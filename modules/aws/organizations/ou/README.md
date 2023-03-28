@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">AWS Organization Module</h3>
+<h3 align="center">AWS Organizations OU</h3>
   <p align="center">
-    This module generates and manages an AWS Organization
+    This module creates an OU within the AWS Organization based on the configuration.
     <br />
     <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,19 +62,12 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
+This example creates a new OU named 'Prod'.
 ```
-module "thinkstack_organization" {
-    source                        = "github.com/thinkstack-co/terraform-modules//modules/aws/organization"
-    
-    aws_service_access_principals = [
-        "aws-artifact-account-sync.amazonaws.com", 
-        "backup.amazonaws.com", 
-        "cloudtrail.amazonaws.com", 
-        "sso.amazonaws.com",
-    ]
-    enabled_policy_types          = ["TAG_POLICY"]
-}
+module "prod_ou" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/route"
+  name   = "Prod"
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
@@ -105,22 +98,23 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_organizations_organization.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organization) | resource |
+| [aws_organizations_organizational_unit.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br>  "aws-artifact-account-sync.amazonaws.com",<br>  "backup.amazonaws.com",<br>  "cloudtrail.amazonaws.com",<br>  "health.amazonaws.com",<br>  "sso.amazonaws.com"<br>]</pre> | no |
-| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | `null` | no |
-| <a name="input_feature_set"></a> [feature\_set](#input\_feature\_set) | (Optional) Specify 'ALL' (default) or 'CONSOLIDATED\_BILLING'. | `string` | `"ALL"` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the Organizational Unit. | `string` | n/a | yes |
+| <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id) | (Required) The unique identifier (ID) of the parent root or organizational unit (OU) that you want to create the OU in. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_accounts"></a> [accounts](#output\_accounts) | The list of accounts in the Organizational Unit. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the Organizational Unit. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Organizational Unit. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
