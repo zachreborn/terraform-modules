@@ -30,7 +30,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/thinkstack-co/terraform-modules">
+  <a href="https://github.com/zachreborn/terraform-modules">
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
@@ -38,14 +38,14 @@
   <p align="center">
     Terraform modules to deploy and manage cloud resourcesusing the latest well architected frameworks
     <br />
-    <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://www.thinkstack.co/">Think|Stack</a>
+    <a href="https://zacharyhill.co/">Zachary Hill</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Report Bug</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Request Feature</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
 
@@ -82,9 +82,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://github.com/thinkstack-co/terraform-modules)
+[![Product Name Screen Shot][product-screenshot]](https://github.com/zachreborn/terraform-modules)
 
-These terraform modules were originally created as part of a six month adoption of 'Infrastructure as Code' at Think|Stack. They serve as the basis to an iterative approach to managing infrastructure. They've grown and expanded to be the workhorse of our organization that we wish to share and collaborate with the world. We are ever evolving and this code will continues to evolve as features, needs, and best practices do.
+These terraform modules were originally created as part of a six month adoption of 'Infrastructure as Code' at Zachary Hill. They serve as the basis to an iterative approach to managing infrastructure. They've grown and expanded to be the workhorse of our organization that we wish to share and collaborate with the world. We are ever evolving and this code will continues to evolve as features, needs, and best practices do.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -124,7 +124,7 @@ This is an example of how to list things you need to use the software and how to
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/thinkstack-co/terraform-modules.git
+   git clone https://github.com/zachreborn/terraform-modules.git
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -137,11 +137,11 @@ This is an example of how to list things you need to use the software and how to
 Navigate to the folder for the provider and subsequent module, service, or infrastructure you're looking to utilize. Within each module a README.md has documented the usage instructions and examples for that module. Included in each README.md is also an output of automated `terraform-docs` which has requirements, inputs, and outputs.
 
 ### Examples:
-* [CloudTrail](https://github.com/thinkstack-co/terraform-modules/tree/main/modules/aws/cloudtrail)
-* [EC2](https://github.com/thinkstack-co/terraform-modules/tree/main/modules/aws/ec2_instance)
-* [VPC](https://github.com/thinkstack-co/terraform-modules/tree/main/modules/aws/vpc)
+* [CloudTrail](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/cloudtrail)
+* [EC2](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/ec2_instance)
+* [VPC](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/vpc)
 
-_For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -150,7 +150,7 @@ _For more examples, please refer to the [Documentation](https://github.com/think
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/thinkstack-co/terraform-modules/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/zachreborn/terraform-modules/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -186,9 +186,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Think|Stack - [![LinkedIn][linkedin-shield]][linkedin-url] - info@thinkstack.co
+Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
-Project Link: [https://github.com/thinkstack-co/terraform-modules](https://github.com/thinkstack-co/terraform-modules)
+Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -205,18 +205,18 @@ Project Link: [https://github.com/thinkstack-co/terraform-modules](https://githu
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[contributors-url]: https://github.com/thinkstack-co/terraform-modules/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[forks-url]: https://github.com/thinkstack-co/terraform-modules/network/members
-[stars-shield]: https://img.shields.io/github/stars/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[stars-url]: https://github.com/thinkstack-co/terraform-modules/stargazers
-[issues-shield]: https://img.shields.io/github/issues/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[issues-url]: https://github.com/thinkstack-co/terraform-modules/issues
-[license-shield]: https://img.shields.io/github/license/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/thinkstack-co/terraform-modules/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
+[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
+[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
+[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
+[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
+[issues-url]: https://github.com/zachreborn/terraform-modules/issues
+[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/company/thinkstack/
+[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
 [product-screenshot]: /images/screenshot.webp
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
