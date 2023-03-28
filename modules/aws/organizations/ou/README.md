@@ -84,7 +84,9 @@ No requirements.
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
 
 ## Modules
 
@@ -92,15 +94,25 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_organizations_organizational_unit.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the Organizational Unit. | `string` | n/a | yes |
+| <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id) | (Required) The unique identifier (ID) of the parent root or organizational unit (OU) that you want to create the OU in. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_accounts"></a> [accounts](#output\_accounts) | The list of accounts in the Organizational Unit. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the Organizational Unit. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Organizational Unit. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
