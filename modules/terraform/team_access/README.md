@@ -24,7 +24,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/thinkstack-co/terraform-modules">
+  <a href="https://github.com/zachreborn/terraform-modules">
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
@@ -32,14 +32,14 @@
   <p align="center">
     This module configures the access permissions for a team assigning the permissions to a terraform workspace.
     <br />
-    <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://www.thinkstack.co/">Think|Stack</a>
+    <a href="https://zacharyhill.co">Zachary Hill</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Report Bug</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Request Feature</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
 
@@ -67,7 +67,7 @@
 ### Simple Example
 ```
 module "example_team_access" {
-    source       = "github.com/thinkstack-co/terraform-modules//modules/terraform/team_access"
+    source       = "github.com/zachreborn/terraform-modules//modules/terraform/team_access"
 
     team_id      = module.team.id
     workspace_id = module.workspace.id
@@ -78,7 +78,7 @@ module "example_team_access" {
 ### Complex for_each
 ```
 module "example_team_access" {
-    source       = "github.com/thinkstack-co/terraform-modules//modules/terraform/team_access"
+    source       = "github.com/zachreborn/terraform-modules//modules/terraform/team_access"
     
     for_each     = var.permissions_mapping
     team_id      = each.value.id
@@ -87,7 +87,7 @@ module "example_team_access" {
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -143,9 +143,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Think|Stack - [![LinkedIn][linkedin-shield]][linkedin-url] - info@thinkstack.co
+Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
-Project Link: [https://github.com/thinkstack-co/terraform-modules](https://github.com/thinkstack-co/terraform-modules)
+Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -162,18 +162,18 @@ Project Link: [https://github.com/thinkstack-co/terraform-modules](https://githu
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[contributors-url]: https://github.com/thinkstack-co/terraform-modules/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[forks-url]: https://github.com/thinkstack-co/terraform-modules/network/members
-[stars-shield]: https://img.shields.io/github/stars/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[stars-url]: https://github.com/thinkstack-co/terraform-modules/stargazers
-[issues-shield]: https://img.shields.io/github/issues/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[issues-url]: https://github.com/thinkstack-co/terraform-modules/issues
-[license-shield]: https://img.shields.io/github/license/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/thinkstack-co/terraform-modules/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
+[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
+[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
+[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
+[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
+[issues-url]: https://github.com/zachreborn/terraform-modules/issues
+[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/company/thinkstack/
+[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
 [product-screenshot]: /images/screenshot.webp
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io

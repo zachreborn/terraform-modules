@@ -22,7 +22,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/thinkstack-co/terraform-modules">
+  <a href="https://github.com/zachreborn/terraform-modules">
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
@@ -30,14 +30,14 @@
   <p align="center">
     This module sets up and enables CloudTrail for all regions. The module handles setting up a new S3 bucket and CloudWatch log group to which all CloudTrail logs are sent. The S3 bucket enabled versioning by default. It is highly recommended that mfa_delete be enabled after the initial build has completed.
     <br />
-    <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://www.thinkstack.co/">Think|Stack</a>
+    <a href="https://zacharyhill.co">Zachary Hill</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Report Bug</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Request Feature</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
 
@@ -62,10 +62,10 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
 ```
 module "cloudtrail" {
-    source                   = "github.com/thinkstack-co/terraform-modules//modules/aws/cloudtrail"
+    source                   = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
 
     bucket_prefix            = "cloudtrail-"
     enable_s3_bucket_logging = true
@@ -73,7 +73,10 @@ module "cloudtrail" {
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
+### Organization Cloudtrail Example
+This example must be created in the root organization account.
+
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -143,6 +146,7 @@ No modules.
 | <a name="input_iam_role_permissions_boundary"></a> [iam\_role\_permissions\_boundary](#input\_iam\_role\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
 | <a name="input_include_global_service_events"></a> [include\_global\_service\_events](#input\_include\_global\_service\_events) | Specifies whether the trail is publishing events from global services such as IAM to the log files | `bool` | `true` | no |
 | <a name="input_is_multi_region_trail"></a> [is\_multi\_region\_trail](#input\_is\_multi\_region\_trail) | Determines whether or not the cloudtrail is created for all regions | `bool` | `true` | no |
+| <a name="input_is_organization_trail"></a> [is\_organization\_trail](#input\_is\_organization\_trail) | (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to false. | `bool` | `false` | no |
 | <a name="input_key_customer_master_key_spec"></a> [key\_customer\_master\_key\_spec](#input\_key\_customer\_master\_key\_spec) | (Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC\_DEFAULT, RSA\_2048, RSA\_3072, RSA\_4096, ECC\_NIST\_P256, ECC\_NIST\_P384, ECC\_NIST\_P521, or ECC\_SECG\_P256K1. Defaults to SYMMETRIC\_DEFAULT. For help with choosing a key spec, see the AWS KMS Developer Guide. | `string` | `"SYMMETRIC_DEFAULT"` | no |
 | <a name="input_key_deletion_window_in_days"></a> [key\_deletion\_window\_in\_days](#input\_key\_deletion\_window\_in\_days) | (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days. | `number` | `30` | no |
 | <a name="input_key_description"></a> [key\_description](#input\_key\_description) | (Optional) The description of the key as viewed in AWS console. | `string` | `"CloudTrail kms key used to encrypt audit logs"` | no |
@@ -185,9 +189,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Think|Stack - [![LinkedIn][linkedin-shield]][linkedin-url] - info@thinkstack.co
+Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
-Project Link: [https://github.com/thinkstack-co/terraform-modules](https://github.com/thinkstack-co/terraform-modules)
+Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -204,18 +208,18 @@ Project Link: [https://github.com/thinkstack-co/terraform-modules](https://githu
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[contributors-url]: https://github.com/thinkstack-co/terraform-modules/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[forks-url]: https://github.com/thinkstack-co/terraform-modules/network/members
-[stars-shield]: https://img.shields.io/github/stars/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[stars-url]: https://github.com/thinkstack-co/terraform-modules/stargazers
-[issues-shield]: https://img.shields.io/github/issues/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[issues-url]: https://github.com/thinkstack-co/terraform-modules/issues
-[license-shield]: https://img.shields.io/github/license/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/thinkstack-co/terraform-modules/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
+[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
+[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
+[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
+[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
+[issues-url]: https://github.com/zachreborn/terraform-modules/issues
+[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/company/thinkstack/
+[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
 [product-screenshot]: /images/screenshot.webp
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io

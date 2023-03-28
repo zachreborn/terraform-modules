@@ -22,7 +22,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/thinkstack-co/terraform-modules">
+  <a href="https://github.com/zachreborn/terraform-modules">
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
@@ -30,14 +30,14 @@
   <p align="center">
     This module creates a route for the given subnets to a transit gateway (tgw).
     <br />
-    <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://www.thinkstack.co/">Think|Stack</a>
+    <a href="https://zacharyhill.co">Zachary Hill</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Report Bug</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
     ·
-    <a href="https://github.com/thinkstack-co/terraform-modules/issues">Request Feature</a>
+    <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
 
@@ -66,7 +66,7 @@
 
 ```
 module "tgw_route_vpc_prod_infrastructure" {
-  source = "github.com/thinkstack-co/terraform-modules//modules/aws/route_transit_gateway"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/route_transit_gateway"
   # VPC - account_prod_infrastructure
   destination_cidr_block = "10.11.0.0/16"
   transit_gateway_id     = module.transit_gateway.id
@@ -74,7 +74,7 @@ module "tgw_route_vpc_prod_infrastructure" {
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -130,9 +130,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Think|Stack - [![LinkedIn][linkedin-shield]][linkedin-url] - info@thinkstack.co
+Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
-Project Link: [https://github.com/thinkstack-co/terraform-modules](https://github.com/thinkstack-co/terraform-modules)
+Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -149,18 +149,18 @@ Project Link: [https://github.com/thinkstack-co/terraform-modules](https://githu
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[contributors-url]: https://github.com/thinkstack-co/terraform-modules/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[forks-url]: https://github.com/thinkstack-co/terraform-modules/network/members
-[stars-shield]: https://img.shields.io/github/stars/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[stars-url]: https://github.com/thinkstack-co/terraform-modules/stargazers
-[issues-shield]: https://img.shields.io/github/issues/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[issues-url]: https://github.com/thinkstack-co/terraform-modules/issues
-[license-shield]: https://img.shields.io/github/license/thinkstack-co/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/thinkstack-co/terraform-modules/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
+[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
+[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
+[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
+[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
+[issues-url]: https://github.com/zachreborn/terraform-modules/issues
+[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/company/thinkstack/
+[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
 [product-screenshot]: /images/screenshot.webp
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io
