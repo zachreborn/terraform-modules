@@ -63,6 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates a new OU named 'Prod'.
 ```
 module "prod_ou" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/route"
