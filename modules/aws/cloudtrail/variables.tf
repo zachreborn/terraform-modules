@@ -266,6 +266,16 @@ variable "is_multi_region_trail" {
   }
 }
 
+variable "is_organization_trail" {
+  type        = bool
+  description = "(Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to false."
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.is_organization_trail))
+    error_message = "The value must be true or false."
+  }
+}
+
 variable "enable_log_file_validation" {
   type        = bool
   description = "Enabled log file validation to all logs sent to S3"
