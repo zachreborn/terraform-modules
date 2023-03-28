@@ -66,8 +66,10 @@
 This example creates a new OU named 'Prod'.
 ```
 module "prod_ou" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/route"
-  name   = "Prod"
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+  name      = "prod"
+  parent_id = "r-n1v2"
+}
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/thinkstack-co/terraform-modules)_
