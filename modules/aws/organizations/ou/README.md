@@ -28,7 +28,7 @@
 
 <h3 align="center">AWS Organizations OU</h3>
   <p align="center">
-    This module creates an OU within the AWS Organization
+    This module creates an OU within the AWS Organization based on the configuration.
     <br />
     <a href="https://github.com/thinkstack-co/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
