@@ -8,9 +8,9 @@ terraform {
   }
 }
 
-############################################################
+###########################################################
 # AWS Organization
-############################################################
+###########################################################
 
 resource "aws_organizations_organization" "org" {
   aws_service_access_principals = var.aws_service_access_principals
