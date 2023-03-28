@@ -1,3 +1,13 @@
+terraform {
+    required_version = ">= 0.15.0"
+    required_providers {
+        aws = {
+            source  = "hashicorp/aws"
+            version = ">= 4.0.0"
+        }
+    }
+}
+
 resource "aws_organizations_organizational_unit" "this" {
   name      = var.name
   parent_id = var.parent_id
