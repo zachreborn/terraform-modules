@@ -197,7 +197,7 @@ variable "tags" {
   type        = map(any)
   default = {
     terraform   = "true"
-    created_by  = "ThinkStack"
+    created_by  = "<YOUR_NAME>"
     environment = "prod"
     priority    = "low"
   }
