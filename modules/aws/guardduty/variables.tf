@@ -24,6 +24,16 @@ variable "finding_publishing_frequency" {
 ###########################
 # GuardDuty Organization Variables
 ###########################
+variable "admin_account_id" {
+  type        = string
+  description = "(Optional) The AWS account ID for the GuardDuty delegated administrator account. This must be an existing account in the organization."
+  default     = null
+  validation {
+    condition     = var.admin_account_id == null ? true : can(regex("^\\d{12}$", var.admin_account_id))
+    error_message = "The value of admin_account_id must be a 12-digit AWS account ID or null."
+  }
+}
+
 variable "auto_enable" {
   type        = bool
   description = "(Optional) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region."
@@ -31,5 +41,19 @@ variable "auto_enable" {
   validation {
     condition     = can(regex("^(true|false)$", var.auto_enable))
     error_message = "The value of auto_enable must be either true or false."
+  }
+}
+
+###########################
+# General Variables
+###########################
+
+variable "enable_organization" {
+  type        = bool
+  description = "(Optional) Enable GuardDuty Organization. Defaults to false."
+  default     = false
+  validation {
+    condition     = can(regex("^(true|false)$", var.enable_organization))
+    error_message = "The value of enable_organization must be either true or false."
   }
 }
