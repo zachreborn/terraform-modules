@@ -10,12 +10,13 @@ terraform {
 }
 
 # GuardDuty Detector
-resource "aws_guardduty_detector" "this" {
+/* resource "aws_guardduty_detector" "this" {
   enable                       = var.enable
   finding_publishing_frequency = var.finding_publishing_frequency
-}
+} */
 
 resource "aws_guardduty_organization_admin_account" "this" {
+  provider         = aws.organization_master_account
   count            = var.enable_organization ? 1 : 0
   admin_account_id = var.admin_account_id
 }
