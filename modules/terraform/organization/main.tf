@@ -1,3 +1,4 @@
+# Organization: https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/organization
 resource "tfe_organization" "this" {
   allow_force_delete_workspaces                           = var.allow_force_delete_workspaces
   assessments_enforced                                    = var.assessments_enforced
