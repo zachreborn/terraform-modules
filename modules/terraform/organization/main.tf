@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    tfe = {
+      source  = "hashicorp/tfe"
+      version = ">=0.42.0"
+    }
+  }
+}
+
 # Organization: https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/organization
 resource "tfe_organization" "this" {
   allow_force_delete_workspaces                           = var.allow_force_delete_workspaces
