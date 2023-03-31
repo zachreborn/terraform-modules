@@ -20,8 +20,8 @@ variable "assessments_enforced" {
 
 variable "collaborator_auth_policy" {
   type        = string
-  description = "(Optional) Authentication policy (password or two_factor_mandatory). Defaults to password."
-  default     = "password"
+  description = "(Optional) Authentication policy (password or two_factor_mandatory). Defaults to two_factor_mandatory."
+  default     = "two_factor_mandatory"
   validation {
     condition     = can(regex("password|two_factor_mandatory", var.collaborator_auth_policy))
     error_message = "The value of collaborator_auth_policy must be either password or two_factor_mandatory."
@@ -56,8 +56,8 @@ variable "owners_team_saml_role_id" {
 
 variable "session_timeout_minutes" {
   type        = number
-  description = "(Optional) Session timeout after inactivity. Defaults to 20160."
-  default     = 20160
+  description = "(Optional) Session timeout after inactivity in minutes. Defaults to 720."
+  default     = 720
   validation {
     condition     = can(regex("^[0-9]+$", var.session_timeout_minutes))
     error_message = "The value of session_timeout_minutes must be a number."
@@ -66,8 +66,8 @@ variable "session_timeout_minutes" {
 
 variable "session_remember_minutes" {
   type        = number
-  description = "(Optional) Session expiration. Defaults to 20160."
-  default     = 20160
+  description = "(Optional) Session expiration in minutes. Defaults to 720."
+  default     = 720
   validation {
     condition     = can(regex("^[0-9]+$", var.session_remember_minutes))
     error_message = "The value of session_remember_minutes must be a number."
