@@ -17,11 +17,17 @@ resource "aws_guardduty_detector" "this" {
 }
 
 resource "aws_guardduty_organization_admin_account" "this" {
+  depends_on       = [
+    aws_guardduty_detector.this
+  ]
   provider         = aws.organization_management_account
   admin_account_id = var.admin_account_id
 }
 
 resource "aws_guardduty_organization_configuration" "this" {
+  depends_on  = [
+    aws_guardduty_organization_admin_account.this
+  ]
   provider    = aws.organization_security_account
   auto_enable = var.auto_enable
   detector_id = aws_guardduty_detector.this.id
