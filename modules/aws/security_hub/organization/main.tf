@@ -21,7 +21,7 @@ resource "aws_securityhub_organization_admin_account" "this" {
 }
 
 resource "aws_securityhub_organization_configuration" "this" {
-  provider                 = aws.organization_security_account
+  provider = aws.organization_security_account
   depends_on = [
     aws_securityhub_organization_admin_account.this
   ]
