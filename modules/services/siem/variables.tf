@@ -654,6 +654,6 @@ variable "tags" {
     project     = "SIEM Implementation"
     service     = "soc"
     team        = "Security Team"
-    used_by     = "ThinkStack"
+    used_by     = "<YOUR_NAME>"
   }
 }

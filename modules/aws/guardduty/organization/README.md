@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">AWS Organizations Account Module</h3>
+<h3 align="center">GuardDuty Organization</h3>
   <p align="center">
-    This module generates and manages an AWS Organization Account
+    This module creates the organization delegation and organization settings for GuardDuty
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,14 +62,12 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
 ```
-module "account_prod_infrastructure" {
-    source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations_account"
-    
-    name      = "account_prod_infrastructure"
-    email     = "aws_environments+account@example.com"
-    parent_id = var.account_parent_id
+module test {
+  source = 
+
+  variable = 
 }
 ```
 
@@ -91,7 +89,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 4.0.0 |
+| <a name="provider_aws.organization_security_account"></a> [aws.organization\_security\_account](#provider\_aws.organization\_security\_account) | >= 4.0.0 |
 
 ## Modules
 
@@ -101,27 +100,25 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_organizations_account.account](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account) | resource |
+| [aws_guardduty_detector.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector) | resource |
+| [aws_guardduty_organization_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_admin_account) | resource |
+| [aws_guardduty_organization_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_close_on_deletion"></a> [close\_on\_deletion](#input\_close\_on\_deletion) | (Optional) If true, a deletion event will close the account. Otherwise, it will only remove from the organization. | `bool` | `false` | no |
-| <a name="input_email"></a> [email](#input\_email) | (Required) The email address of the owner to assign to the new member account. This email address must not already be associated with another AWS account. | `string` | n/a | yes |
-| <a name="input_iam_user_access_to_billing"></a> [iam\_user\_access\_to\_billing](#input\_iam\_user\_access\_to\_billing) | (Optional) If set to ALLOW, the new account enables IAM users to access account billing information if they have the required permissions. If set to DENY, then only the root user of the new account can access account billing information. | `string` | `"ALLOW"` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) A friendly name for the member account. | `string` | n/a | yes |
-| <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id) | (Optional) Parent Organizational Unit ID or Root ID for the account. Defaults to the Organization default Root ID. A configuration must be present for this argument to perform drift detection. | `string` | `null` | no |
-| <a name="input_role_name"></a> [role\_name](#input\_role\_name) | (Optional) The name of an IAM role that Organizations automatically preconfigures in the new member account. This role trusts the master account, allowing users in the master account to assume the role, as permitted by the master account administrator. The role has administrator permissions in the new member account. The Organizations API provides no method for reading this information after account creation, so Terraform cannot perform drift detection on its value and will always show a difference for a configured value after import unless ignore\_changes is used. | `string` | `"OrganizationAccountAccessRole"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | `{}` | no |
+| <a name="input_admin_account_id"></a> [admin\_account\_id](#input\_admin\_account\_id) | (Optional) The AWS account ID for the GuardDuty delegated administrator account. This must be an existing account in the organization. | `string` | `null` | no |
+| <a name="input_auto_enable"></a> [auto\_enable](#input\_auto\_enable) | (Optional) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region. | `bool` | `true` | no |
+| <a name="input_enable"></a> [enable](#input\_enable) | (Optional) Enable monitoring and feedback reporting. Setting to false is equivalent to 'suspending' GuardDuty. Defaults to true. | `bool` | `true` | no |
+| <a name="input_finding_publishing_frequency"></a> [finding\_publishing\_frequency](#input\_finding\_publishing\_frequency) | (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to SIX\_HOURS. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: FIFTEEN\_MINUTES, ONE\_HOUR, SIX\_HOURS. See AWS Documentation for more information. | `string` | `"SIX_HOURS"` | no |
+| <a name="input_s3_logs_enable"></a> [s3\_logs\_enable](#input\_s3\_logs\_enable) | (Optional) When this setting is enabled, GuardDuty will automatically enable S3 data sources for new accounts in the organization. Defaults to true. | `bool` | `true` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the detector |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -171,7 +171,7 @@ variable "tags" {
   description = "(Optional) A mapping of tags to assign to the object."
   default = {
     terraform   = "true"
-    created_by  = "ThinkStack"
+    created_by  = "<YOUR_NAME>"
     environment = "prod"
     priority    = "high"
   }

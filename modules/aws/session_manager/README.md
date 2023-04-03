@@ -115,7 +115,7 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | The description of the all resources. | `string` | `"Managed by Terraform"` | no |
 | <a name="input_iam_path"></a> [iam\_path](#input\_iam\_path) | Path in which to create the IAM Role and the IAM Policy. | `string` | `"/"` | no |
 | <a name="input_iam_policy"></a> [iam\_policy](#input\_iam\_policy) | The policy document. This is a JSON formatted string. | `string` | `""` | no |
-| <a name="input_name"></a> [name](#input\_name) | The name of the Session Manager. | `string` | `"thinkstack"` | no |
+| <a name="input_name"></a> [name](#input\_name) | The name of the Session Manager. | `string` | `"ssm-session-manager"` | no |
 | <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | The name of the bucket. | `string` | `""` | no |
 | <a name="input_s3_encryption_enabled"></a> [s3\_encryption\_enabled](#input\_s3\_encryption\_enabled) | Specify true to indicate that encryption for S3 Bucket enabled. | `bool` | `true` | no |
 | <a name="input_s3_key_prefix"></a> [s3\_key\_prefix](#input\_s3\_key\_prefix) | The prefix for the specified S3 bucket. | `string` | `""` | no |
