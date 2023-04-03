@@ -64,10 +64,8 @@
 ## Usage
 ### Simple Example
 ```
-module test {
-  source = 
-
-  variable = 
+module "guardduty" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/detector"
 }
 ```
 

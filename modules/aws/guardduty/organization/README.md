@@ -83,12 +83,12 @@ provider "aws" {
 ```
 # Module configuration
 module "guardduty" {
-    source           = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
-    providers        = {
-        aws.organization_management_account = aws.organization_management_account
-        aws.organization_security_account   = aws.organization_security_account
-    }
-    admin_account_id = module.account_security.id
+  source           = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
+  providers        = {
+      aws.organization_management_account = aws.organization_management_account
+      aws.organization_security_account   = aws.organization_security_account
+  }
+  admin_account_id = module.account_security.id
 }
 ```
 
