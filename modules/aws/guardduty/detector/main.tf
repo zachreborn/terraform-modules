@@ -4,7 +4,6 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = ">= 4.0.0"
-      # configuration_aliases = [aws.organization_master_account, aws.organization_security_account]
     }
   }
 }
