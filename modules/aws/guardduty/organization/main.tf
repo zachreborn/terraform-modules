@@ -16,6 +16,7 @@ resource "aws_guardduty_detector" "this" {
   finding_publishing_frequency = var.finding_publishing_frequency
 }
 
+# GuardDuty Admin Deligation
 resource "aws_guardduty_organization_admin_account" "this" {
   depends_on = [
     aws_guardduty_detector.this
@@ -24,6 +25,7 @@ resource "aws_guardduty_organization_admin_account" "this" {
   admin_account_id = var.admin_account_id
 }
 
+# GuardDuty Organization Configuration
 resource "aws_guardduty_organization_configuration" "this" {
   depends_on = [
     aws_guardduty_organization_admin_account.this
