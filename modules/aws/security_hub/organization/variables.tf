@@ -68,7 +68,7 @@ variable "specified_regions" {
   description = "(Optional) List of regions to include or exclude (required if linking_mode is set to ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS)"
   default     = null
   validation {
-    condition     = var.specififed_regions == null ? true : can(regex("^\\w{2}-\\w+-\\d$", var.specified_regions))
+    condition     = var.specified_regions == null ? true : can(regex("^\\w{2}-\\w+-\\d$", var.specified_regions))
     error_message = "The value must be a list of Regions."
   }
 }
