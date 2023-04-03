@@ -32,6 +32,7 @@ resource "aws_securityhub_organization_configuration" "this" {
   auto_enable_standards = var.auto_enable_standards
 }
 
+# Security Hub Finding Aggregator on the Security Account
 resource "aws_securityhub_finding_aggregator" "this" {
   depends_on        = [aws_securityhub_organization_configuration.this]
   linking_mode      = var.linking_mode
