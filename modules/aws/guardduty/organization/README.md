@@ -62,12 +62,33 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Simple Example
+### Organization Admin Delegation Example
+This example configures guardduty for use in an organization. This requires access to the organization management account and the security account. The providers must be set up with aliases matching the module requirements.
 ```
-module test {
-  source = 
+# Provider configuration
+provider "aws" {
+  alias      = "organization_management_account"
+  access_key = var.access_id
+  secret_key = var.secret_key
+  region     = var.aws_prod_region
+}
 
-  variable = 
+provider "aws" {
+  alias      = "organization_security_account"
+  access_key = var.security_access_id
+  secret_key = var.security_secret_key
+  region     = var.aws_prod_region
+}
+```
+```
+# Module configuration
+module "guardduty" {
+    source           = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
+    providers        = {
+        aws.organization_management_account = aws.organization_management_account
+        aws.organization_security_account   = aws.organization_security_account
+    }
+    admin_account_id = module.account_security.id
 }
 ```
 
