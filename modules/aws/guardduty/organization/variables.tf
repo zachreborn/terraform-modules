@@ -47,13 +47,3 @@ variable "auto_enable" {
 ###########################
 # General Variables
 ###########################
-
-variable "enable_organization" {
-  type        = bool
-  description = "(Optional) Enable GuardDuty Organization. Defaults to false."
-  default     = false
-  validation {
-    condition     = can(regex("^(true|false)$", var.enable_organization))
-    error_message = "The value of enable_organization must be either true or false."
-  }
-}
