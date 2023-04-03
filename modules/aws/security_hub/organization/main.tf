@@ -31,3 +31,9 @@ resource "aws_securityhub_organization_configuration" "this" {
   auto_enable           = var.auto_enable
   auto_enable_standards = var.auto_enable_standards
 }
+
+resource "aws_securityhub_finding_aggregator" "this" {
+  depends_on        = [aws_securityhub_organization_configuration.this]
+  linking_mode      = var.linking_mode
+  specified_regions = var.specified_regions
+}

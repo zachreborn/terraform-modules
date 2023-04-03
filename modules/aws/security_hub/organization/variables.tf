@@ -48,3 +48,27 @@ variable "auto_enable_standards" {
     error_message = "The value must be DEFAULT or NONE."
   }
 }
+
+############################################################
+# AWS Security Hub Finding Aggregator Variables
+############################################################
+
+variable "linking_mode" {
+  type        = string
+  description = "(Optional) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are ALL_REGIONS, ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS. When ALL_REGIONS or ALL_REGIONS_EXCEPT_SPECIFIED are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them."
+  default     = "ALL_REGIONS"
+  validation {
+    condition     = can(regex("^(ALL_REGIONS|ALL_REGIONS_EXCEPT_SPECIFIED|SPECIFIED_REGIONS)$", var.linking_mode))
+    error_message = "The value must be ALL_REGIONS, ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS."
+  }
+}
+
+variable "specified_regions" {
+  type        = list(string)
+  description = "(Optional) List of regions to include or exclude (required if linking_mode is set to ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS)"
+  default     = null
+  validation {
+    condition     = var.specififed_regions == null ? true : can(regex("^\\w{2}-\\w+-\\d$", var.specified_regions))
+    error_message = "The value must be a list of Regions."
+  }
+}
