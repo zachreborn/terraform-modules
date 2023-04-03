@@ -44,6 +44,16 @@ variable "auto_enable" {
   }
 }
 
+variable "s3_logs_enable" {
+  type        = bool
+  description = "(Optional) When this setting is enabled, GuardDuty will automatically enable S3 data sources for new accounts in the organization. Defaults to true."
+  default     = true
+  validation {
+    condition     = can(regex("^(true|false)$", var.s3_logs_enable))
+    error_message = "The value of s3_logs_enable must be either true or false."
+  }
+}
+
 ###########################
 # General Variables
 ###########################
