@@ -9,7 +9,7 @@ variable "storage_capacity" {
 }
 
 variable "subnet_ids" {
-  type        = list
+  type        = list(any)
   description = "(Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set deployment_type to MULTI_AZ_1."
 }
 
@@ -40,7 +40,7 @@ variable "copy_tags_to_backups" {
   description = "(Optional) A boolean flag indicating whether tags on the file system should be copied to backups. Defaults to true."
   default     = true
   validation {
-    condition = can(regex("^(true|false)$", var.copy_tags_to_backups))
+    condition     = can(regex("^(true|false)$", var.copy_tags_to_backups))
     error_message = "The value of copy_tags_to_backups must be either true or false."
   }
 }
@@ -53,7 +53,7 @@ variable "daily_automatic_backup_start_time" {
 
 #replace with an sg module in code
 variable "security_group_ids" {
-  type        = list
+  type        = list(any)
   description = "(Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces."
 }
 
@@ -62,7 +62,7 @@ variable "skip_final_backup" {
   description = "(Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to false."
   default     = false
   validation {
-    condition = can(regex("^(true|false)$", var.skip_final_backup))
+    condition     = can(regex("^(true|false)$", var.skip_final_backup))
     error_message = "The value of skip_final_backup must be either true or false."
   }
 }
@@ -176,7 +176,7 @@ variable "enable_key_rotation" {
   description = "(Optional) Specifies whether key rotation is enabled. Defaults to false."
   default     = true
   validation {
-    condition = can(regex("^(true|false)$", var.enable_key_rotation))
+    condition     = can(regex("^(true|false)$", var.enable_key_rotation))
     error_message = "The value of enable_key_rotation must be either true or false."
   }
 }
@@ -192,7 +192,7 @@ variable "is_enabled" {
   description = "(Optional) Specifies whether the key is enabled. Defaults to true."
   default     = true
   validation {
-    condition = can(regex("^(true|false)$", var.is_enabled))
+    condition     = can(regex("^(true|false)$", var.is_enabled))
     error_message = "The value of is_enabled must be either true or false."
   }
 }
@@ -213,7 +213,7 @@ variable "enable_audit_logs" {
   description = "Determines count for cloudwatch log group, IAM policy, and IAM role. Defaults to true and enters a count of 1 to create resources."
   default     = true
   validation {
-    condition = can(regex("^(true|false)$", var.enable_audit_logs))
+    condition     = can(regex("^(true|false)$", var.enable_audit_logs))
     error_message = "The value of enable_audit_logs must be either true or false."
   }
 }
