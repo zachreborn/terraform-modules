@@ -17,7 +17,7 @@ resource "aws_guardduty_detector" "this" {
 }
 
 resource "aws_guardduty_organization_admin_account" "this" {
-  depends_on       = [
+  depends_on = [
     aws_guardduty_detector.this
   ]
   provider         = aws.organization_management_account
@@ -25,7 +25,7 @@ resource "aws_guardduty_organization_admin_account" "this" {
 }
 
 resource "aws_guardduty_organization_configuration" "this" {
-  depends_on  = [
+  depends_on = [
     aws_guardduty_organization_admin_account.this
   ]
   provider    = aws.organization_security_account
