@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">GuardDuty Organization</h3>
+<h3 align="center">Security Hub Organization</h3>
   <p align="center">
-    This module creates the organization delegation and organization settings for GuardDuty
+    This module creates the resources required for Security Hub usage in an Organization and delegation to the account chosen.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,33 +62,31 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Organization Admin Delegation Example
-This example configures guardduty for use in an organization. This requires access to the organization management account and the security account. The providers must be set up with aliases matching the module requirements.
+### Simple Example
+This example enables security hub, delegates an admin account from the organization management, and enables fll region aggregation of information.
 ```
-# Provider configuration
-provider "aws" {
-  alias      = "organization_management_account"
-  access_key = var.access_id
-  secret_key = var.secret_key
-  region     = var.aws_prod_region
-}
-
-provider "aws" {
-  alias      = "organization_security_account"
-  access_key = var.security_access_id
-  secret_key = var.security_secret_key
-  region     = var.aws_prod_region
-}
-```
-```
-# Module configuration
-module "guardduty" {
-  source           = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
-  providers        = {
+module "security_hub" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/security_hub/organization"
+  providers = {
       aws.organization_management_account = aws.organization_management_account
       aws.organization_security_account   = aws.organization_security_account
   }
   admin_account_id = module.account_security.id
+}
+```
+
+### Setting Specific Regions
+This example configures security hub with an organization delegation and specifically aggregates the US regions.
+```
+module "security_hub" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/security_hub/organization"
+  providers = {
+      aws.organization_management_account = aws.organization_management_account
+      aws.organization_security_account   = aws.organization_security_account
+  }
+  admin_account_id  = module.account_security.id
+  linking_mode      = "SPECIFIED_REGIONS"
+  specified_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
 }
 ```
 
@@ -121,25 +119,25 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_guardduty_detector.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector) | resource |
-| [aws_guardduty_organization_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_admin_account) | resource |
-| [aws_guardduty_organization_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration) | resource |
+| [aws_securityhub_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/securityhub_account) | resource |
+| [aws_securityhub_finding_aggregator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/securityhub_finding_aggregator) | resource |
+| [aws_securityhub_organization_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/securityhub_organization_admin_account) | resource |
+| [aws_securityhub_organization_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/securityhub_organization_configuration) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_account_id"></a> [admin\_account\_id](#input\_admin\_account\_id) | (Optional) The AWS account ID for the GuardDuty delegated administrator account. This must be an existing account in the organization. | `string` | `null` | no |
-| <a name="input_auto_enable"></a> [auto\_enable](#input\_auto\_enable) | (Optional) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region. | `bool` | `true` | no |
-| <a name="input_enable"></a> [enable](#input\_enable) | (Optional) Enable monitoring and feedback reporting. Setting to false is equivalent to 'suspending' GuardDuty. Defaults to true. | `bool` | `true` | no |
-| <a name="input_finding_publishing_frequency"></a> [finding\_publishing\_frequency](#input\_finding\_publishing\_frequency) | (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to SIX\_HOURS. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: FIFTEEN\_MINUTES, ONE\_HOUR, SIX\_HOURS. See AWS Documentation for more information. | `string` | `"SIX_HOURS"` | no |
-| <a name="input_s3_logs_enable"></a> [s3\_logs\_enable](#input\_s3\_logs\_enable) | (Optional) When this setting is enabled, GuardDuty will automatically enable S3 data sources for new accounts in the organization. Defaults to true. | `bool` | `true` | no |
+| <a name="input_admin_account_id"></a> [admin\_account\_id](#input\_admin\_account\_id) | (Required) The 12-digit identifier of the AWS account designated as the Security Hub administrator account. | `string` | n/a | yes |
+| <a name="input_auto_enable"></a> [auto\_enable](#input\_auto\_enable) | (Required) Whether to automatically enable Security Hub for new accounts in the organization. Defaults to true. | `bool` | `true` | no |
+| <a name="input_auto_enable_standards"></a> [auto\_enable\_standards](#input\_auto\_enable\_standards) | (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to DEFAULT, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to NONE. | `string` | `"DEFAULT"` | no |
+| <a name="input_enable_default_standards"></a> [enable\_default\_standards](#input\_enable\_default\_standards) | (Optional) Whether to enable the security standards that Security Hub has designated as automatically enabled including: AWS Foundational Security Best Practices v1.0.0 and CIS AWS Foundations Benchmark v1.2.0. Defaults to true. | `bool` | `true` | no |
+| <a name="input_linking_mode"></a> [linking\_mode](#input\_linking\_mode) | (Optional) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are ALL\_REGIONS, ALL\_REGIONS\_EXCEPT\_SPECIFIED or SPECIFIED\_REGIONS. When ALL\_REGIONS or ALL\_REGIONS\_EXCEPT\_SPECIFIED are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them. | `string` | `"ALL_REGIONS"` | no |
+| <a name="input_specified_regions"></a> [specified\_regions](#input\_specified\_regions) | (Optional) List of regions to include or exclude (required if linking\_mode is set to ALL\_REGIONS\_EXCEPT\_SPECIFIED or SPECIFIED\_REGIONS) | `list(string)` | `null` | no |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | The ID of the detector |
+No outputs.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
