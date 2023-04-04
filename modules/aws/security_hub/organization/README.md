@@ -64,10 +64,28 @@
 ## Usage
 ### Simple Example
 ```
-module test {
-  source = 
+module "security_hub" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/security_hub/organization"
+  providers = {
+      aws.organization_management_account = aws.organization_management_account
+      aws.organization_security_account   = aws.organization_security_account
+  }
+  admin_account_id = module.account_security.id
+}
+```
 
-  variable = 
+### Setting Specific Regions
+This example configures security hub with an organization delegation and specifically aggregates the US regions.
+```
+module "security_hub" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/security_hub/organization"
+  providers = {
+      aws.organization_management_account = aws.organization_management_account
+      aws.organization_security_account   = aws.organization_security_account
+  }
+  admin_account_id  = module.account_security.id
+  linking_mode      = "SPECIFIED_REGIONS"
+  specified_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
 }
 ```
 
