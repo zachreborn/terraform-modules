@@ -34,6 +34,7 @@ resource "aws_securityhub_organization_configuration" "this" {
 
 # Security Hub Finding Aggregator on the Security Account
 resource "aws_securityhub_finding_aggregator" "this" {
+  provider          = aws.organization_security_account
   depends_on        = [aws_securityhub_organization_configuration.this]
   linking_mode      = var.linking_mode
   specified_regions = var.specified_regions
