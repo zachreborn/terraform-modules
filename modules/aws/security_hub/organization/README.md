@@ -63,6 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example enables security hub, delegates an admin account from the organization management, and enables fll region aggregation of information.
 ```
 module "security_hub" {
   source    = "github.com/zachreborn/terraform-modules//modules/aws/security_hub/organization"
