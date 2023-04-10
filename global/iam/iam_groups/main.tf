@@ -46,15 +46,6 @@ resource "aws_iam_group_policy_attachment" "readonly_mfa" {
   policy_arn = aws_iam_policy.mfa_required.arn
 }
 
-resource "aws_iam_group" "sms_connector" {
-  name = var.sms_connector_group_name
-}
-
-resource "aws_iam_group_policy_attachment" "sms_connector_policy" {
-  group      = aws_iam_group.sms_connector.name
-  policy_arn = var.sms_connector_policy_arn
-}
-
 resource "aws_iam_group" "system_admins" {
   name = var.system_admins_group_name
 }
