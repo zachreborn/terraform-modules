@@ -2,23 +2,35 @@ variable "apply_immediately" {
   type        = string
   description = "(Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default isfalse."
   default     = false
+  validation {
+    condition     = can(regex("^(true|false)$", var.apply_immediately))
+    error_message = "The value must be true or false."
+  }
 }
 
 variable "auto_minor_version_upgrade" {
   type        = string
   description = "(Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default true."
   default     = true
+  validation {
+    condition     = can(regex("^(true|false)$", var.auto_minor_version_upgrade))
+    error_message = "The value must be true or false."
+  }
 }
 
 variable "availability_zone" {
   type        = string
   description = "(Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See docs about the details."
-  default     = ""
+  default     = null
 }
 
 variable "number" {
-  type        = string
+  type        = number
   description = "The number of resources to create"
+  validation {
+    condition     = var.number > 0
+    error_message = "The number of resources must be greater than 0."
+  }
 }
 
 variable "cluster_identifier" {
@@ -39,19 +51,19 @@ variable "db_parameter_group_name" {
 variable "engine" {
   type        = string
   description = "(Optional) The name of the database engine to be used for the RDS instance. Defaults to aurora. Valid Values: aurora, aurora-mysql, aurora-postgresql. For information on the difference between the available Aurora MySQL engines see Comparison between Aurora MySQL 1 and Aurora MySQL 2 in the Amazon RDS User Guide."
-  default     = ""
+  default     = null
 }
 
 variable "engine_version" {
   type        = string
   description = "(Optional) The database engine version."
-  default     = ""
+  default     = null
 }
 
 variable "identifier" {
   type        = string
   description = "(Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier."
-  default     = ""
+  default     = null
 }
 
 variable "instance_class" {
@@ -60,31 +72,39 @@ variable "instance_class" {
 }
 
 variable "monitoring_interval" {
-  type        = string
+  type        = number
   description = "(Optional) The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60."
   default     = 0
+  validation {
+    condition     = can(regex("^(0|1|5|10|15|30|60)$", var.monitoring_interval))
+    error_message = "The value must be 0, 1, 5, 10, 15, 30, 60."
+  }
 }
 
 variable "monitoring_role_arn" {
   type        = string
   description = "(Optional) The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the AWS Documentation what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances."
-  default     = ""
+  default     = null
 }
 
 variable "performance_insights_enabled" {
   type        = string
   description = "(Optional) Specifies whether Performance Insights is enabled or not."
   default     = true
+  validation {
+    condition     = can(regex("^(true|false)$", var.performance_insights_enabled))
+    error_message = "The value must be true or false."
+  }
 }
 
 variable "performance_insights_kms_key_id" {
   type        = string
   description = "(Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying performance_insights_kms_key_id, performance_insights_enabled needs to be set to true."
-  default     = ""
+  default     = null
 }
 
 variable "promotion_tier" {
-  type        = string
+  type        = number
   description = "(Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer."
   default     = 0
 }
@@ -93,10 +113,16 @@ variable "publicly_accessible" {
   type        = string
   description = "(Optional) Bool to control if instance is publicly accessible. Default false. See the documentation on Creating DB Instances for more details on controlling this property."
   default     = false
+  validation {
+    condition     = can(regex("^(true|false)$", var.publicly_accessible))
+    error_message = "The value must be true or false."
+  }
 }
 
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the instance."
-  default     = {}
+  default = {
+    terraform = "true"
+  }
 }
