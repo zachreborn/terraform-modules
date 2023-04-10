@@ -122,7 +122,7 @@ variable "publicly_accessible" {
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the instance."
-  default     = {
+  default = {
     terraform = "true"
   }
 }
