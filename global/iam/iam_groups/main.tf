@@ -1,8 +1,8 @@
 ###########################
 # Data Sources
 ###########################
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
+# data "aws_caller_identity" "current" {}
+# data "aws_region" "current" {}
 
 ###########################
 # IAM Policies
@@ -31,7 +31,6 @@ resource "aws_iam_group_policy_attachment" "powerusers_mfa" {
   policy_arn = aws_iam_policy.mfa_required.arn
 }
 
-#tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_group" "billing" {
   name = var.billing_group_name
 }
