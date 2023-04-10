@@ -1,3 +1,9 @@
+resource "aws_iam_policy" "mfa_required" {
+  name        = var.mfa_required_policy_name
+  description = "Allows users to manage their own MFA settings"
+  policy      = file("../iam_policies/mfa_required/mfa_required_policy.json")
+}
+
 resource "aws_iam_group" "powerusers" {
   name = var.powerusers_group_name
 }
@@ -9,7 +15,7 @@ resource "aws_iam_group_policy_attachment" "powerusers" {
 
 resource "aws_iam_group_policy_attachment" "powerusers_mfa" {
   group      = aws_iam_group.powerusers.name
-  policy_arn = var.mfa_policy_arn
+  policy_arn = aws_iam_policy.mfa_required.arn
 }
 
 resource "aws_iam_group" "billing" {
@@ -23,7 +29,7 @@ resource "aws_iam_group_policy_attachment" "billing" {
 
 resource "aws_iam_group_policy_attachment" "billing_mfa" {
   group      = aws_iam_group.billing.name
-  policy_arn = var.mfa_policy_arn
+  policy_arn = aws_iam_policy.mfa_required.arn
 }
 
 resource "aws_iam_group" "readonly" {
@@ -37,7 +43,7 @@ resource "aws_iam_group_policy_attachment" "readonly" {
 
 resource "aws_iam_group_policy_attachment" "readonly_mfa" {
   group      = aws_iam_group.readonly.name
-  policy_arn = var.mfa_policy_arn
+  policy_arn = aws_iam_policy.mfa_required.arn
 }
 
 resource "aws_iam_group" "sms_connector" {
@@ -57,7 +63,7 @@ resource "aws_iam_policy" "system_admins_policy" {
   description = var.system_admins_description
   name        = var.system_admins_name
   path        = var.system_admins_path
-  policy      = file("${path.module}/iam_policies/system_admins/system-admins-policy.json")
+  policy      = file("../iam_policies/system_admins/system-admins-policy.json")
 }
 
 resource "aws_iam_group_policy_attachment" "system_admins" {
@@ -67,5 +73,5 @@ resource "aws_iam_group_policy_attachment" "system_admins" {
 
 resource "aws_iam_group_policy_attachment" "system_admins_mfa" {
   group      = aws_iam_group.system_admins.name
-  policy_arn = var.mfa_policy_arn
+  policy_arn = aws_iam_policy.mfa_required.arn
 }

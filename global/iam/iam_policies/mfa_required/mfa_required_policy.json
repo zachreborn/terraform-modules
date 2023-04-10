@@ -10,7 +10,7 @@
                 "iam:ListVirtualMFADevices"
             ],
             "Resource": "*"
-        },       
+        },
         {
             "Sid": "AllowManageOwnPasswords",
             "Effect": "Allow",
