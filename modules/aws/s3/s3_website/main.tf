@@ -8,6 +8,8 @@ terraform {
   }
 }
 
+# Public website S3 bucket requires public access
+#tfsec:ignore:aws-s3-specify-public-access-block
 resource "aws_s3_bucket" "this" {
   bucket = var.bucket
   tags   = var.tags

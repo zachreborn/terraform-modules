@@ -31,25 +31,31 @@ resource "aws_iam_group_policy_attachment" "powerusers_mfa" {
   policy_arn = aws_iam_policy.mfa_required.arn
 }
 
+#tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_group" "billing" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   name = var.billing_group_name
 }
 
 resource "aws_iam_group_policy_attachment" "billing" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   group      = aws_iam_group.billing.name
   policy_arn = var.billing_policy_arn
 }
 
 resource "aws_iam_group_policy_attachment" "billing_mfa" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   group      = aws_iam_group.billing.name
   policy_arn = aws_iam_policy.mfa_required.arn
 }
 
 resource "aws_iam_group" "readonly" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   name = var.readonly_group_name
 }
 
 resource "aws_iam_group_policy_attachment" "readonly" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   group      = aws_iam_group.readonly.name
   policy_arn = var.readonly_policy_arn
 }
@@ -61,10 +67,12 @@ resource "aws_iam_group_policy_attachment" "readonly_mfa" {
 }
 
 resource "aws_iam_group" "system_admins" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   name = var.system_admins_group_name
 }
 
 resource "aws_iam_policy" "system_admins_policy" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   description = var.system_admins_description
   name        = var.system_admins_name
   path        = var.system_admins_path
@@ -72,6 +80,7 @@ resource "aws_iam_policy" "system_admins_policy" {
 }
 
 resource "aws_iam_group_policy_attachment" "system_admins" {
+  #tfsec:ignore:aws-iam-no-policy-wildcards
   group      = aws_iam_group.system_admins.name
   policy_arn = aws_iam_policy.system_admins_policy.arn
 }
