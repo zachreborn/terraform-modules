@@ -65,26 +65,54 @@
 ### Simple Example
 ```
 module "client_prod_security" {
-    source           = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
-    
-    identifier        = "github-repo/client_prod_security"
-    name              = "client_prod_security"
-    oauth_token_id    = var.github_oauth_token_id
-    organization      = var.organization
-    terraform_version = "~>1.3.0"
-    permission_map    = var.workspace_permissions_mapping
+  source           = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
+  
+  identifier        = "github-repo/client_prod_security"
+  name              = "client_prod_security"
+  oauth_token_id    = var.github_oauth_token_id
+  organization      = var.organization
+  terraform_version = "~>1.4.0"
+  permission_map    = var.workspace_permissions_mapping
 }
 
 variable "thinkstack_workspace_permissions_mapping" {
-    description = "Map of permissions to set with each terraform workspace."
-    type        = map
-    default     = {
-        "all_admin"      = {"id" = "team-fjkdlsafjska2411", "access" = "admin"}
-        "cloud_read"     = {"id" = "team-fndsabfak2010144", "access" = "read"}
-        "cloud_write"    = {"id" = "team-fdjkslajflkn4591", "access" = "write"}
-        "security_read"  = {"id" = "team-fdsahfkdsnalka40", "access" = "read"}
-        "security_write" = {"id" = "team-fjdkslajfdsa0140", "access" = "write"}
-    }
+  description = "Map of permissions to set with each terraform workspace."
+  type        = map
+  default     = {
+      "all_admin"      = {"id" = "team-fjkdlsafjska2411", "access" = "admin"}
+      "cloud_read"     = {"id" = "team-fndsabfak2010144", "access" = "read"}
+      "cloud_write"    = {"id" = "team-fdjkslajflkn4591", "access" = "write"}
+      "security_read"  = {"id" = "team-fdsahfkdsnalka40", "access" = "read"}
+      "security_write" = {"id" = "team-fjdkslajfdsa0140", "access" = "write"}
+  }
+}
+```
+
+### Dyanmic Credentials with AWS Example
+This example uses an OIDC Identity Provider in AWS, an IAM role, and STS Assume functions to generate dynamic credentials
+```
+module "client_prod_security" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
+  enable_aws                 = true
+  enable_dynamic_credentials = true
+  identifier                 = "github-repo/client_prod_security"
+  name                       = "client_prod_security"
+  oauth_token_id             = var.github_oauth_token_id
+  organization               = var.organization
+  terraform_version          = "~>1.4.0"
+  permission_map             = var.workspace_permissions_mapping
+}
+
+variable "thinkstack_workspace_permissions_mapping" {
+  description = "Map of permissions to set with each terraform workspace."
+  type        = map
+  default     = {
+      "all_admin"      = {"id" = "team-fjkdlsafjska2411", "access" = "admin"}
+      "cloud_read"     = {"id" = "team-fndsabfak2010144", "access" = "read"}
+      "cloud_write"    = {"id" = "team-fdjkslajflkn4591", "access" = "write"}
+      "security_read"  = {"id" = "team-fdsahfkdsnalka40", "access" = "read"}
+      "security_write" = {"id" = "team-fjdkslajfdsa0140", "access" = "write"}
+  }
 }
 ```
 
