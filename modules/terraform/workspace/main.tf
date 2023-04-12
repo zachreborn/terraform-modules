@@ -59,21 +59,17 @@ resource "tfe_team_access" "this" {
 resource "tfe_variable" "aws_provider_auth" {
   count        = var.enable_dynamic_credentials ? 1 : 0
   workspace_id = tfe_workspace.this.id
-
+  category     = "env"
+  description  = "Enable dynamic authentication with AWS identity provider."
   key          = "TFC_AWS_PROVIDER_AUTH"
   value        = "true"
-  category     = "env"
-
-  description  = "Enable the Workload Identity integration for AWS."
 }
 
-resource "tfe_variable" "tfc_aws_role_arn" {
+resource "tfe_variable" "aws_role_arn" {
   count        = var.enable_dynamic_credentials ? 1 : 0
   workspace_id = tfe_workspace.this.id
-
-  key      = "TFC_AWS_RUN_ROLE_ARN"
-  value    = aws_iam_role.tfc_role.arn
-  category = "env"
-
-  description = "The AWS role arn runs will use to authenticate."
+  category     = "env"
+  description  = "The AWS role arn the workspace will use to authenticate."
+  key          = "TFC_AWS_RUN_ROLE_ARN"
+  value        = var.dynamic_role_arn
 }

@@ -194,3 +194,9 @@ variable "enable_dynamic_credentials" {
     error_message = "enable_dynamic_credentials must be true or false."
   }
 }
+
+variable "dynamic_role_arn" {
+  type        = string
+  description = "(Optional) The ARN of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable_dynamic_credentials is true."
+  default     = null
+}
