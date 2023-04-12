@@ -222,7 +222,7 @@ variable "terraform_cloud_aws_audience" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) A map of tags to assign to the workspace."
-  default     = {
+  default = {
     terraform = "true"
   }
 }

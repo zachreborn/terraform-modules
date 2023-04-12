@@ -106,7 +106,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
 | <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
+| <a name="provider_tls"></a> [tls](#provider\_tls) | n/a |
 
 ## Modules
 
@@ -116,10 +118,14 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [aws_iam_openid_connect_provider.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
+| [aws_iam_role.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [tfe_team_access.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/team_access) | resource |
 | [tfe_variable.tfc_aws_provider_auth](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
-| [tfe_variable.tfc_aws_role_arn](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
+| [tfe_variable.tfc_aws_run_role_arn](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_workspace.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/workspace) | resource |
+| [tls_certificate.terraform_cloud_certificate](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
 
 ## Inputs
 
@@ -132,10 +138,12 @@ No modules.
 | <a name="input_branch"></a> [branch](#input\_branch) | (Optional) The repository branch that Terraform will execute from. This defaults to the repository's default branch (e.g. main). | `string` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) A description for the workspace. | `string` | `null` | no |
 | <a name="input_dynamic_role_arn"></a> [dynamic\_role\_arn](#input\_dynamic\_role\_arn) | (Optional) The ARN of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable\_dynamic\_credentials is true. | `string` | `null` | no |
+| <a name="input_enable_aws"></a> [enable\_aws](#input\_enable\_aws) | (Optional) Whether to enable AWS as an identity provider for this workspace. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enable_dynamic_credentials"></a> [enable\_dynamic\_credentials](#input\_enable\_dynamic\_credentials) | (Optional) Whether to enable dynamic credentials for this workspace. Defaults to false. | `bool` | `false` | no |
 | <a name="input_execution_mode"></a> [execution\_mode](#input\_execution\_mode) | (Optional) Which execution mode to use. Using Terraform Cloud, valid values are remote, local or agent. Defaults to remote. Using Terraform Enterprise, only remote and local execution modes are valid. When set to local, the workspace will be used for state storage only. This value must not be provided if operations is provided. | `string` | `"remote"` | no |
 | <a name="input_file_triggers_enabled"></a> [file\_triggers\_enabled](#input\_file\_triggers\_enabled) | (Optional) Whether to filter runs based on the changed files in a VCS push. Defaults to false. If enabled, the working directory and trigger prefixes describe a set of paths which must contain changes for a VCS push to trigger a run. If disabled, any push will trigger a run. | `bool` | `false` | no |
 | <a name="input_global_remote_state"></a> [global\_remote\_state](#input\_global\_remote\_state) | (Optional) Whether the workspace allows all workspaces in the organization to access its state data during runs. If false, then only specifically approved workspaces can access its state (remote\_state\_consumer\_ids). | `bool` | `false` | no |
+| <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | (Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable\_aws is true. | `string` | `"terraform_cloud"` | no |
 | <a name="input_identifier"></a> [identifier](#input\_identifier) | (Required) A reference to your VCS repository in the format <organization>/<repository> where <organization> and <repository> refer to the organization and repository in your VCS provider. The format for Azure DevOps is //\_git/. | `string` | n/a | yes |
 | <a name="input_ingress_submodules"></a> [ingress\_submodules](#input\_ingress\_submodules) | (Optional) Whether submodules should be fetched when cloning the VCS repository. Defaults to false. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Name of the workspace. | `string` | n/a | yes |
@@ -148,6 +156,11 @@ No modules.
 | <a name="input_ssh_key_id"></a> [ssh\_key\_id](#input\_ssh\_key\_id) | (Optional) The ID of an SSH key to assign to the workspace. | `string` | `null` | no |
 | <a name="input_structured_run_output_enabled"></a> [structured\_run\_output\_enabled](#input\_structured\_run\_output\_enabled) | (Optional) Whether this workspace should show output from Terraform runs using the enhanced UI when available. Defaults to true. Setting this to false ensures that all runs in this workspace will display their output as text logs. | `bool` | `true` | no |
 | <a name="input_tag_names"></a> [tag\_names](#input\_tag\_names) | (Optional) A list of tag names for this workspace. Note that tags must only contain letters, numbers or colons. | `list(string)` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the workspace. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_terraform_cloud_aws_audience"></a> [terraform\_cloud\_aws\_audience](#input\_terraform\_cloud\_aws\_audience) | The audience value to use in the terraform run identity tokens | `string` | `"aws.workload.identity"` | no |
+| <a name="input_terraform_cloud_hostname"></a> [terraform\_cloud\_hostname](#input\_terraform\_cloud\_hostname) | The hostname of the Terraform Cloud or Terraform Enterprise environment you'd like to use with the identity provider | `string` | `"app.terraform.io"` | no |
+| <a name="input_terraform_cloud_project_name"></a> [terraform\_cloud\_project\_name](#input\_terraform\_cloud\_project\_name) | (Optional) The name of the Terraform Cloud project which the workspace is in. This is only required if enable\_aws is true. | `string` | `"Default Project"` | no |
+| <a name="input_terraform_role_policy_arn"></a> [terraform\_role\_policy\_arn](#input\_terraform\_role\_policy\_arn) | AWS IAM AdministratorAccess policy arn | `string` | `"arn:aws:iam::aws:policy/AdministratorAccess"` | no |
 | <a name="input_terraform_version"></a> [terraform\_version](#input\_terraform\_version) | (Optional) The version of Terraform to use for this workspace. This can be either an exact version or a version constraint (like ~> 1.0.0); if you specify a constraint, the workspace will always use the newest release that meets that constraint. Defaults to the latest available version. | `string` | `"~>1.4.0"` | no |
 | <a name="input_trigger_prefixes"></a> [trigger\_prefixes](#input\_trigger\_prefixes) | (Optional) List of repository-root-relative paths which describe all locations to be tracked for changes. | `list(string)` | `null` | no |
 | <a name="input_working_directory"></a> [working\_directory](#input\_working\_directory) | (Optional) A relative path that Terraform will execute within. Defaults to the root of your repository. | `string` | `null` | no |
