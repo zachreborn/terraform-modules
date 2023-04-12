@@ -93,7 +93,7 @@ resource "aws_iam_openid_connect_provider" "terraform_cloud" {
     var.terraform_cloud_aws_audience
   ]
   thumbprint_list = [
-    data.tls_certificate.terraform_cloud_certificate.sha1_fingerprint
+    data.tls_certificate.terraform_cloud_certificate[0].sha1_fingerprint
   ]
 }
 
