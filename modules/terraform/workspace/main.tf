@@ -106,7 +106,7 @@ resource "aws_iam_role" "terraform_cloud" {
       {
         "Effect" = "Allow",
         "Principal" = {
-          "Federated" = "${aws_iam_openid_connect_provider.terraform_cloud.arn}"
+          "Federated" = "${aws_iam_openid_connect_provider.terraform_cloud[0].arn}"
         },
         "Action" = "sts:AssumeRoleWithWebIdentity",
         "Condition" = {
