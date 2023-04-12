@@ -93,7 +93,6 @@ This example uses an OIDC Identity Provider in AWS, an IAM role, and STS Assume 
 ```
 module "client_prod_security" {
   source                     = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
-  enable_aws                 = true
   enable_dynamic_credentials = true
   identifier                 = "github-repo/client_prod_security"
   name                       = "client_prod_security"
