@@ -213,6 +213,7 @@ variable "dynamic_role_arn" {
 ##############################
 # AWS Identity Provider Variables
 ##############################
+/* Commented out due to strategy with bootstrapping the provider
 variable "terraform_cloud_aws_audience" {
   type        = string
   default     = "aws.workload.identity"
@@ -254,3 +255,4 @@ variable "terraform_role_policy_arn" {
   description = "AWS IAM AdministratorAccess policy arn"
   default     = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+ */
