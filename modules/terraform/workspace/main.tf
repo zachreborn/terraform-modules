@@ -124,6 +124,6 @@ resource "aws_iam_role" "terraform_cloud" {
 
 resource "aws_iam_role_policy_attachment" "terraform_cloud" {
   count      = var.enable_aws ? 1 : 0
-  role       = aws_iam_role.terraform_cloud.name
+  role       = aws_iam_role.terraform_cloud[0].name
   policy_arn = var.terraform_role_policy_arn
 }
