@@ -9,6 +9,13 @@ terraform {
 }
 
 ##############################
+# Data Sources
+##############################
+data "tls_certificate" "terraform_cloud_certificate" {
+  url = "https://${var.tfc_hostname}"
+}
+
+##############################
 # Terraform Workspace
 ##############################
 
@@ -73,3 +80,4 @@ resource "tfe_variable" "tfc_aws_role_arn" {
   key          = "TFC_AWS_RUN_ROLE_ARN"
   value        = var.dynamic_role_arn
 }
+
