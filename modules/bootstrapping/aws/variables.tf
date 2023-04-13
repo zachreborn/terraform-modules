@@ -44,10 +44,11 @@ variable "terraform_cloud_project_name" {
 
 variable "terraform_cloud_workspace_name" {
   type        = string
-  description = "(Required) The name of the Terraform Cloud workspace which will use OIDC."
+  description = "(Optional) The name of the Terraform Cloud workspace which will use OIDC."
+  default     = "*" # This is a wildcard to allow all workspaces to use this role
   validation {
-    condition     = can(regex("^[a-zA-Z0-9-_]{0,255}$", var.terraform_workspace_name))
-    error_message = "The workspace name must be 1-256 characters long, start with a letter or number, and may only contain letters, numbers, underscores, and dashes."
+    condition     = can(regex("^[a-zA-Z0-9-_*]{0,255}$", var.terraform_workspace_name))
+    error_message = "The workspace name must be 1-256 characters long, and may only contain letters, numbers, asterisks, underscores, and dashes."
   }
 }
 
