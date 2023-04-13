@@ -28,7 +28,7 @@
 
 <h3 align="center">Bootstrapping for AWS</h3>
   <p align="center">
-    This module is to be used for bootstrapping a new AWS account for use with Terraform Cloud or Terraform Enterprise. It enabled dynamic credentials which are single use and more secure. Should be utilized with modules/terraform/workspace and setting 'enable_dynamic_credentials = true'.
+    This module is to be used for bootstrapping a new AWS account for use with Terraform Cloud or Terraform Enterprise. It helps to solve the issue where you would normally need to set up an AWS IAM user, access ID, and secret key in terraform. Instead, this module enables dynamic credentials which are single use and more secure. Should be utilized with modules/terraform/workspace and setting 'enable_dynamic_credentials = true'.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,19 +62,69 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-Steps
+This module should be used to bootstrap an AWS account for Terraform Cloud or Terraform Enterprise. The following is an overview of the steps required to accomplish this.
+### Steps
 1. Download terraform cli
-2. Generate temporary credentials for the AWS account
-3. Add the credentials as environment variables to your CLI
-4. Create the AWS OIDC Identity Provider
-5. Set the terraform cloud workspace variables to enable dynamic credentials
-### Simple Example
 ```
-module test {
-  source = 
-
-  variable = 
+brew install terraform
+```
+2. Generate temporary credentials for the AWS account.
+3. Copy the credentials as environment variables to your CLI
+```
+export AWS_ACCESS_KEY_ID="xxxxxx"
+export AWS_SECRET_ACCESS_KEY="yyyyyy"
+export AWS_SESSION_TOKEN="zzzzzz"
+```
+4. Run terraform init
+```
+terraform init
+```
+5. Run terraform plan
+```
+terraform plan
+```
+6. Run terraform apply
+```
+terraform apply
+```
+7. Update the terraform workspaces variables to enable dynamic authentication
+```
+module "workspace" {
+  ...
+  enable_dynamic_auth = true
+  ...
 }
+```
+8. Cleanup
+```
+sudo rm -r .terraform
+rm .terraform.lock.hcl
+rm *.tfstate
+```
+
+
+### Terraform Code Example
+This example allows any project OU and any workspace name to leverage this OIDC identity provider
+```
+################################################################
+# AWS Setup
+################################################################
+
+provider "aws" {
+  region     = "us-east-1"
+}
+
+################################################################
+# Bootstrapping
+################################################################
+
+module "bootstrap_aws" {
+  source                         = "github.com/zachreborn/terraform-modules//modules/bootstrapping/aws"
+  terraform_cloud_organization   = "your-tfe-org-name"
+  terraform_cloud_project_name   = "*"
+  terraform_cloud_workspace_name = "*"
+}
+
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
