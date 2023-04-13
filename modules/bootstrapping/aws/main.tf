@@ -21,6 +21,7 @@ resource "aws_iam_openid_connect_provider" "terraform_cloud" {
 
 resource "aws_iam_role" "terraform_cloud" {
   name = var.iam_role_name
+  tags = var.tags
   assume_role_policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
