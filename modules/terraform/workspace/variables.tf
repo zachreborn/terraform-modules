@@ -195,8 +195,8 @@ variable "enable_dynamic_auth" {
   }
 }
 
-variable "dynamic_role_arn" {
+variable "dynamic_auth_role_arn" {
   type        = string
-  description = "(Optional) The ARN of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable_dynamic_credentials is true."
+  description = "(Optional) The ARN of the IAM role to assume when generating dynamic authentication for this workspace. This is only required if enable_dynamic_credentials is true."
   default     = null
 }

@@ -71,5 +71,5 @@ resource "tfe_variable" "tfc_aws_run_role_arn" {
   category     = "env"
   description  = "The AWS role arn the workspace will use to authenticate."
   key          = "TFC_AWS_RUN_ROLE_ARN"
-  value        = var.dynamic_role_arn
+  value        = var.dynamic_auth_role_arn
 }
