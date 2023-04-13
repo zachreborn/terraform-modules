@@ -8,7 +8,6 @@ data "tls_certificate" "terraform_cloud_certificate" {
 ##############################
 # AWS Identity Provider
 ##############################
-# Used if enable_aws is true
 resource "aws_iam_openid_connect_provider" "terraform_cloud" {
   url  = data.tls_certificate.terraform_cloud_certificate.url
   tags = var.tags
