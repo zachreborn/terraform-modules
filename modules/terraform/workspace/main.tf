@@ -11,9 +11,9 @@ terraform {
 ##############################
 # Data Sources
 ##############################
-data "tls_certificate" "terraform_cloud_certificate" {
+/* data "tls_certificate" "terraform_cloud_certificate" {
   url = "https://${var.terraform_cloud_hostname}"
-}
+} */
 
 ##############################
 # Terraform Workspace
