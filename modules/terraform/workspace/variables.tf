@@ -1,11 +1,11 @@
 ##############################
 # Data Source Variables
 ##############################
-variable "terraform_cloud_hostname" {
+/* variable "terraform_cloud_hostname" {
   type        = string
   description = "The hostname of the Terraform Cloud or Terraform Enterprise environment you'd like to use with the identity provider"
   default     = "app.terraform.io"
-}
+} */
 
 ##############################
 # Terraform Workspace Variables
