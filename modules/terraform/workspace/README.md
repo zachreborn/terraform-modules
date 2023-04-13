@@ -88,17 +88,17 @@ variable "thinkstack_workspace_permissions_mapping" {
 ```
 
 ### Dyanmic Credentials with AWS Example
-This example uses an OIDC Identity Provider in AWS, an IAM role, and STS Assume functions to generate dynamic credentials
+This example uses an OIDC Identity Provider in AWS, an IAM role, and STS Assume functions to generate dynamic authentication.
 ```
 module "client_prod_security" {
-  source                     = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
-  enable_dynamic_credentials = true
-  identifier                 = "github-repo/client_prod_security"
-  name                       = "client_prod_security"
-  oauth_token_id             = var.github_oauth_token_id
-  organization               = var.organization
-  permission_map             = var.workspace_permissions_mapping
-  terraform_version          = "~>1.4.0"
+  source              = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
+  enable_dynamic_auth = true
+  identifier          = "github-repo/client_prod_security"
+  name                = "client_prod_security"
+  oauth_token_id      = var.github_oauth_token_id
+  organization        = var.organization
+  permission_map      = var.workspace_permissions_mapping
+  terraform_version   = "~>1.4.0"
 }
 
 variable "thinkstack_workspace_permissions_mapping" {
