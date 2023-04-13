@@ -35,7 +35,7 @@ resource "aws_iam_role" "terraform_cloud" {
             "${var.terraform_cloud_hostname}:aud" : "${var.terraform_cloud_aws_audience}"
           },
           "StringLike" = {
-            "${var.terraform_cloud_hostname}:sub" : "organization:${var.terraform_cloud_organization}:project:${var.terraform_cloud_project_name}:workspace:${var.terraform_workspace_name}:run_phase:*"
+            "${var.terraform_cloud_hostname}:sub" : "organization:${var.terraform_cloud_organization}:project:${var.terraform_cloud_project_name}:workspace:${var.terraform_cloud_workspace_name}:run_phase:*"
           }
         }
       }
