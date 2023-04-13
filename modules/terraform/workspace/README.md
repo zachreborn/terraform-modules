@@ -66,13 +66,12 @@
 ```
 module "client_prod_security" {
   source           = "github.com/zachreborn/terraform-modules//modules/terraform/workspace"
-  
   identifier        = "github-repo/client_prod_security"
   name              = "client_prod_security"
   oauth_token_id    = var.github_oauth_token_id
   organization      = var.organization
-  terraform_version = "~>1.4.0"
   permission_map    = var.workspace_permissions_mapping
+  terraform_version = "~>1.4.0"
 }
 
 variable "thinkstack_workspace_permissions_mapping" {
@@ -98,8 +97,8 @@ module "client_prod_security" {
   name                       = "client_prod_security"
   oauth_token_id             = var.github_oauth_token_id
   organization               = var.organization
-  terraform_version          = "~>1.4.0"
   permission_map             = var.workspace_permissions_mapping
+  terraform_version          = "~>1.4.0"
 }
 
 variable "thinkstack_workspace_permissions_mapping" {
