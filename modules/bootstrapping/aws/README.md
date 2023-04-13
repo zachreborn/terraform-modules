@@ -124,7 +124,6 @@ module "bootstrap_aws" {
   terraform_cloud_project_name   = "*"
   terraform_cloud_workspace_name = "*"
 }
-
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
