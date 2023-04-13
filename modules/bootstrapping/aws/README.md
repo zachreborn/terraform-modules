@@ -176,7 +176,9 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The ARN of the IAM role for 'terraform\_cloud' that Terraform Cloud/Enterprise will assume. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
