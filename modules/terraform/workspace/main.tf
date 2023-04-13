@@ -85,7 +85,7 @@ resource "tfe_variable" "tfc_aws_run_role_arn" {
 # AWS Identity Provider
 ##############################
 # Used if enable_aws is true
-/* Commented out due to strategy with bootstrapping the provider
+/* Commented out due to strategy change with bootstrapping the provider
 resource "aws_iam_openid_connect_provider" "terraform_cloud" {
   count = var.enable_aws ? 1 : 0
   url   = data.tls_certificate.terraform_cloud_certificate.url
