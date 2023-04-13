@@ -62,6 +62,12 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+Steps
+1. Download terraform cli
+2. Generate temporary credentials for the AWS account
+3. Add the credentials as environment variables to your CLI
+4. Create the AWS OIDC Identity Provider
+5. Set the terraform cloud workspace variables to enable dynamic credentials
 ### Simple Example
 ```
 module test {
