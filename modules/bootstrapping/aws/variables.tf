@@ -24,16 +24,6 @@ variable "tags" {
   }
 }
 
-variable "enable_aws" {
-  type        = bool
-  description = "(Optional) Whether to enable AWS as an identity provider for this workspace. Defaults to false."
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_aws))
-    error_message = "enable_aws must be true or false."
-  }
-}
-
 variable "iam_role_name" {
   type        = string
   description = "(Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable_aws is true."
