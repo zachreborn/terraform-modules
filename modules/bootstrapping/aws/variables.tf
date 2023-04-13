@@ -20,24 +20,39 @@ variable "tags" {
   type        = map(string)
   description = "(Optional) A map of tags to assign to the workspace."
   default = {
-    terraform = "true"
+    environment = "prod"
+    terraform   = "true"
   }
 }
 
 variable "iam_role_name" {
   type        = string
-  description = "(Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable_aws is true."
+  description = "(Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace."
   default     = "terraform_cloud"
 }
 
 variable "terraform_cloud_project_name" {
   type        = string
-  description = "(Optional) The name of the Terraform Cloud project which the workspace is in. This is only required if enable_aws is true."
+  description = "(Optional) The name of the Terraform Cloud project which the workspace is in."
   default     = "Default Project"
+}
+
+variable "terraform_organization" {
+  type        = string
+  description = "(Required) The name of the Terraform Cloud organization which the workspace is in."
 }
 
 variable "terraform_role_policy_arn" {
   type        = string
   description = "AWS IAM AdministratorAccess policy arn"
   default     = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+variable "terraform_workspace_name" {
+  type        = string
+  description = "(Required) The name of the Terraform Cloud workspace which will use OIDC."
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-_]{0,255}$", var.terraform_workspace_name))
+    error_message = "The workspace name must be 1-256 characters long, start with a letter or number, and may only contain letters, numbers, underscores, and dashes."
+  }
 }
