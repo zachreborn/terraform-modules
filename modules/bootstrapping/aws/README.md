@@ -106,7 +106,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_enable_aws"></a> [enable\_aws](#input\_enable\_aws) | (Optional) Whether to enable AWS as an identity provider for this workspace. Defaults to false. | `bool` | `false` | no |
 | <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | (Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. This is only required if enable\_aws is true. | `string` | `"terraform_cloud"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the workspace. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_terraform_cloud_aws_audience"></a> [terraform\_cloud\_aws\_audience](#input\_terraform\_cloud\_aws\_audience) | The audience value to use in the terraform run identity tokens | `string` | `"aws.workload.identity"` | no |
