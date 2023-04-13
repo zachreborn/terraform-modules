@@ -28,7 +28,7 @@ variable "tags" {
 variable "terraform_cloud_aws_audience" {
   type        = string
   default     = "aws.workload.identity"
-  description = "The audience value to use in the terraform run identity tokens"
+  description = "(Optional) The audience value to use in the terraform run identity tokens"
 }
 
 variable "terraform_cloud_organization" {
@@ -53,6 +53,6 @@ variable "terraform_cloud_workspace_name" {
 
 variable "terraform_role_policy_arn" {
   type        = string
-  description = "AWS IAM AdministratorAccess policy arn"
+  description = "(Optional) AWS IAM AdministratorAccess policy arn"
   default     = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
