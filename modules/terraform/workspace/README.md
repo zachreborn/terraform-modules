@@ -87,7 +87,7 @@ variable "thinkstack_workspace_permissions_mapping" {
 }
 ```
 
-### Dyanmic Credentials with AWS Example
+### Dyanmic Authentication with AWS Example
 This example uses an OIDC Identity Provider in AWS, an IAM role, and STS Assume functions to generate dynamic authentication.
 ```
 module "client_prod_security" {
