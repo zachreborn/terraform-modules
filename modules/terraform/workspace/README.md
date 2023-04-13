@@ -134,7 +134,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
-| <a name="provider_tls"></a> [tls](#provider\_tls) | n/a |
 
 ## Modules
 
@@ -148,7 +147,6 @@ No modules.
 | [tfe_variable.tfc_aws_provider_auth](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_variable.tfc_aws_run_role_arn](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_workspace.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/workspace) | resource |
-| [tls_certificate.terraform_cloud_certificate](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
 
 ## Inputs
 
