@@ -118,7 +118,7 @@ No modules.
 | <a name="input_terraform_cloud_hostname"></a> [terraform\_cloud\_hostname](#input\_terraform\_cloud\_hostname) | The hostname of the Terraform Cloud or Terraform Enterprise environment you'd like to use with the identity provider | `string` | `"app.terraform.io"` | no |
 | <a name="input_terraform_cloud_organization"></a> [terraform\_cloud\_organization](#input\_terraform\_cloud\_organization) | (Required) The name of the Terraform Cloud organization which the workspace is in. | `string` | n/a | yes |
 | <a name="input_terraform_cloud_project_name"></a> [terraform\_cloud\_project\_name](#input\_terraform\_cloud\_project\_name) | (Optional) The name of the Terraform Cloud project which the workspace is in. | `string` | `"Default Project"` | no |
-| <a name="input_terraform_cloud_workspace_name"></a> [terraform\_cloud\_workspace\_name](#input\_terraform\_cloud\_workspace\_name) | (Required) The name of the Terraform Cloud workspace which will use OIDC. | `string` | n/a | yes |
+| <a name="input_terraform_cloud_workspace_name"></a> [terraform\_cloud\_workspace\_name](#input\_terraform\_cloud\_workspace\_name) | (Optional) The name of the Terraform Cloud workspace which will use OIDC. | `string` | `"*"` | no |
 | <a name="input_terraform_role_policy_arn"></a> [terraform\_role\_policy\_arn](#input\_terraform\_role\_policy\_arn) | (Optional) AWS IAM AdministratorAccess policy arn | `string` | `"arn:aws:iam::aws:policy/AdministratorAccess"` | no |
 
 ## Outputs
