@@ -185,13 +185,13 @@ variable "permission_map" {
 # Variables Variables
 ##############################
 
-variable "enable_dynamic_credentials" {
+variable "enable_dynamic_auth" {
   type        = bool
-  description = "(Optional) Whether to enable dynamic credentials for this workspace. Defaults to false."
+  description = "(Optional) Whether to enable dynamic authentication for this workspace. Defaults to false."
   default     = false
   validation {
-    condition     = can(regex("true|false", var.enable_dynamic_credentials))
-    error_message = "enable_dynamic_credentials must be true or false."
+    condition     = can(regex("true|false", var.enable_dynamic_auth))
+    error_message = "enable_dynamic_auth must be true or false."
   }
 }
 

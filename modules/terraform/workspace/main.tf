@@ -57,7 +57,7 @@ resource "tfe_team_access" "this" {
 # Used if enable_dynamic_credentials is true
 # This is used by the Terraform Cloud workspace to authentication dynamically with the provider and should be enabled for best practice authentication
 resource "tfe_variable" "tfc_aws_provider_auth" {
-  count        = var.enable_dynamic_credentials ? 1 : 0
+  count        = var.enable_dynamic_auth ? 1 : 0
   workspace_id = tfe_workspace.this.id
   category     = "env"
   description  = "Enable dynamic authentication with AWS identity provider."
@@ -66,7 +66,7 @@ resource "tfe_variable" "tfc_aws_provider_auth" {
 }
 
 resource "tfe_variable" "tfc_aws_run_role_arn" {
-  count        = var.enable_dynamic_credentials ? 1 : 0
+  count        = var.enable_dynamic_auth ? 1 : 0
   workspace_id = tfe_workspace.this.id
   category     = "env"
   description  = "The AWS role arn the workspace will use to authenticate."
