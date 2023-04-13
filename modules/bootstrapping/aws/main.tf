@@ -10,8 +10,8 @@ data "tls_certificate" "terraform_cloud_certificate" {
 ##############################
 # Used if enable_aws is true
 resource "aws_iam_openid_connect_provider" "terraform_cloud" {
-  url   = data.tls_certificate.terraform_cloud_certificate.url
-  tags  = var.tags
+  url  = data.tls_certificate.terraform_cloud_certificate.url
+  tags = var.tags
   client_id_list = [
     var.terraform_cloud_aws_audience
   ]
@@ -21,7 +21,7 @@ resource "aws_iam_openid_connect_provider" "terraform_cloud" {
 }
 
 resource "aws_iam_role" "terraform_cloud" {
-  name  = var.iam_role_name
+  name = var.iam_role_name
   assume_role_policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
