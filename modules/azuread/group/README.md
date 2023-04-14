@@ -62,11 +62,32 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+### Simple Example
+```
+module group_simple_example {
+  source           = "github.com/zachreborn/terraform-modules//modules/azuread/group"
+  display_name     = "example"
+  owners           = [admin.objectid]
+  security_enabled = true
+}
+```
+### Microsoft 365 Group Example
+```
+module group_365_example {
+  source           = "github.com/zachreborn/terraform-modules//modules/azuread/group"
+  display_name     = "example"
+  mail_enabled     = true
+  mail_nickname    = "ExampleGroup"
+  owners           = [admin.objectid]
+  security_enabled = true
+  types            = ["Unified"]
+}
+```
 ### Dynamic Membership Group Example
 This configures an Azure AD security group which utilizes dynamic membership rules to manage group membership.
 ```
 module group_app_terraform {
-  source = "github.com/zachreborn/terraform-modules//modules/azuread/group"
+  source           = "github.com/zachreborn/terraform-modules//modules/azuread/group"
   display_name     = "app_terraform"
   owners           = [admin.objectid]
   security_enabled = true
