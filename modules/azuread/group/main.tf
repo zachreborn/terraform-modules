@@ -1,8 +1,12 @@
-############################
-# Data Sources
-############################
-
-data "azuread_client_config" "current" {}
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = ">= 2.36.0"
+    }
+  }
+}
 
 ############################
 # Azure AD Group
