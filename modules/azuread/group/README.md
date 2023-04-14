@@ -63,7 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Dynamic Membership Group Example
-This group utilizes dynamic membership rules to manage group membership.
+This configures an Azure AD security group which utilizes dynamic membership rules to manage group membership.
 ```
 module group_app_terraform {
   source = "github.com/zachreborn/terraform-modules//modules/azuread/group"
