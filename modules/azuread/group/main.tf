@@ -26,10 +26,10 @@ resource "azuread_group" "this" {
   visibility                 = var.visibility
 
   dynamic "dynamic_membership" {
-    for_each = var.dynamic_membership
+    for_each = var.dynamic_membership == null ? [] : [var.dynamic_membership]
     content {
-      enabled = dynamic_membership.value.enabled
-      rule    = dynamic_membership.value.rule
+      enabled = try(dynamic_membership.value.enabled, null)
+      rule    = try(dynamic_membership.value.rule, null)
     }
   }
 }

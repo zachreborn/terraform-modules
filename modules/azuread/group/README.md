@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Azure AD Group Module</h3>
   <p align="center">
-    module_description
+    This module creates and manages Azure AD group resources.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,12 +62,20 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Simple Example
+### Dynamic Membership Group Example
+This group utilizes dynamic membership rules to manage group membership.
 ```
-module test {
-  source = 
+module group_app_terraform {
+  source = "github.com/zachreborn/terraform-modules//modules/azuread/group"
+  display_name     = "app_terraform"
+  owners           = [admin.objectid]
+  security_enabled = true
+  types            = ["DynamicMembership"]
 
-  variable = 
+  dynamic_membership = {
+    enabled = true
+    rule    = "user.department -eq \"DevOps\""
+  }
 }
 ```
 
