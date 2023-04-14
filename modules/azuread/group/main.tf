@@ -17,11 +17,12 @@ resource "azuread_group" "this" {
   hide_from_outlook_clients  = var.hide_from_outlook_clients
   mail_enabled               = var.mail_enabled
   mail_nickname              = var.mail_nickname
+  members                    = var.members
+  owners                     = var.owners
   prevent_duplicate_names    = var.prevent_duplicate_names
   provisioning_options       = var.provisioning_options
   security_enabled           = var.security_enabled
   types                      = var.types
-  owners                     = var.owners
   visibility                 = var.visibility
 
   dynamic "dynamic_membership" {
