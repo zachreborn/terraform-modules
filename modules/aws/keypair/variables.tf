@@ -11,7 +11,7 @@ variable "public_key" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) A mapping of tags to assign to the resource."
-  default     = {
+  default = {
     terraform = "true"
   }
 }
