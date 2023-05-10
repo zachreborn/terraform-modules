@@ -63,7 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Usage
-This generates a keypair that can be used with EC2 instances. You need to provide the public key as a string by copy + pasting the content of the public key into the variable.
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a string.
 ```
 module "keypair" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
