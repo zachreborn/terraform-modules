@@ -62,13 +62,25 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Usage
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a string.
 ```
 module "keypair" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
   
   key_name_prefix = "terraform_keypair_01"
   public_key      = "ssh-rsa AAAAAAAAAAAAA"
+}
+```
+
+### Public Key as a File
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a file pointer. This is useful if you are using a local file to store your public key.
+```
+module "keypair" {
+  source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
+  
+  key_name_prefix = "terraform_keypair_01"
+  public_key      = file("./global/keypair.pub")
 }
 ```
 
@@ -106,13 +118,15 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | SSL key pair name prefix, used to generate unique keypair name for EC2 instance deployments | `any` | n/a | yes |
-| <a name="input_public_key"></a> [public\_key](#input\_public\_key) | Public rsa key | `any` | n/a | yes |
+| <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Required) Name prefix, used to generate unique keypair name used with AWS services | `string` | n/a | yes |
+| <a name="input_public_key"></a> [public\_key](#input\_public\_key) | (Required) The public key material. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
 | <a name="output_key_name"></a> [key\_name](#output\_key\_name) | n/a |
 <!-- END_TF_DOCS -->
 
