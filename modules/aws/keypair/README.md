@@ -62,13 +62,25 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Usage
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a string.
 ```
 module "keypair" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
   
   key_name_prefix = "terraform_keypair_01"
   public_key      = "ssh-rsa AAAAAAAAAAAAA"
+}
+```
+
+### Public Key as a File
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a file pointer.
+```
+module "keypair" {
+  source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
+  
+  key_name_prefix = "terraform_keypair_01"
+  public_key      = file("./global/keypair.pub")
 }
 ```
 
