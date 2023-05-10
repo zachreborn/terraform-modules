@@ -74,7 +74,7 @@ module "keypair" {
 ```
 
 ### Public Key as a File
-This generates a keypair that can be used with EC2 instances. You need to provide the public key as a file pointer.
+This generates a keypair that can be used with EC2 instances. You need to provide the public key as a file pointer. This is useful if you are using a local file to store your public key.
 ```
 module "keypair" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/keypair"
