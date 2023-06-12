@@ -106,6 +106,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_client_id_list"></a> [client\_id\_list](#input\_client\_id\_list) | (Required) A list of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client\_id parameter on OAuth requests.) | `list(string)` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the provider to create, such as Terraform Cloud. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_thumbprint_list"></a> [thumbprint\_list](#input\_thumbprint\_list) | (Required) A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). | `list(string)` | n/a | yes |
 | <a name="input_url"></a> [url](#input\_url) | (Required) The URL of the identity provider. Corresponds to the iss claim. | `string` | n/a | yes |
