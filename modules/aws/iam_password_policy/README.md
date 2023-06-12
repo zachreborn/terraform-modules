@@ -70,6 +70,24 @@ module iam_password_policy {
 }
 ```
 
+### Full Example
+This example will create an IAM password policy with custom settings enabled.
+```
+module iam_password_policy {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
+
+  allow_users_to_change_password = true
+  hard_expiry                    = false
+  max_password_age               = null
+  minimum_password_length        = 20
+  password_reuse_prevention      = 12
+  require_lowercase_characters   = true
+  require_numbers                = true
+  require_symbols                = false
+  require_uppercase_characters   = true
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
