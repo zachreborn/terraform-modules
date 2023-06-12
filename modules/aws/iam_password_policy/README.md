@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">IAM Password Policy</h3>
   <p align="center">
-    module_description
+    This module is used to create and manage an IAM password policy. The IAM password policy is account wide.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -63,11 +63,10 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example will create an IAM password policy with the hardened best practice settings enabled.
 ```
-module test {
-  source = 
-
-  variable = 
+module iam_password_policy {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
 }
 ```
 
