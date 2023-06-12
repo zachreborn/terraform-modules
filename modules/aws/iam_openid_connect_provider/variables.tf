@@ -6,8 +6,8 @@ variable "client_id_list" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) Key-value map of resource tags."
-  default     = {
-    terraform  = "true"
+  default = {
+    terraform = "true"
   }
 }
 
