@@ -31,21 +31,21 @@ variable "kms_key_id" {
 }
 
 variable "lifecycle_policy" {
-    description = "(Optional) A file system lifecycle policy object. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html"
-    type        = list(object({
-        transition_to_ia                    = string
-        transition_to_primary_storage_class = string
-    }))
-    default     = []
+  description = "(Optional) A file system lifecycle policy object. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html"
+  type = list(object({
+    transition_to_ia                    = string
+    transition_to_primary_storage_class = string
+  }))
+  default = []
 
-    # Example:
-    # lifecycle_policy = [
-    #     {
-    #         transition_to_ia                    = "AFTER_30_DAYS"
-    #         transition_to_primary_storage_class = "AFTER_14_DAYS"
-    #     }
-    # ]
-    #
+  # Example:
+  # lifecycle_policy = [
+  #     {
+  #         transition_to_ia                    = "AFTER_30_DAYS"
+  #         transition_to_primary_storage_class = "AFTER_14_DAYS"
+  #     }
+  # ]
+  #
 }
 
 variable "performance_mode" {
