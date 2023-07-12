@@ -31,7 +31,7 @@
 
 <h3 align="center">IAM Role Module</h3>
   <p align="center">
-    This module will deploy an IAM Role with the policy you have previously created or a built-in policy.
+    This module will create an IAM Role with the policy you have previously created or a built-in policy.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -104,7 +104,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_role) | data source |
+| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 
 ## Inputs
 
@@ -112,14 +112,18 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_assume_role_policy"></a> [assume\_role\_policy](#input\_assume\_role\_policy) | (Required) The policy that grants an entity permission to assume the role. | `string` | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `""` | no |
-| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `string` | `false` | no |
+| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
 | <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The friendly IAM role name to match. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
 | <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `""` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM role. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The Amazon Resource Name (ARN) specifying the role. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

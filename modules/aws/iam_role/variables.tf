@@ -10,9 +10,14 @@ variable "description" {
 }
 
 variable "force_detach_policies" {
-  type        = string
+  type        = bool
   description = "(Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false."
   default     = false
+
+  validation {
+    condition     = var.force_detach_policies == false || var.force_detach_policies == true
+    error_message = "force_detach_policies must be either true or false"
+  }
 }
 
 variable "max_session_duration" {
@@ -26,8 +31,22 @@ variable "name" {
   description = "(Required) The friendly IAM role name to match."
 }
 
+variable "path" {
+  type        = string
+  description = "(Optional) The path to the role."
+  default     = "/"
+}
+
 variable "permissions_boundary" {
   type        = string
   description = "(Optional) The ARN of the policy that is used to set the permissions boundary for the role."
   default     = ""
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "(Optional) A map of tags to assign to the IAM role."
+  default = {
+    terraform = "true"
+  }
 }
