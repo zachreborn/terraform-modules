@@ -9,12 +9,6 @@ variable "description" {
   default     = ""
 }
 
-variable "force_detach_policies" {
-  type        = string
-  description = "(Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false."
-  default     = false
-}
-
 variable "max_session_duration" {
   type        = string
   description = "(Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours."
@@ -26,8 +20,22 @@ variable "name" {
   description = "(Required) The friendly IAM role name to match."
 }
 
+variable "path" {
+  type        = string
+  description = "(Optional) The path to the role."
+  default     = "/"
+}
+
 variable "permissions_boundary" {
   type        = string
   description = "(Optional) The ARN of the policy that is used to set the permissions boundary for the role."
   default     = ""
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "(Optional) A map of tags to assign to the IAM role."
+  default = {
+    terraform = "true"
+  }
 }
