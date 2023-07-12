@@ -31,7 +31,7 @@
 
 <h3 align="center">IAM Role Module</h3>
   <p align="center">
-    This module will deploy an IAM Role with the policy you have previously created or a built-in policy.
+    This module will create an IAM Role with the policy you have previously created or a built-in policy.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
