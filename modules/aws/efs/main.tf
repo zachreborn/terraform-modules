@@ -39,9 +39,4 @@ resource "aws_efs_mount_target" "this" {
   file_system_id  = aws_efs_file_system.this.id
   subnet_id       = each.key
   security_groups = var.security_groups
-  lifecycle {
-    ignore_changes = [
-      "ip_address",
-    ]
-  }
 }
