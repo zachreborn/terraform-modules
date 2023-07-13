@@ -12,7 +12,7 @@ variable "creation_token" {
   type        = string
   default     = null
   validation {
-    condition     = length(var.creation_token) <= 64
+    condition     = var.creation_token == null ? true : length(var.creation_token) <= 64
     error_message = "The creation_token must be less than or equal to 64 characters."
   }
 }
