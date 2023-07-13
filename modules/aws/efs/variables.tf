@@ -102,11 +102,20 @@ variable "security_groups" {
 ##############################
 # General Variables
 ##############################
+variable "environment" {
+  description = "(Optional) Environment for which the resources will be created. Recommended that this be set on all resources, such as 'prod', 'dev', 'test,' 'demo', or 'dr'. Defaults to 'dev'."
+  type        = string
+  default     = "dev"
+}
+
+variable "name" {
+  description = "(Optional) The name of the file system."
+  type        = string
+  default     = null
+}
 
 variable "tags" {
   description = "(Optional) A mapping of tags to assign to the file system."
   type        = map(string)
-  default = {
-    terraform = "true"
-  }
+  default = {}
 }

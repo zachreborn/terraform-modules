@@ -1,3 +1,20 @@
+############################
+# Locals for readability
+############################
+
+locals {
+  # Sets specific tags as required by the module and merges them with input tags
+  tags = merge(var.tags, {
+    environment = var.environment
+    Name        = var.name
+    terraform   = true
+    })
+}
+
+############################
+# EFS File System
+############################
+
 resource "aws_efs_file_system" "this" {
   availability_zone_name          = var.availability_zone_name
   creation_token                  = var.creation_token
@@ -6,7 +23,7 @@ resource "aws_efs_file_system" "this" {
   performance_mode                = var.performance_mode
   provisioned_throughput_in_mibps = var.provisioned_throughput_in_mibps
   throughput_mode                 = var.throughput_mode
-  tags                            = var.tags
+  tags                            = local.tags
 
   dynamic "lifecycle_policy" {
     for_each = var.lifecycle_policy
