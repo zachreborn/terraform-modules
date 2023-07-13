@@ -124,7 +124,7 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the file system. |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the file system. |
 | <a name="output_id"></a> [id](#output\_id) | The ID that identifies the file system (e.g. fs-ccfc0d65). |
-| <a name="output_mount_target_dns_names"></a> [mount\_target\_dns\_names](#output\_mount\_target\_dns\_names) | List of DNS names for the EFS File System. |
+| <a name="output_mount_target_dns_names"></a> [mount\_target\_dns\_names](#output\_mount\_target\_dns\_names) | Map of DNS names for the EFS File System. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
