@@ -86,7 +86,7 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.7.0 |
 
 ## Modules
 
@@ -97,6 +97,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [aws_efs_file_system.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system) | resource |
+| [aws_efs_mount_target.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_mount_target) | resource |
 
 ## Inputs
 
@@ -109,6 +110,10 @@ No modules.
 | <a name="input_lifecycle_policy"></a> [lifecycle\_policy](#input\_lifecycle\_policy) | (Optional) A file system lifecycle policy object. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html | <pre>list(object({<br>    transition_to_ia                    = string<br>    transition_to_primary_storage_class = string<br>  }))</pre> | `[]` | no |
 | <a name="input_performance_mode"></a> [performance\_mode](#input\_performance\_mode) | (Optional) The file system performance mode. Can be either 'generalPurpose' or 'maxIO'. Defaults to 'generalPurpose'. | `string` | `"generalPurpose"` | no |
 | <a name="input_provisioned_throughput_in_mibps"></a> [provisioned\_throughput\_in\_mibps](#input\_provisioned\_throughput\_in\_mibps) | (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with throughput\_mode set to provisioned. Valid values are 1-1024. Required if throughput\_mode is set to provisioned. | `number` | `null` | no |
+| <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | (Optional) A list of up to 5 VPC security group IDs (that must be for the same VPC as subnet\_ids) in effect for the mount target. | `list(string)` | `[]` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) A list of subnet IDs where you want to create the mount target. | `list(string)` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the file system. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_throughput_mode"></a> [throughput\_mode](#input\_throughput\_mode) | (Optional) Throughput mode for the file system. Defaults to bursting. Valid values: bursting, provisioned, or elastic. When using provisioned, also set provisioned\_throughput\_in\_mibps. | `string` | `"bursting"` | no |
 
 ## Outputs
 
@@ -117,6 +122,7 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the file system. |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the file system. |
 | <a name="output_id"></a> [id](#output\_id) | The ID that identifies the file system (e.g. fs-ccfc0d65). |
+| <a name="output_mount_target_dns_names"></a> [mount\_target\_dns\_names](#output\_mount\_target\_dns\_names) | List of DNS names for the EFS File System. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
