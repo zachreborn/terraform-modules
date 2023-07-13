@@ -15,7 +15,7 @@ output "id" {
 
 output "mount_target_dns_names" {
   description = "List of DNS names for the EFS File System."
-  value       = {
+  value = {
     for mount_target in aws_efs_mount_target.this : mount_target.id => mount_target.dns_name
   }
 }
