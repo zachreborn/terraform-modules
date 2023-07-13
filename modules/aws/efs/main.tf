@@ -8,7 +8,7 @@ locals {
     environment = var.environment
     Name        = var.name
     terraform   = true
-    })
+  })
 }
 
 ############################
