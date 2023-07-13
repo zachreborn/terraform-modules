@@ -12,3 +12,8 @@ output "id" {
   description = "The ID that identifies the file system (e.g. fs-ccfc0d65)."
   value       = aws_efs_file_system.this.id
 }
+
+output "mount_target_dns_names" {
+  description = "List of DNS names for the EFS File System."
+  value       = aws_efs_mount_target.this.*.dns_name
+}
