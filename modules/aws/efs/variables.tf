@@ -106,7 +106,7 @@ variable "security_groups" {
 variable "tags" {
   description = "(Optional) A mapping of tags to assign to the file system."
   type        = map(string)
-  default     = {
+  default = {
     terraform = "true"
   }
 }
