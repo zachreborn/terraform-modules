@@ -34,16 +34,16 @@ resource "aws_efs_file_system" "this" {
   }
 }
 
-resource "null_resource" "this" {
-  for_each = toset(var.subnet_ids)
-  triggers = {
-    subnet_id = each.key.id
-  }
-}
-
-resource "aws_efs_mount_target" "this" {
+/* resource "aws_efs_mount_target" "this" {
   for_each        = toset(var.subnet_ids)
   file_system_id  = aws_efs_file_system.this.id
-  subnet_id       = each.key.id
+  subnet_id       = each.key
+  security_groups = var.security_groups
+} */
+
+resource "aws_efs_mount_target" "this" {
+  count           = length(var.subnet_ids)
+  file_system_id  = aws_efs_file_system.this.id
+  subnet_id       = var.subnet_ids[count.index]
   security_groups = var.security_groups
 }
