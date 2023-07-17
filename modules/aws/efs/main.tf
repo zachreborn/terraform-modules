@@ -37,13 +37,13 @@ resource "aws_efs_file_system" "this" {
 resource "null_resource" "this" {
   for_each = toset(var.subnet_ids)
   triggers = {
-    subnet_id = each.key
+    subnet_id = each.key.id
   }
 }
 
 resource "aws_efs_mount_target" "this" {
   for_each        = toset(var.subnet_ids)
   file_system_id  = aws_efs_file_system.this.id
-  subnet_id       = each.key
+  subnet_id       = each.key.id
   security_groups = var.security_groups
 }
