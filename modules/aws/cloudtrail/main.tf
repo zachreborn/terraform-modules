@@ -175,10 +175,10 @@ resource "aws_s3_bucket" "cloudtrail_s3_bucket" {
   tags          = var.tags
 }
 
-resource "aws_s3_bucket_acl" "cloudtrail_bucket_acl" {
+/* resource "aws_s3_bucket_acl" "cloudtrail_bucket_acl" {
   bucket = aws_s3_bucket.cloudtrail_s3_bucket.id
   acl    = var.acl
-}
+} */
 
 resource "aws_s3_bucket_public_access_block" "cloudtrail_bucket_public_access_block" {
   bucket                  = aws_s3_bucket.cloudtrail_s3_bucket.id
