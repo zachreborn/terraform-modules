@@ -269,7 +269,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
         },
-        "Action"   = [
+        "Action" = [
           "s3:PutObject",
           "s3:PutObjectAcl",
           "s3:GetObject"
