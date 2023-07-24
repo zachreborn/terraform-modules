@@ -186,6 +186,9 @@ resource "aws_cloudtrail" "cloudtrail" {
   s3_key_prefix                 = var.s3_key_prefix
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
+  depends_on = [ 
+    aws_s3_bucket_policy.cloudtrail_bucket_policy
+  ]
 }
 
 ###########################
@@ -290,8 +293,6 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         },
         "Action" = [
           "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:GetObject"
         ],
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
         "Condition" = {
