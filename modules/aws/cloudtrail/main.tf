@@ -246,42 +246,40 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_bucket
 
 resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
   bucket = aws_s3_bucket.cloudtrail_s3_bucket.id
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AWSCloudTrailAclCheck",
-            "Effect": "Allow",
-            "Principal": {
-              "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": "s3:GetBucketAcl",
-            "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
-            "Condition": {
-                "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
-                }
-            }
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Sid" = "AWSCloudTrailAclCheck",
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "cloudtrail.amazonaws.com"
         },
-        {
-            "Sid": "AWSCloudTrailWrite",
-            "Effect": "Allow",
-            "Principal": {
-              "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/*",
-            "Condition": {
-                "StringEquals": {
-                    "s3:x-amz-acl": "bucket-owner-full-control",
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
-                }
-            }
+        "Action" = "s3:GetBucketAcl",
+        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
+        "Condition" = {
+          "StringEquals" = {
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+          }
         }
+      },
+      {
+        "Sid" = "AWSCloudTrailWrite",
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "cloudtrail.amazonaws.com"
+        },
+        "Action" = "s3:PutObject",
+        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/*",
+        "Condition" = {
+          "StringEquals" = {
+            "s3:x-amz-acl" = "bucket-owner-full-control",
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+          }
+        }
+      }
     ]
-}
-POLICY
+  })
 }
 
 resource "aws_s3_bucket_logging" "cloudtrail_s3_bucket" {
