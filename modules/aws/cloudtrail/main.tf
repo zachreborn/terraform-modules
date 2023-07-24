@@ -82,6 +82,28 @@ resource "aws_kms_key" "cloudtrail" {
             "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
           }
         }
+      },
+      {
+        "Sid" = "Enable cross account log decryption",
+        "Effect" = "Allow",
+        "Principal" = {
+          "AWS" = "*"
+        },
+        "Action" = [
+          "kms:Decrypt",
+          "kms:ReEncryptFrom",
+        ],
+        "Resource" = "*",
+        "Condition" = {
+          "StringEquals" = {
+            "kms:CallerAccount" = "${data.aws_caller_identity.current.account_id}"
+          },
+          "StringLike" = {
+            "kms:EncryptionContext:aws:cloudtrail:arn" = [
+              "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+            ]
+          }
+        }
       }
     ]
   })
