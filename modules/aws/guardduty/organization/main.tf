@@ -31,7 +31,7 @@ resource "aws_guardduty_organization_configuration" "this" {
     aws_guardduty_organization_admin_account.this
   ]
   provider    = aws.organization_security_account
-  auto_enable = var.auto_enable
+  auto_enable_auto_enable_organization_members = var.auto_enable
   detector_id = aws_guardduty_detector.this.id
   datasources {
     s3_logs {
