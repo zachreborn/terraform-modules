@@ -269,12 +269,16 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
         },
-        "Action"   = "s3:PutObject",
+        "Action"   = [
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:GetObject"
+        ],
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/*",
         "Condition" = {
           "StringEquals" = {
-            "s3:x-amz-acl"  = "bucket-owner-full-control",
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "s3:x-amz-acl"  = "bucket-owner-full-control"
           }
         }
       }
