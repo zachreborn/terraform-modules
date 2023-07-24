@@ -124,6 +124,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_arn"></a> [arn](#output\_arn) | The Amazon Resource Name (ARN) specifying the role. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the role. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
