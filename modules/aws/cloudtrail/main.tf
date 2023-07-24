@@ -250,12 +250,12 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
     "Version" = "2012-10-17",
     "Statement" = [
       {
-        "Sid" = "AWSCloudTrailAclCheck",
+        "Sid"    = "AWSCloudTrailAclCheck",
         "Effect" = "Allow",
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
         },
-        "Action" = "s3:GetBucketAcl",
+        "Action"   = "s3:GetBucketAcl",
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
         "Condition" = {
           "StringEquals" = {
@@ -264,16 +264,16 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         }
       },
       {
-        "Sid" = "AWSCloudTrailWrite",
+        "Sid"    = "AWSCloudTrailWrite",
         "Effect" = "Allow",
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
         },
-        "Action" = "s3:PutObject",
+        "Action"   = "s3:PutObject",
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/*",
         "Condition" = {
           "StringEquals" = {
-            "s3:x-amz-acl" = "bucket-owner-full-control",
+            "s3:x-amz-acl"  = "bucket-owner-full-control",
             "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
           }
         }
