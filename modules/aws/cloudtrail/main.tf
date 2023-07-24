@@ -84,7 +84,7 @@ resource "aws_kms_key" "cloudtrail" {
         }
       },
       {
-        "Sid" = "Enable cross account log decryption",
+        "Sid"    = "Enable cross account log decryption",
         "Effect" = "Allow",
         "Principal" = {
           "AWS" = "*"
