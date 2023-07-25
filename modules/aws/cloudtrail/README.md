@@ -77,10 +77,12 @@ This example must be created in the root organization account.
 ```hcl
 module "org_cloudtrail" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
+
   providers = {
     aws = aws.organization_logging_account
   }
-  name                     = "org-cloudtrail"
+
+  name                     = "organization"
   enable_s3_bucket_logging = false
   is_organization_trail    = true
 }
