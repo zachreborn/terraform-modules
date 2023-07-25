@@ -234,6 +234,7 @@ resource "aws_cloudtrail" "cloudtrail" {
 
 resource "aws_s3_bucket" "cloudtrail_s3_bucket" {
   bucket_prefix = "${var.name}-"
+  force_destroy = var.force_destroy
   tags          = var.tags
 }
 
