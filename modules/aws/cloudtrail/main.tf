@@ -61,7 +61,7 @@ resource "aws_kms_key" "cloudtrail" {
         }
       },
       {
-        "Sid" = "Allow CloudTrail to describe key",
+        "Sid"    = "Allow CloudTrail to describe key",
         "Effect" = "Allow",
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
