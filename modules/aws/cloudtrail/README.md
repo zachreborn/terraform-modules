@@ -63,18 +63,40 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-```
+Creates a trail and sets logging for the s3 bucket to another s3 bucket
+```hcl
 module "cloudtrail" {
     source                   = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
-
-    bucket_prefix            = "cloudtrail-"
     enable_s3_bucket_logging = true
+    name                     = "cloudtrail"
     target_bucket            = module.s3_logging_bucket.id
 }
 ```
 
 ### Organization Cloudtrail Example
 This example must be created in the root organization account.
+
+*Provider configuration for a organization management account*
+```hcl
+provider "aws" {
+  alias      = "organization_management_account"
+  region     = var.aws_prod_region
+}
+```
+*Cloudtrail configuration for a organization management account*
+```hcl
+module "org_cloudtrail" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
+
+  providers = {
+    aws = aws.organization_management_account
+  }
+
+  name                     = "organization"
+  enable_s3_bucket_logging = false
+  is_organization_trail    = true
+}
+```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -112,7 +134,6 @@ No modules.
 | [aws_kms_alias.cloudtrail](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.cloudtrail](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_s3_bucket.cloudtrail_s3_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_acl.cloudtrail_bucket_acl](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
 | [aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
 | [aws_s3_bucket_logging.cloudtrail_s3_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_logging) | resource |
 | [aws_s3_bucket_policy.cloudtrail_bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
@@ -120,21 +141,20 @@ No modules.
 | [aws_s3_bucket_server_side_encryption_configuration.cloudtrail_bucket_encryption](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.cloudtrail_bucket_versioning](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_organizations_organization.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_acl"></a> [acl](#input\_acl) | (Optional) The canned ACL to apply. Defaults to 'private'. | `string` | `"private"` | no |
 | <a name="input_bucket_key_enabled"></a> [bucket\_key\_enabled](#input\_bucket\_key\_enabled) | (Optional) Whether or not to use Amazon S3 Bucket Keys for SSE-KMS. | `bool` | `true` | no |
 | <a name="input_bucket_lifecycle_expiration_days"></a> [bucket\_lifecycle\_expiration\_days](#input\_bucket\_lifecycle\_expiration\_days) | (Optional) The lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer. | `number` | `365` | no |
 | <a name="input_bucket_lifecycle_rule_id"></a> [bucket\_lifecycle\_rule\_id](#input\_bucket\_lifecycle\_rule\_id) | (Required) Unique identifier for the rule. The value cannot be longer than 255 characters. | `string` | `"365_day_delete"` | no |
-| <a name="input_bucket_prefix"></a> [bucket\_prefix](#input\_bucket\_prefix) | (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket. | `string` | n/a | yes |
-| <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. | `string` | `"cloudtrail_"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire. | `number` | `90` | no |
 | <a name="input_enable_log_file_validation"></a> [enable\_log\_file\_validation](#input\_enable\_log\_file\_validation) | Enabled log file validation to all logs sent to S3 | `bool` | `true` | no |
 | <a name="input_enable_s3_bucket_logging"></a> [enable\_s3\_bucket\_logging](#input\_enable\_s3\_bucket\_logging) | (Optional) Enable logging on the cloudtrail S3 bucket. If true, the 'target\_bucket' is required. Defaults to true. | `bool` | `true` | no |
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | (Optional) A boolean that indicates all objects should be deleted from the S3 bucket so that the bucket can be destroyed without error. These objects are not recoverable. | `bool` | `false` | no |
 | <a name="input_iam_policy_description"></a> [iam\_policy\_description](#input\_iam\_policy\_description) | (Optional, Forces new resource) Description of the IAM policy. | `string` | `"Used with flow logs to send packet capture logs to a CloudWatch log group"` | no |
 | <a name="input_iam_policy_name_prefix"></a> [iam\_policy\_name\_prefix](#input\_iam\_policy\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with name. | `string` | `"cloudtrail_policy_"` | no |
 | <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | (Optional, default '/') Path in which to create the policy. See IAM Identifiers for more information. | `string` | `"/"` | no |
@@ -152,11 +172,9 @@ No modules.
 | <a name="input_key_description"></a> [key\_description](#input\_key\_description) | (Optional) The description of the key as viewed in AWS console. | `string` | `"CloudTrail kms key used to encrypt audit logs"` | no |
 | <a name="input_key_enable_key_rotation"></a> [key\_enable\_key\_rotation](#input\_key\_enable\_key\_rotation) | (Optional) Specifies whether key rotation is enabled. Defaults to false. | `bool` | `true` | no |
 | <a name="input_key_is_enabled"></a> [key\_is\_enabled](#input\_key\_is\_enabled) | (Optional) Specifies whether the key is enabled. Defaults to true. | `string` | `true` | no |
-| <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/cloudtrail_key_"` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
 | <a name="input_mfa_delete"></a> [mfa\_delete](#input\_mfa\_delete) | (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: Enabled or Disabled. | `string` | `"Disabled"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the trail | `string` | `"cloudtrail"` | no |
-| <a name="input_s3_key_prefix"></a> [s3\_key\_prefix](#input\_s3\_key\_prefix) | S3 key prefix to be applied to all logs | `string` | `"cloudtrail-logs"` | no |
 | <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | (Required) The server-side encryption algorithm to use. Valid values are AES256 and aws:kms | `string` | `"aws:kms"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `null` | no |
 | <a name="input_target_bucket"></a> [target\_bucket](#input\_target\_bucket) | (Optional) The name of the bucket that will receive the logs. Required if logging of the S3 bucket is set to true. | `string` | `null` | no |
