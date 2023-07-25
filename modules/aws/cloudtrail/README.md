@@ -74,12 +74,21 @@ module "cloudtrail" {
 
 ### Organization Cloudtrail Example
 This example must be created in the root organization account.
+
+*Provider configuration for a organization management account*
+```hcl
+provider "aws" {
+  alias      = "organization_management_account"
+  region     = var.aws_prod_region
+}
+```
+*Cloudtrail configuration for a organization management account*
 ```hcl
 module "org_cloudtrail" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
 
   providers = {
-    aws = aws.organization_logging_account
+    aws = aws.organization_management_account
   }
 
   name                     = "organization"
