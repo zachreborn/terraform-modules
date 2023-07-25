@@ -63,18 +63,28 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-```
+```hcl
 module "cloudtrail" {
     source                   = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
-
-    bucket_prefix            = "cloudtrail-"
     enable_s3_bucket_logging = true
+    name                     = "org-cloudtrail"
     target_bucket            = module.s3_logging_bucket.id
 }
 ```
 
 ### Organization Cloudtrail Example
 This example must be created in the root organization account.
+```hcl
+module "org_cloudtrail" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail?ref=bug_cloudtrail_org"
+  providers = {
+    aws = aws.organization_logging_account
+  }
+  name                     = "org-cloudtrail"
+  enable_s3_bucket_logging = false
+  is_organization_trail    = true
+}
+```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
