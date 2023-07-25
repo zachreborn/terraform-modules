@@ -56,11 +56,6 @@ variable "key_name_prefix" {
 # S3 Variables
 ######################
 
-variable "bucket_prefix" {
-  description = "(Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket."
-  type        = string
-}
-
 variable "acl" {
   description = "(Optional) The canned ACL to apply. Defaults to 'private'."
   type        = string
@@ -138,12 +133,6 @@ variable "target_prefix" {
 ###########################
 # CloudWatch Log Group Variables
 ###########################
-
-variable "cloudwatch_name_prefix" {
-  description = "(Optional, Forces new resource) Creates a unique name beginning with the specified prefix."
-  default     = "cloudtrail_"
-  type        = string
-}
 
 variable "cloudwatch_retention_in_days" {
   description = "(Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire."
@@ -238,12 +227,6 @@ variable "name" {
   description = "Name of the trail"
   type        = string
   default     = "cloudtrail"
-}
-
-variable "s3_key_prefix" {
-  type        = string
-  description = "S3 key prefix to be applied to all logs"
-  default     = "cloudtrail-logs"
 }
 
 variable "include_global_service_events" {

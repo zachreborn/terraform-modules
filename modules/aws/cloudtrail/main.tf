@@ -15,6 +15,12 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_organizations_organization" "current" {}
 
+############################
+# Locals
+############################
+
+
+
 ###########################
 # KMS Encryption Key
 ###########################
@@ -150,7 +156,7 @@ resource "aws_kms_alias" "cloudtrail" {
 
 resource "aws_cloudwatch_log_group" "cloudtrail" {
   kms_key_id        = aws_kms_key.cloudtrail.arn
-  name_prefix       = var.cloudwatch_name_prefix
+  name_prefix       = "${var.name}-"
   retention_in_days = var.cloudwatch_retention_in_days
   tags              = var.tags
 }
@@ -213,7 +219,6 @@ resource "aws_cloudtrail" "cloudtrail" {
   kms_key_id                    = aws_kms_key.cloudtrail.arn
   name                          = var.name
   s3_bucket_name                = aws_s3_bucket.cloudtrail_s3_bucket.id
-  s3_key_prefix                 = var.s3_key_prefix
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
   depends_on = [
@@ -227,7 +232,7 @@ resource "aws_cloudtrail" "cloudtrail" {
 ###########################
 
 resource "aws_s3_bucket" "cloudtrail_s3_bucket" {
-  bucket_prefix = var.bucket_prefix
+  bucket_prefix = "${var.name}-"
   tags          = var.tags
 }
 
