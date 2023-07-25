@@ -222,6 +222,7 @@ resource "aws_cloudtrail" "cloudtrail" {
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
   depends_on = [
+    aws_s3_bucket.cloudtrail_s3_bucket,
     aws_s3_bucket_policy.cloudtrail_bucket_policy,
     aws_kms_key.cloudtrail,
   ]
@@ -235,11 +236,6 @@ resource "aws_s3_bucket" "cloudtrail_s3_bucket" {
   bucket_prefix = "${var.name}-"
   tags          = var.tags
 }
-
-/* resource "aws_s3_bucket_acl" "cloudtrail_bucket_acl" {
-  bucket = aws_s3_bucket.cloudtrail_s3_bucket.id
-  acl    = var.acl
-} */
 
 resource "aws_s3_bucket_public_access_block" "cloudtrail_bucket_public_access_block" {
   bucket                  = aws_s3_bucket.cloudtrail_s3_bucket.id
