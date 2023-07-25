@@ -46,12 +46,6 @@ variable "key_is_enabled" {
   type        = string
 }
 
-variable "key_name_prefix" {
-  description = "(Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
-  default     = "alias/cloudtrail_key_"
-  type        = string
-}
-
 ######################
 # S3 Variables
 ######################

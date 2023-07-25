@@ -146,7 +146,7 @@ resource "aws_kms_key" "cloudtrail" {
 }
 
 resource "aws_kms_alias" "cloudtrail" {
-  name_prefix   = var.key_name_prefix
+  name_prefix   = "alias/${var.name}_key"
   target_key_id = aws_kms_key.cloudtrail.key_id
 }
 
