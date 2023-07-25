@@ -13,6 +13,7 @@ terraform {
 ############################
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_organizations_organization" "current" {}
 
 ###########################
 # KMS Encryption Key
@@ -46,9 +47,9 @@ resource "aws_kms_key" "cloudtrail" {
         },
         "Action" = [
           "kms:Encrypt*",
-          "kms:Decrypt*",
+          "kms:Decrypt",
           "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
+          "kms:GenerateDataKey",
           "kms:Describe*"
         ],
         "Resource" = "*",
@@ -267,7 +268,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         }
       },
       {
-        "Sid"    = "AWSCloudTrailOrganizationWrite",
+        "Sid"    = "AWSCloudTrailAccountIDWrite",
         "Effect" = "Allow",
         "Principal" = {
           "Service" = "cloudtrail.amazonaws.com"
@@ -276,6 +277,23 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
           "s3:PutObject",
         ],
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        "Condition" = {
+          "StringEquals" = {
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "s3:x-amz-acl"  = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        "Sid"    = "AWSCloudTrailOrganizationWrite",
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "cloudtrail.amazonaws.com"
+        },
+        "Action" = [
+          "s3:PutObject",
+        ],
+        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_organizations_organization.current.id}/*",
         "Condition" = {
           "StringEquals" = {
             "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
