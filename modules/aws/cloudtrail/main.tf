@@ -46,11 +46,7 @@ resource "aws_kms_key" "cloudtrail" {
           "Service" = "cloudtrail.amazonaws.com"
         },
         "Action" = [
-          "kms:Encrypt*",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey",
-          "kms:Describe*"
+          "kms:GenerateDataKey*",
         ],
         "Resource" = "*",
         "Condition" = {
@@ -63,6 +59,17 @@ resource "aws_kms_key" "cloudtrail" {
             "aws:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
           }
         }
+      },
+      {
+        "Sid" = "Allow CloudTrail to describe key",
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "cloudtrail.amazonaws.com"
+        },
+        "Action" = [
+          "kms:DescribeKey",
+        ],
+        "Resource" = "*"
       },
       {
         "Sid"    = "Allow CloudWatch Logs to encrypt logs",
@@ -81,6 +88,28 @@ resource "aws_kms_key" "cloudtrail" {
         "Condition" = {
           "ArnEquals" = {
             "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+          }
+        }
+      },
+      {
+        "Sid"    = "Allow principals in the account to decrypt log files",
+        "Effect" = "Allow",
+        "Principal" = {
+          "AWS" = "*"
+        },
+        "Action" = [
+          "kms:Decrypt",
+          "kms:ReEncryptFrom",
+        ],
+        "Resource" = "*",
+        "Condition" = {
+          "StringEquals" = {
+            "kms:CallerAccount" = "${data.aws_caller_identity.current.account_id}"
+          },
+          "StringLike" = {
+            "kms:EncryptionContext:aws:cloudtrail:arn" = [
+              "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+            ]
           }
         }
       },
@@ -188,7 +217,8 @@ resource "aws_cloudtrail" "cloudtrail" {
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
   depends_on = [
-    aws_s3_bucket_policy.cloudtrail_bucket_policy
+    aws_s3_bucket_policy.cloudtrail_bucket_policy,
+    aws_kms_key.cloudtrail,
   ]
 }
 
