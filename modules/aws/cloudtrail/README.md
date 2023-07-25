@@ -63,11 +63,12 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+Creates a trail and sets logging for the s3 bucket to another s3 bucket
 ```hcl
 module "cloudtrail" {
     source                   = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
     enable_s3_bucket_logging = true
-    name                     = "org-cloudtrail"
+    name                     = "cloudtrail"
     target_bucket            = module.s3_logging_bucket.id
 }
 ```
