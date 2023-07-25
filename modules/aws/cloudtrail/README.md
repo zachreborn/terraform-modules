@@ -76,7 +76,7 @@ module "cloudtrail" {
 This example must be created in the root organization account.
 ```hcl
 module "org_cloudtrail" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail?ref=bug_cloudtrail_org"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
   providers = {
     aws = aws.organization_logging_account
   }
