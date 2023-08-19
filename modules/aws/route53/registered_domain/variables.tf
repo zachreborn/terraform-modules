@@ -65,7 +65,7 @@ variable "registrant_contact" {
     contact_type      = string
     country_code      = string
     email             = string
-    extra_params      = map
+    extra_params      = map(any)
     fax               = string
     first_name        = string
     last_name         = string
