@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Route53 Registered Domain</h3>
   <p align="center">
-    module_description
+    This module manages the registration of a domain with Route53. This module does not create a registar, but per Terraform will manage the registration of a domain already transfered or registered with Route53.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
