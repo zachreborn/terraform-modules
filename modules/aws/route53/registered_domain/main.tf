@@ -1,3 +1,20 @@
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.0.0"
+    }
+  }
+}
+
+###########################
+# Data Sources
+###########################
+
+########################################
+# Route 53 Registered Domains
+########################################
 resource "aws_route53domains_registered_domain" "this" {
   for_each = var.domains
 

@@ -1,3 +1,7 @@
+########################################
+# Route 53 Registered Domains Variables
+########################################
+
 variable "admin_contact" {
   description = "The admin contact information for the domain."
   type = object({
