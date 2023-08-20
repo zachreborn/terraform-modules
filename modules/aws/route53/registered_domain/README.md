@@ -63,11 +63,57 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-```
-module test {
-  source = 
+This example will manage a registered domain with Route53. The domain will be registered with the provided contact information. The domain will be registered with the provided name servers. The domain will be locked from transfer. The domain will be set to auto renew.
 
-  variable = 
+```hcl
+module "registered_domains" {
+  source             = "github.com/zachreborn/terraform-modules//modules/aws/route53/registered_domain"
+  admin_contact      = var.my_contact_info
+  registrant_contact = var.my_contact_info
+  tech_contact       = var.my_contact_info
+  domains = {
+    "example.com" = {
+      auto_renew    = true
+      name_servers  = module.example_com.name_servers
+      transfer_lock = true
+    },
+    "example.org" = {
+      auto_renew    = true
+      name_servers  = [
+        "ns-123.awsdns-12.org",
+        "ns-456.awsdns-34.org"
+        "ns-123.awsdns-56.org",
+      ]
+      transfer_lock = true
+    }
+  }
+
+  tags = {
+    terraform   = "true"
+    created_by  = "John Doe"
+    environment = "prod"
+    role        = "external dns"
+  }
+}
+
+variable "my_contact_info" {
+  description = "Domain name registration contact information."
+  default = {
+    address_line_1    = "123 Broadway Ave"
+    address_line_2    = ""
+    city              = "Duluth"
+    contact_type      = "Company"
+    country_code      = "US"
+    email             = "me@example.org"
+    extra_params      = {}
+    fax               = ""
+    first_name        = "John"
+    last_name         = "Doe"
+    organization_name = "Example"
+    phone_number      = "+1.5551234567"
+    state             = "MN"
+    zip_code          = "11111"
+  }
 }
 ```
 
