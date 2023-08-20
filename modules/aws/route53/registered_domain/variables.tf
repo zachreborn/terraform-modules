@@ -44,7 +44,7 @@ variable "domains" {
   #   },
   #   example.org = {
   #     auto_renew         = true
-  #     name_servers       = [ "ns-123.awsdns-12.com", "ns-456.awsdns-34.net" ]
+  #     name_servers       = module.example_org.name_servers
   #     transfer_lock      = true
   #   }
   # }
