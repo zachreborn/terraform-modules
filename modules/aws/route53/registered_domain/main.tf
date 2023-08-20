@@ -20,7 +20,7 @@ resource "aws_route53domains_registered_domain" "this" {
 
   admin_privacy      = var.admin_privacy
   auto_renew         = each.value.auto_renew
-  domain_name        = each.value
+  domain_name        = each.key
   registrant_privacy = var.registrant_privacy
   tags               = var.tags
   tech_privacy       = var.tech_privacy
