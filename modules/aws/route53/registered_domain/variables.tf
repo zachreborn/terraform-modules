@@ -4,7 +4,7 @@
 
 variable "admin_contact" {
   description = "The admin contact information for the domain."
-  type = map(object({
+  type = object({
     address_line_1    = string
     address_line_2    = string
     city              = string
@@ -19,7 +19,7 @@ variable "admin_contact" {
     phone_number      = string
     state             = string
     zip_code          = string
-  }))
+  })
 }
 
 variable "admin_privacy" {
@@ -58,7 +58,7 @@ variable "domains" {
 
 variable "registrant_contact" {
   description = "The registrant contact information for the domain."
-  type = map(object({
+  type = object({
     address_line_1    = string
     address_line_2    = string
     city              = string
@@ -73,7 +73,7 @@ variable "registrant_contact" {
     phone_number      = string
     state             = string
     zip_code          = string
-  }))
+  })
 }
 
 variable "registrant_privacy" {
@@ -90,7 +90,7 @@ variable "tags" {
 
 variable "tech_contact" {
   description = "The tech contact information for the domain."
-  type = map(object({
+  type = object({
     address_line_1    = string
     address_line_2    = string
     city              = string
@@ -105,7 +105,7 @@ variable "tech_contact" {
     phone_number      = string
     state             = string
     zip_code          = string
-  }))
+  })
 }
 
 variable "tech_privacy" {
