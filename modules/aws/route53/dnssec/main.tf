@@ -28,7 +28,7 @@ resource "aws_kms_key" "dnssec" {
   enable_key_rotation      = var.enable_key_rotation
   key_usage                = var.key_usage
   is_enabled               = var.is_enabled
-  tags                     = var.tags
+  tags                     = merge(var.tags , { "Name" = "${var.name}" })
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -80,22 +80,44 @@ resource "aws_kms_key" "dnssec" {
   })
 }
 
-resource "aws_kms_alias" "this" {
+resource "aws_kms_alias" "dnssec" {
   name_prefix   = var.name_prefix
   target_key_id = aws_kms_key.dnssec.key_id
 }
 
-resource "aws_route53_key_signing_key" "this" {
+########################################
+# Route 53 Signing Key
+########################################
+
+resource "aws_route53_key_signing_key" "dnssec" {
   hosted_zone_id             = var.hosted_zone_id
   key_management_service_arn = aws_kms_key.dnssec.arn
   name                       = var.name
   status                     = var.status
 }
 
-resource "aws_route53_hosted_zone_dnssec" "this" {
+########################################
+# Route 53 DNSSEC
+########################################
+
+resource "aws_route53_hosted_zone_dnssec" "dnssec" {
   depends_on = [
-    aws_route53_key_signing_key.this
+    aws_route53_key_signing_key.dnssec
   ]
-  hosted_zone_id = aws_route53_key_signing_key.this.hosted_zone_id
+  hosted_zone_id = aws_route53_key_signing_key.dnssec.hosted_zone_id
   signing_status = var.signing_status
+}
+
+########################################
+# Route 53 DS Record
+########################################
+
+resource "aws_route53_record" "dnssec" {
+  count      = var.create_ds_record ? 1 : 0
+  depends_on = [aws_route53_hosted_zone_dnssec.dnssec]
+  name       = var.name
+  records    = aws_route53_key_signing_key.dnssec.ds_record
+  type       = "DS"
+  ttl        = var.ds_record_ttl
+  zone_id    = var.hosted_zone_id
 }
