@@ -28,11 +28,11 @@
 
 <h3 align="center">Route53 DNSSEC Module</h3>
   <p align="center">
-    This module configures DNSSEC on a Route53 zone.
-    <br />
+    This module configures DNSSEC on a Route53 zone. You will need to use the DNSSEC DS record settings and public key output to configure your registrar. If you're registrar is Route53 Domains, you need to manually configure DNSSEC on the domain in the AWS Console. There is not currently an API for enabling DNSSEC on Route53 Domains.
+    <br/>
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
+    <br/>
+    <br/>
     <a href="https://zacharyhill.co">Zachary Hill</a>
     ·
     <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
@@ -62,6 +62,9 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+This module creates a KMS key for signing, the KMS key alias, and the signing configuration. It also outputs the public key, DS record, and DNSKEY record. You will need to use the DS record settings and public key output to configure your registrar. If you're registrar is Route53 Domains, you need to manually configure DNSSEC on the domain in the AWS Console. There is not currently an API for enabling DNSSEC on Route53 Domains.
+
+See the [AWS Route53 Documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-enable-signing.html) for more information.
 
 ```
 module "example_com_dnssec" {
@@ -71,10 +74,22 @@ module "example_com_dnssec" {
     name           = "example_com_signing_key"
     tags           = {
         terraform   = "true"
-        created_by  = "YOUR NAME"
+        created_by  = "YOUR_NAME"
         environment = "prod"
         role        = "dns"
         }
+}
+
+output "example_com_dnssec_flag" {
+    value = module.example_com_dnssec.flag
+}
+
+output "example_com_dnssec_signing_algorithm_type" {
+    value = module.example_com_dnssec.signing_algorithm_type
+}
+
+output "example_com_dnssec_public_key" {
+    value = module.example_com_dnssec.public_key
 }
 ```
 
