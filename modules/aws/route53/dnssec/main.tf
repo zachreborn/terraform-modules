@@ -28,7 +28,7 @@ resource "aws_kms_key" "dnssec" {
   enable_key_rotation      = var.enable_key_rotation
   key_usage                = var.key_usage
   is_enabled               = var.is_enabled
-  tags                     = merge(var.tags , { "Name" = "${var.name}" })
+  tags                     = merge(var.tags, { "Name" = "${var.name}" })
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
