@@ -112,7 +112,7 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
 # Route 53 DS Record
 ########################################
 
-resource "aws_route53_record" "dnssec" {
+/* resource "aws_route53_record" "dnssec" {
   count      = var.create_ds_record ? 1 : 0
   depends_on = [aws_route53_hosted_zone_dnssec.dnssec]
   name       = var.name
@@ -121,3 +121,4 @@ resource "aws_route53_record" "dnssec" {
   ttl        = var.ds_record_ttl
   zone_id    = var.hosted_zone_id
 }
+ */
