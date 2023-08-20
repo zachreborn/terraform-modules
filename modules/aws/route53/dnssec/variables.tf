@@ -81,22 +81,6 @@ variable "signing_status" {
 }
 
 ########################################
-# Route 53 DS Record Variables
-########################################
-
-variable "create_ds_record" {
-  type        = bool
-  description = "(Optional) Whether to create a DS record for the key-signing key (KSK). Defaults to true."
-  default     = true
-}
-
-variable "ds_record_ttl" {
-  type        = number
-  description = "(Optional) The TTL in seconds of the DS record. Defaults to 3600."
-  default     = 3600
-}
-
-########################################
 # Global Variables
 ########################################
 

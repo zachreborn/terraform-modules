@@ -110,15 +110,6 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
 
 ########################################
 # Route 53 DS Record
+# The DS record must be set upstream as a chain of trust with the parent zone. For example, if you're
+# enabling DNSSEC for example.org., the DS record is defined at .org. not in your example.org. zone.
 ########################################
-
-/* resource "aws_route53_record" "dnssec" {
-  count      = var.create_ds_record ? 1 : 0
-  depends_on = [aws_route53_hosted_zone_dnssec.dnssec]
-  name       = var.name
-  records    = [aws_route53_key_signing_key.dnssec.dnskey_record]
-  type       = "DS"
-  ttl        = var.ds_record_ttl
-  zone_id    = var.hosted_zone_id
-}
- */
