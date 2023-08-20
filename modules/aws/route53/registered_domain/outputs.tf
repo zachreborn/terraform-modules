@@ -1,7 +1,7 @@
 ########################################
 # Route 53 Registered Domains
 ########################################
-output "creation_date" {
+output "creation_dates" {
   description = "The creation date of the domain."
   value = {
     for domain in aws_route53domains_registered_domain.this :
@@ -9,7 +9,7 @@ output "creation_date" {
   }
 }
 
-output "expiration_date" {
+output "expiration_dates" {
   description = "The expiration date of the domain."
   value = {
     for domain in aws_route53domains_registered_domain.this :
@@ -17,7 +17,7 @@ output "expiration_date" {
   }
 }
 
-output "updated_date" {
+output "updated_dates" {
   description = "The last updated date of the domain."
   value = {
     for domain in aws_route53domains_registered_domain.this :
@@ -25,7 +25,7 @@ output "updated_date" {
   }
 }
 
-output "whois_server" {
+output "whois_servers" {
   description = "The whois server of the domain."
   value = {
     for domain in aws_route53domains_registered_domain.this :
