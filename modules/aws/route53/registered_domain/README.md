@@ -118,10 +118,10 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_creation_date"></a> [creation\_date](#output\_creation\_date) | The creation date of the domain. |
-| <a name="output_expiration_date"></a> [expiration\_date](#output\_expiration\_date) | The expiration date of the domain. |
-| <a name="output_updated_date"></a> [updated\_date](#output\_updated\_date) | The last updated date of the domain. |
-| <a name="output_whois_server"></a> [whois\_server](#output\_whois\_server) | The whois server of the domain. |
+| <a name="output_creation_dates"></a> [creation\_dates](#output\_creation\_dates) | The creation date of the domain. |
+| <a name="output_expiration_dates"></a> [expiration\_dates](#output\_expiration\_dates) | The expiration date of the domain. |
+| <a name="output_updated_dates"></a> [updated\_dates](#output\_updated\_dates) | The last updated date of the domain. |
+| <a name="output_whois_servers"></a> [whois\_servers](#output\_whois\_servers) | The whois server of the domain. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
