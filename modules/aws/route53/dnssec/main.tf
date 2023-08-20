@@ -116,7 +116,7 @@ resource "aws_route53_record" "dnssec" {
   count      = var.create_ds_record ? 1 : 0
   depends_on = [aws_route53_hosted_zone_dnssec.dnssec]
   name       = var.name
-  records    = aws_route53_key_signing_key.dnssec.ds_record
+  records    = toset(aws_route53_key_signing_key.dnssec.ds_record)
   type       = "DS"
   ttl        = var.ds_record_ttl
   zone_id    = var.hosted_zone_id
