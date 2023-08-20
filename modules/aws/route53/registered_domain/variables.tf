@@ -38,19 +38,13 @@ variable "domains" {
   # Example:
   # domains = {
   #   example.com = {
-  #     admin_contact      = var.admin_contact
   #     auto_renew         = true
   #     name_servers       = [ "ns-123.awsdns-12.com", "ns-456.awsdns-34.net" ]
-  #     registrant_contact = var.registrant_contact
-  #     tech_contact       = var.tech_contact
   #     transfer_lock      = true
   #   },
   #   example.org = {
-  #     admin_contact      = var.admin_contact
   #     auto_renew         = true
   #     name_servers       = [ "ns-123.awsdns-12.com", "ns-456.awsdns-34.net" ]
-  #     registrant_contact = var.registrant_contact
-  #     tech_contact       = var.tech_contact
   #     transfer_lock      = true
   #   }
   # }
