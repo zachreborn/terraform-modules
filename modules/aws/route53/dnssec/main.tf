@@ -11,15 +11,13 @@ terraform {
 ###########################
 # Data Sources
 ###########################
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 ########################################
 # KMS Keys
 ########################################
-####################
-# DNSSEC Key
-####################
 
 resource "aws_kms_key" "dnssec" {
   customer_master_key_spec = var.customer_master_key_spec
