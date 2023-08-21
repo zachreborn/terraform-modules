@@ -1,3 +1,7 @@
+########################################
+# KMS Key Variables
+########################################
+
 variable "customer_master_key_spec" {
   type        = string
   description = "(Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, HMAC_256, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, or ECC_SECG_P256K1. Defaults to SYMMETRIC_DEFAULT. For help with choosing a key spec, see the AWS KMS Developer Guide."
@@ -42,29 +46,15 @@ variable "is_enabled" {
   default     = true
 }
 
-variable "tags" {
-  type        = map(any)
-  description = "(Optional) A map of tags to assign to the object. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level."
-  default = {
-    terraform = "true"
-  }
-}
-
 variable "name_prefix" {
   description = "(Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
   default     = "alias/dnssec_"
   type        = string
 }
 
-variable "hosted_zone_id" {
-  type        = string
-  description = "(Required) Identifier of the Route 53 Hosted Zone."
-}
-
-variable "name" {
-  type        = string
-  description = "(Required) Name of the key-signing key (KSK). Must be unique for each key-singing key in the same hosted zone."
-}
+########################################
+# Route 53 Signing Key Variables
+########################################
 
 variable "status" {
   type        = string
@@ -76,6 +66,10 @@ variable "status" {
   }
 }
 
+########################################
+# Route 53 DNSSEC Variables
+########################################
+
 variable "signing_status" {
   type        = string
   description = "(Optional) Hosted Zone signing status. Valid values: SIGNING, NOT_SIGNING. Defaults to SIGNING."
@@ -83,5 +77,27 @@ variable "signing_status" {
   validation {
     condition     = contains(["SIGNING", "NOT_SIGNING"], var.signing_status)
     error_message = "The value must be one of SIGNING or NOT_SIGNING."
+  }
+}
+
+########################################
+# Global Variables
+########################################
+
+variable "hosted_zone_id" {
+  type        = string
+  description = "(Required) Identifier of the Route 53 Hosted Zone."
+}
+
+variable "name" {
+  type        = string
+  description = "(Required) Name to use for resources such as the key-signing key (KSK), DS record, . Must be unique for each key-singing key in the same hosted zone."
+}
+
+variable "tags" {
+  type        = map(any)
+  description = "(Optional) A map of tags to assign to the object. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level."
+  default = {
+    terraform = "true"
   }
 }

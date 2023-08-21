@@ -28,11 +28,11 @@
 
 <h3 align="center">Route53 DNSSEC Module</h3>
   <p align="center">
-    This module configures DNSSEC on a Route53 zone.
-    <br />
+    This module configures DNSSEC on a Route53 zone. You will need to use the DNSSEC DS record settings and public key output to configure your registrar. If you're registrar is Route53 Domains, you need to manually configure DNSSEC on the domain in the AWS Console. There is not currently an API for enabling DNSSEC on Route53 Domains.
+    <br/>
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
+    <br/>
+    <br/>
     <a href="https://zacharyhill.co">Zachary Hill</a>
     ·
     <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
@@ -62,6 +62,9 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+This module creates a KMS key for signing, the KMS key alias, and the signing configuration. It also outputs the public key, DS record, and DNSKEY record. You will need to use the DS record settings and public key output to configure your registrar. If you're registrar is Route53 Domains, you need to manually configure DNSSEC on the domain in the AWS Console. There is not currently an API for enabling DNSSEC on Route53 Domains.
+
+See the [AWS Route53 Documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-enable-signing.html) for more information.
 
 ```
 module "example_com_dnssec" {
@@ -71,10 +74,22 @@ module "example_com_dnssec" {
     name           = "example_com_signing_key"
     tags           = {
         terraform   = "true"
-        created_by  = "YOUR NAME"
+        created_by  = "YOUR_NAME"
         environment = "prod"
         role        = "dns"
         }
+}
+
+output "example_com_dnssec_flag" {
+    value = module.example_com_dnssec.flag
+}
+
+output "example_com_dnssec_signing_algorithm_type" {
+    value = module.example_com_dnssec.signing_algorithm_type
+}
+
+output "example_com_dnssec_public_key" {
+    value = module.example_com_dnssec.public_key
 }
 ```
 
@@ -106,10 +121,10 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_kms_alias.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
-| [aws_route53_hosted_zone_dnssec.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_hosted_zone_dnssec) | resource |
-| [aws_route53_key_signing_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_key_signing_key) | resource |
+| [aws_route53_hosted_zone_dnssec.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_hosted_zone_dnssec) | resource |
+| [aws_route53_key_signing_key.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_key_signing_key) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -124,7 +139,7 @@ No modules.
 | <a name="input_hosted_zone_id"></a> [hosted\_zone\_id](#input\_hosted\_zone\_id) | (Required) Identifier of the Route 53 Hosted Zone. | `string` | n/a | yes |
 | <a name="input_is_enabled"></a> [is\_enabled](#input\_is\_enabled) | (Optional) Specifies whether the key is enabled. Defaults to true. | `bool` | `true` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Valid values: ENCRYPT\_DECRYPT, SIGN\_VERIFY, or GENERATE\_VERIFY\_MAC. Defaults to ENCRYPT\_DECRYPT. | `string` | `"SIGN_VERIFY"` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) Name of the key-signing key (KSK). Must be unique for each key-singing key in the same hosted zone. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Required) Name to use for resources such as the key-signing key (KSK), DS record, . Must be unique for each key-singing key in the same hosted zone. | `string` | n/a | yes |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/dnssec_"` | no |
 | <a name="input_signing_status"></a> [signing\_status](#input\_signing\_status) | (Optional) Hosted Zone signing status. Valid values: SIGNING, NOT\_SIGNING. Defaults to SIGNING. | `string` | `"SIGNING"` | no |
 | <a name="input_status"></a> [status](#input\_status) | (Optional) Status of the key-signing key (KSK). Valid values: ACTIVE, INACTIVE. Defaults to ACTIVE. | `string` | `"ACTIVE"` | no |
