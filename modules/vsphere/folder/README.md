@@ -84,7 +84,9 @@ No requirements.
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_vsphere"></a> [vsphere](#provider\_vsphere) | n/a |
 
 ## Modules
 
@@ -92,7 +94,9 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [vsphere_folder.this](https://registry.terraform.io/providers/hashicorp/vsphere/latest/docs/resources/folder) | resource |
 
 ## Inputs
 
