@@ -1,5 +1,5 @@
 resource "vsphere_datacenter" "this" {
-  name   = var.name
   folder = var.folder
+  name   = var.name
   tags   = var.tags
 }
