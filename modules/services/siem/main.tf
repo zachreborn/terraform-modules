@@ -53,7 +53,7 @@ resource "aws_subnet" "public_subnets" {
 
 resource "aws_eip" "nateip" {
   count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
-  vpc   = true
+  domain                    = "vpc"
 }
 
 resource "aws_internet_gateway" "igw" {
