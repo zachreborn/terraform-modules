@@ -100,7 +100,13 @@ No modules.
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_custom_attributes"></a> [custom\_attributes](#input\_custom\_attributes) | A list of custom attributes to apply to the folder. Unsupported on ESXi hosts, requires vCenter. | `map(string)` | `{}` | no |
+| <a name="input_datacenter_id"></a> [datacenter\_id](#input\_datacenter\_id) | The ID of the datacenter where the folder should be created. Forces a new resource if changed. | `any` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | The path of the folder. Must be unique within the datacenter. This is relative to the root of the folder for the resource type being created. | `any` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the folder. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_type"></a> [type](#input\_type) | The type of the folder. Allowed options are: datacenter, host, vm, datastore, and network. If unset, the default is host. | `string` | `"host"` | no |
 
 ## Outputs
 
