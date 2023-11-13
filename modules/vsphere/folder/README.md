@@ -64,10 +64,12 @@
 ## Usage
 ### Simple Example
 ```
-module test {
-  source = 
-
-  variable = 
+module "hq" {
+  source = "github.com/zachreborn/terraform-modules//modules/vsphere/folder"
+  
+  datacenter_id = module.datacenter.id
+  path = "/"
+  type = "host"
 }
 ```
 
