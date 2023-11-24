@@ -68,7 +68,6 @@ module "public_ip" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/eip"
 
   instance = module.web_server.id[0]
-  vpc      = true
 }
 ```
 
@@ -79,7 +78,6 @@ module "website_eip" {
 
   associate_with_private_ip = "10.11.201.20"
   network_interface         = module.fw.network_interface_id[0]
-  vpc                       = true
 }
 ```
 
@@ -121,7 +119,6 @@ No modules.
 | <a name="input_instance"></a> [instance](#input\_instance) | (Optional) EC2 instance ID. | `string` | `""` | no |
 | <a name="input_network_interface"></a> [network\_interface](#input\_network\_interface) | (Optional) Network interface ID to associate with. | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `{}` | no |
-| <a name="input_vpc"></a> [vpc](#input\_vpc) | (Optional) Boolean if the EIP is in a VPC or not. | `string` | `true` | no |
 
 ## Outputs
 
