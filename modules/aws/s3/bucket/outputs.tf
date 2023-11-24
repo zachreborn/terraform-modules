@@ -25,5 +25,5 @@ output "s3_website_domain" {
 
 output "s3_website_endpoint" {
   description = "Endpoint of the website"
-  value       = aws_s3_bucket_website_configuration.this[*].endpoint
+  value       = aws_s3_bucket_website_configuration.this[*].website_endpoint
 }
