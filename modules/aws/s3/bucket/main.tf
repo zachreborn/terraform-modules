@@ -191,12 +191,18 @@ resource "aws_s3_bucket_website_configuration" "this" {
   bucket        = aws_s3_bucket.this.id
   routing_rules = var.routing_rules
 
-  error_document {
-    key = local.error_document
+  dynamic "error_document" {
+    for_each = local.error_document == null ? [] : [local.error_document]
+    content {
+      key = error_document.value.key
+    }
   }
 
-  index_document {
-    suffix = local.index_document
+  dynamic "index_document" {
+    for_each = local.index_document == null ? [] : [local.index_document]
+    content {
+      suffix = index_document.value.suffix
+    }
   }
 
   dynamic "redirect_all_requests_to" {
