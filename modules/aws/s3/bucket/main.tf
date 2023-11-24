@@ -10,6 +10,16 @@ terraform {
 }
 
 ###########################
+# Locals
+###########################
+
+locals {
+  # Set error_document and index_document to null if redirect_all_requests_to is set
+  error_document = var.redirect_all_requests_to != null ? null : var.error_document
+  index_document = var.redirect_all_requests_to != null ? null : var.index_document
+}
+
+###########################
 # KMS Encryption Key
 ###########################
 
@@ -182,11 +192,11 @@ resource "aws_s3_bucket_website_configuration" "this" {
   routing_rules = var.routing_rules
 
   error_document {
-    key = var.error_document
+    key = local.error_document
   }
 
   index_document {
-    suffix = var.index_document
+    suffix = local.index_document
   }
 
   dynamic "redirect_all_requests_to" {
