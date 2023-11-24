@@ -28,7 +28,7 @@
 
 <h3 align="center">S3 Module</h3>
   <p align="center">
-    This module creates S3 resources.
+    This module creates S3 bucket resources. It can be utilized to build and configure all components of a S3 bucket for simple or complex bucket needs, including static websites, intelligent tiering, lifecycle rules, and more.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -264,6 +264,32 @@ module "logging_bucket" {
   acl           = ""log-delivery-write""
   bucket_prefix = "octo-prod-s3-logging-bucket-"
   tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
+### Static Website
+
+### Route53 Apex Domain Redirect
+This example makes use of the ability to use a S3 bucket as an apex domain redirect. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to redirect the domain to the S3 bucket. This example also shows how to use the 'redirect\_all\_requests\_to' option to redirect all requests to a specific hostname.
+```
+module "example_org_redirect_bucket" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket                     = "example.org"
+  enable_public_access_block = false
+  block_public_acls          = false
+  block_public_policy        = false
+  ignore_public_acls         = false
+  restrict_public_buckets    = false
+  enable_website             = true
+  redirect_all_requests_to = {
+    host_name = "example.com"
+    protocol  = "https"
+  }
+  tags = {
     created_by  = "<YOUR_NAME>"
     environment = "prod"
     terraform   = "true"
