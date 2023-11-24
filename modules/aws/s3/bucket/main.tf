@@ -176,6 +176,28 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   }
 }
 
+resource "aws_s3_bucket_website_configuration" "this" {
+  count  = var.enable_website ? 1 : 0
+  bucket = aws_s3_bucket.this.id
+  routing_rules = var.routing_rules
+
+  error_document {
+    key = var.error_document
+  }
+
+  index_document {
+    suffix = var.index_document
+  }
+
+  dynamic "redirect_all_requests_to" {
+    for_each = var.redirect_all_requests_to == null ? [] : [var.redirect_all_requests_to]
+    content {
+      host_name = redirect_all_requests_to.value.host_name
+      protocol  = redirect_all_requests_to.value.protocol
+    }
+  }
+}
+
 resource "aws_s3_bucket_versioning" "this" {
   count                 = var.versioning_status == "Enabled" ? 1 : 0
   bucket                = aws_s3_bucket.this.id
