@@ -20,10 +20,10 @@ output "s3_bucket_region" {
 
 output "s3_website_domain" {
   description = "Domain of the website endpoint. Can be utilized to create Route 53 alias records"
-  value       = aws_s3_bucket_website_configuration.this[*].website_domain
+  value       = aws_s3_bucket_website_configuration.this[0].website_domain
 }
 
 output "s3_website_endpoint" {
   description = "Endpoint of the website"
-  value       = aws_s3_bucket_website_configuration.this[*].website_endpoint
+  value       = aws_s3_bucket_website_configuration.this[0].website_endpoint
 }
