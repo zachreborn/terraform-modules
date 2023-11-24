@@ -299,8 +299,13 @@ variable "index_document" {
 
 variable "redirect_all_requests_to" {
   type        = any
-  description = "(Optional) A hostname to redirect all website requests for this bucket to. Hostname can optionally be prefixed with a protocol (http:// or https://) to use when redirecting requests. The default is the protocol that is used in the original request."
+  description = "(Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request."
   default     = null
+  # Example:
+  # redirect_all_requests_to = {
+  #   host_name = "www.example.com"
+  #   protocol  = "https"
+  # }
 }
 
 variable "routing_rules" {
