@@ -26,10 +26,10 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">S3 Website Bucket Module
+<h3 align="center">S3 Website Bucket Module (Deprecated)
 </h3>
   <p align="center">
-    module_description
+    This module is depreciated. Utilized the module for a S3 <a href="/modules/aws/s3/bucket">bucket</a> instead.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -63,22 +63,7 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
-### Simple Example
-```
-module "s3_prod_website_pub_bucket" {
-    source        = "github.com/zachreborn/terraform-modules//modules/aws/s3_website"
-
-    policy        = file("global/s3/bucket_policies/prod_website_policy.json")
-    bucket        = "this-is-a-bucket-name"
-    tags          = {
-        terraform   = "true"
-        created_by  = "terraform"
-        environment = "prod"
-        role        = "website_bucket"
-    }
-}
-```
+The S3 bucket module can now be utilized to create and maintain a static website.
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
