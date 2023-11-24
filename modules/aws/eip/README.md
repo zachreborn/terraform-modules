@@ -68,7 +68,6 @@ module "public_ip" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/eip"
 
   instance = module.web_server.id[0]
-  vpc      = true
 }
 ```
 
@@ -79,7 +78,6 @@ module "website_eip" {
 
   associate_with_private_ip = "10.11.201.20"
   network_interface         = module.fw.network_interface_id[0]
-  vpc                       = true
 }
 ```
 
