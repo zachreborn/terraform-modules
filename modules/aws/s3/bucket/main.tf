@@ -187,8 +187,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
 }
 
 resource "aws_s3_bucket_website_configuration" "this" {
-  count  = var.enable_website ? 1 : 0
-  bucket = aws_s3_bucket.this.id
+  count         = var.enable_website ? 1 : 0
+  bucket        = aws_s3_bucket.this.id
   routing_rules = var.routing_rules
 
   error_document {
