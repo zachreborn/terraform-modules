@@ -364,7 +364,7 @@ variable "enable_intelligent_tiering" {
 
 variable "enable_public_access_block" {
   type        = bool
-  description = "(Optional) Enable public access block for S3 bucket. If true, this will create a public access block for the bucket. Defaults to true."
+  description = "(Optional) Enable public access block for S3 bucket. If true, this will block all public access to the bucket. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("true|false", var.enable_public_access_block))

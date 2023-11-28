@@ -14,9 +14,23 @@ terraform {
 ###########################
 
 locals {
-  # Set error_document and index_document to null if redirect_all_requests_to is set
+  # Logic for public access blocking on S3 buckets.
+  block_public_acls       = var.enable_public_access_block ? true : var.block_public_acls
+  block_public_policy     = var.enable_public_access_block ? true : var.block_public_policy
+  ignore_public_acls      = var.enable_public_access_block ? true : var.ignore_public_acls
+  restrict_public_buckets = var.enable_public_access_block ? true : var.restrict_public_buckets
+
+  # Set error_document and index_document to null if redirect_all_requests_to is set.
   error_document = var.redirect_all_requests_to != null ? null : var.error_document
   index_document = var.redirect_all_requests_to != null ? null : var.index_document
+
+  # Logic for enable_website to disable public_access_blocks. If enable_website is true, then public_access_blocks are disabled.
+  website_public_block = var.enable_website ? false : null
+
+  website_block = coalesce(
+    var.enable_website ? false : null,
+    var.enable_public_access_block ? true : null
+  )
 }
 
 ###########################
@@ -165,12 +179,11 @@ resource "aws_s3_bucket_policy" "this" {
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
-  count                   = var.enable_public_access_block ? 1 : 0
   bucket                  = aws_s3_bucket.this.id
-  block_public_acls       = var.block_public_acls
-  block_public_policy     = var.block_public_policy
-  ignore_public_acls      = var.ignore_public_acls
-  restrict_public_buckets = var.restrict_public_buckets
+  block_public_acls       = local.block_public_acls
+  block_public_policy     = local.block_public_policy
+  ignore_public_acls      = local.ignore_public_acls
+  restrict_public_buckets = local.restrict_public_buckets
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {

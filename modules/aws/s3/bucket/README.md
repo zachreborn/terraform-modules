@@ -272,6 +272,24 @@ module "logging_bucket" {
 ```
 
 ### Static Website
+This example makes use of the ability to use a S3 bucket as a static website. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to point the domain to the S3 bucket.
+```
+module "example_org_website_bucket" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket                     = "example.org"
+  enable_public_access_block = false
+  block_public_acls          = false
+  block_public_policy        = false
+  ignore_public_acls         = false
+  restrict_public_buckets    = false
+  enable_website             = true
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
 
 ### Route53 Apex Domain Redirect
 This example makes use of the ability to use a S3 bucket as an apex domain redirect. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to redirect the domain to the S3 bucket. This example also shows how to use the 'redirect\_all\_requests\_to' option to redirect all requests to a specific hostname.
