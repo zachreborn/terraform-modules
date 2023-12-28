@@ -1,7 +1,14 @@
 output "arn" {
-  value = aws_iam_user.this.arn
+  description = "The ARN assigned by AWS for this user."
+  value       = aws_iam_user.this.arn
 }
 
-output "unique_id" {
-  value = aws_iam_user.this.unique_id
+output "id" {
+  description = "The ID of the user."
+  value       = aws_iam_user.this.id
+}
+
+output "user_name" {
+  description = "The user's name."
+  value       = aws_iam_user.this.name
 }
