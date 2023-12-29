@@ -277,11 +277,6 @@ This example makes use of the ability to use a S3 bucket as a static website. Th
 module "example_org_website_bucket" {
   source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   bucket                     = "example.org"
-  enable_public_access_block = false
-  block_public_acls          = false
-  block_public_policy        = false
-  ignore_public_acls         = false
-  restrict_public_buckets    = false
   enable_website             = true
   tags = {
     created_by  = "<YOUR_NAME>"
@@ -297,11 +292,6 @@ This example makes use of the ability to use a S3 bucket as an apex domain redir
 module "example_org_redirect_bucket" {
   source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   bucket                     = "example.org"
-  enable_public_access_block = false
-  block_public_acls          = false
-  block_public_policy        = false
-  ignore_public_acls         = false
-  restrict_public_buckets    = false
   enable_website             = true
   redirect_all_requests_to = {
     host_name = "example.com"
