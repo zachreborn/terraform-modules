@@ -105,17 +105,18 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | (Optional, default false) When destroying this user, destroy even if it has non-Terraform-managed IAM access keys, login profile or MFA devices. Without force\_destroy a user with non-Terraform-managed access keys and login profile will fail to be destroyed. | `string` | n/a | yes |
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | (Optional, default false) When destroying this user, destroy even if it has non-Terraform-managed IAM access keys, login profile or MFA devices. Without force\_destroy a user with non-Terraform-managed access keys and login profile will fail to be destroyed. | `string` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: =,.@-\_.. User names are not distinguished by case. For example, you cannot create users named both 'TESTUSER' and 'testuser'. | `string` | n/a | yes |
-| <a name="input_path"></a> [path](#input\_path) | (Optional, default '/') Path in which to create the user. | `string` | n/a | yes |
-| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the user. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional, default '/') Path in which to create the user. | `string` | `"/"` | no |
+| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the user. | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_unique_id"></a> [unique\_id](#output\_unique\_id) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN assigned by AWS for this user. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the user. |
+| <a name="output_user_name"></a> [user\_name](#output\_user\_name) | The user's name. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
