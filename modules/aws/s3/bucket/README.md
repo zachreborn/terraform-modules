@@ -28,7 +28,7 @@
 
 <h3 align="center">S3 Module</h3>
   <p align="center">
-    This module creates S3 bucket resources. It can be utilized to build and configure all components of a S3 bucket for simple or complex bucket needs, including static websites, intelligent tiering, lifecycle rules, and more.
+    This module creates S3 bucket resources. It can be utilized to build and configure all components of a S3 bucket for simple or complex bucket needs, including static websites, intelligent tiering, lifecycle rules, and more. This module can be used in place of the deprecated `s3_website` module.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
