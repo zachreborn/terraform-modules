@@ -28,7 +28,7 @@
 
 <h3 align="center">S3 Module</h3>
   <p align="center">
-    This module creates S3 resources.
+    This module creates S3 bucket resources. It can be utilized to build and configure all components of a S3 bucket for simple or complex bucket needs, including static websites, intelligent tiering, lifecycle rules, and more. This module can be used in place of the deprecated `s3_website` module.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -271,6 +271,40 @@ module "logging_bucket" {
 }
 ```
 
+### Static Website
+This example makes use of the ability to use a S3 bucket as a static website. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to point the domain to the S3 bucket.
+```
+module "example_org_website_bucket" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket                     = "example.org"
+  enable_website             = true
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
+### Route53 Apex Domain Redirect
+This example makes use of the ability to use a S3 bucket as an apex domain redirect. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to redirect the domain to the S3 bucket. This example also shows how to use the 'redirect\_all\_requests\_to' option to redirect all requests to a specific hostname.
+```
+module "example_org_redirect_bucket" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket                     = "example.org"
+  enable_website             = true
+  redirect_all_requests_to = {
+    host_name = "example.com"
+    protocol  = "https"
+  }
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -310,6 +344,7 @@ No modules.
 | [aws_s3_bucket_public_access_block.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_s3_bucket_website_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
 
 ## Inputs
 
@@ -326,10 +361,13 @@ No modules.
 | <a name="input_bucket_prefix"></a> [bucket\_prefix](#input\_bucket\_prefix) | (Optional, bucket\_name or bucket\_prefix must exist) Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket. Must be lowercase and less than or equal to 37 characters in length. | `string` | `null` | no |
 | <a name="input_enable_intelligent_tiering"></a> [enable\_intelligent\_tiering](#input\_enable\_intelligent\_tiering) | (Optional) Enable intelligent tiering for S3 bucket. If true, this will create an intelligent tiering configuration for the bucket. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enable_kms_key"></a> [enable\_kms\_key](#input\_enable\_kms\_key) | (Optional) Enable KMS key for S3 bucket. If true, this will create a kms key and alias for use with the bucket encryption. Defaults to false. | `bool` | `false` | no |
-| <a name="input_enable_public_access_block"></a> [enable\_public\_access\_block](#input\_enable\_public\_access\_block) | (Optional) Enable public access block for S3 bucket. If true, this will create a public access block for the bucket. Defaults to true. | `bool` | `true` | no |
+| <a name="input_enable_public_access_block"></a> [enable\_public\_access\_block](#input\_enable\_public\_access\_block) | (Optional) Enable public access block for S3 bucket. If true, this will block all public access to the bucket. Defaults to true. | `bool` | `true` | no |
 | <a name="input_enable_s3_bucket_logging"></a> [enable\_s3\_bucket\_logging](#input\_enable\_s3\_bucket\_logging) | (Optional) Enable logging on the cloudtrail S3 bucket. If true, the 'target\_bucket' is required. Defaults to false. | `bool` | `false` | no |
+| <a name="input_enable_website"></a> [enable\_website](#input\_enable\_website) | (Optional) Enable static website hosting for S3 bucket. If true, this will create a website configuration for the bucket. Defaults to false. | `bool` | `false` | no |
+| <a name="input_error_document"></a> [error\_document](#input\_error\_document) | (Optional) An absolute path to the document to return in case of a 4XX error. | `string` | `"error.html"` | no |
 | <a name="input_expected_bucket_owner"></a> [expected\_bucket\_owner](#input\_expected\_bucket\_owner) | (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error. | `string` | `null` | no |
 | <a name="input_ignore_public_acls"></a> [ignore\_public\_acls](#input\_ignore\_public\_acls) | (Optional) Whether Amazon S3 should ignore public ACLs for this bucket. Defaults to false. Enabling this setting does not affect the persistence of any existing ACLs and doesn't prevent new public ACLs from being set. | `bool` | `true` | no |
+| <a name="input_index_document"></a> [index\_document](#input\_index\_document) | (Optional) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders. | `string` | `"index.html"` | no |
 | <a name="input_intelligent_tiering_access_tier"></a> [intelligent\_tiering\_access\_tier](#input\_intelligent\_tiering\_access\_tier) | (Optional) Specifies the access tier to use for objects that meet the filter criteria. Valid values: ARCHIVE\_ACCESS, DEEP\_ARCHIVE\_ACCESS. Default is ARCHIVE\_ACCESS. | `string` | `"ARCHIVE_ACCESS"` | no |
 | <a name="input_intelligent_tiering_days"></a> [intelligent\_tiering\_days](#input\_intelligent\_tiering\_days) | (Optional) Number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier. For ARCHIVE\_ACCESS the date range must be between 90 to 730 days. For DEEP\_ARCHIVE\_ACCESS the date range must be between 180 to 730 days. Default is 90 days. | `number` | `90` | no |
 | <a name="input_intelligent_tiering_filter"></a> [intelligent\_tiering\_filter](#input\_intelligent\_tiering\_filter) | (Optional) Specifies the S3 Intelligent-Tiering filter that identifies the subset of objects to which the configuration applies. Can have several filters as a list of maps where each map is the filter configuration. Type should be list(map(string)). | `any` | `null` | no |
@@ -347,7 +385,9 @@ No modules.
 | <a name="input_logging_target_bucket"></a> [logging\_target\_bucket](#input\_logging\_target\_bucket) | (Optional) The name of the bucket that will receive the logs. Required if logging of the S3 bucket is set to true. | `string` | `null` | no |
 | <a name="input_logging_target_prefix"></a> [logging\_target\_prefix](#input\_logging\_target\_prefix) | (Optional) The prefix that is prepended to all log object keys. If not set, the logs are stored in the root of the bucket. | `string` | `"log/"` | no |
 | <a name="input_mfa_delete"></a> [mfa\_delete](#input\_mfa\_delete) | (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: Enabled or Disabled. | `string` | `"Disabled"` | no |
+| <a name="input_redirect_all_requests_to"></a> [redirect\_all\_requests\_to](#input\_redirect\_all\_requests\_to) | (Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request. | `any` | `null` | no |
 | <a name="input_restrict_public_buckets"></a> [restrict\_public\_buckets](#input\_restrict\_public\_buckets) | (Optional) Whether Amazon S3 should restrict public bucket policies for this bucket. Defaults to false. Enabling this setting does not affect the previously stored bucket policy, except that public and cross-account access within the public bucket policy, including non-public delegation to specific accounts, is blocked. | `bool` | `true` | no |
+| <a name="input_routing_rules"></a> [routing\_rules](#input\_routing\_rules) | (Optional) A list of routing rules that can redirect requests to different directories or buckets. These rules are applied in the order that you specify them. For more information about routing rules, see Configuring advanced conditional redirects in the Amazon Simple Storage Service Developer Guide. | `any` | `null` | no |
 | <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | (Optional) The server-side encryption algorithm to use. Valid values are AES256 and aws:kms | `string` | `"aws:kms"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the bucket. | `map(any)` | <pre>{<br>  "created_by": "<YOUR NAME>",<br>  "environment": "prod",<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_versioning_status"></a> [versioning\_status](#input\_versioning\_status) | (Optional) Versioning state of the bucket. Valid values: Enabled, Suspended, or Disabled. Disabled should only be used when creating or importing resources that correspond to unversioned S3 buckets. | `string` | `"Disabled"` | no |
@@ -356,10 +396,12 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | n/a |
-| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | n/a |
-| <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | n/a |
-| <a name="output_s3_hosted_zone_id"></a> [s3\_hosted\_zone\_id](#output\_s3\_hosted\_zone\_id) | n/a |
+| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | ARN of the S3 bucket |
+| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | ID of the S3 bucket |
+| <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | Region of the S3 bucket |
+| <a name="output_s3_hosted_zone_id"></a> [s3\_hosted\_zone\_id](#output\_s3\_hosted\_zone\_id) | The Route 53 Hosted Zone ID for this bucket's region |
+| <a name="output_s3_website_domain"></a> [s3\_website\_domain](#output\_s3\_website\_domain) | Domain of the website endpoint. Can be utilized to create Route 53 alias records |
+| <a name="output_s3_website_endpoint"></a> [s3\_website\_endpoint](#output\_s3\_website\_endpoint) | Endpoint of the website |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

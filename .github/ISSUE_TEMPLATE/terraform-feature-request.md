@@ -3,7 +3,7 @@ name: Terraform Feature Request
 about: Feature template for tracking issues, next steps, and solutions.
 title: ''
 labels: feature
-assignees: zachreborn, TheJalpa, jakeasarus
+assignees: zachreborn
 
 ---
 

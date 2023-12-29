@@ -282,6 +282,39 @@ variable "sse_algorithm" {
 }
 
 ######################
+# S3 Website Variables
+######################
+
+variable "error_document" {
+  type        = string
+  description = "(Optional) An absolute path to the document to return in case of a 4XX error."
+  default     = "error.html"
+}
+
+variable "index_document" {
+  type        = string
+  description = "(Optional) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders."
+  default     = "index.html"
+}
+
+variable "redirect_all_requests_to" {
+  type        = any
+  description = "(Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request."
+  default     = null
+  # Example:
+  # redirect_all_requests_to = {
+  #   host_name = "www.example.com"
+  #   protocol  = "https"
+  # }
+}
+
+variable "routing_rules" {
+  type        = any
+  description = "(Optional) A list of routing rules that can redirect requests to different directories or buckets. These rules are applied in the order that you specify them. For more information about routing rules, see Configuring advanced conditional redirects in the Amazon Simple Storage Service Developer Guide."
+  default     = null
+}
+
+######################
 # S3 Versioning Variables
 ######################
 
@@ -331,7 +364,7 @@ variable "enable_intelligent_tiering" {
 
 variable "enable_public_access_block" {
   type        = bool
-  description = "(Optional) Enable public access block for S3 bucket. If true, this will create a public access block for the bucket. Defaults to true."
+  description = "(Optional) Enable public access block for S3 bucket. If true, this will block all public access to the bucket. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("true|false", var.enable_public_access_block))
@@ -349,11 +382,22 @@ variable "enable_s3_bucket_logging" {
   }
 }
 
+variable "enable_website" {
+  type        = bool
+  description = "(Optional) Enable static website hosting for S3 bucket. If true, this will create a website configuration for the bucket. Defaults to false."
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_website))
+    error_message = "The value must be true or false."
+  }
+}
+
 variable "expected_bucket_owner" {
   type        = string
   description = "(Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error."
   default     = null
 }
+
 
 variable "tags" {
   type        = map(any)
