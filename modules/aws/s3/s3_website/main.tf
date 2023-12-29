@@ -1,3 +1,6 @@
+########################################################
+# This module is deprecated, please use `bucket` module instead which includes all the features of this module.
+########################################################
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
