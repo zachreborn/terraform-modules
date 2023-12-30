@@ -65,4 +65,11 @@ variable "tags" {
 variable "target_accounts" {
   description = "(Required) The list of AWS account IDs to assign the permission set to."
   type        = set(string)
+  # Example:
+  # target_accounts = [
+  #   "123456789012",
+  #   "123456789013",
+  #   "123456789014",
+  #   "123456789015"
+  # ]
 }
