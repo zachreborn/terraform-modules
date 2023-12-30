@@ -16,6 +16,18 @@ variable "description" {
   default     = null
 }
 
+variable "groups" {
+  description = "(Optional) The group names to lookup and associate with the permission set."
+  type        = list(string)
+  default     = []
+}
+
+variable "group_attribute_path" {
+  description = "(Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO."
+  type        = string
+  default     = "DisplayName"
+}
+
 variable "inline_policy" {
   description = "(Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline_policy."
   type        = string

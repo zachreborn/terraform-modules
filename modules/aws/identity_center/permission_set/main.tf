@@ -18,15 +18,17 @@ terraform {
 data "aws_ssoadmin_instances" "this" {}
 
 data "aws_identitystore_group" "this" {
+  for_each = var.groups
   identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
-  # group_id          = var.group_id
   alternate_identifier {
     unique_attribute {
       attribute_path = var.group_attribute_path
-      attribute_value = var.group_attribute_value
+      attribute_value = each.groups
     }
   }
 }
+
+data "aws_caller_identity" "current" {}
 
 ###########################
 # Locals
@@ -73,13 +75,13 @@ resource "aws_ssoadmin_permission_set_inline_policy" "this" {
 # Account Assignments
 ###########################
 
-resource "aws_ssoadmin_account_assignment" "example" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
-  permission_set_arn = data.aws_ssoadmin_permission_set.example.arn
+resource "aws_ssoadmin_account_assignment" "this" {
+  instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.this.arn
 
-  principal_id   = data.aws_identitystore_group.example.group_id
+  principal_id   = data.aws_identitystore_group.this.group_id
   principal_type = "GROUP"
 
-  target_id   = "123456789012"
+  target_id   = data.aws_caller_identity.current.account_id
   target_type = "AWS_ACCOUNT"
 }
