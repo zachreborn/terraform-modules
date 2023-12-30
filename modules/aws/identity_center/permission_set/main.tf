@@ -23,7 +23,7 @@ data "aws_identitystore_group" "this" {
   alternate_identifier {
     unique_attribute {
       attribute_path  = var.group_attribute_path
-      attribute_value = each.groups
+      attribute_value = each.key
     }
   }
 }
