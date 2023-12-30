@@ -32,6 +32,20 @@ data "aws_identitystore_group" "this" {
 # Locals
 ###########################
 
+locals {
+  # Create a list of groups and accounts to use with for_each for assignment
+  account_group_assignments = {
+    for account in var.target_accounts : account => {
+      for group in var.groups : group => {
+        principal_id   = data.aws_identitystore_group[group].group_id
+        principal_type = "GROUP"
+        target_id      = account
+        target_type    = "AWS_ACCOUNT"
+      }
+    }
+  }
+}
+
 ###########################
 # Permission Set
 ###########################
@@ -78,7 +92,7 @@ resource "aws_ssoadmin_account_assignment" "this" {
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this.arn
 
-  principal_id   = data.aws_identitystore_group.this.group_id
+  principal_id   = data.aws_identitystore_group.this.group_id["admins"]
   principal_type = "GROUP"
 
   target_id   = each.key
