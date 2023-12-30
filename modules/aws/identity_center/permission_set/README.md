@@ -80,11 +80,16 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -92,15 +97,35 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
+| [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
+| [aws_ssoadmin_permission_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set) | resource |
+| [aws_ssoadmin_permission_set_inline_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set_inline_policy) | resource |
+| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_customer_managed_iam_policy_name"></a> [customer\_managed\_iam\_policy\_name](#input\_customer\_managed\_iam\_policy\_name) | (Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer\_managed\_policy\_attachment. | `string` | `null` | no |
+| <a name="input_customer_managed_iam_policy_path"></a> [customer\_managed\_iam\_policy\_path](#input\_customer\_managed\_iam\_policy\_path) | (Optional) The path of the customer managed IAM policy to attach to a Permission Set. | `string` | `"/"` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the permission set. | `string` | `null` | no |
+| <a name="input_inline_policy"></a> [inline\_policy](#input\_inline\_policy) | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline\_policy. | `string` | `null` | no |
+| <a name="input_managed_policy_arn"></a> [managed\_policy\_arn](#input\_managed\_policy\_arn) | (Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the permission set. | `string` | n/a | yes |
+| <a name="input_relay_state"></a> [relay\_state](#input\_relay\_state) | (Optional) The relay state URL used to redirect users within the application during the federation authentication process. | `string` | `null` | no |
+| <a name="input_session_duration"></a> [session\_duration](#input\_session\_duration) | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. | `string` | `"PT1H"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. | `map(string)` | `{}` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
+| <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
