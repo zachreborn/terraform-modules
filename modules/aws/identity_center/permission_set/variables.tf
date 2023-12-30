@@ -1,5 +1,29 @@
+variable "customer_managed_iam_policy_name" {
+  description = "(Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer_managed_policy_attachment."
+  type        = string
+  default     = null
+}
+
+variable "customer_managed_iam_policy_path" {
+  description = "(Optional) The path of the customer managed IAM policy to attach to a Permission Set."
+  type        = string
+  default     = "/"
+}
+
 variable "description" {
   description = "(Optional) The description of the permission set."
+  type        = string
+  default     = null
+}
+
+variable "inline_policy" {
+  description = "(Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline_policy."
+  type        = string
+  default     = null
+}
+
+variable "managed_policy_arn" {
+  description = "(Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed_policy_attachment."
   type        = string
   default     = null
 }
