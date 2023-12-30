@@ -17,9 +17,8 @@ variable "description" {
 }
 
 variable "groups" {
-  description = "(Optional) The group names to lookup and associate with the permission set."
+  description = "(Required) The group names to lookup and associate with the permission set."
   type        = list(string)
-  default     = []
 }
 
 variable "group_attribute_path" {
@@ -61,4 +60,9 @@ variable "tags" {
   description = "(Optional) Key-value map of resource tags."
   type        = map(string)
   default     = {}
+}
+
+variable "target_accounts" {
+  description = "(Required) The list of AWS account IDs to assign the permission set to."
+  type        = set(string)
 }

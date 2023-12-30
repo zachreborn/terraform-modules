@@ -28,8 +28,6 @@ data "aws_identitystore_group" "this" {
   }
 }
 
-data "aws_caller_identity" "current" {}
-
 ###########################
 # Locals
 ###########################
@@ -76,12 +74,13 @@ resource "aws_ssoadmin_permission_set_inline_policy" "this" {
 ###########################
 
 resource "aws_ssoadmin_account_assignment" "this" {
+  for_each           = var.target_accounts
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this.arn
 
   principal_id   = data.aws_identitystore_group.this.group_id
   principal_type = "GROUP"
 
-  target_id   = data.aws_caller_identity.current.account_id
+  target_id   = each.key
   target_type = "AWS_ACCOUNT"
 }
