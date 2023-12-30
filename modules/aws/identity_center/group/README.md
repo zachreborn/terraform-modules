@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Identity Center Group</h3>
   <p align="center">
-    module_description
+    This module creates a group in AWS Identity Center (formerly AWS SSO). These groups are then utilized to manage permissions to accounts or applications.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -63,11 +63,20 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
 ```
-module test {
-  source = 
-
-  variable = 
+module "groups" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/group"
+  groups = {
+    "admins" = {
+      display_name = "admins"
+      description  = "Admins from my domains"
+    },
+    "terraform" = {
+      display_name = "terraform"
+      description  = "Terraform users for CI/CD deployment"
+    }
+  }
 }
 ```
 
