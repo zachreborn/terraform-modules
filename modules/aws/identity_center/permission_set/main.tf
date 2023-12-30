@@ -19,7 +19,7 @@ data "aws_ssoadmin_instances" "this" {}
 
 data "aws_identitystore_group" "this" {
   for_each          = var.groups
-  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
+  identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
   alternate_identifier {
     unique_attribute {
       attribute_path  = var.group_attribute_path
