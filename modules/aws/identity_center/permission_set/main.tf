@@ -33,36 +33,36 @@ data "aws_identitystore_group" "this" {
 ###########################
 
 locals {
-# TODO Create a map of groups and accounts to use with for_each for assignment
-# groupname_accountid = {
-    # group = group_id
-    # account = account_id
-# }
+  # TODO Create a map of groups and accounts to use with for_each for assignment
+  # groupname_accountid = {
+  # group = group_id
+  # account = account_id
+  # }
   group_ids = {
     for group in var.groups : group => data.aws_identitystore_group.this[group].group_id
   }
-#   {
-#     "admins" = "1234",
-#     "terraform" = "5678"
-#   }
-#  [
-#     "12345678",
-#     "87654321",
-#     "940821941"
-#  ]
-# for group in groups {
-    # for account in target_accounts {
-      # groupname_accountid = {
-        # group = group_id
-        # account = account_id
-      # }
+  #   {
+  #     "admins" = "1234",
+  #     "terraform" = "5678"
+  #   }
+  #  [
+  #     "12345678",
+  #     "87654321",
+  #     "940821941"
+  #  ]
+  # for group in groups {
+  # for account in target_accounts {
+  # groupname_accountid = {
+  # group = group_id
+  # account = account_id
+  # }
 
   assignments = flatten([
     for group in var.groups : [
-        for account in var.target_accounts : {
-            group_id = data.aws_identitystore_group.this[group].group_id
-            account_id = account
-        }
+      for account in var.target_accounts : {
+        group_id   = data.aws_identitystore_group.this[group].group_id
+        account_id = account
+      }
     ]
   ])
 }
