@@ -33,17 +33,38 @@ data "aws_identitystore_group" "this" {
 ###########################
 
 locals {
-  # Create a list of groups and accounts to use with for_each for assignment
-  account_group_assignments = {
-    for account in var.target_accounts : account => {
-      for group in var.groups : group => {
-        principal_id   = data.aws_identitystore_group[group].group_id
-        principal_type = "GROUP"
-        target_id      = account
-        target_type    = "AWS_ACCOUNT"
-      }
-    }
+# TODO Create a map of groups and accounts to use with for_each for assignment
+# groupname_accountid = {
+    # group = group_id
+    # account = account_id
+# }
+  group_ids = {
+    for group in var.groups : group => data.aws_identitystore_group.this[group].group_id
   }
+#   {
+#     "admins" = "1234",
+#     "terraform" = "5678"
+#   }
+#  [
+#     "12345678",
+#     "87654321",
+#     "940821941"
+#  ]
+# for group in groups {
+    # for account in target_accounts {
+      # groupname_accountid = {
+        # group = group_id
+        # account = account_id
+      # }
+
+  assignments = flatten([
+    for group in var.groups : [
+        for account in var.target_accounts : {
+            group_id = data.aws_identitystore_group.this[group].group_id
+            account_id = account
+        }
+    ]
+  ])
 }
 
 ###########################
@@ -88,13 +109,15 @@ resource "aws_ssoadmin_permission_set_inline_policy" "this" {
 ###########################
 
 resource "aws_ssoadmin_account_assignment" "this" {
-  for_each           = var.target_accounts
+  # TODO for_each needs to be target accounts as well as group_ids
+  for_each           = local.assignments
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this.arn
 
-  principal_id   = data.aws_identitystore_group.this.group_id["admins"]
+  # principal_id   = data.aws_identitystore_group.this.group_id
+  principal_id   = each.value.group_id
   principal_type = "GROUP"
 
-  target_id   = each.key
+  target_id   = each.value.account_id
   target_type = "AWS_ACCOUNT"
 }
