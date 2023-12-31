@@ -18,7 +18,7 @@ variable "description" {
 
 variable "groups" {
   description = "(Required) The group names to lookup and associate with the permission set."
-  type        = list(string)
+  type        = set(string)
 }
 
 variable "group_attribute_path" {
