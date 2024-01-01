@@ -71,6 +71,31 @@ module test {
 }
 ```
 
+### Managed Policy Example
+This example will create a permission set and attach a managed policy to it.
+```
+module "admins_permissions" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
+  
+  name = "AdministratorAccess"
+  description = "Admin permissions using the Managed Policy - AdministratorAccess"
+  groups = [
+    "admins",
+    "terraform"
+  ]
+
+  managed_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  target_accounts = [
+    module.organization.id,
+    module.security.id,
+    module.logging.id,
+    module.network.id,
+    module.infrastructure.id
+  ]
+}
+```
+
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

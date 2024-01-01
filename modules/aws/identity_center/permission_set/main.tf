@@ -33,30 +33,14 @@ data "aws_identitystore_group" "this" {
 ###########################
 
 locals {
-  # TODO Create a map of groups and accounts to use with for_each for assignment
-  # groupname_accountid = {
-  # group = group_id
-  # account = account_id
-  # }
-  group_ids = {
-    for group in var.groups : group => data.aws_identitystore_group.this[group].group_id
-  }
-  #   {
-  #     "admins" = "1234",
-  #     "terraform" = "5678"
+  # Creates a map of objects with the following structure:
+  # assignments = {
+  #   "group_name_account_id" = {
+  #     group_name = group_name
+  #     group_id   = group_id
+  #     account_id = account_id
   #   }
-  #  [
-  #     "12345678",
-  #     "87654321",
-  #     "940821941"
-  #  ]
-  # for group in groups {
-  # for account in target_accounts {
-  # groupname_accountid = {
-  # group = group_id
-  # account = account_id
   # }
-
   assignments = {
     for item in flatten([
       for group in var.groups : [
@@ -112,15 +96,11 @@ resource "aws_ssoadmin_permission_set_inline_policy" "this" {
 ###########################
 
 resource "aws_ssoadmin_account_assignment" "this" {
-  # TODO for_each needs to be target accounts as well as group_ids
   for_each           = local.assignments
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this.arn
-
-  # principal_id   = data.aws_identitystore_group.this.group_id
-  principal_id   = each.value.group_id
-  principal_type = "GROUP"
-
-  target_id   = each.value.account_id
-  target_type = "AWS_ACCOUNT"
+  principal_id       = each.value.group_id
+  principal_type     = "GROUP"
+  target_id          = each.value.account_id
+  target_type        = "AWS_ACCOUNT"
 }
