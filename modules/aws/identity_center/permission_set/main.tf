@@ -57,14 +57,16 @@ locals {
   # account = account_id
   # }
 
-  assignments = toset(flatten([
-    for group in var.groups : [
-      for account in var.target_accounts : {
-        group_id   = data.aws_identitystore_group.this[group].group_id
-        account_id = account
-      }
-    ]
-  ]))
+  assignments = {
+    for item in flatten([
+      for group in var.groups : [
+        for account in var.target_accounts : {
+          group_id   = data.aws_identitystore_group.this[group].group_id
+          account_id = account
+        }
+      ]
+    ]) : "${item.group_id}_${item.account_id}" => item
+  }
 }
 
 ###########################
