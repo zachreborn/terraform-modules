@@ -15,7 +15,7 @@ output "id" {
 
 output "assignment_ids" {
   description = "The IDs of the permission set assignments"
-  value       = {
+  value = {
     for assignment in aws_ssoadmin_permission_set_inline_policy.this : assignment.id => assignment.id
   }
 }

@@ -129,6 +129,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | The IDs of the permission set assignments |
 | <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->
