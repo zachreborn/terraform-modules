@@ -61,11 +61,12 @@ locals {
     for item in flatten([
       for group in var.groups : [
         for account in var.target_accounts : {
+          group_name = group
           group_id   = data.aws_identitystore_group.this[group].group_id
           account_id = account
         }
       ]
-    ]) : "${item.group_id}_${item.account_id}" => item
+    ]) : "${item.group_name}_${item.account_id}" => item
   }
 }
 
