@@ -16,7 +16,7 @@ output "id" {
 output "assignment_ids" {
   description = "Map of the IDs of the permission set assignments and their corresponding configuration"
   value = {
-    for assignment in aws_ssoadmin_account_assignment.this : split(",", assignment.id)[5] => {
+    for assignment in aws_ssoadmin_account_assignment.this : "${split(",", assignment.id)[0]}_${split(",", assignment.id)[2]}" => {
       principal_id       = split(",", assignment.id)[0]
       principal_type     = split(",", assignment.id)[1]
       target_id          = split(",", assignment.id)[2]
