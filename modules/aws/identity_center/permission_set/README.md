@@ -62,29 +62,66 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Simple Example
-```
-module test {
-  source = 
-
-  variable = 
-}
-```
-
 ### Managed Policy Example
-This example will create a permission set and attach a managed policy to it.
+This example will create a permission set, attach a managed policy to it, and assign the permission set to a list of groups. This is the recommended way to use this module as the built-in permission sets are managed policies.
 ```
 module "admins_permissions" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
   
-  name = "AdministratorAccess"
+  name        = "AdministratorAccess"
   description = "Admin permissions using the Managed Policy - AdministratorAccess"
+  groups = [
+    "admins"
+  ]
+
+  managed_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  target_accounts = [
+    module.organization.id,
+    module.security.id,
+    module.logging.id,
+    module.network.id,
+    module.infrastructure.id
+  ]
+}
+```
+
+### Customer Managed Policy Example
+This example will create a permission set, attach a customer managed policy to it, and assign the permission set to a list of groups. This requires deploying the customer managed policy first to all accounts you plan to assign the permission set to. This does NOT deploy the IAM policy to the target accounts, it only attaches the policy to the permission set. This is useful if you have a custom policy that you want to use across multiple accounts and are managing the IAM policy across each account.
+
+```
+module "customer_managed_permissions" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
+
+  name        = "CustomerManagedPolicyPermissions"
+  description = "Permissions test using a customer managed policy"
   groups = [
     "admins",
     "terraform"
   ]
 
-  managed_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  customer_managed_iam_policy_name = "test-policy"
+  customer_managed_iam_policy_path = "/"
+  target_accounts = [
+    module.organization.id
+  ]
+}
+```
+
+### Inline Policy Example
+This example will create a permission set, attach an inline policy to it, and assign the permission set to a list of groups. This is useful if you want to create a custom policy that is only used for a single permission set. This is the simplest way to deploy custom policies to multiple accounts. It should be noted that this does not allow for versioning of the policy. If you need to version your policy, you should use the customer managed policy example and deploy the policy to each account using the `aws_iam_policy` resource or modules.
+
+```
+module "inline_permissions" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
+
+  name        = "InlinePolicyPermissions"
+  description = "Permissions test using an inline policy"
+  groups = [
+    "admins",
+    "terraform"
+  ]
+
+  inline_policy = data.aws_iam_policy_document.example.json
   target_accounts = [
     module.organization.id,
     module.security.id,
