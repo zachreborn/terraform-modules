@@ -304,5 +304,7 @@ variable "enable_s3_bucket_logging" {
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the resource."
-  default     = null
+  default     = {
+    terraform = "true"
+  }
 }

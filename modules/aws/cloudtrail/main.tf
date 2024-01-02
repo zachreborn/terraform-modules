@@ -212,6 +212,14 @@ resource "aws_iam_role_policy_attachment" "role_attach" {
 ###########################
 
 resource "aws_cloudtrail" "cloudtrail" {
+  depends_on = [
+    aws_s3_bucket.cloudtrail_s3_bucket,
+    aws_s3_bucket_policy.cloudtrail_bucket_policy,
+    aws_kms_key.cloudtrail,
+  ]
+
+  cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
+  cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
   enable_log_file_validation    = var.enable_log_file_validation
   include_global_service_events = var.include_global_service_events
   is_multi_region_trail         = var.is_multi_region_trail
@@ -219,13 +227,11 @@ resource "aws_cloudtrail" "cloudtrail" {
   kms_key_id                    = aws_kms_key.cloudtrail.arn
   name                          = var.name
   s3_bucket_name                = aws_s3_bucket.cloudtrail_s3_bucket.id
-  cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail.arn}:*" # CloudTrail requires the Log Stream wildcard
-  cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail.arn
-  depends_on = [
-    aws_s3_bucket.cloudtrail_s3_bucket,
-    aws_s3_bucket_policy.cloudtrail_bucket_policy,
-    aws_kms_key.cloudtrail,
-  ]
+  tags                          = var.tags
+
+  insight_selector {
+    insight_type = "ApiCallRateInsight"
+  }
 }
 
 ###########################
