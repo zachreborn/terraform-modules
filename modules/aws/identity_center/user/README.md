@@ -67,14 +67,16 @@ This example creates users managed by terraform. Note, we recommend using an IAM
 ```
 module "users" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/user"
+
   users = {
-    "admins" = {
-      display_name = "admins"
-      description  = "Admins from my domains"
-    },
-    "terraform" = {
-      display_name = "terraform"
-      description  = "Terraform users for CI/CD deployment"
+    "Zachary Hill" = {
+      display_name     = "Zachary Hill"
+      given_name       = "Zachary"
+      family_name      = "Hill"
+      user_name        = "zhill@zacharyhill.co"
+      email            = "zhill@zacharyhill.co"
+      email_is_primary = true
+      email_type       = "work"
     }
   }
 }
