@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Identity Center Group</h3>
   <p align="center">
-    module_description
+    This module creates a group in AWS Identity Center (formerly AWS SSO). These groups are then utilized to manage permissions to accounts or applications.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -63,11 +63,20 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
 ```
-module test {
-  source = 
-
-  variable = 
+module "groups" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/group"
+  groups = {
+    "admins" = {
+      display_name = "admins"
+      description  = "Admins from my domains"
+    },
+    "terraform" = {
+      display_name = "terraform"
+      description  = "Terraform users for CI/CD deployment"
+    }
+  }
 }
 ```
 
@@ -87,7 +96,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -95,15 +106,22 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
+| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br>    display_name = string # (Required) The friendly name to identify the group.<br>    description  = string # (Optional) The description of the group.<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

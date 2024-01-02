@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Identity Center User</h3>
   <p align="center">
-    module_description
+    This module creates one or more users in AWS Identity Center (formerly AWS SSO). These users are then attached to groups in order to provide access to AWS accounts or applications.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -63,11 +63,22 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates users managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
 ```
-module test {
-  source = 
+module "users" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/user"
 
-  variable = 
+  users = {
+    "Zachary Hill" = {
+      display_name     = "Zachary Hill"
+      given_name       = "Zachary"
+      family_name      = "Hill"
+      user_name        = "zhill@zacharyhill.co"
+      email            = "zhill@zacharyhill.co"
+      email_is_primary = true
+      email_type       = "work"
+    }
+  }
 }
 ```
 
@@ -87,7 +98,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -95,15 +108,22 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_identitystore_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
+| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_users"></a> [users](#input\_users) | (Required) The list of users to create. | <pre>map(object({<br>    display_name = string # (Required) The friendly name to identify the user.<br>    given_name   = string # (Required) The given name of the user.<br>    family_name  = string # (Required) The family name of the user.<br>    user_name    = string # (Required) The username of the user.<br><br>    honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.<br>    honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.<br>    middle_name      = optional(string) # (Optional) The middle name of the user.<br>    nickname         = optional(string) # (Optional) The nickname of the user.<br><br>    email                   = optional(string) # (Optional) The email address of the user.<br>    email_is_primary        = optional(bool)   # (Optional) Indicates whether the email address is the primary email address of the user.<br>    email_type              = optional(string) # (Optional) The type of the email address of the user.<br>    phone_number            = optional(string) # (Optional) The phone number of the user.<br>    phone_number_is_primary = optional(bool)   # (Optional) Indicates whether the phone number is the primary phone number of the user.<br>    phone_number_type       = optional(string) # (Optional) The type of the phone number of the user.<br><br>    preferred_language = optional(string) # (Optional) The user's preferred language.<br>    timezone           = optional(string) # (Optional) The user's time zone.<br>    title              = optional(string) # (Optional) The user's title.<br>    user_type          = optional(string) # (Optional) The type of the user.<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_user_ids"></a> [user\_ids](#output\_user\_ids) | The IDs of the users in the identity store |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
