@@ -108,20 +108,20 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
+| [aws_identitystore_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
 | [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br>    display_name = string # (Required) The friendly name to identify the group.<br>    description  = string # (Optional) The description of the group.<br>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | (Required) The list of users to create. | <pre>map(object({<br>    display_name = string # (Required) The friendly name to identify the user.<br>    given_name   = string # (Required) The given name of the user.<br>    family_name  = string # (Required) The family name of the user.<br>    user_name    = string # (Required) The username of the user.<br><br>    honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.<br>    honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.<br>    middle_name      = optional(string) # (Optional) The middle name of the user.<br>    nickname         = optional(string) # (Optional) The nickname of the user.<br><br>    email        = optional(string) # (Optional) The email address of the user.<br>    phone_number = optional(string) # (Optional) The phone number of the user.<br><br>    preferred_language = optional(string) # (Optional) The user's preferred language.<br>    timezone           = optional(string) # (Optional) The user's time zone.<br>    title              = optional(string) # (Optional) The user's title.<br>    user_type          = optional(string) # (Optional) The type of the user.<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
+| <a name="output_user_ids"></a> [user\_ids](#output\_user\_ids) | The IDs of the users in the identity store |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
