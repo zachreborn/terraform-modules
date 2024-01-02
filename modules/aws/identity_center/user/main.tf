@@ -21,6 +21,10 @@ data "aws_ssoadmin_instances" "this" {}
 # Locals
 ###########################
 
+locals {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+}
+
 ###########################
 # Module Configuration
 ###########################
@@ -29,7 +33,7 @@ resource "aws_identitystore_user" "this" {
   for_each = var.users
 
   display_name       = each.value.display_name
-  identity_store_id  = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+  identity_store_id  = local.identity_store_id
   nickname           = each.value.nickname
   preferred_language = each.value.preferred_language
   timezone           = each.value.timezone
