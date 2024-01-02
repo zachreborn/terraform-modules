@@ -22,5 +22,7 @@ variable "policy" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) A map of tags to assign to the IAM policy."
-  default     = {}
+  default = {
+    terraform = "true"
+  }
 }
