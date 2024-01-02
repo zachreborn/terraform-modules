@@ -65,7 +65,7 @@
 
 ```
 module "backup_policy" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/iam_policy"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/iam/policy"
     
     description = "Backup to s3 permissions"
     name        = "backup_policy"

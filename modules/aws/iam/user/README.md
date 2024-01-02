@@ -65,7 +65,7 @@
 
 ```
 module test_user {
-    source               = "github.com/zachreborn/terraform-modules//global/iam/iam_user"
+    source               = "github.com/zachreborn/terraform-modules//modules/aws/iam/user"
     
     name                 = "test_user"
 }

@@ -68,7 +68,7 @@
 
 ```
 module "iam_role" {
-    source             = "github.com/zachreborn/terraform-modules//modules/aws/iam_role"
+    source             = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
     
     assume_role_policy = module.iam_policy.arn
     description        = "Role used for a test"

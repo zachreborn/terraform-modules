@@ -66,7 +66,7 @@
 This example will create an IAM password policy with the hardened best practice settings enabled.
 ```
 module iam_password_policy {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/password_policy"
 }
 ```
 
@@ -74,7 +74,7 @@ module iam_password_policy {
 This example will create an IAM password policy with custom settings enabled.
 ```
 module iam_password_policy {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/password_policy"
 
   allow_users_to_change_password = true
   hard_expiry                    = false
