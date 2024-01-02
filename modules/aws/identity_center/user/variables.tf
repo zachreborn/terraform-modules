@@ -11,8 +11,12 @@ variable "users" {
     middle_name      = optional(string) # (Optional) The middle name of the user.
     nickname         = optional(string) # (Optional) The nickname of the user.
 
-    email        = optional(string) # (Optional) The email address of the user.
-    phone_number = optional(string) # (Optional) The phone number of the user.
+    email                   = optional(string) # (Optional) The email address of the user.
+    email_is_primary        = optional(bool)   # (Optional) Indicates whether the email address is the primary email address of the user.
+    email_type              = optional(string) # (Optional) The type of the email address of the user.
+    phone_number            = optional(string) # (Optional) The phone number of the user.
+    phone_number_is_primary = optional(bool)   # (Optional) Indicates whether the phone number is the primary phone number of the user.
+    phone_number_type       = optional(string) # (Optional) The type of the phone number of the user.
 
     preferred_language = optional(string) # (Optional) The user's preferred language.
     timezone           = optional(string) # (Optional) The user's time zone.
@@ -22,11 +26,12 @@ variable "users" {
   # Example
   # users = {
   #   "John Hill" = {
-  #     display_name = "John Hill"
-  #     given_name   = "John"
-  #     family_name  = "Hill"
-  #     user_name    = "John Hill"
-  #     email        = "john.hill@example.com"
+  #     display_name     = "John Hill"
+  #     given_name       = "John"
+  #     family_name      = "Hill"
+  #     user_name        = "John Hill"
+  #     email            = "john.hill@example.com"
+  #     email_is_primary = "true"
   #   }
   # }
 }

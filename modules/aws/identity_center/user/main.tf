@@ -38,7 +38,9 @@ resource "aws_identitystore_user" "this" {
   user_type          = each.value.user_type
 
   emails {
-    value = each.value.email
+    primary = each.value.email_is_primary
+    value   = each.value.email
+    type    = each.value.email_type
   }
 
   name {
@@ -50,6 +52,8 @@ resource "aws_identitystore_user" "this" {
   }
 
   phone_numbers {
-    value = each.value.phone_number
+    primary = each.value.phone_number_is_primary
+    value   = each.value.phone_number
+    type    = each.value.phone_number_type
   }
 }
