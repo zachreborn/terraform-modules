@@ -64,10 +64,10 @@
 ## Usage
 
 ```
-module "thinkstack_azure_ad_provider" {
+module "azure_ad_provider" {
   source                 = "github.com/zachreborn/terraform-modules//modules/aws/iam/saml_provider"
 
-  name                   = "thinkstack_azure_ad"
+  name                   = "azure_ad"
   saml_metadata_document = file("global/iam/providers/azuread_sso_aws_metadata.xml")
 }
 ```

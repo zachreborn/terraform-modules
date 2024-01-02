@@ -26,7 +26,7 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">ThinkStack - AWS Backups Module</h3>
+<h3 align="center">AWS Backups Module</h3>
   <p align="center">
     This module sets AWS backup jobs and associated services.
     <br />
@@ -65,7 +65,7 @@
 ### Simple Example
 ```
 module "aws_prod_backups" {
-    source           = "github.com/zachreborn/terraform-modules//modules/thinkstack/aws_backup"
+    source           = "github.com/zachreborn/terraform-modules//modules/services/aws_backup"
     providers        = {
         aws.aws_prod_region = aws.aws_prod_region
         aws.aws_dr_region   = aws.aws_dr_region

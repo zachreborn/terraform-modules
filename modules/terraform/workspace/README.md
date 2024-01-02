@@ -74,7 +74,7 @@ module "client_prod_security" {
   terraform_version = "~>1.4.0"
 }
 
-variable "thinkstack_workspace_permissions_mapping" {
+variable "org_workspace_permissions_mapping" {
   description = "Map of permissions to set with each terraform workspace."
   type        = map
   default     = {
@@ -102,7 +102,7 @@ module "client_prod_security" {
   terraform_version     = "~>1.4.0"
 }
 
-variable "thinkstack_workspace_permissions_mapping" {
+variable "org_workspace_permissions_mapping" {
   description = "Map of permissions to set with each terraform workspace."
   type        = map
   default     = {
