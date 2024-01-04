@@ -29,7 +29,7 @@
 <h3 align="center">S3 Website Bucket Module (Deprecated)
 </h3>
   <p align="center">
-    This module is depreciated. Utilized the module for a S3 <a href="/modules/aws/s3/bucket">bucket</a> instead.
+    This module is depreciated. Utilized the module for a S3 <a href="/modules/aws/s3/bucket">bucket</a> instead. 
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -47,7 +47,7 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li><a href="#usage">Usage</a></li>
+    <li><a href="#migration">Migration</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -62,8 +62,29 @@
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
-The S3 bucket module can now be utilized to create and maintain a static website.
+## Migration
+The S3 `bucket` module can now be utilized to create and maintain a static website.
+
+Move the state of any modules utilizing `s3_website` to the `s3/bucket` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.
+
+Match up the resources and components from the `s3_website` module to the `s3/bucket` module
+
+- [s3_website module](https://github.com/zachreborn/terraform-modules/tree/v2.15.0/modules/aws/s3/s3_website)
+- [bucket module](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/s3/bucket)
+
+An example of a S3 website utilizing the `s3/bucket` module:
+```
+module "example_org_website_bucket" {
+  source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket                     = "example.org"
+  enable_website             = true
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
