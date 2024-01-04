@@ -95,16 +95,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+No requirements.
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+No providers.
 
 ## Modules
 
@@ -112,31 +107,16 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [aws_s3_bucket.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_policy.public_website_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
-| [aws_s3_bucket_website_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
+No resources.
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_bucket"></a> [bucket](#input\_bucket) | (Required, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules may be found here. | `string` | n/a | yes |
-| <a name="input_error_document"></a> [error\_document](#input\_error\_document) | (Optional) An absolute path to the document to return in case of a 4XX error. | `string` | `"error.html"` | no |
-| <a name="input_index_document"></a> [index\_document](#input\_index\_document) | (Required, unless using redirect\_all\_requests\_to) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders. | `string` | `"index.html"` | no |
-| <a name="input_policy"></a> [policy](#input\_policy) | (Optional) The text of the policy. Although this is a bucket policy rather than an IAM policy, the aws\_iam\_policy\_document data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the AWS IAM Policy Document Guide. Note: Bucket policies are limited to 20 KB in size. | `string` | `null` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the bucket. | `map(any)` | <pre>{<br>  "created_by": "Jake Jones",<br>  "environment": "prod",<br>  "terraform": "true"<br>}</pre> | no |
+No inputs.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | n/a |
-| <a name="output_s3_bucket_domain_name"></a> [s3\_bucket\_domain\_name](#output\_s3\_bucket\_domain\_name) | n/a |
-| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | n/a |
-| <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | n/a |
-| <a name="output_s3_hosted_zone_id"></a> [s3\_hosted\_zone\_id](#output\_s3\_hosted\_zone\_id) | n/a |
+No outputs.
+
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
