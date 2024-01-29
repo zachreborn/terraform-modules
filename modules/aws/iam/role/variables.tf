@@ -1,3 +1,7 @@
+##############################
+# Role Variables
+##############################
+
 variable "assume_role_policy" {
   type        = string
   description = "(Required) The policy that grants an entity permission to assume the role."
@@ -53,4 +57,18 @@ variable "tags" {
   default = {
     terraform = "true"
   }
+}
+
+##############################
+# Policy Attachment Variables
+##############################
+
+variable "policy_arn" {
+  type        = string
+  description = "(Required) - The ARN of the policy you want to apply"
+}
+
+variable "role" {
+  type        = string
+  description = "(Required) - The role the policy should be applied to"
 }

@@ -1,3 +1,7 @@
+##############################
+# Provider Configuration
+##############################
+
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -7,6 +11,10 @@ terraform {
     }
   }
 }
+
+##############################
+# Role Configuration
+##############################
 
 resource "aws_iam_role" "this" {
   assume_role_policy    = var.assume_role_policy
@@ -18,3 +26,13 @@ resource "aws_iam_role" "this" {
   permissions_boundary  = var.permissions_boundary
   tags                  = var.tags
 }
+
+##############################
+# Policy Attachment Configuration
+##############################
+
+resource "aws_iam_role_policy_attachment" "this" {
+  policy_arn = var.policy_arn
+  role       = var.role
+}
+
