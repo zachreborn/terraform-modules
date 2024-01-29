@@ -63,9 +63,9 @@ variable "tags" {
 # Policy Attachment Variables
 ##############################
 
-variable "policy_arn" {
-  type        = string
-  description = "(Required) - The ARN of the policy you want to apply"
+variable "policy_arns" {
+  type        = set(string)
+  description = "(Required) - A list of ARNs of the policies which you want attached to the role."
 }
 
 variable "role" {
