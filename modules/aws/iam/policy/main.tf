@@ -1,3 +1,7 @@
+##############################
+# Provider Configuration
+##############################
+
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -7,6 +11,10 @@ terraform {
     }
   }
 }
+
+##############################
+# Policy Configuration
+##############################
 
 resource "aws_iam_policy" "this" {
   description = var.description
