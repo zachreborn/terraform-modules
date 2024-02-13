@@ -74,18 +74,6 @@ variable "logging_role" {
   default     = null
 }
 
-variable "on_partial_upload" {
-  description = "(Optional) The ARN of the AWS Lambda function that is invoked after partial uploads."
-  type        = string
-  default     = null
-}
-
-variable "on_upload" {
-  description = "(Optional) The ARN of the AWS Lambda function that is invoked after a file is uploaded."
-  type        = string
-  default     = null
-}
-
 variable "passive_ip" {
   description = "(Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate."
   type        = string
