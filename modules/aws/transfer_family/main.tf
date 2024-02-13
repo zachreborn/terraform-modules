@@ -58,8 +58,4 @@ resource "aws_transfer_server" "this" {
     set_stat_option             = var.set_stat_option
     tls_session_resumption_mode = var.tls_session_resumption_mode
   }
-  workflow_details {
-    on_upload         = var.on_upload
-    on_partial_upload = var.on_partial_upload
-  }
 }
