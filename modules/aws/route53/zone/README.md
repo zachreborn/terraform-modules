@@ -62,19 +62,55 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Usage
+This example configures two hosted zones with a comment and tags for each zone.
 ```
 module "route53_zone" {
   source  = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
   
-  comment = "ThinkStack primary domain"
-  name    = "thinkstack.co"
+  zones = {
+    "example.com" = {
+      comment = "example.com"
+    }
+    "example.net" = {
+      comment = "example.net"
+    }
+  }
   
   tags    = {
     terraform   = "yes"
     created_by  = "Zachary Hill"
     environment = "prod"
     role        = "external dns"
+  }
+}
+```
+
+### Advanced Usage
+This example shows how to use the module with a variable and a map of objects. This allows for easier readability and maintainability of the code.
+```
+module "route53_zones" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
+
+  zones = var.zones
+  tags = {
+    created_by = "Zachary Hill"
+    role       = "external dns"
+  }
+}
+
+variable "zones" {
+  type = map(object({
+    comment           = optional(string)
+    delegation_set_id = optional(string)
+  }))
+  default = {
+    "example.com" = {
+      comment = "example.com"
+    }
+    "example.net" = {
+      comment = "Not in use"
+    }
   }
 }
 ```
@@ -113,18 +149,15 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_comment"></a> [comment](#input\_comment) | (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'. | `string` | `"Managed by Terraform"` | no |
-| <a name="input_delegation_set_id"></a> [delegation\_set\_id](#input\_delegation\_set\_id) | (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones. | `string` | `null` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) This is the name of the hosted zone. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the zone. | `map(any)` | <pre>{<br>  "terraform": true<br>}</pre> | no |
-| <a name="input_vpc"></a> [vpc](#input\_vpc) | (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the delegation\_set\_id argument in this resource and any aws\_route53\_zone\_association resource specifying the same zone ID. Detailed below. | `string` | `null` | no |
+| <a name="input_zones"></a> [zones](#input\_zones) | (Required) A map of hosted zone objects. The key is the name of the hosted zone. Values are the zone configuration settings. | <pre>map(object({<br>    comment           = optional(string) # (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.<br>    delegation_set_id = optional(string) # (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones.<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_name_servers"></a> [name\_servers](#output\_name\_servers) | n/a |
-| <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | n/a |
+| <a name="output_name_servers"></a> [name\_servers](#output\_name\_servers) | A map of zones and their list of name servers. |
+| <a name="output_zone_ids"></a> [zone\_ids](#output\_zone\_ids) | A map of zones and their zone IDs. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

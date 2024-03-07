@@ -9,8 +9,9 @@ terraform {
 }
 
 resource "aws_route53_zone" "zone" {
-  comment           = var.comment
-  delegation_set_id = var.delegation_set_id
-  name              = var.name
+  for_each          = var.zones
+  comment           = each.value.comment
+  delegation_set_id = each.value.delegation_set_id
+  name              = each.key
   tags              = var.tags
 }
