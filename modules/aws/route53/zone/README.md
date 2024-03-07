@@ -62,19 +62,55 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Usage
+This example configures two hosted zones with a comment and tags for each zone.
 ```
 module "route53_zone" {
   source  = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
   
-  comment = "example.com"
-  name    = "example.com"
+  zones = {
+    "example.com" = {
+      comment = "example.com"
+    }
+    "example.net" = {
+      comment = "example.net"
+    }
+  }
   
   tags    = {
     terraform   = "yes"
     created_by  = "Zachary Hill"
     environment = "prod"
     role        = "external dns"
+  }
+}
+```
+
+### Advanced Usage
+This example shows how to use the module with a variable and a map of objects. This allows for easier readability and maintainability of the code.
+```
+module "route53_zones" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
+
+  zones = var.zones
+  tags = {
+    created_by = "Zachary Hill"
+    role       = "external dns"
+  }
+}
+
+variable "zones" {
+  type = map(object({
+    comment           = optional(string)
+    delegation_set_id = optional(string)
+  }))
+  default = {
+    "example.com" = {
+      comment = "example.com"
+    }
+    "example.net" = {
+      comment = "Not in use"
+    }
   }
 }
 ```

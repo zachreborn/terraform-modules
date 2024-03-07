@@ -20,7 +20,6 @@ variable "zones" {
   #   },
   #   "example.net" = {
   #     comment = "example.net"
-  #     delegation_set_id = null
   #   },
   #   "example.org" = {
   #   }
