@@ -5,7 +5,7 @@ output "name_servers" {
   }
 }
 
-output "zone_id" {
+output "zone_ids" {
   description = "A map of zones and their zone IDs."
   value = {
     for zone in aws_route53_zone.zone : zone.name => zone.zone_id
