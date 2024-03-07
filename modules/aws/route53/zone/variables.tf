@@ -15,12 +15,14 @@ variable "zones" {
   # Example:
   # zones = {
   #   "example.com" = {
-  #     comment           = "example.com"
+  #     comment = "example.com"
   #     delegation_set_id = null
   #   },
   #   "example.net" = {
-  #     comment           = "example.net"
+  #     comment = "example.net"
   #     delegation_set_id = null
+  #   },
+  #   "example.org" = {
   #   }
   # }
 }
