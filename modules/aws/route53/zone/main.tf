@@ -12,6 +12,6 @@ resource "aws_route53_zone" "zone" {
   for_each          = var.zones
   comment           = each.value.comment
   delegation_set_id = each.value.delegation_set_id
-  name              = each.value.name
+  name              = each.key
   tags              = var.tags
 }
