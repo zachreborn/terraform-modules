@@ -19,12 +19,6 @@ variable "force_detach_policies" {
   default     = false
 }
 
-variable "managed_policy_arns" {
-  type        = set(string)
-  description = "(Optional) A list of managed policy ARNs to attach to the role."
-  default     = []
-}
-
 variable "max_session_duration" {
   type        = string
   description = "(Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours."
