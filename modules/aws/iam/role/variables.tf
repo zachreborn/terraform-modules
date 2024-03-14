@@ -17,11 +17,6 @@ variable "force_detach_policies" {
   type        = bool
   description = "(Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false."
   default     = false
-
-  validation {
-    condition     = var.force_detach_policies == false || var.force_detach_policies == true
-    error_message = "force_detach_policies must be either true or false"
-  }
 }
 
 variable "max_session_duration" {
