@@ -73,9 +73,12 @@ resource "aws_transfer_server" "this" {
 
 
 ##############
-# Create the transfer family server access
+# Create the transfer family server IAM role
 ##############
 
+##############
+# Create the transfer family server users
+##############
 
 
 

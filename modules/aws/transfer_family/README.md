@@ -69,7 +69,7 @@ module "vendor_sftp" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/transfer_family"
 
   tags = {
-    created_by = "Zachary Hill"
+    created_by = "<YOUR NAME>"
     role       = "vendor sftp"
   }
 }
