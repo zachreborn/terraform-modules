@@ -24,7 +24,6 @@ terraform {
 # Module Configuration
 ###########################
 
-
 resource "aws_transfer_server" "this" {
   certificate                      = var.certificate
   directory_id                     = var.directory_id

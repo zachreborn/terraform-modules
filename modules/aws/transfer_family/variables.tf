@@ -97,8 +97,8 @@ variable "protocols" {
   type        = list(string)
   default     = ["SFTP"]
   validation {
-    condition     = can(regex("^(AS2|SFTP|FTP|FTPS)$", var.protocols))
-    error_message = "The value of protocols must be either AS2, SFTP, FTP, or FTPS."
+    condition     = alltrue([for protocol in var.protocols : can(regex("^(AS2|SFTP|FTP|FTPS)$", protocol))])
+    error_message = "The value of protocols must be a list of any of the following: AS2, SFTP, FTP, or FTPS."
   }
 }
 
