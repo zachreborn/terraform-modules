@@ -1,3 +1,7 @@
+##############################
+# Policy Variables
+##############################
+
 variable "description" {
   type        = string
   description = "(Required) Description of the IAM policy. Changes to the description will force the creation of a new resource."
