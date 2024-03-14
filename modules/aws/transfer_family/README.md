@@ -63,12 +63,17 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+The following example creates a new SFTP server using the default settings. Settings include: S3 backend storage, public access, built in users, and SFTP transfer porotocol.
 ```
-module test {
-  source = 
+module "vendor_sftp" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/transfer_family"
 
-  variable = 
+  tags = {
+    created_by = "Zachary Hill"
+    role       = "vendor sftp"
+  }
 }
+
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_

@@ -24,6 +24,18 @@ terraform {
 # Module Configuration
 ###########################
 
+##############
+# Create logging IAM role
+##############
+
+##############
+# Create CloudWatch log group
+##############
+
+##############
+# Create the AWS transfer family server
+##############
+
 resource "aws_transfer_server" "this" {
   certificate                      = var.certificate
   directory_id                     = var.directory_id
@@ -58,3 +70,15 @@ resource "aws_transfer_server" "this" {
     tls_session_resumption_mode = var.tls_session_resumption_mode
   }
 }
+
+
+##############
+# Create the transfer family server access
+##############
+
+
+
+
+##############
+# Create the transfer family server workflow
+##############
