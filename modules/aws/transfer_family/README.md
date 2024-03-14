@@ -92,7 +92,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -100,11 +102,38 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_address_allocation_ids"></a> [address\_allocation\_ids](#input\_address\_allocation\_ids) | (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your server's endpoint. This can only be set when 'var.endpoint\_type' is set to 'VPC' | `list(string)` | `[]` | no |
+| <a name="input_as2_transports"></a> [as2\_transports](#input\_as2\_transports) | (Optional) The transport method for AS2 messages. Valid values are HTTP. | `list(string)` | `null` | no |
+| <a name="input_certificate"></a> [certificate](#input\_certificate) | (Optional) The ARN of the AWS Certificate Manager certificate to use with the server | `string` | `null` | no |
+| <a name="input_directory_id"></a> [directory\_id](#input\_directory\_id) | (Optional) The ID of the AWS Directory Service directory that you want to associate with the server | `string` | `null` | no |
+| <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are VPC and PUBLIC | `string` | `"PUBLIC"` | no |
+| <a name="input_function"></a> [function](#input\_function) | (Optional) The ARN of the AWS Lambda function that is invoked for user authentication | `string` | `null` | no |
+| <a name="input_host_key"></a> [host\_key](#input\_host\_key) | (Optional) The RSA, ECDSA, or ED25519 private key. This must be created ahead of time. | `string` | `null` | no |
+| <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
+| <a name="input_invocation_role"></a> [invocation\_role](#input\_invocation\_role) | (Optional) The ARN of the IAM role that controls your authentication with an identity provider\_type through API\_GATEWAY. | `string` | `null` | no |
+| <a name="input_logging_role"></a> [logging\_role](#input\_logging\_role) | (Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group. | `string` | `null` | no |
+| <a name="input_passive_ip"></a> [passive\_ip](#input\_passive\_ip) | (Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate. | `string` | `null` | no |
+| <a name="input_post_authentication_login_banner"></a> [post\_authentication\_login\_banner](#input\_post\_authentication\_login\_banner) | (Optional) The banner message which is displayed to users after they authenticate to the server. | `string` | `null` | no |
+| <a name="input_pre_authentication_login_banner"></a> [pre\_authentication\_login\_banner](#input\_pre\_authentication\_login\_banner) | (Optional) The banner message which is displayed to users before they authenticate to the server. | `string` | `null` | no |
+| <a name="input_protocols"></a> [protocols](#input\_protocols) | (Optional) The list of protocol settings that are configured for your server. Valid values are AS2, SFTP, FTP, and FTPS. | `list(string)` | <pre>[<br>  "SFTP"<br>]</pre> | no |
+| <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (Optional) A list of security group IDs that are attached to the server's endpoint. (Optional) A list of security groups IDs that are available to attach to your server's endpoint. If no security groups are specified, the VPC's default security groups are automatically assigned to your endpoint. This property can only be used when endpoint\_type is set to VPC. | `list(string)` | `[]` | no |
+| <a name="input_security_policy_name"></a> [security\_policy\_name](#input\_security\_policy\_name) | (Optional) Specifies the name of the security policy that is attached to the server.  Possible values are TransferSecurityPolicy-2018-11, TransferSecurityPolicy-2020-06, TransferSecurityPolicy-FIPS-2020-06, TransferSecurityPolicy-FIPS-2023-05, TransferSecurityPolicy-2022-03, TransferSecurityPolicy-2023-05, TransferSecurityPolicy-PQ-SSH-Experimental-2023-04, TransferSecurityPolicy-2024-01, and TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04. Default value is: TransferSecurityPolicy-2024-01. | `string` | `"TransferSecurityPolicy-2024-01"` | no |
+| <a name="input_set_stat_option"></a> [set\_stat\_option](#input\_set\_stat\_option) | (Optional) Specifies the behavior of your server endpoint when you use the STAT command. Valid values are: DEFAULT and ENABLE\_NO\_OP. | `string` | `null` | no |
+| <a name="input_storage_location"></a> [storage\_location](#input\_storage\_location) | (Optional) The domain of the storage system that is used for file transfers. Valid values are: S3 and EFS. The default is S3. | `string` | `"S3"` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Optional) A list of subnet IDs that are required to host your server endpoint in your VPC. This property can only be used when endpoint\_type is set to VPC. | `list(string)` | `[]` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tls_session_resumption_mode"></a> [tls\_session\_resumption\_mode](#input\_tls\_session\_resumption\_mode) | (Optional) Specifies the mode of the TLS session resumption. Valid values are: DISABLED, ENABLED, and ENFORCED. | `string` | `null` | no |
+| <a name="input_url"></a> [url](#input\_url) | (Optional) The URL of the file transfer protocol endpoint that is used to authentication users through an API\_GATEWAY. | `string` | `null` | no |
+| <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) The ID of the VPC endpoint. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) The ID of the VPC that is used for the transfer server. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 
 ## Outputs
 
