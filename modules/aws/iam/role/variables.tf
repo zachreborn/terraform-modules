@@ -29,9 +29,9 @@ variable "max_session_duration" {
   }
 }
 
-variable "name" {
+variable "name_prefix" {
   type        = string
-  description = "(Required) The friendly IAM role name to match."
+  description = "(Required) The prefix used to generate a unique role name."
 }
 
 variable "path" {
