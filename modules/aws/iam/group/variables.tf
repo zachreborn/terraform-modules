@@ -20,7 +20,3 @@ variable "groups" {
 ##############################
 # Policy Attachment Variables
 ##############################
-variable "policy_arns" {
-  type        = set(string)
-  description = "(Required) - A list of ARNs of the policies which you want attached to the groups."
-}
