@@ -125,10 +125,9 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | The ARN assigned by AWS for this IAM group. |
-| <a name="output_id"></a> [id](#output\_id) | The ID of the IAM group. |
-| <a name="output_name"></a> [name](#output\_name) | The name of the IAM group. |
-| <a name="output_path"></a> [path](#output\_path) | The path of the IAM group in AWS. |
+| <a name="output_arn"></a> [arn](#output\_arn) | A map of ARNs assigned by AWS for the IAM groups. |
+| <a name="output_id"></a> [id](#output\_id) | A map of IDs of the IAM groups. |
+| <a name="output_path"></a> [path](#output\_path) | A map of the paths for each IAM group. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
