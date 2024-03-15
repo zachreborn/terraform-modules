@@ -120,7 +120,6 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_groups"></a> [groups](#input\_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br>    policy_arns = set(string)<br>  }))</pre> | n/a | yes |
-| <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the groups. | `set(string)` | n/a | yes |
 
 ## Outputs
 
