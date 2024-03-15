@@ -42,6 +42,7 @@ resource "aws_iam_group" "this" {
 ##############################
 
 resource "aws_iam_group_policy_attachment" "this" {
+  depends_on = [aws_iam_group.this]
   for_each   = local.group_policies
   group      = each.value.group
   policy_arn = each.value.policy_arn
