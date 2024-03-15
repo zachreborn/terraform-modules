@@ -65,14 +65,15 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+The following example demonstrates how to use the iam_role module and attach multiple policies to the role. These can be built in policies or policies as outputs from data sources or other modules.
 ```
 module "iam_role" {
     source             = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
     
     assume_role_policy = module.iam_policy.arn
     description        = "Role used for a test"
-    name               = "test_role"
+    name_prefix        = "test_role"
+    policy_arns        = ["arn:aws:iam::aws:policy/SomePolicy", "module.iam_policy.arn"]
 }
 ```
 
