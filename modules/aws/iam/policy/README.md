@@ -108,7 +108,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_description"></a> [description](#input\_description) | (Required) Description of the IAM policy. Changes to the description will force the creation of a new resource. | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource. | `string` | n/a | yes |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource. | `string` | n/a | yes |
 | <a name="input_path"></a> [path](#input\_path) | (Optional) Path in which to create the policy. See IAM Identifiers for more information. Defaults to `/`. | `string` | `"/"` | no |
 | <a name="input_policy"></a> [policy](#input\_policy) | (Required) The policy document. This is a JSON formatted string. The heredoc syntax, file function, or the aws\_iam\_policy\_document data source are all helpful here. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM policy. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
