@@ -24,7 +24,7 @@ locals {
           policy_arn = policy
         }
       ]
-    ]) : "${item.group}_${item.policy_arn}" => item
+    ]) : "${item.group}_attachment_${item.policy_arn}" => item
   }
 }
 
