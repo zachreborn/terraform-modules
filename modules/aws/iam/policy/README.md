@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">IAM Role Policy Attachment</h3>
+<h3 align="center">IAM Policy Module</h3>
   <p align="center">
-    Attaches an IAM policy to an IAM role.
+    This module will create, configure, and manage a IAM Policy for use in attaching to a group, role, or user.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,10 +64,12 @@
 ## Usage
 
 ```
-module test {
-    source = 
-
-    variable = 
+module "backup_policy" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/iam/policy"
+    
+    description = "Backup to s3 permissions"
+    name        = "backup_policy"
+    policy      = file("global/iam/iam_policies/backup_policy/backup-policy.json")
 }
 ```
 
@@ -99,18 +101,24 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_role_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_policy_arn"></a> [policy\_arn](#input\_policy\_arn) | (Required) - The ARN of the policy you want to apply | `string` | n/a | yes |
-| <a name="input_role"></a> [role](#input\_role) | (Required) - The role the policy should be applied to | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Required) Description of the IAM policy. Changes to the description will force the creation of a new resource. | `string` | n/a | yes |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional) Path in which to create the policy. See IAM Identifiers for more information. Defaults to `/`. | `string` | `"/"` | no |
+| <a name="input_policy"></a> [policy](#input\_policy) | (Required) The policy document. This is a JSON formatted string. The heredoc syntax, file function, or the aws\_iam\_policy\_document data source are all helpful here. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM policy. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -64,8 +64,8 @@
 ## Usage
 
 ```
-module "thinkstack_organization" {
-    source                        = "github.com/zachreborn/terraform-modules//modules/aws/organization"
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organization"
     
     aws_service_access_principals = [
         "aws-artifact-account-sync.amazonaws.com", 

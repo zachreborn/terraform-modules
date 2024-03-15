@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">ThinkStack SIEM Module</h3>
+<h3 align="center">SIEM Module</h3>
   <p align="center">
-    This module sets up all of the necesarry components for the ThinkStack SIEM security platform.
+    This module sets up all of the necesarry components for the SIEM security platform.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -65,7 +65,7 @@
 ### Simple Example
 ```
 module "siem" {
-    source                         = "github.com/zachreborn/terraform-modules//modules/thinkstack/siem"
+    source                         = "github.com/zachreborn/terraform-modules//modules/services/siem"
 
     ami                            = var.centos_ami[var.aws_region]
     created_by                     = "Zachary Hill"
@@ -93,7 +93,6 @@ module "siem" {
         environment = "prod"
         project     = "SIEM Implementation"
         team        = "Security Team"
-        used_by     = "ThinkStack"
     }
 }
 ```

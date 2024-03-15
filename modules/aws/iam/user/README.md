@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">IAM Password Policy</h3>
+<h3 align="center">IAM User Module</h3>
   <p align="center">
-    This module is used to create and manage an IAM password policy. The IAM password policy is account wide.
+    This module sets up an IAM user.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,29 +62,12 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Simple Example
-This example will create an IAM password policy with the hardened best practice settings enabled.
-```
-module iam_password_policy {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
-}
-```
 
-### Full Example
-This example will create an IAM password policy with custom settings enabled.
 ```
-module iam_password_policy {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_password_policy"
-
-  allow_users_to_change_password = true
-  hard_expiry                    = false
-  max_password_age               = null
-  minimum_password_length        = 20
-  password_reuse_prevention      = 12
-  require_lowercase_characters   = true
-  require_numbers                = true
-  require_symbols                = false
-  require_uppercase_characters   = true
+module test_user {
+    source               = "github.com/zachreborn/terraform-modules//modules/aws/iam/user"
+    
+    name                 = "test_user"
 }
 ```
 
@@ -116,25 +99,24 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_account_password_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_account_password_policy) | resource |
+| [aws_iam_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_allow_users_to_change_password"></a> [allow\_users\_to\_change\_password](#input\_allow\_users\_to\_change\_password) | (Optional) Whether to allow users to change their own password | `bool` | `true` | no |
-| <a name="input_hard_expiry"></a> [hard\_expiry](#input\_hard\_expiry) | (Optional) Whether users are prevented from setting a new password after their password has expired (i.e. require administrator reset) | `bool` | `false` | no |
-| <a name="input_max_password_age"></a> [max\_password\_age](#input\_max\_password\_age) | (Optional) The number of days that an user password is valid. | `number` | `null` | no |
-| <a name="input_minimum_password_length"></a> [minimum\_password\_length](#input\_minimum\_password\_length) | (Optional) Minimum length to require for user passwords. Recommended to be set to >= 14. | `number` | `14` | no |
-| <a name="input_password_reuse_prevention"></a> [password\_reuse\_prevention](#input\_password\_reuse\_prevention) | (Optional) The number of previous passwords that users are prevented from reusing. | `number` | `24` | no |
-| <a name="input_require_lowercase_characters"></a> [require\_lowercase\_characters](#input\_require\_lowercase\_characters) | (Optional) Whether to require lowercase characters for user passwords. | `bool` | `true` | no |
-| <a name="input_require_numbers"></a> [require\_numbers](#input\_require\_numbers) | (Optional) Whether to require numbers for user passwords. | `bool` | `true` | no |
-| <a name="input_require_symbols"></a> [require\_symbols](#input\_require\_symbols) | (Optional) Whether to require symbols for user passwords. | `bool` | `true` | no |
-| <a name="input_require_uppercase_characters"></a> [require\_uppercase\_characters](#input\_require\_uppercase\_characters) | (Optional) Whether to require uppercase characters for user passwords. | `bool` | `true` | no |
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | (Optional, default false) When destroying this user, destroy even if it has non-Terraform-managed IAM access keys, login profile or MFA devices. Without force\_destroy a user with non-Terraform-managed access keys and login profile will fail to be destroyed. | `string` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: =,.@-\_.. User names are not distinguished by case. For example, you cannot create users named both 'TESTUSER' and 'testuser'. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional, default '/') Path in which to create the user. | `string` | `"/"` | no |
+| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the user. | `string` | `null` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN assigned by AWS for this user. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the user. |
+| <a name="output_user_name"></a> [user\_name](#output\_user\_name) | The user's name. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
