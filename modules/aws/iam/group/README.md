@@ -1,6 +1,3 @@
-## Usage
-    
-
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
@@ -29,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">IAM Role Module</h3>
+<h3 align="center">IAM Group Module</h3>
   <p align="center">
-    This module will create an IAM Role with the policy you have previously created or a built-in policy.
+    This module sets up an IAM group and the IAM policy attachments to the group.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -65,14 +62,19 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+This example creates two IAM groups and attaches policies to them. The first group has two policies attached, and the second group has two policies attached, one of which is a module output from another module.
 ```
-module "iam_role" {
-    source             = "github.com/zachreborn/terraform-modules//modules/aws/iam_role"
-    
-    assume_role_policy = module.iam_policy.arn
-    description        = "Role used for a test"
-    name               = "test_role"
+module "groups" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/group"
+
+  groups = {
+    "group1" = {
+      policy_arns = ["arn:aws:iam::aws:policy/AmazonAppStreamReadOnlyAccess", "arn:aws:iam::aws:policy/AmazonAppStreamFullAccess"]
+    },
+    "group2" = {
+      policy_arns = ["arn:aws:iam::aws:policy/AmazonAppStreamReadOnlyAccess", module.iam_policy.policy.arn]
+    }
+  }
 }
 ```
 
@@ -104,27 +106,22 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group) | resource |
+| [aws_iam_group_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group_policy_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_assume_role_policy"></a> [assume\_role\_policy](#input\_assume\_role\_policy) | (Required) The policy that grants an entity permission to assume the role. | `string` | n/a | yes |
-| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `""` | no |
-| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
-| <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) The friendly IAM role name to match. | `string` | n/a | yes |
-| <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
-| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `""` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM role. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br>    policy_arns = set(string)<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | The Amazon Resource Name (ARN) specifying the role. |
-| <a name="output_name"></a> [name](#output\_name) | The name of the role. |
+| <a name="output_arn"></a> [arn](#output\_arn) | A map of ARNs assigned by AWS for the IAM groups. |
+| <a name="output_id"></a> [id](#output\_id) | A map of IDs of the IAM groups. |
+| <a name="output_path"></a> [path](#output\_path) | A map of the paths for each IAM group. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">IAM Policy Module</h3>
+<h3 align="center">IAM User Policy Attachment Module</h3>
   <p align="center">
-    This module will create, configure, and manage a IAM Policy for use in attaching to a group, role, or user.
+    This module attaches an IAM policy to an IAM user.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,12 +64,10 @@
 ## Usage
 
 ```
-module "backup_policy" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/iam_policy"
-    
-    description = "Backup to s3 permissions"
-    name        = "backup_policy"
-    policy      = file("global/iam/iam_policies/backup_policy/backup-policy.json")
+module test {
+    source = 
+
+    variable = 
 }
 ```
 
@@ -101,23 +99,18 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_user_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_description"></a> [description](#input\_description) | (Optional, Forces new resource) Description of the IAM policy. | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name. | `string` | n/a | yes |
-| <a name="input_path"></a> [path](#input\_path) | (Optional, default '/') Path in which to create the policy. See IAM Identifiers for more information. | `string` | `"/"` | no |
-| <a name="input_policy"></a> [policy](#input\_policy) | (Required) The policy document. This is a JSON formatted string. The heredoc syntax, file function, or the aws\_iam\_policy\_document data source are all helpful here. | `string` | n/a | yes |
+| <a name="input_policy_arn"></a> [policy\_arn](#input\_policy\_arn) | (Required) - The ARN of the policy you want to apply | `string` | n/a | yes |
+| <a name="input_user"></a> [user](#input\_user) | (Required) - The user the policy should be applied to | `string` | n/a | yes |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+No outputs.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

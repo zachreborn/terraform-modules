@@ -1,3 +1,6 @@
+## Usage
+    
+
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
@@ -26,9 +29,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">IAM User Policy Attachment Module</h3>
+<h3 align="center">IAM Role Module</h3>
   <p align="center">
-    This module attaches an IAM policy to an IAM user.
+    This module will create an IAM Role and attach a policy you have previously created or attach a built-in policy.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,12 +65,15 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+The following example demonstrates how to use the iam_role module and attach multiple policies to the role. These can be built in policies or policies as outputs from data sources or other modules.
 ```
-module test {
-    source = 
-
-    variable = 
+module "iam_role" {
+    source             = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
+    
+    assume_role_policy = module.iam_policy.arn
+    description        = "Role used for a test"
+    name_prefix        = "test_role"
+    policy_arns        = ["arn:aws:iam::aws:policy/SomePolicy", "module.iam_policy.arn"]
 }
 ```
 
@@ -99,18 +105,29 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_user_policy_attachment.test-attach](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
+| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_policy_arn"></a> [policy\_arn](#input\_policy\_arn) | (Required) - The ARN of the policy you want to apply | `string` | n/a | yes |
-| <a name="input_user"></a> [user](#input\_user) | (Required) - The user the policy should be applied to | `string` | n/a | yes |
+| <a name="input_assume_role_policy"></a> [assume\_role\_policy](#input\_assume\_role\_policy) | (Required) The policy that grants an entity permission to assume the role. | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `null` | no |
+| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
+| <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique role name. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
+| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
+| <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the role. | `set(string)` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM role. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The Amazon Resource Name (ARN) specifying the role. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the role. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

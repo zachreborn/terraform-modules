@@ -1,3 +1,6 @@
+##############################
+# Provider Configuration
+##############################
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -7,6 +10,10 @@ terraform {
     }
   }
 }
+
+##############################
+# Password Policy Configuration
+##############################
 
 resource "aws_iam_account_password_policy" "this" {
   allow_users_to_change_password = var.allow_users_to_change_password
