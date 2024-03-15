@@ -28,7 +28,7 @@
 
 <h3 align="center">IAM Group Module</h3>
   <p align="center">
-    This module sets up an IAM group.
+    This module sets up an IAM group and the IAM policy attachments to the group.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,10 +64,23 @@
 ## Usage
 
 ```
-module test_user {
-    source               = "github.com/zachreborn/terraform-modules//modules/aws/iam/group"
+module groups {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/iam/group"
     
-    name                 = "test_user"
+    groups = {
+        "group1" = {
+            policy_arns = [
+                "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+                "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+            ]
+        }
+        "group2" = {
+            policy_arns = [
+                "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+                "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+            ]
+        }
+    }
 }
 ```
 
