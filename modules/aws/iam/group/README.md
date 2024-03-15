@@ -62,25 +62,19 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+This example creates two IAM groups and attaches policies to them. The first group has two policies attached, and the second group has two policies attached, one of which is a module output from another module.
 ```
-module groups {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/iam/group"
-    
-    groups = {
-        "group1" = {
-            policy_arns = [
-                "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
-            ]
-        }
-        "group2" = {
-            policy_arns = [
-                "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
-            ]
-        }
+module "groups" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/group"
+
+  groups = {
+    "group1" = {
+      policy_arns = ["arn:aws:iam::aws:policy/AmazonAppStreamReadOnlyAccess", "arn:aws:iam::aws:policy/AmazonAppStreamFullAccess"]
+    },
+    "group2" = {
+      policy_arns = ["arn:aws:iam::aws:policy/AmazonAppStreamReadOnlyAccess", module.iam_policy.policy.arn]
     }
+  }
 }
 ```
 
