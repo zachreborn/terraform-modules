@@ -17,7 +17,7 @@ terraform {
 ##############################
 
 locals {
-  # This translates the policy_arns list into a map of objects that can be used by the aws_iam_role_policy_attachment resource. This is needed
+  # This transforms the policy_arns list into a map of objects that can be used by the aws_iam_role_policy_attachment resource. This is needed
   # in order to utilize `for_each` when using policies which have not yet been created within modules.
   # Example Output:
   # {
