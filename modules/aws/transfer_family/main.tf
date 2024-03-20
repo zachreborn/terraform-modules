@@ -147,7 +147,7 @@ resource "aws_transfer_user" "this" {
   home_directory      = "/${module.bucket.s3_bucket_id}/${each.value.home_directory}"
   home_directory_type = each.value.home_directory_type
   policy              = each.value.policy
-  role                = module.transfer_family_iam_role.name
+  role                = module.transfer_family_iam_role.arn
   server_id           = aws_transfer_server.this.id
   tags                = var.tags
   user_name           = each.value.username
