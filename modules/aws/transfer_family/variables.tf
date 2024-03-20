@@ -184,8 +184,8 @@ variable "vpc_id" {
 variable "users" {
   description = "(Optional) A map of user names and their configuration"
   type = map(object({
-    home_directory      = string
-    home_directory_type = optional(string, "PATH") # Default is "PATH"
+    home_directory      = oprional(string)
+    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"
     policy              = optional(string)
     username            = string
   }))

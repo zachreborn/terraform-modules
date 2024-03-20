@@ -144,7 +144,7 @@ module "transfer_family_iam_role" {
 resource "aws_transfer_user" "this" {
   for_each = var.users
 
-  home_directory      = "/${module.bucket.s3_bucket_id}/${each.value.home_directory}"
+  home_directory      = each.value.home_directory
   home_directory_type = each.value.home_directory_type
   policy              = each.value.policy
   role                = module.transfer_family_iam_role.arn
@@ -156,8 +156,16 @@ resource "aws_transfer_user" "this" {
     entry  = "/"
     target = "/${module.bucket.s3_bucket_id}/$${Transfer:UserName}"
   }
-}
 
+  dynamic "home_directory_mappings" {
+    # Disables the dynamic block of home_directory_mappings if home_directory_type is not "LOGICAL"
+    for_each = each.value.home_directory_type == "LOGICAL" ? [1] : []
+    content {
+      entry  = "/"
+      target = "/${module.bucket.s3_bucket_id}/$${Transfer:UserName}"
+    }
+  }
+}
 
 ##############
 # Create the transfer family server workflow
