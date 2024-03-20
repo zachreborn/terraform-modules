@@ -119,7 +119,7 @@ No modules.
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique role name. | `string` | n/a | yes |
 | <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
 | <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
-| <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the role. | `set(string)` | n/a | yes |
+| <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A set of ARNs of the policies which you want attached to the role. | `set(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM role. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 
 ## Outputs

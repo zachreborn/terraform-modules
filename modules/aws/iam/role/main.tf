@@ -18,9 +18,9 @@ terraform {
 
 locals {
   policy_map = { for idx, policy_arn in var.policy_arns : policy => {
-    name = "policy-${idx}"
-    policy_arn  = policy_arn
-  }}
+    name       = "policy-${idx}"
+    policy_arn = policy_arn
+  } }
 }
 
 ##############################
