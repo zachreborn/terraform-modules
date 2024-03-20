@@ -185,9 +185,8 @@ variable "users" {
   description = "(Optional) A map of user names and their configuration"
   type = map(object({
     home_directory      = string
-    home_directory_type = string
+    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"
     policy              = optional(string)
-    tags                = map(string)
     username            = string
   }))
   default = {}
