@@ -154,7 +154,7 @@ resource "aws_transfer_user" "this" {
 
   home_directory_mappings {
     entry  = "/"
-    target = "/${aws_s3_bucket.foo.id}/$${Transfer:UserName}"
+    target = "/${module.bucket.s3_bucket_id}/$${Transfer:UserName}"
   }
 }
 
