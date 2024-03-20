@@ -188,7 +188,7 @@ variable "users" {
     home_directory_type = string
     policy              = optional(string)
     tags                = map(string)
-    username           = string
+    username            = string
   }))
   default = {}
 }
