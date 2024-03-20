@@ -78,7 +78,7 @@ resource "aws_transfer_server" "this" {
 module "bucket" {
   source = "../s3/bucket"
 
-  bucket_prefix = var.s3_bucket_prefix
+  bucket_prefix = var.name
   tags          = var.tags
 }
 
@@ -147,7 +147,7 @@ resource "aws_transfer_user" "this" {
   home_directory      = each.value.home_directory
   home_directory_type = each.value.home_directory_type
   policy              = each.value.policy
-  role                = module.transfer_family_iam_role.iam_role_name
+  role                = module.transfer_family_iam_role.name
   server_id           = aws_transfer_server.this.id
   tags                = var.tags
   user_name           = each.value.user_name

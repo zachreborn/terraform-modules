@@ -176,11 +176,6 @@ variable "vpc_id" {
 # S3 Bucket Variables
 ###########################
 
-variable "s3_bucket_prefix" {
-  description = "(Optional) The prefix to apply to the S3 bucket name"
-  type        = string
-  default     = "transfer-family-"
-}
 
 ###########################
 # User Variables
@@ -204,7 +199,7 @@ variable "users" {
 ###########################
 
 variable "name" {
-  description = "(Required) The name of the AWS Transfer Family server"
+  description = "(Required) The name of the AWS Transfer Family server used to name the resources created."
   type        = string
 }
 
