@@ -57,6 +57,6 @@ resource "aws_iam_role" "this" {
 
 resource "aws_iam_role_policy_attachment" "this" {
   for_each   = local.policy_map
-  policy_arn = each.key.policy_arn
+  policy_arn = each.value.policy_arn
   role       = aws_iam_role.this.name
 }
