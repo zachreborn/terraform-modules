@@ -98,13 +98,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_bucket"></a> [bucket](#module\_bucket) | ../s3/bucket | n/a |
+| <a name="module_transfer_family_iam_role"></a> [transfer\_family\_iam\_role](#module\_transfer\_family\_iam\_role) | ../iam/role | n/a |
+| <a name="module_transfer_family_iam_role_policy"></a> [transfer\_family\_iam\_role\_policy](#module\_transfer\_family\_iam\_role\_policy) | ../iam/policy | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
 | [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
+| [aws_transfer_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_user) | resource |
 
 ## Inputs
 
@@ -120,10 +125,12 @@ No modules.
 | <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
 | <a name="input_invocation_role"></a> [invocation\_role](#input\_invocation\_role) | (Optional) The ARN of the IAM role that controls your authentication with an identity provider\_type through API\_GATEWAY. | `string` | `null` | no |
 | <a name="input_logging_role"></a> [logging\_role](#input\_logging\_role) | (Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group. | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Transfer Family server | `string` | n/a | yes |
 | <a name="input_passive_ip"></a> [passive\_ip](#input\_passive\_ip) | (Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate. | `string` | `null` | no |
 | <a name="input_post_authentication_login_banner"></a> [post\_authentication\_login\_banner](#input\_post\_authentication\_login\_banner) | (Optional) The banner message which is displayed to users after they authenticate to the server. | `string` | `null` | no |
 | <a name="input_pre_authentication_login_banner"></a> [pre\_authentication\_login\_banner](#input\_pre\_authentication\_login\_banner) | (Optional) The banner message which is displayed to users before they authenticate to the server. | `string` | `null` | no |
 | <a name="input_protocols"></a> [protocols](#input\_protocols) | (Optional) The list of protocol settings that are configured for your server. Valid values are AS2, SFTP, FTP, and FTPS. | `list(string)` | <pre>[<br>  "SFTP"<br>]</pre> | no |
+| <a name="input_s3_bucket_prefix"></a> [s3\_bucket\_prefix](#input\_s3\_bucket\_prefix) | (Optional) The prefix to apply to the S3 bucket name | `string` | `"transfer-family-"` | no |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (Optional) A list of security group IDs that are attached to the server's endpoint. (Optional) A list of security groups IDs that are available to attach to your server's endpoint. If no security groups are specified, the VPC's default security groups are automatically assigned to your endpoint. This property can only be used when endpoint\_type is set to VPC. | `list(string)` | `[]` | no |
 | <a name="input_security_policy_name"></a> [security\_policy\_name](#input\_security\_policy\_name) | (Optional) Specifies the name of the security policy that is attached to the server.  Possible values are TransferSecurityPolicy-2018-11, TransferSecurityPolicy-2020-06, TransferSecurityPolicy-FIPS-2020-06, TransferSecurityPolicy-FIPS-2023-05, TransferSecurityPolicy-2022-03, TransferSecurityPolicy-2023-05, TransferSecurityPolicy-PQ-SSH-Experimental-2023-04, TransferSecurityPolicy-2024-01, and TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04. Default value is: TransferSecurityPolicy-2024-01. | `string` | `"TransferSecurityPolicy-2024-01"` | no |
 | <a name="input_set_stat_option"></a> [set\_stat\_option](#input\_set\_stat\_option) | (Optional) Specifies the behavior of your server endpoint when you use the STAT command. Valid values are: DEFAULT and ENABLE\_NO\_OP. | `string` | `null` | no |
@@ -132,6 +139,7 @@ No modules.
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_tls_session_resumption_mode"></a> [tls\_session\_resumption\_mode](#input\_tls\_session\_resumption\_mode) | (Optional) Specifies the mode of the TLS session resumption. Valid values are: DISABLED, ENABLED, and ENFORCED. | `string` | `null` | no |
 | <a name="input_url"></a> [url](#input\_url) | (Optional) The URL of the file transfer protocol endpoint that is used to authentication users through an API\_GATEWAY. | `string` | `null` | no |
+| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br>    home_directory      = string<br>    home_directory_type = string<br>    policy              = optional(string)<br>    tags                = map(string)<br>    user_name           = string<br>  }))</pre> | `{}` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) The ID of the VPC endpoint. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) The ID of the VPC that is used for the transfer server. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 
