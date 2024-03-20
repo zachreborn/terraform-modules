@@ -13,6 +13,30 @@ terraform {
 }
 
 ##############################
+# Locals
+##############################
+
+locals {
+  # This transforms the policy_arns list into a map of objects that can be used by the aws_iam_role_policy_attachment resource. This is needed
+  # in order to utilize `for_each` when using policies which have not yet been created within modules.
+  # Example Output:
+  # {
+  #   "policy-0" = {
+  #     name       = "policy-0"
+  #     policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  #   },
+  #   "policy-1" = {
+  #     name       = "policy-1"
+  #     policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  #   }
+  # }
+  policy_map = { for idx, policy_arn in var.policy_arns : "policy-${idx}" => {
+    name       = "policy-${idx}"
+    policy_arn = policy_arn
+  } }
+}
+
+##############################
 # Role Configuration
 ##############################
 
@@ -32,7 +56,7 @@ resource "aws_iam_role" "this" {
 ##############################
 
 resource "aws_iam_role_policy_attachment" "this" {
-  for_each   = var.policy_arns
-  policy_arn = each.key
+  for_each   = local.policy_map
+  policy_arn = each.value.policy_arn
   role       = aws_iam_role.this.name
 }
