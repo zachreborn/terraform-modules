@@ -51,7 +51,7 @@ resource "aws_transfer_server" "this" {
   protocols                        = var.protocols
   security_policy_name             = var.security_policy_name
   url                              = var.url
-  tags                             = var.tags
+  tags                             = merge(var.tags, { "Name" = var.name })
 
   dynamic "endpoint_details" {
     for_each = var.endpoint_type == "VPC" ? [1] : []
@@ -71,15 +71,92 @@ resource "aws_transfer_server" "this" {
   }
 }
 
+##############
+# Create the S3 bucket(s) for the transfer family server
+##############
+
+module "bucket" {
+  source = "../s3/bucket"
+
+  bucket_prefix = var.s3_bucket_prefix
+  tags          = var.tags
+}
 
 ##############
 # Create the transfer family server IAM role
 ##############
 
+module "transfer_family_iam_role_policy" {
+  source = "../iam/policy"
+
+  description = "Transfer Family Server IAM role policy for ${var.name}"
+  name_prefix = "${var.name}-transfer-family-role-policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ],
+        Effect   = "Allow",
+        Resource = [module.bucket.s3_bucket_arn]
+      },
+      {
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ],
+        Effect   = "Allow",
+        Resource = "${module.bucket.s3_bucket_arn}/*"
+      }
+    ]
+  })
+  tags = var.tags
+}
+
+module "transfer_family_iam_role" {
+  source = "../iam/role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "transfer.amazonaws.com"
+        }
+      }
+    ]
+  })
+  description = "Transfer Family Server IAM role for ${var.name}"
+  name_prefix = "${var.name}-transfer-family-role"
+  policy_arns = [module.transfer_family_iam_role_policy.arn]
+  tags        = var.tags
+}
+
 ##############
 # Create the transfer family server users
 ##############
 
+resource "aws_transfer_user" "this" {
+  for_each = var.users
+
+  home_directory      = each.value.home_directory
+  home_directory_type = each.value.home_directory_type
+  policy              = each.value.policy
+  role                = module.transfer_family_iam_role.iam_role_name
+  server_id           = aws_transfer_server.this.id
+  tags                = var.tags
+  user_name           = each.value.user_name
+
+  home_directory_mappings {
+    entry  = "/"
+    target = "/${aws_s3_bucket.foo.id}/$${Transfer:UserName}"
+  }
+}
 
 
 ##############

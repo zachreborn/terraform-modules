@@ -173,8 +173,40 @@ variable "vpc_id" {
 }
 
 ###########################
+# S3 Bucket Variables
+###########################
+
+variable "s3_bucket_prefix" {
+  description = "(Optional) The prefix to apply to the S3 bucket name"
+  type        = string
+  default     = "transfer-family-"
+}
+
+###########################
+# User Variables
+###########################
+
+variable "users" {
+  description = "(Optional) A map of user names and their configuration"
+  type = map(object({
+    home_directory      = string
+    home_directory_type = string
+    policy              = optional(string)
+    tags                = map(string)
+    user_name           = string
+  }))
+  default = {}
+}
+
+
+###########################
 # General Variables
 ###########################
+
+variable "name" {
+  description = "(Required) The name of the AWS Transfer Family server"
+  type        = string
+}
 
 variable "tags" {
   description = "(Optional) Key-value mapping of resource tags"
