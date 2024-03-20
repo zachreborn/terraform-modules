@@ -59,6 +59,6 @@ variable "tags" {
 ##############################
 
 variable "policy_arns" {
-  type        = set(string)
+  type        = list(string)
   description = "(Required) - A list of ARNs of the policies which you want attached to the role."
 }
