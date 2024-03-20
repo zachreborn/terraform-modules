@@ -60,5 +60,5 @@ variable "tags" {
 
 variable "policy_arns" {
   type        = set(string)
-  description = "(Required) - A list of ARNs of the policies which you want attached to the role."
+  description = "(Required) - A set of ARNs of the policies which you want attached to the role."
 }

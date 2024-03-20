@@ -13,6 +13,17 @@ terraform {
 }
 
 ##############################
+# Locals
+##############################
+
+locals {
+  policy_map = { for idx, policy_arn in var.policy_arns : policy => {
+    name = "policy-${idx}"
+    policy_arn  = policy_arn
+  }}
+}
+
+##############################
 # Role Configuration
 ##############################
 
@@ -32,7 +43,7 @@ resource "aws_iam_role" "this" {
 ##############################
 
 resource "aws_iam_role_policy_attachment" "this" {
-  for_each   = var.policy_arns
+  for_each   = local.policy_map
   policy_arn = each.key
   role       = aws_iam_role.this.name
 }
