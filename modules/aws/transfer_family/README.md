@@ -109,6 +109,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Type |
 |------|------|
 | [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
+| [aws_transfer_ssh_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_ssh_key) | resource |
 | [aws_transfer_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_user) | resource |
 
 ## Inputs
@@ -138,7 +139,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_tls_session_resumption_mode"></a> [tls\_session\_resumption\_mode](#input\_tls\_session\_resumption\_mode) | (Optional) Specifies the mode of the TLS session resumption. Valid values are: DISABLED, ENABLED, and ENFORCED. | `string` | `null` | no |
 | <a name="input_url"></a> [url](#input\_url) | (Optional) The URL of the file transfer protocol endpoint that is used to authentication users through an API\_GATEWAY. | `string` | `null` | no |
-| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br>    home_directory      = optional(string)            # Cannot be set if home_directory_type is set to "LOGICAL".<br>    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"<br>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br>    username            = string<br>  }))</pre> | `{}` | no |
+| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br>    home_directory      = optional(string)            # Cannot be set if home_directory_type is set to "LOGICAL".<br>    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"<br>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br>    public_key          = optional(string)            # The public key portion of an SSH key pair<br>    username            = string<br>  }))</pre> | `{}` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) The ID of the VPC endpoint. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) The ID of the VPC that is used for the transfer server. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 
