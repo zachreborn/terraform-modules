@@ -163,7 +163,7 @@ resource "aws_transfer_user" "this" {
     for_each = each.value.home_directory_type == "LOGICAL" ? [1] : []
     content {
       entry  = "/"
-      target = "/${module.bucket.s3_bucket_id}/$${Transfer:UserName}"
+      target = "/${module.bucket.s3_bucket_id}/${each.value.username}"
     }
   }
 }
