@@ -26,7 +26,7 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">Transfer Family Module</h3>
   <p align="center">
     module_description
     <br />
