@@ -95,7 +95,7 @@ module "transfer_family_iam_role_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "AllowListingOfUserFolder",
+        Sid = "AllowListingOfUserFolder",
         Action = [
           "s3:ListBucket",
           "s3:GetBucketLocation"
@@ -104,7 +104,7 @@ module "transfer_family_iam_role_policy" {
         Resource = [module.bucket.s3_bucket_arn]
       },
       {
-        Sid   = "HomeDirObjectAccess",
+        Sid = "HomeDirObjectAccess",
         Action = [
           "s3:GetObject",
           "s3:GetObjectACL",
