@@ -145,7 +145,12 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_server_arn"></a> [server\_arn](#output\_server\_arn) | The ARN of the transfer family server |
+| <a name="output_server_endpoint"></a> [server\_endpoint](#output\_server\_endpoint) | The endpoint of the transfer family server |
+| <a name="output_server_host_key_fingerprint"></a> [server\_host\_key\_fingerprint](#output\_server\_host\_key\_fingerprint) | The RSA private key fingerprint of the transfer family server |
+| <a name="output_server_id"></a> [server\_id](#output\_server\_id) | The ID of the transfer family server |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
