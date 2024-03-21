@@ -28,7 +28,7 @@
 
 <h3 align="center">Transfer Family Module</h3>
   <p align="center">
-    module_description
+    This module creates a new AWS Transfer Family server and associated resources.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -68,12 +68,22 @@ The following example creates a new SFTP server using the default settings. Sett
 module "vendor_sftp" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/transfer_family"
 
+  users = {
+    "user1" = {
+      username   = "user1"
+      public_key = "ssh-ed25519 A1245151512553e542355235325325238IscbHEk"
+    },
+    "user2" = {
+      username   = "user2"
+      public_key = "ssh-ed25519 AA213141d+8XZjatUQ5325jkfldslajfkdjsaoicbHEk"
+    }
+  }
+
   tags = {
     created_by = "<YOUR NAME>"
     role       = "vendor sftp"
   }
 }
-
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
