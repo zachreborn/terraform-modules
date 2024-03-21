@@ -187,6 +187,7 @@ variable "users" {
     home_directory      = optional(string)            # Cannot be set if home_directory_type is set to "LOGICAL".
     home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"
     policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information
+    public_key          = optional(string)            # The public key portion of an SSH key pair
     username            = string
   }))
   default = {}

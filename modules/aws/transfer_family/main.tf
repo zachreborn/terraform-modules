@@ -169,5 +169,17 @@ resource "aws_transfer_user" "this" {
 }
 
 ##############
+# Create the user SSH keys
+##############
+
+resource "aws_transfer_ssh_key" "this" {
+  for_each = var.users
+
+  server_id = aws_transfer_server.this.id
+  user_name = each.value.username
+  body      = each.value.public_key
+}
+
+##############
 # Create the transfer family server workflow
 ##############
