@@ -205,11 +205,11 @@ variable "lifecycle_rules" {
       noncurrent_days           = optional(number)
       storage_class             = optional(string)
     })))
-    transition = list(object({
+    transition = optional(list(object({
       date          = optional(string)
       days          = optional(number)
       storage_class = optional(string)
-    }))
+    })))
   }))
   default = null
 }
