@@ -78,8 +78,9 @@ resource "aws_transfer_server" "this" {
 module "bucket" {
   source = "../s3/bucket"
 
-  bucket_prefix = var.name
-  tags          = var.tags
+  bucket_prefix   = var.name
+  lifecycle_rules = var.lifecycle_rules
+  tags            = var.tags
 }
 
 ##############
