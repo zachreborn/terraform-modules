@@ -157,7 +157,7 @@ module "logging_bucket" {
 ```
 
 ### Lifecycle Rules With All Available Options
-This example shows all of the available options. All transition configurations are lists and can have multiple transitions configured.
+This example shows all of the available options. All transition configurations are lists and can have multiple transitions configured. Any combination of the options can be used to create the desired lifecycle rule.
 ```
 module "logging_bucket" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
