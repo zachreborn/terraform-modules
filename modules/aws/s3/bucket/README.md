@@ -234,7 +234,7 @@ module "app_bucket" {
 ```
 
 ### Intelligent Tiering Filter Example
-This example makes use of a simple S3 bucket with intelligent tiering enabled. The intelligent tiering configuration will eventually end up with objects in the DEEP_ARCHIVE_ACCESS glacier tier after 120 days. Objects with the prefix 'test/' and tagged with 'project' = 'app' will utilize this intelligent tiering configuration.
+This example makes use of a simple S3 bucket with intelligent tiering enabled. The intelligent tiering configuration will eventually end up with objects in the DEEP_ARCHIVE_ACCESS glacier tier after 120 days. Objects with the prefix 'test/' and tagged with 'project' = 'app' will utilize this intelligent tiering configuration. 
 ```
 module "app_bucket" {
   source                          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
