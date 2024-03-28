@@ -178,6 +178,8 @@ resource "aws_transfer_ssh_key" "this" {
   server_id = aws_transfer_server.this.id
   user_name = each.value.username
   body      = each.value.public_key
+
+  depends_on = [aws_transfer_user.this]
 }
 
 ##############
