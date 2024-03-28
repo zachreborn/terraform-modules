@@ -209,7 +209,7 @@ variable "lifecycle_rules" {
       date          = optional(string)
       days          = optional(number)
       storage_class = optional(string)
-    })))
+    })), [])
   }))
   default = null
 }
