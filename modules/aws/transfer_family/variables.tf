@@ -177,7 +177,7 @@ variable "vpc_id" {
 ###########################
 
 variable "lifecycle_rules" {
-  description = "(Optional) A list of lifecycle rules to apply to the bucket"
+  description = "(Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration."
   type = list(object({
     id     = string
     status = string
@@ -199,11 +199,11 @@ variable "lifecycle_rules" {
       newer_noncurrent_versions = optional(number)
       noncurrent_days           = optional(number)
     }))
-    noncurrent_version_transitions = list(object({
+    noncurrent_version_transitions = optional(list(object({
       newer_noncurrent_versions = optional(number)
       noncurrent_days           = optional(number)
       storage_class             = optional(string)
-    }))
+    })))
     transition = list(object({
       date          = optional(string)
       days          = optional(number)
