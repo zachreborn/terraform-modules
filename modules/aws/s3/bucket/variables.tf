@@ -180,6 +180,7 @@ variable "intelligent_tiering_days" {
 variable "lifecycle_rules" {
   description = "(Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration."
   type        = any
+  # Commenting out as this is causing a bug where expiration is always being set to 0 days. https://github.com/zachreborn/terraform-modules/issues/60
   # type = list(object({
   #   id     = string
   #   status = string
