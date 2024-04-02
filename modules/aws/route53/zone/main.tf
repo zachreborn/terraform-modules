@@ -1,3 +1,6 @@
+###########################
+# Provider Configuration
+###########################
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -8,6 +11,18 @@ terraform {
   }
 }
 
+###########################
+# Data Sources
+###########################
+
+
+###########################
+# Locals
+###########################
+
+###########################
+# Module Configuration
+###########################
 resource "aws_route53_zone" "zone" {
   for_each          = var.zones
   comment           = each.value.comment
