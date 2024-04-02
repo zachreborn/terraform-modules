@@ -77,7 +77,7 @@ module "bucket" {
 ```
 
 ### Lifecycle Rules Example
-This example creates a bucket with multiple lifecycle rules configured to transition objects to Standard-IA after 30 days, Glacier after 60 days, and expire objects after 90 days.
+This example creates a bucket with multiple lifecycle rules configured to transition objects to Standard-IA after 30 days, Glacier after 60 days, and expire objects after 90 days. 
 ```
 module "logging_bucket" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
