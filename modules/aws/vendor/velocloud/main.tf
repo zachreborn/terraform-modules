@@ -18,27 +18,41 @@ data "aws_region" "current" {}
 # Security Groups
 ############################################
 
-resource "aws_security_group" "velocloud_sdwan_mgmt_sg" {
+resource "aws_security_group" "sdwan_mgmt_sg" {
   name        = var.wan_mgmt_sg_name
   description = "Security group applied to the VeloCloud SDWAN instance WAN and MGMT NICs for VeloCloud communication"
   vpc_id      = var.vpc_id
 
-  egress {
-    description = "HTTPS Tunnel"
-    from_port   = 443
-    to_port     = 443
+  ingress {
+    description = "SSH access for support"
+    from_port   = 22
+    to_port     = 22
     protocol    = "TCP"
-    # CATO Cloud requires this port to be open to the internet
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = var.ssh_mgmt_access_cidr_blocks
+  }
+
+  ingress {
+    description = "SNMP access for management"
+    from_port   = 161
+    to_port     = 161
+    protocol    = "UDP"
+    cidr_blocks = var.snmp_mgmt_access_cidr_blocks
+  }
+
+  ingress {
+    description = "VMware Multipath Protocol"
+    from_port = 2426
+    to_port = 2426
+    protocol = "UDP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description = "HTTPS Tunnel"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "UDP"
-    # CATO Cloud requires this port to be open to the internet
+    description = "All traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    # VeloCloud SDWAN requires this port to be open to the internet
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -96,7 +110,7 @@ resource "aws_network_interface" "mgmt_nic" {
   count           = var.number
   description     = var.mgmt_nic_description
   private_ips     = var.mgmt_ips
-  security_groups = [aws_security_group.cato_wan_mgmt_sg.id]
+  security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.mgmt_subnet_id, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
 }
@@ -106,7 +120,7 @@ resource "aws_network_interface" "public_nic" {
   count           = var.number
   description     = var.public_nic_description
   private_ips     = [element(var.public_ips, count.index)]
-  security_groups = [aws_security_group.cato_wan_mgmt_sg.id]
+  security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.public_subnet_id, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
 

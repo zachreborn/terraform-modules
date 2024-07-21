@@ -2,20 +2,27 @@
 # Security Groups
 ############################################
 
-variable "wan_mgmt_sg_name" {
-  description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
-  default     = "velocloud_wan_mgmt_sg"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "(Required, Forces new resource) VPC ID. Defaults to the region's default VPC."
-  type        = string
-}
-
 variable "lan_sg_name" {
   description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
   default     = "velocloud_lan_sg"
+  type        = string
+}
+
+variable "snmp_mgmt_access_cidr_blocks" {
+  description = "(Optional) List of CIDR blocks allowed to SNMP into the VeloCloud instance."
+  default     = []
+  type        = list(string)
+}
+
+variable "ssh_mgmt_access_cidr_blocks" {
+  description = "(Optional) List of CIDR blocks allowed to SSH into the VeloCloud instance."
+  default     = []
+  type        = list(string)
+}
+
+variable "wan_mgmt_sg_name" {
+  description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
+  default     = "velocloud_wan_mgmt_sg"
   type        = string
 }
 
@@ -23,6 +30,11 @@ variable "velocloud_lan_cidr_blocks" {
   type        = list(string)
   description = "(Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication."
   default     = null
+}
+
+variable "vpc_id" {
+  description = "(Required, Forces new resource) VPC ID. Defaults to the region's default VPC."
+  type        = string
 }
 
 ############################################
