@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">Cato SDWAN Module</h3>
+<h3 align="center">VeloCloud SDWAN Module</h3>
   <p align="center">
-    This module deploys a Cato SDWAN into your environment.
+    This module deploys a VeloCloud SDWAN into your environment. Please see the <a href=https://docs.vmware.com/en/VMware-SD-WAN/index.html> VeloCloud documentation </a> for more information.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,8 +64,8 @@
 ## Usage
 
 ```
-module "aws_prod_cato" {
-    source               = "github.com/zachreborn/terraform-modules//modules/aws/cato_sdwan"
+module "aws_prod_sdwan" {
+    source               = "github.com/zachreborn/terraform-modules//modules/aws/velocloud"
 
     ami                  = "ami-0xx6edxxaf4xxdf1e"
     availability_zone    = [module.vpc.availability_zone[0]]
@@ -79,7 +79,7 @@ module "aws_prod_cato" {
     public_ips           = ["10.200.201.12"]
     private_ips          = ["10.200.1.12"]
     vpc_id               = module.vpc.vpc_id
-    user_data            = file("./global/user_data/cato_sdwan_serial.txt")
+    user_data            = file("./global/user_data/velocloud_sdwan_license.txt")
 
     tags                 = {
         terraform   = "true"
