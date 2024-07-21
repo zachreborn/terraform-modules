@@ -21,7 +21,7 @@ variable "lan_sg_name" {
 
 variable "velocloud_lan_cidr_blocks" {
   type        = list(string)
-  description = "(Optional) List of CIDR blocks allowed to utilize the Cato instance for SDWAN communication."
+  description = "(Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication."
   default     = null
 }
 
@@ -126,7 +126,7 @@ variable "iam_instance_profile" {
 
 variable "instance_name_prefix" {
   description = "(Optional) Used to populate the Name tag."
-  default     = "aws_prod_cato"
+  default     = "aws_prod_sdwan"
   type        = string
 }
 
