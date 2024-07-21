@@ -41,9 +41,9 @@ resource "aws_security_group" "sdwan_mgmt_sg" {
 
   ingress {
     description = "VMware Multipath Protocol"
-    from_port = 2426
-    to_port = 2426
-    protocol = "UDP"
+    from_port   = 2426
+    to_port     = 2426
+    protocol    = "UDP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 

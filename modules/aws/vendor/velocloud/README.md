@@ -128,8 +128,8 @@ No modules.
 | [aws_network_interface.mgmt_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_network_interface.private_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_network_interface.public_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
+| [aws_security_group.sdwan_mgmt_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group.velocloud_lan_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_security_group.velocloud_sdwan_mgmt_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
@@ -159,7 +159,9 @@ No modules.
 | <a name="input_root_ebs_volume_encrypted"></a> [root\_ebs\_volume\_encrypted](#input\_root\_ebs\_volume\_encrypted) | (Optional) Whether to enable volume encryption on the root ebs volume. Defaults to true. Must be configured to perform drift detection. | `bool` | `true` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Size of the root volume in gibibytes (GiB). | `number` | `16` | no |
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Type of volume. Valid values include standard, gp2, gp3, io1, io2, sc1, or st1. Defaults to gp3 | `string` | `"gp3"` | no |
+| <a name="input_snmp_mgmt_access_cidr_blocks"></a> [snmp\_mgmt\_access\_cidr\_blocks](#input\_snmp\_mgmt\_access\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to SNMP into the VeloCloud instance. | `list(string)` | `[]` | no |
 | <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | (Optional) Whether to enable source destination checking for the ENI. Default false. | `bool` | `false` | no |
+| <a name="input_ssh_mgmt_access_cidr_blocks"></a> [ssh\_mgmt\_access\_cidr\_blocks](#input\_ssh\_mgmt\_access\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to SSH into the VeloCloud instance. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br>  "created_by": "terraform",<br>  "environment": "prod",<br>  "role": "sdwan",<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see user\_data\_base64 instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the user\_data\_replace\_on\_change is set then updates to this field will trigger a destroy and recreate. | `string` | `null` | no |
 | <a name="input_velocloud_lan_cidr_blocks"></a> [velocloud\_lan\_cidr\_blocks](#input\_velocloud\_lan\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication. | `list(string)` | `null` | no |
