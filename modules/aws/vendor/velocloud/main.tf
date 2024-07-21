@@ -18,7 +18,7 @@ data "aws_region" "current" {}
 # Security Groups
 ############################################
 
-resource "aws_security_group" "velocloud_wan_mgmt_sg" {
+resource "aws_security_group" "velocloud_sdwan_mgmt_sg" {
   name        = var.wan_mgmt_sg_name
   description = "Security group applied to the VeloCloud SDWAN instance WAN and MGMT NICs for VeloCloud communication"
   vpc_id      = var.vpc_id
@@ -56,7 +56,7 @@ resource "aws_security_group" "velocloud_lan_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.cato_lan_cidr_blocks
+    cidr_blocks = var.velocloud_lan_cidr_blocks
   }
 
   egress {
@@ -92,6 +92,7 @@ resource "aws_eip_association" "wan_external_ip" {
 ############################################
 
 resource "aws_network_interface" "mgmt_nic" {
+  # Ge1 is the management interface in VeloCloud and attached at eth0
   count           = var.number
   description     = var.mgmt_nic_description
   private_ips     = var.mgmt_ips
@@ -101,6 +102,7 @@ resource "aws_network_interface" "mgmt_nic" {
 }
 
 resource "aws_network_interface" "public_nic" {
+  # Ge2 is the public interface in VeloCloud and attached at eth1
   count           = var.number
   description     = var.public_nic_description
   private_ips     = [element(var.public_ips, count.index)]
@@ -115,6 +117,7 @@ resource "aws_network_interface" "public_nic" {
 }
 
 resource "aws_network_interface" "private_nic" {
+  # Ge3 is the private interface in VeloCloud and attached at eth2
   count             = var.number
   description       = var.private_nic_description
   private_ips       = [element(var.private_ips, count.index)]

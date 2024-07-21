@@ -4,7 +4,7 @@
 
 variable "wan_mgmt_sg_name" {
   description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
-  default     = "cato_wan_mgmt_sg"
+  default     = "velocloud_wan_mgmt_sg"
   type        = string
 }
 
@@ -15,11 +15,11 @@ variable "vpc_id" {
 
 variable "lan_sg_name" {
   description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
-  default     = "cato_lan_sg"
+  default     = "velocloud_lan_sg"
   type        = string
 }
 
-variable "cato_lan_cidr_blocks" {
+variable "velocloud_lan_cidr_blocks" {
   type        = list(string)
   description = "(Optional) List of CIDR blocks allowed to utilize the Cato instance for SDWAN communication."
   default     = null
@@ -31,7 +31,7 @@ variable "cato_lan_cidr_blocks" {
 
 variable "mgmt_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "Cato mgmt nic"
+  default     = "SDWAN mgmt nic"
   type        = string
 }
 
@@ -48,7 +48,7 @@ variable "mgmt_subnet_id" {
 
 variable "public_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "Cato public nic"
+  default     = "SDWAN public nic"
   type        = string
 }
 
@@ -70,7 +70,7 @@ variable "private_subnet_id" {
 
 variable "private_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "Cato private nic"
+  default     = "SDWAN private nic"
   type        = string
 }
 
@@ -184,7 +184,7 @@ variable "tags" {
     created_by  = "terraform"
     terraform   = "true"
     environment = "prod"
-    role        = "cato_sdwan"
+    role        = "sdwan"
   }
   type = map(any)
 }
