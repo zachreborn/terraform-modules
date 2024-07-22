@@ -165,10 +165,24 @@ variable "root_ebs_volume_encrypted" {
   type        = bool
 }
 
-variable "user_data" {
+variable "velocloud_activation_key" {
+  description = "(Required) The activation key for the VeloCloud instance(s)."
   type        = string
-  description = "(Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see user_data_base64 instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the user_data_replace_on_change is set then updates to this field will trigger a destroy and recreate."
-  default     = null
+  validation {
+    condition     = can(regex("^[A-Z0-9-]+{16}$", var.velocloud_activation_key))
+    error_message = "The activation key must be 16 characters long and contain only uppercase alphanumeric characters and hyphens."
+  }
+}
+
+variable "velocloud_ignore_cert_errors" {
+  description = "(Optional) Whether or not to ignore certificate errors when connecting to the VeloCloud orchestrator. Set to true if using private or self-signed certificates on the orchestrator. Defaults to false."
+  default     = false
+  type        = bool
+}
+
+variable "velocloud_orchestrator" {
+  description = "(Required) The IP address or FQDN of the VeloCloud orchestrator. Example: vco.example.com"
+  type        = string
 }
 
 variable "http_endpoint" {
