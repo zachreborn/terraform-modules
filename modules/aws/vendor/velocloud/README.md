@@ -130,13 +130,13 @@ No modules.
 | [aws_network_interface.public_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_security_group.sdwan_mgmt_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group.velocloud_lan_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_ami.velocloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_ami"></a> [ami](#input\_ami) | (Required) AMI to use for the instance. Required unless launch\_template is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template. | `string` | n/a | yes |
 | <a name="input_ebs_optimized"></a> [ebs\_optimized](#input\_ebs\_optimized) | (Optional) If true, the launched EC2 instance will be EBS-optimized. Note that if this is not set on an instance type that is optimized by default then this will show as disabled but if the instance type is optimized by default then there is no need to set this and there is no effect to disabling it. See the EBS Optimized section of the AWS User Guide for more information. | `bool` | `true` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the metadata service is available. Valid values include enabled or disabled. Defaults to enabled. | `string` | `"enabled"` | no |
 | <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) Whether or not the metadata service requires session tokens, also referred to as Instance Metadata Service Version 2 (IMDSv2). Valid values include optional or required. Defaults to optional. | `string` | `"required"` | no |
@@ -165,6 +165,7 @@ No modules.
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br>  "created_by": "terraform",<br>  "environment": "prod",<br>  "role": "sdwan",<br>  "terraform": "true"<br>}</pre> | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see user\_data\_base64 instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the user\_data\_replace\_on\_change is set then updates to this field will trigger a destroy and recreate. | `string` | `null` | no |
 | <a name="input_velocloud_lan_cidr_blocks"></a> [velocloud\_lan\_cidr\_blocks](#input\_velocloud\_lan\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication. | `list(string)` | `null` | no |
+| <a name="input_velocloud_version"></a> [velocloud\_version](#input\_velocloud\_version) | (Optional) The version ID of the VeloCloud VCE AMI to use. Defaults to the latest version. Use semantic versioning to specify a version. Example: 4.5 | `string` | `"4.5"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required, Forces new resource) VPC ID. Defaults to the region's default VPC. | `string` | n/a | yes |
 | <a name="input_wan_mgmt_sg_name"></a> [wan\_mgmt\_sg\_name](#input\_wan\_mgmt\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_wan_mgmt_sg"` | no |
 

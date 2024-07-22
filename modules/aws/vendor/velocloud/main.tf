@@ -16,8 +16,8 @@ data "aws_region" "current" {}
 
 data "aws_ami" "velocloud" {
   executable_users = ["self"]
-  most_recent = true
-  owners = ["679593333241"]
+  most_recent      = true
+  owners           = ["679593333241"]
   filter {
     name   = "name"
     values = ["VeloCloud VCE ${var.velocloud_version}*"]
