@@ -14,6 +14,16 @@ terraform {
 # data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+data "aws_ami" "velocloud" {
+  executable_users = ["self"]
+  most_recent = true
+  owners = ["679593333241"]
+  filter {
+    name   = "name"
+    values = ["VeloCloud VCE ${var.velocloud_version}*"]
+  }
+}
+
 ############################################
 # Security Groups
 ############################################
@@ -151,7 +161,7 @@ resource "aws_network_interface" "private_nic" {
 ############################################
 
 resource "aws_instance" "ec2_instance" {
-  ami                  = var.ami
+  ami                  = data.aws_ami.velocloud.id
   count                = var.number
   ebs_optimized        = var.ebs_optimized
   iam_instance_profile = var.iam_instance_profile

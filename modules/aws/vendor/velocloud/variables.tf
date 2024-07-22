@@ -1,4 +1,14 @@
 ############################################
+# Data Sources
+############################################
+
+variable "velocloud_version" {
+  description = "(Optional) The version ID of the VeloCloud VCE AMI to use. Defaults to the latest version. Use semantic versioning to specify a version. Example: 4.5"
+  default     = "4.5"
+  type        = string
+}
+
+############################################
 # Security Groups
 ############################################
 
@@ -112,11 +122,6 @@ variable "monitoring" {
   description = "(Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)"
   default     = true
   type        = bool
-}
-
-variable "ami" {
-  description = "(Required) AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template."
-  type        = string
 }
 
 variable "instance_type" {
