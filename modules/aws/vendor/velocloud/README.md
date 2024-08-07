@@ -178,7 +178,6 @@ No modules.
 | <a name="output_eip_id"></a> [eip\_id](#output\_eip\_id) | n/a |
 | <a name="output_eip_public_ip"></a> [eip\_public\_ip](#output\_eip\_public\_ip) | n/a |
 | <a name="output_mgmt_network_interface_id"></a> [mgmt\_network\_interface\_id](#output\_mgmt\_network\_interface\_id) | n/a |
-| <a name="output_private_network_interface_id"></a> [private\_network\_interface\_id](#output\_private\_network\_interface\_id) | n/a |
 | <a name="output_public_network_interface_id"></a> [public\_network\_interface\_id](#output\_public\_network\_interface\_id) | n/a |
 <!-- END_TF_DOCS -->
 
