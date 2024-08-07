@@ -131,8 +131,9 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  description = "(Required) Key name of the Key Pair to use for the instance; which can be managed using the aws_key_pair resource."
+  description = "(Optional) Key name of the Key Pair to use for the instance; which can be managed using the aws_key_pair resource."
   type        = string
+  default     = null
 }
 
 variable "iam_instance_profile" {
