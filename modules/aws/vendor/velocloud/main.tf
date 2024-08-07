@@ -80,6 +80,8 @@ resource "aws_security_group" "velocloud_lan_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    # VeloCloud requires this port to be open in order to pass traffic from sources to the SDWAN.
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = var.velocloud_lan_cidr_blocks
   }
 
@@ -88,7 +90,7 @@ resource "aws_security_group" "velocloud_lan_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    # VeloCloud requires this port to be open to the internet
+    # VeloCloud requires this port to be open in order to pass traffic to the SDWAN.
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
