@@ -63,8 +63,8 @@ variable "mgmt_ips" {
   type        = list(string)
 }
 
-variable "mgmt_subnet_id" {
-  description = "(Required) Subnet ID to create the ENI in."
+variable "mgmt_subnet_ids" {
+  description = "(Required) Subnet IDs to create the ENI in."
   type        = list(string)
 }
 
@@ -74,8 +74,8 @@ variable "public_nic_description" {
   type        = string
 }
 
-variable "public_subnet_id" {
-  description = "(Required) Subnet ID to create the ENI in."
+variable "public_subnet_ids" {
+  description = "(Required) Subnet IDs to create the ENI in."
   type        = list(string)
 }
 
@@ -85,8 +85,8 @@ variable "public_ips" {
   type        = list(string)
 }
 
-variable "private_subnet_id" {
-  description = "(Required) Subnet ID to create the ENI in."
+variable "private_subnet_ids" {
+  description = "(Required) Subnet IDs to create the ENI in."
   type        = list(string)
 }
 

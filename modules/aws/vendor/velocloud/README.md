@@ -65,15 +65,15 @@
 
 ```
 module "aws_prod_sdwan" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/velocloud"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
     availability_zone         = [module.vpc.availability_zone[0]]
     velocloud_lan_cidr_blocks = ["10.11.0.0/16"]
     key_name                  = module.keypair.key_name
     instance_type             = "c5.xlarge"
-    mgmt_subnet_id            = module.vpc.mgmt_subnet_ids
-    public_subnet_id          = module.vpc.public_subnet_ids
-    private_subnet_id         = module.vpc.private_subnet_ids
+    mgmt_subnet_ids           = module.vpc.mgmt_subnet_ids
+    public_subnet_ids         = module.vpc.public_subnet_ids
+    private_subnet_ids        = module.vpc.private_subnet_ids
     mgmt_ips                  = ["10.200.61.12"]
     public_ips                = ["10.200.201.12"]
     private_ips               = ["10.200.1.12"]

@@ -123,7 +123,7 @@ resource "aws_network_interface" "mgmt_nic" {
   description     = var.mgmt_nic_description
   private_ips     = var.mgmt_ips
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
-  subnet_id       = element(var.mgmt_subnet_id, count.index)
+  subnet_id       = element(var.mgmt_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
 }
 
@@ -133,7 +133,7 @@ resource "aws_network_interface" "public_nic" {
   description     = var.public_nic_description
   private_ips     = [element(var.public_ips, count.index)]
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
-  subnet_id       = element(var.public_subnet_id, count.index)
+  subnet_id       = element(var.public_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
 
   attachment {
@@ -149,7 +149,7 @@ resource "aws_network_interface" "private_nic" {
   private_ips       = [element(var.private_ips, count.index)]
   security_groups   = [aws_security_group.cato_lan_sg.id]
   source_dest_check = var.source_dest_check
-  subnet_id         = element(var.private_subnet_id, count.index)
+  subnet_id         = element(var.private_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
 
   attachment {
