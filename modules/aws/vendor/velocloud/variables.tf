@@ -59,7 +59,7 @@ variable "mgmt_nic_description" {
 
 variable "mgmt_ips" {
   description = "(Optional) List of private IPs to assign to the ENI."
-  default     = ["10.11.61.12", "10.11.62.12", "10.11.63.12"]
+  default     = null
   type        = list(string)
 }
 
@@ -81,7 +81,7 @@ variable "public_subnet_ids" {
 
 variable "public_ips" {
   description = "(Optional) Private IP addresses to associate with the instance in a VPC."
-  default     = ["10.11.201.12", "10.11.202.12", "10.11.203.12"]
+  default     = null
   type        = list(string)
 }
 
@@ -98,7 +98,7 @@ variable "private_nic_description" {
 
 variable "private_ips" {
   description = "(Optional) List of private IPs to assign to the ENI."
-  default     = ["10.11.1.12", "10.11.2.12", "10.11.3.12"]
+  default     = null
   type        = list(string)
 }
 

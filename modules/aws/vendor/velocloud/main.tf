@@ -121,7 +121,7 @@ resource "aws_network_interface" "mgmt_nic" {
   # Ge1 is the management interface in VeloCloud and attached at eth0
   count           = var.number
   description     = var.mgmt_nic_description
-  private_ips     = var.mgmt_ips
+  private_ips     = var.mgmt_ips == null ? null : [element(var.mgmt_ips, count.index)]
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.mgmt_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
@@ -131,7 +131,7 @@ resource "aws_network_interface" "public_nic" {
   # Ge2 is the public interface in VeloCloud and attached at eth1
   count           = var.number
   description     = var.public_nic_description
-  private_ips     = [element(var.public_ips, count.index)]
+  private_ips     = var.public_ips == null ? null : [element(var.public_ips, count.index)]
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.public_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
@@ -146,7 +146,7 @@ resource "aws_network_interface" "private_nic" {
   # Ge3 is the private interface in VeloCloud and attached at eth2
   count             = var.number
   description       = var.private_nic_description
-  private_ips       = [element(var.private_ips, count.index)]
+  private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
   security_groups   = [aws_security_group.cato_lan_sg.id]
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.private_subnet_ids, count.index)
