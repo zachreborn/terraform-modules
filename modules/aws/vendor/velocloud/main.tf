@@ -184,7 +184,7 @@ resource "aws_instance" "ec2_instance" {
   }
 
   network_interface {
-    network_interface_id = element(aws_network_interface.public_nic[*].id, count.index)
+    network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
     device_index         = 0
   }
 
