@@ -63,11 +63,6 @@ variable "mgmt_ips" {
   type        = list(string)
 }
 
-variable "mgmt_subnet_ids" {
-  description = "(Required) Subnet IDs to create the ENI in."
-  type        = list(string)
-}
-
 variable "public_nic_description" {
   description = "(Optional) Description for the network interface."
   default     = "SDWAN public nic"

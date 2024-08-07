@@ -153,21 +153,21 @@ resource "aws_network_interface" "public_nic" {
   }
 }
 
-resource "aws_network_interface" "private_nic" {
-  # Ge3 is the private interface in VeloCloud and attached at eth2
-  count             = var.number
-  description       = var.private_nic_description
-  private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
-  security_groups   = [aws_security_group.velocloud_lan_sg.id]
-  source_dest_check = var.source_dest_check
-  subnet_id         = element(var.private_subnet_ids, count.index)
-  tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
+# resource "aws_network_interface" "private_nic" {
+#   # Ge3 is the private interface in VeloCloud and attached at eth2
+#   count             = var.number
+#   description       = var.private_nic_description
+#   private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
+#   security_groups   = [aws_security_group.velocloud_lan_sg.id]
+#   source_dest_check = var.source_dest_check
+#   subnet_id         = element(var.private_subnet_ids, count.index)
+#   tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
 
-  attachment {
-    instance     = element(aws_instance.ec2_instance[*].id, count.index)
-    device_index = 2
-  }
-}
+#   attachment {
+#     instance     = element(aws_instance.ec2_instance[*].id, count.index)
+#     device_index = 2
+#   }
+# }
 
 ############################################
 # EC2 Instance
