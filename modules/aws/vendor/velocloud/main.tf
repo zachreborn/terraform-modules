@@ -147,7 +147,7 @@ resource "aws_network_interface" "private_nic" {
   count             = var.number
   description       = var.private_nic_description
   private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
-  security_groups   = [aws_security_group.cato_lan_sg.id]
+  security_groups   = [aws_security_group.velocloud_lan_sg.id]
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.private_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
