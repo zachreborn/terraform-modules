@@ -126,6 +126,10 @@ resource "aws_network_interface" "mgmt_nic" {
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.mgmt_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
+  attachment {
+    instance     = element(aws_instance.ec2_instance[*].id, count.index)
+    device_index = 2
+  }
 }
 
 resource "aws_network_interface" "public_nic" {
@@ -136,11 +140,6 @@ resource "aws_network_interface" "public_nic" {
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
   subnet_id       = element(var.public_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
-
-  attachment {
-    instance     = element(aws_instance.ec2_instance[*].id, count.index)
-    device_index = 1
-  }
 }
 
 resource "aws_network_interface" "private_nic" {
@@ -155,7 +154,7 @@ resource "aws_network_interface" "private_nic" {
 
   attachment {
     instance     = element(aws_instance.ec2_instance[*].id, count.index)
-    device_index = 2
+    device_index = 1
   }
 }
 
@@ -185,7 +184,7 @@ resource "aws_instance" "ec2_instance" {
   }
 
   network_interface {
-    network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
+    network_interface_id = element(aws_network_interface.public_nic[*].id, count.index)
     device_index         = 0
   }
 
