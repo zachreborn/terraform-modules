@@ -131,7 +131,7 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  description = "(Optional) Key name of the Key Pair to use for the instance; which can be managed using the aws_key_pair resource."
+  description = "(Optional) Key name of the Key Pair to use for the instance; which can be managed using the aws_key_pair resource. Defaults to null."
   type        = string
   default     = null
 }
