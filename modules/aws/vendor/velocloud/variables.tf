@@ -151,7 +151,7 @@ variable "root_volume_type" {
 
 variable "root_volume_size" {
   description = "(Optional) Size of the root volume in gibibytes (GiB)."
-  default     = 16
+  default     = 8
   type        = number
 }
 
