@@ -14,9 +14,9 @@ output "public_network_interface_id" {
   value = aws_network_interface.public_nic[*].id
 }
 
-output "private_network_interface_id" {
-  value = aws_network_interface.private_nic[*].id
-}
+# output "private_network_interface_id" {
+#   value = aws_network_interface.private_nic[*].id
+# }
 
 output "mgmt_network_interface_id" {
   value = aws_network_interface.mgmt_nic[*].id
