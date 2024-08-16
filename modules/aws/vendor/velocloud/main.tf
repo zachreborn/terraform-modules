@@ -201,11 +201,6 @@ resource "aws_instance" "ec2_instance" {
     http_tokens   = var.http_tokens
   }
 
-  # network_interface {
-  #   network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
-  #   device_index         = 0
-  # }
-
   root_block_device {
     volume_type = var.root_volume_type
     volume_size = var.root_volume_size
