@@ -184,6 +184,7 @@ resource "aws_instance" "ec2_instance" {
   instance_type        = var.instance_type
   key_name             = var.key_name
   monitoring           = var.monitoring
+  source_dest_check    = var.source_dest_check
   volume_tags          = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
   tags                 = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
   user_data = templatefile("${path.module}/user_data.sh", {
