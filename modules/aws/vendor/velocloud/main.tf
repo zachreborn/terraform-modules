@@ -138,6 +138,10 @@ resource "aws_network_interface" "mgmt_nic" {
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.public_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
+  attachment {
+    instance     = element(aws_instance.ec2_instance[*].id, count.index)
+    device_index = 0
+  }
 }
 
 resource "aws_network_interface" "public_nic" {
@@ -197,10 +201,10 @@ resource "aws_instance" "ec2_instance" {
     http_tokens   = var.http_tokens
   }
 
-  network_interface {
-    network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
-    device_index         = 0
-  }
+  # network_interface {
+  #   network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
+  #   device_index         = 0
+  # }
 
   root_block_device {
     volume_type = var.root_volume_type
