@@ -117,7 +117,7 @@ resource "aws_security_group" "velocloud_lan_sg" {
 resource "aws_eip" "wan_external_ip" {
   count  = var.number
   domain = "vpc"
-  tags = merge(var.tags, ({ "Name" = format("%s%d_wan", var.instance_name_prefix, count.index + 1) }))
+  tags   = merge(var.tags, ({ "Name" = format("%s%d_wan", var.instance_name_prefix, count.index + 1) }))
 }
 
 resource "aws_eip_association" "wan_external_ip" {
