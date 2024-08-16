@@ -103,16 +103,16 @@ resource "aws_security_group" "velocloud_lan_sg" {
 # EIP
 ############################################
 
-resource "aws_eip" "mgmt_external_ip" {
-  count  = var.number
-  domain = "vpc"
-}
+# resource "aws_eip" "mgmt_external_ip" {
+#   count  = var.number
+#   domain = "vpc"
+# }
 
-resource "aws_eip_association" "mgmt_external_ip" {
-  count                = var.number
-  allocation_id        = element(aws_eip.mgmt_external_ip[*].id, count.index)
-  network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
-}
+# resource "aws_eip_association" "mgmt_external_ip" {
+#   count                = var.number
+#   allocation_id        = element(aws_eip.mgmt_external_ip[*].id, count.index)
+#   network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
+# }
 
 resource "aws_eip" "wan_external_ip" {
   count  = var.number
@@ -135,6 +135,7 @@ resource "aws_network_interface" "mgmt_nic" {
   description     = var.mgmt_nic_description
   private_ips     = var.mgmt_ips == null ? null : [element(var.mgmt_ips, count.index)]
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
+  source_dest_check = var.source_dest_check
   subnet_id       = element(var.public_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_mgmt", var.instance_name_prefix, count.index + 1) }))
 }
@@ -145,6 +146,7 @@ resource "aws_network_interface" "public_nic" {
   description     = var.public_nic_description
   private_ips     = var.public_ips == null ? null : [element(var.public_ips, count.index)]
   security_groups = [aws_security_group.sdwan_mgmt_sg.id]
+  source_dest_check = var.source_dest_check
   subnet_id       = element(var.public_subnet_ids, count.index)
   tags            = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
   attachment {
@@ -153,21 +155,21 @@ resource "aws_network_interface" "public_nic" {
   }
 }
 
-# resource "aws_network_interface" "private_nic" {
-#   # Ge3 is the private interface in VeloCloud and attached at eth2
-#   count             = var.number
-#   description       = var.private_nic_description
-#   private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
-#   security_groups   = [aws_security_group.velocloud_lan_sg.id]
-#   source_dest_check = var.source_dest_check
-#   subnet_id         = element(var.private_subnet_ids, count.index)
-#   tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
+resource "aws_network_interface" "private_nic" {
+  # Ge3 is the private interface in VeloCloud and attached at eth2
+  count             = var.number
+  description       = var.private_nic_description
+  private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
+  security_groups   = [aws_security_group.velocloud_lan_sg.id]
+  source_dest_check = var.source_dest_check
+  subnet_id         = element(var.private_subnet_ids, count.index)
+  tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
 
-#   attachment {
-#     instance     = element(aws_instance.ec2_instance[*].id, count.index)
-#     device_index = 2
-#   }
-# }
+  attachment {
+    instance     = element(aws_instance.ec2_instance[*].id, count.index)
+    device_index = 2
+  }
+}
 
 ############################################
 # EC2 Instance
