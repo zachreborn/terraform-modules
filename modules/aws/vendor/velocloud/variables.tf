@@ -119,6 +119,12 @@ variable "monitoring" {
   type        = bool
 }
 
+variable "hibernation" {
+  description = "(Optional) If true, the launched EC2 instance will support hibernation. (Available since v0.6.0)"
+  type        = bool
+  default     = null
+}
+
 variable "instance_type" {
   description = "(Optional) Instance type to use for the instance. Updates to this field will trigger a stop/start of the EC2 instance."
   default     = "c5.xlarge"
