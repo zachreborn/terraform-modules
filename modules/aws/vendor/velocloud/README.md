@@ -124,7 +124,6 @@ No modules.
 | [aws_eip.wan_external_ip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
 | [aws_eip_association.wan_external_ip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip_association) | resource |
 | [aws_instance.ec2_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
-| [aws_network_interface.mgmt_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_network_interface.private_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_network_interface.public_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_security_group.sdwan_mgmt_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
@@ -161,7 +160,7 @@ No modules.
 | <a name="input_snmp_mgmt_access_cidr_blocks"></a> [snmp\_mgmt\_access\_cidr\_blocks](#input\_snmp\_mgmt\_access\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to SNMP into the VeloCloud instance. | `list(string)` | `[]` | no |
 | <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | (Optional) Whether to enable source destination checking for the ENI. Default false. | `bool` | `false` | no |
 | <a name="input_ssh_mgmt_access_cidr_blocks"></a> [ssh\_mgmt\_access\_cidr\_blocks](#input\_ssh\_mgmt\_access\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to SSH into the VeloCloud instance. | `list(string)` | `[]` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br>  "created_by": "terraform",<br>  "environment": "prod",<br>  "role": "sdwan",<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "role": "sdwan",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_velocloud_activation_key"></a> [velocloud\_activation\_key](#input\_velocloud\_activation\_key) | (Required) The activation key for the VeloCloud instance(s). | `string` | n/a | yes |
 | <a name="input_velocloud_ignore_cert_errors"></a> [velocloud\_ignore\_cert\_errors](#input\_velocloud\_ignore\_cert\_errors) | (Optional) Whether or not to ignore certificate errors when connecting to the VeloCloud orchestrator. Set to true if using private or self-signed certificates on the orchestrator. Defaults to false. | `bool` | `false` | no |
 | <a name="input_velocloud_lan_cidr_blocks"></a> [velocloud\_lan\_cidr\_blocks](#input\_velocloud\_lan\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication. | `list(string)` | `null` | no |

@@ -115,7 +115,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br>    display_name = string # (Required) The friendly name to identify the group.<br>    description  = string # (Optional) The description of the group.<br>  }))</pre> | n/a | yes |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the group.<br/>    description  = string # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
