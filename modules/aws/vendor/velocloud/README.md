@@ -174,7 +174,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | n/a |
-| <a name="output_mgmt_network_interface_id"></a> [mgmt\_network\_interface\_id](#output\_mgmt\_network\_interface\_id) | n/a |
 | <a name="output_private_network_interface_id"></a> [private\_network\_interface\_id](#output\_private\_network\_interface\_id) | n/a |
 | <a name="output_public_eip_id"></a> [public\_eip\_id](#output\_public\_eip\_id) | n/a |
 | <a name="output_public_eip_ip"></a> [public\_eip\_ip](#output\_public\_eip\_ip) | n/a |
