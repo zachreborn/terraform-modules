@@ -18,9 +18,9 @@ output "public_eip_ip" {
   value = aws_eip.wan_external_ip[*].public_ip
 }
 
-output "mgmt_network_interface_id" {
-  value = aws_network_interface.mgmt_nic[*].id
-}
+# output "mgmt_network_interface_id" {
+#   value = aws_network_interface.mgmt_nic[*].id
+# }
 
 output "public_network_interface_id" {
   value = aws_network_interface.public_nic[*].id
