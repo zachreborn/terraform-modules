@@ -130,7 +130,6 @@ resource "aws_eip_association" "wan_external_ip" {
 # ENI
 ############################################
 
-# Removed during testing period to match the Mettel Velocloud template
 resource "aws_network_interface" "mgmt_nic" {
   # Ge1 is the management interface in VeloCloud and attached at eth0
   count             = var.number
