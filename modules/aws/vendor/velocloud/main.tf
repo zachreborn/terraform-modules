@@ -157,7 +157,7 @@ resource "aws_network_interface" "private_nic" {
 ############################################
 
 resource "aws_instance" "ec2_instance" {
-  
+
   ami                  = data.aws_ami.velocloud.id
   count                = var.number
   ebs_optimized        = var.ebs_optimized
@@ -200,11 +200,11 @@ resource "aws_instance" "ec2_instance" {
     encrypted   = var.root_ebs_volume_encrypted
   }
 
-  depends_on = [ 
+  depends_on = [
     aws_network_interface.mgmt_nic,
     aws_network_interface.public_nic,
     aws_network_interface.private_nic
-   ]
+  ]
 }
 
 ###################################################
