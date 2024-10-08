@@ -103,16 +103,17 @@ resource "aws_security_group" "velocloud_lan_sg" {
 # EIP
 ############################################
 
-resource "aws_eip" "mgmt_external_ip" {
-  count  = var.number
-  domain = "vpc"
-}
+# Per the documentation, the MGMT interface does not require an EIP
+# resource "aws_eip" "mgmt_external_ip" {
+#   count  = var.number
+#   domain = "vpc"
+# }
 
-resource "aws_eip_association" "mgmt_external_ip" {
-  count                = var.number
-  allocation_id        = element(aws_eip.mgmt_external_ip[*].id, count.index)
-  network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
-}
+# resource "aws_eip_association" "mgmt_external_ip" {
+#   count                = var.number
+#   allocation_id        = element(aws_eip.mgmt_external_ip[*].id, count.index)
+#   network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
+# }
 
 resource "aws_eip" "wan_external_ip" {
   count  = var.number
