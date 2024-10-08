@@ -103,18 +103,6 @@ resource "aws_security_group" "velocloud_lan_sg" {
 # EIP
 ############################################
 
-# Per the documentation, the MGMT interface does not require an EIP
-# resource "aws_eip" "mgmt_external_ip" {
-#   count  = var.number
-#   domain = "vpc"
-# }
-
-# resource "aws_eip_association" "mgmt_external_ip" {
-#   count                = var.number
-#   allocation_id        = element(aws_eip.mgmt_external_ip[*].id, count.index)
-#   network_interface_id = element(aws_network_interface.mgmt_nic[*].id, count.index)
-# }
-
 resource "aws_eip" "wan_external_ip" {
   count  = var.number
   domain = "vpc"
@@ -151,10 +139,6 @@ resource "aws_network_interface" "public_nic" {
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.public_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
-  attachment {
-    instance     = element(aws_instance.ec2_instance[*].id, count.index)
-    device_index = 1
-  }
 }
 
 resource "aws_network_interface" "private_nic" {
@@ -166,11 +150,6 @@ resource "aws_network_interface" "private_nic" {
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.private_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_private", var.instance_name_prefix, count.index + 1) }))
-
-  attachment {
-    instance     = element(aws_instance.ec2_instance[*].id, count.index)
-    device_index = 2
-  }
 }
 
 ############################################
@@ -178,6 +157,7 @@ resource "aws_network_interface" "private_nic" {
 ############################################
 
 resource "aws_instance" "ec2_instance" {
+  
   ami                  = data.aws_ami.velocloud.id
   count                = var.number
   ebs_optimized        = var.ebs_optimized
@@ -204,11 +184,27 @@ resource "aws_instance" "ec2_instance" {
     device_index         = 0
   }
 
+  network_interface {
+    network_interface_id = element(aws_network_interface.public_nic[*].id, count.index)
+    device_index         = 1
+  }
+
+  network_interface {
+    network_interface_id = element(aws_network_interface.private_nic[*].id, count.index)
+    device_index         = 2
+  }
+
   root_block_device {
     volume_type = var.root_volume_type
     volume_size = var.root_volume_size
     encrypted   = var.root_ebs_volume_encrypted
   }
+
+  depends_on = [ 
+    aws_network_interface.mgmt_nic,
+    aws_network_interface.public_nic,
+    aws_network_interface.private_nic
+   ]
 }
 
 ###################################################
