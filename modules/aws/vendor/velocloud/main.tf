@@ -201,6 +201,7 @@ resource "aws_instance" "ec2_instance" {
   }
 
   depends_on = [
+    aws_eip.wan_external_ip,
     aws_network_interface.mgmt_nic,
     aws_network_interface.public_nic,
     aws_network_interface.private_nic
