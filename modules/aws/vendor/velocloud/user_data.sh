@@ -1,4 +1,4 @@
-#cloud-config 
+#cloud-config
 velocloud:
   vce:
     vco: ${velocloud_orchestrator}
