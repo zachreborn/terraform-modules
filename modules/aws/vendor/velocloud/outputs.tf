@@ -2,13 +2,14 @@ output "ec2_instance_id" {
   value = aws_instance.ec2_instance[*].id
 }
 
-output "mgmt_eip_id" {
-  value = aws_eip.mgmt_external_ip[*].id
-}
+# Per the documentation, the MGMT interface does not require an EIP
+# output "mgmt_eip_id" {
+#   value = aws_eip.mgmt_external_ip[*].id
+# }
 
-output "mgmt_eip_ip" {
-  value = aws_eip.mgmt_external_ip[*].public_ip
-}
+# output "mgmt_eip_ip" {
+#   value = aws_eip.mgmt_external_ip[*].public_ip
+# }
 
 output "public_eip_id" {
   value = aws_eip.wan_external_ip[*].id
