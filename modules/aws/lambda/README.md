@@ -122,7 +122,7 @@ No modules.
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | (Required) See Runtimes for valid values. | `string` | `"python3.6"` | no |
 | <a name="input_source_code_hash"></a> [source\_code\_hash](#input\_source\_code\_hash) | (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either filename or s3\_key | `any` | n/a | yes |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to 3. See Limits | `number` | `180` | no |
-| <a name="input_variables"></a> [variables](#input\_variables) | (Optional) A map that defines environment variables for the Lambda function. | `map` | <pre>{<br>  "lambda": "true"<br>}</pre> | no |
+| <a name="input_variables"></a> [variables](#input\_variables) | (Optional) A map that defines environment variables for the Lambda function. | `map` | <pre>{<br/>  "lambda": "true"<br/>}</pre> | no |
 
 ## Outputs
 

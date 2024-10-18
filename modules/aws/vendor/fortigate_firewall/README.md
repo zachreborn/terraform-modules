@@ -134,7 +134,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | The AMI to use | `string` | n/a | yes |
 | <a name="input_dmz_nic_description"></a> [dmz\_nic\_description](#input\_dmz\_nic\_description) | Description of the dmz network interface | `string` | `"Fortigate FW DMZ nic"` | no |
-| <a name="input_dmz_private_ips"></a> [dmz\_private\_ips](#input\_dmz\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | <pre>[<br>  "10.11.101.10",<br>  "10.11.102.10"<br>]</pre> | no |
+| <a name="input_dmz_private_ips"></a> [dmz\_private\_ips](#input\_dmz\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | <pre>[<br/>  "10.11.101.10",<br/>  "10.11.102.10"<br/>]</pre> | no |
 | <a name="input_dmz_subnet_id"></a> [dmz\_subnet\_id](#input\_dmz\_subnet\_id) | The VPC subnet the instance(s) will be assigned. Set in main.tf | `list(any)` | n/a | yes |
 | <a name="input_ebs_device_name"></a> [ebs\_device\_name](#input\_ebs\_device\_name) | ebs volume mount name | `string` | `"/dev/sdb"` | no |
 | <a name="input_ebs_optimized"></a> [ebs\_optimized](#input\_ebs\_optimized) | If true, the launched EC2 instance will be EBS-optimized | `bool` | `false` | no |
@@ -149,7 +149,7 @@ No modules.
 | <a name="input_instance_name_prefix"></a> [instance\_name\_prefix](#input\_instance\_name\_prefix) | Used to populate the Name tag. Set in main.tf | `string` | `"aws_fw"` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | Select the instance type. Set in main.tf | `string` | `"c5.large"` | no |
 | <a name="input_key_name"></a> [key\_name](#input\_key\_name) | keypair name to use for ec2 instance deployment. Keypairs are used to obtain the username/password | `string` | n/a | yes |
-| <a name="input_lan_private_ips"></a> [lan\_private\_ips](#input\_lan\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | <pre>[<br>  "10.11.1.10",<br>  "10.11.2.10"<br>]</pre> | no |
+| <a name="input_lan_private_ips"></a> [lan\_private\_ips](#input\_lan\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | <pre>[<br/>  "10.11.1.10",<br/>  "10.11.2.10"<br/>]</pre> | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | If true, the launched EC2 instance will have detailed monitoring enabled | `bool` | `true` | no |
 | <a name="input_number"></a> [number](#input\_number) | number of resources to make | `number` | `2` | no |
 | <a name="input_private_nic_description"></a> [private\_nic\_description](#input\_private\_nic\_description) | Description of the private network interface | `string` | `"Fortigate FW private nic"` | no |
@@ -162,9 +162,9 @@ No modules.
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Type of volume. Valid values include standard, gp2, gp3, io1, io2, sc1, or st1. Defaults to gp3. | `string` | `"gp3"` | no |
 | <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | Name of the security group | `string` | `"fortigate_fw_sg"` | no |
 | <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | Boolean for source and destination checking on the nics | `bool` | `false` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | <pre>{<br>  "created_by": "terraform",<br>  "environment": "dev",<br>  "role": "fortigate_firewall",<br>  "terraform": "yes"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "dev",<br/>  "role": "fortigate_firewall",<br/>  "terraform": "yes"<br/>}</pre> | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The VPC id to add the security group | `string` | n/a | yes |
-| <a name="input_wan_private_ips"></a> [wan\_private\_ips](#input\_wan\_private\_ips) | (Optional) Private IP addresses to associate with the instance in a VPC. | `list(string)` | <pre>[<br>  "10.11.201.10",<br>  "10.11.202.10"<br>]</pre> | no |
+| <a name="input_wan_private_ips"></a> [wan\_private\_ips](#input\_wan\_private\_ips) | (Optional) Private IP addresses to associate with the instance in a VPC. | `list(string)` | <pre>[<br/>  "10.11.201.10",<br/>  "10.11.202.10"<br/>]</pre> | no |
 
 ## Outputs
 

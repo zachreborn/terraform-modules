@@ -140,7 +140,7 @@ No modules.
 | <a name="input_s3_lifecycle_id"></a> [s3\_lifecycle\_id](#input\_s3\_lifecycle\_id) | (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length. | `string` | `"delete_after_7_days"` | no |
 | <a name="input_s3_lifecycle_prefix"></a> [s3\_lifecycle\_prefix](#input\_s3\_lifecycle\_prefix) | (Optional) Object key prefix identifying one or more objects to which the rule applies. | `string` | `""` | no |
 | <a name="input_s3_policy"></a> [s3\_policy](#input\_s3\_policy) | (Optional) A valid bucket policy JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a terraform plan. In this case, please make sure you use the verbose/specific version of the policy. | `string` | `""` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br>  "created_by": "<YOUR_NAME>",<br>  "environment": "prod",<br>  "priority": "low",<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "low",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 

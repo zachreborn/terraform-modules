@@ -165,7 +165,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | (Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. | `string` | `"terraform_cloud"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the workspace. | `map(string)` | <pre>{<br>  "environment": "prod",<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the workspace. | `map(string)` | <pre>{<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_terraform_cloud_aws_audience"></a> [terraform\_cloud\_aws\_audience](#input\_terraform\_cloud\_aws\_audience) | (Optional) The audience value to use in the terraform run identity tokens | `string` | `"aws.workload.identity"` | no |
 | <a name="input_terraform_cloud_hostname"></a> [terraform\_cloud\_hostname](#input\_terraform\_cloud\_hostname) | The hostname of the Terraform Cloud or Terraform Enterprise environment you'd like to use with the identity provider | `string` | `"app.terraform.io"` | no |
 | <a name="input_terraform_cloud_organization"></a> [terraform\_cloud\_organization](#input\_terraform\_cloud\_organization) | (Required) The name of the Terraform Cloud organization which the workspace is in. | `string` | n/a | yes |

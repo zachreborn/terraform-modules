@@ -114,7 +114,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_auto_accept"></a> [auto\_accept](#input\_auto\_accept) | (Optional) Whether or not to accept the peering request. Defaults to false. | `string` | `false` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | <pre>{<br>  "created_by": "Jake Jones",<br>  "environment": "prod",<br>  "role": "vpc_peering_connection_accepter",<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "Jake Jones",<br/>  "environment": "prod",<br/>  "role": "vpc_peering_connection_accepter",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_vpc_peering_connection_id"></a> [vpc\_peering\_connection\_id](#input\_vpc\_peering\_connection\_id) | (Required) The VPC Peering Connection ID to manage. | `string` | n/a | yes |
 
 ## Outputs
