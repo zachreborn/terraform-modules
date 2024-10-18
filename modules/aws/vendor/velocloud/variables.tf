@@ -125,6 +125,26 @@ variable "hibernation" {
   default     = null
 }
 
+variable "http_endpoint" {
+  type        = string
+  description = "(Optional) Whether the metadata service is available. Valid values include enabled or disabled. Defaults to enabled."
+  default     = "enabled"
+  validation {
+    condition     = can(regex("^(enabled|disabled)$", var.http_endpoint))
+    error_message = "The value must be either enabled or disabled."
+  }
+}
+
+variable "http_tokens" {
+  type        = string
+  description = "(Optional) Whether or not the metadata service requires session tokens, also referred to as Instance Metadata Service Version 2 (IMDSv2). Valid values include optional or required. Defaults to optional."
+  default     = "required"
+  validation {
+    condition     = can(regex("^(optional|required)$", var.http_tokens))
+    error_message = "The value must be either optional or required."
+  }
+}
+
 variable "instance_type" {
   description = "(Optional) Instance type to use for the instance. Updates to this field will trigger a stop/start of the EC2 instance."
   default     = "c5.xlarge"
@@ -187,24 +207,10 @@ variable "velocloud_orchestrator" {
   type        = string
 }
 
-variable "http_endpoint" {
+variable "user_data" {
+  description = "(Optional) The user data to provide when launching the instance. By default, the velocloud variables will generate a unique user_data cloud-init configuration for you. This allows specifying custom cloud-init scripting."
   type        = string
-  description = "(Optional) Whether the metadata service is available. Valid values include enabled or disabled. Defaults to enabled."
-  default     = "enabled"
-  validation {
-    condition     = can(regex("^(enabled|disabled)$", var.http_endpoint))
-    error_message = "The value must be either enabled or disabled."
-  }
-}
-
-variable "http_tokens" {
-  type        = string
-  description = "(Optional) Whether or not the metadata service requires session tokens, also referred to as Instance Metadata Service Version 2 (IMDSv2). Valid values include optional or required. Defaults to optional."
-  default     = "required"
-  validation {
-    condition     = can(regex("^(optional|required)$", var.http_tokens))
-    error_message = "The value must be either optional or required."
-  }
+  default     = null
 }
 
 ###############################################################
