@@ -113,7 +113,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br>    policy_arns = set(string)<br>  }))</pre> | n/a | yes |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br/>    policy_arns = set(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

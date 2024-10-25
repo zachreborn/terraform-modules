@@ -108,7 +108,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_folder"></a> [folder](#input\_folder) | The folder where the datacenter will be created. Forces a new resource if this is changed. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | The name of the datacenter. The name needs to be unique within the folder. Forces a new resource if this is changed. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the datacenter. | `map(string)` | <pre>{<br>  "terraform": "true"<br>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the datacenter. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
