@@ -10,8 +10,8 @@ variable "inside_cidr_blocks" {
 }
 
 variable "name" {
-  description = "(Required) The name of the transit gateway"
   type        = string
+  description = "(Required) The name of the transit gateway"
 }
 
 variable "peer_address" {
@@ -31,7 +31,8 @@ variable "tags" {
 
 variable "transit_gateway_address" {
   type        = string
-  description = "(Required) The IP address assigned to Transit Gateway, which will be used as tunnel endpoint. This address must be from associated Transit Gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated Transit Gateway CIDR blocks"
+  description = "(Optional) The IP address assigned to Transit Gateway, which will be used as tunnel endpoint. This address must be from associated Transit Gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated Transit Gateway CIDR blocks"
+  default     = null
 }
 
 variable "transit_gateway_attachment_id" {

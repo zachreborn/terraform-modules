@@ -62,12 +62,26 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
+Simple example of how to use the module. This creates a transit gateway with the name "sdwan_tgw".
 ```
 module "transit_gateway" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway"
 
     name   = "sdwan_tgw"
+}
+```
+
+### Example with CIDR blocks
+This example creates a transit gateway with the name "sdwan_tgw" and CIDR blocks of `10.100.0.0/24`
+```
+module "transit_gateway" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway"
+
+  name = "sdwan_tgw"
+  transit_gateway_cidr_blocks = [
+    "10.100.0.0/24"
+  ]
 }
 ```
 
