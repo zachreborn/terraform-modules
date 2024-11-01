@@ -63,7 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well.
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will utilize the Velocloud variables to automatically activate against the Orchestrator.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
@@ -89,7 +89,7 @@ module "aws_prod_sdwan" {
 ```
 
 ### Custom AMI Example
-This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well. The AMI ID is provided to use a custom AMI.
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will utilize the Velocloud variables to automatically activate against the Orchestrator. The AMI ID is provided to use a custom AMI.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
