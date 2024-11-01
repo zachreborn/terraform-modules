@@ -94,7 +94,7 @@ This example creates a VeloCloud vEdge instance in the VPC of your choosing. The
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
-    ami_id                       = "ami-1234567890"
+    ami_id                       = "ami-123456789e"
     key_name                     = module.keypair.key_name
     number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
