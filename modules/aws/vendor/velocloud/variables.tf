@@ -166,7 +166,7 @@ variable "key_name" {
 variable "iam_instance_profile" {
   description = "(Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the EC2 documentation, notably iam:PassRole."
   type        = string
-  default     = "aws_prod_sdwan"
+  default     = null
 }
 
 variable "instance_name_prefix" {
