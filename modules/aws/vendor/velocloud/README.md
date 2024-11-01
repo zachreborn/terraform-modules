@@ -62,25 +62,49 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
-    availability_zone         = [module.vpc.availability_zone[0]]
-    velocloud_lan_cidr_blocks = ["10.11.0.0/16"]
-    key_name                  = module.keypair.key_name
-    instance_type             = "c5.xlarge"
-    mgmt_subnet_ids           = module.vpc.mgmt_subnet_ids
-    public_subnet_ids         = module.vpc.public_subnet_ids
-    private_subnet_ids        = module.vpc.private_subnet_ids
-    mgmt_ips                  = ["10.200.61.12"]
-    public_ips                = ["10.200.201.12"]
-    private_ips               = ["10.200.1.12"]
-    vpc_id                    = module.vpc.vpc_id
-    velocloud_activation_key  = "1234-5678-90AB-CDEF"
-    velocloud_orchestrator    = "vco.example.com"
-    tags                      = {
+    key_name                     = module.keypair.key_name
+    number                       = 1
+    public_subnet_ids            = module.vpc.public_subnet_ids
+    private_subnet_ids           = module.vpc.private_subnet_ids
+    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_orchestrator       = "vco.example.com"
+    velocloud_ignore_cert_errors = true
+    velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
+    vpc_id                       = module.vpc.vpc_id
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "aws_poc"
+        backup      = "true"
+        role        = "sdwan"
+    }
+}
+```
+
+### Custom AMI Example
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well. The AMI ID is provided to use a custom AMI.
+```
+module "aws_prod_sdwan" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
+
+    ami_id                       = "ami-1234567890"
+    key_name                     = module.keypair.key_name
+    number                       = 1
+    public_subnet_ids            = module.vpc.public_subnet_ids
+    private_subnet_ids           = module.vpc.private_subnet_ids
+    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_orchestrator       = "vco.example.com"
+    velocloud_ignore_cert_errors = true
+    velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
+    vpc_id                       = module.vpc.vpc_id
+    tags = {
         terraform   = "true"
         created_by  = "Zachary Hill"
         environment = "prod"
@@ -136,6 +160,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) The ID of the AMI to use for the instance. If this is not set, the AMI ID will be automated selected based on the `velocloud_version` defined. | `string` | `null` | no |
 | <a name="input_ebs_optimized"></a> [ebs\_optimized](#input\_ebs\_optimized) | (Optional) If true, the launched EC2 instance will be EBS-optimized. Note that if this is not set on an instance type that is optimized by default then this will show as disabled but if the instance type is optimized by default then there is no need to set this and there is no effect to disabling it. See the EBS Optimized section of the AWS User Guide for more information. | `bool` | `true` | no |
 | <a name="input_hibernation"></a> [hibernation](#input\_hibernation) | (Optional) If true, the launched EC2 instance will support hibernation. (Available since v0.6.0) | `bool` | `null` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the metadata service is available. Valid values include enabled or disabled. Defaults to enabled. | `string` | `"enabled"` | no |
@@ -146,14 +171,14 @@ No modules.
 | <a name="input_key_name"></a> [key\_name](#input\_key\_name) | (Optional) Key name of the Key Pair to use for the instance; which can be managed using the aws\_key\_pair resource. Defaults to null. | `string` | `null` | no |
 | <a name="input_lan_sg_name"></a> [lan\_sg\_name](#input\_lan\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_lan_sg"` | no |
 | <a name="input_mgmt_ips"></a> [mgmt\_ips](#input\_mgmt\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
-| <a name="input_mgmt_nic_description"></a> [mgmt\_nic\_description](#input\_mgmt\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN mgmt nic"` | no |
+| <a name="input_mgmt_nic_description"></a> [mgmt\_nic\_description](#input\_mgmt\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN mgmt nic Ge1 in VeloCloud"` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0) | `bool` | `true` | no |
 | <a name="input_number"></a> [number](#input\_number) | (Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1 | `number` | `1` | no |
 | <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
-| <a name="input_private_nic_description"></a> [private\_nic\_description](#input\_private\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN private nic"` | no |
+| <a name="input_private_nic_description"></a> [private\_nic\_description](#input\_private\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN private nic Ge3 in VeloCloud"` | no |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | (Required) Subnet IDs to create the ENI in. | `list(string)` | n/a | yes |
 | <a name="input_public_ips"></a> [public\_ips](#input\_public\_ips) | (Optional) Private IP addresses to associate with the instance in a VPC. | `list(string)` | `null` | no |
-| <a name="input_public_nic_description"></a> [public\_nic\_description](#input\_public\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN public nic"` | no |
+| <a name="input_public_nic_description"></a> [public\_nic\_description](#input\_public\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN public nic Ge2 in VeloCloud"` | no |
 | <a name="input_public_subnet_ids"></a> [public\_subnet\_ids](#input\_public\_subnet\_ids) | (Required) Subnet IDs to create the ENI in. | `list(string)` | n/a | yes |
 | <a name="input_root_ebs_volume_encrypted"></a> [root\_ebs\_volume\_encrypted](#input\_root\_ebs\_volume\_encrypted) | (Optional) Whether to enable volume encryption on the root ebs volume. Defaults to true. Must be configured to perform drift detection. | `bool` | `true` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Size of the root volume in gibibytes (GiB). | `number` | `8` | no |

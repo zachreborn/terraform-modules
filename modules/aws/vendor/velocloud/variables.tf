@@ -4,8 +4,8 @@
 
 variable "velocloud_version" {
   description = "(Optional) The version ID of the VeloCloud VCE AMI to use. Defaults to the latest version. Use semantic versioning to specify a version. Example: 4.5"
-  default     = "4.5"
   type        = string
+  default     = "4.5"
 }
 
 ############################################
@@ -20,20 +20,20 @@ variable "lan_sg_name" {
 
 variable "snmp_mgmt_access_cidr_blocks" {
   description = "(Optional) List of CIDR blocks allowed to SNMP into the VeloCloud instance."
-  default     = []
   type        = list(string)
+  default     = []
 }
 
 variable "ssh_mgmt_access_cidr_blocks" {
   description = "(Optional) List of CIDR blocks allowed to SSH into the VeloCloud instance."
-  default     = []
   type        = list(string)
+  default     = []
 }
 
 variable "wan_mgmt_sg_name" {
   description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
-  default     = "velocloud_wan_mgmt_sg"
   type        = string
+  default     = "velocloud_wan_mgmt_sg"
 }
 
 variable "velocloud_lan_cidr_blocks" {
@@ -53,20 +53,20 @@ variable "vpc_id" {
 
 variable "mgmt_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "SDWAN mgmt nic"
   type        = string
+  default     = "SDWAN mgmt nic Ge1 in VeloCloud"
 }
 
 variable "mgmt_ips" {
   description = "(Optional) List of private IPs to assign to the ENI."
-  default     = null
   type        = list(string)
+  default     = null
 }
 
 variable "public_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "SDWAN public nic"
   type        = string
+  default     = "SDWAN public nic Ge2 in VeloCloud"
 }
 
 variable "public_subnet_ids" {
@@ -76,8 +76,8 @@ variable "public_subnet_ids" {
 
 variable "public_ips" {
   description = "(Optional) Private IP addresses to associate with the instance in a VPC."
-  default     = null
   type        = list(string)
+  default     = null
 }
 
 variable "private_subnet_ids" {
@@ -87,36 +87,42 @@ variable "private_subnet_ids" {
 
 variable "private_nic_description" {
   description = "(Optional) Description for the network interface."
-  default     = "SDWAN private nic"
   type        = string
+  default     = "SDWAN private nic Ge3 in VeloCloud"
 }
 
 variable "private_ips" {
   description = "(Optional) List of private IPs to assign to the ENI."
-  default     = null
   type        = list(string)
+  default     = null
 }
 
 variable "source_dest_check" {
   description = "(Optional) Whether to enable source destination checking for the ENI. Default false."
-  default     = false
   type        = bool
+  default     = false
 }
 
 ############################################
 # EC2 Instance
 ############################################
 
+variable "ami_id" {
+  description = "(Optional) The ID of the AMI to use for the instance. If this is not set, the AMI ID will be automated selected based on the `velocloud_version` defined."
+  type        = string
+  default     = null
+}
+
 variable "ebs_optimized" {
   description = "(Optional) If true, the launched EC2 instance will be EBS-optimized. Note that if this is not set on an instance type that is optimized by default then this will show as disabled but if the instance type is optimized by default then there is no need to set this and there is no effect to disabling it. See the EBS Optimized section of the AWS User Guide for more information."
-  default     = true
   type        = bool
+  default     = true
 }
 
 variable "monitoring" {
   description = "(Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)"
-  default     = true
   type        = bool
+  default     = true
 }
 
 variable "hibernation" {
@@ -147,8 +153,8 @@ variable "http_tokens" {
 
 variable "instance_type" {
   description = "(Optional) Instance type to use for the instance. Updates to this field will trigger a stop/start of the EC2 instance."
-  default     = "c5.xlarge"
   type        = string
+  default     = "c5.xlarge"
 }
 
 variable "key_name" {
@@ -159,20 +165,20 @@ variable "key_name" {
 
 variable "iam_instance_profile" {
   description = "(Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the EC2 documentation, notably iam:PassRole."
-  default     = null
   type        = string
+  default     = null
 }
 
 variable "instance_name_prefix" {
   description = "(Optional) Used to populate the Name tag."
-  default     = "aws_prod_sdwan"
   type        = string
+  default     = "aws_prod_sdwan"
 }
 
 variable "root_volume_type" {
   description = "(Optional) Type of volume. Valid values include standard, gp2, gp3, io1, io2, sc1, or st1. Defaults to gp3"
-  default     = "gp3"
   type        = string
+  default     = "gp3"
 }
 
 variable "root_volume_size" {
@@ -183,8 +189,8 @@ variable "root_volume_size" {
 
 variable "root_ebs_volume_encrypted" {
   description = "(Optional) Whether to enable volume encryption on the root ebs volume. Defaults to true. Must be configured to perform drift detection."
-  default     = true
   type        = bool
+  default     = true
 }
 
 variable "velocloud_activation_key" {
@@ -198,8 +204,8 @@ variable "velocloud_activation_key" {
 
 variable "velocloud_ignore_cert_errors" {
   description = "(Optional) Whether or not to ignore certificate errors when connecting to the VeloCloud orchestrator. Set to true if using private or self-signed certificates on the orchestrator. Defaults to false."
-  default     = false
   type        = bool
+  default     = false
 }
 
 variable "velocloud_orchestrator" {
@@ -219,17 +225,17 @@ variable "user_data" {
 
 variable "tags" {
   description = "(Optional) Map of tags to assign to the device."
+  type        = map(any)
   default = {
     created_by  = "terraform"
     terraform   = "true"
     environment = "prod"
     role        = "sdwan"
   }
-  type = map(any)
 }
 
 variable "number" {
   description = "(Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1"
-  default     = 1
   type        = number
+  default     = 1
 }
