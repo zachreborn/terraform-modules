@@ -75,8 +75,6 @@ module "aws_prod_sdwan" {
     velocloud_activation_key     = "1234-5678-90AB-CDEF"
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
-    ssh_mgmt_access_cidr_blocks  = ["0.0.0.0/0"]
-    snmp_mgmt_access_cidr_blocks = ["0.0.0.0/0"]
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
     vpc_id                       = module.vpc.vpc_id
     tags = {
@@ -104,8 +102,6 @@ module "aws_prod_sdwan" {
     velocloud_activation_key     = "1234-5678-90AB-CDEF"
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
-    ssh_mgmt_access_cidr_blocks  = ["0.0.0.0/0"]
-    snmp_mgmt_access_cidr_blocks = ["0.0.0.0/0"]
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
     vpc_id                       = module.vpc.vpc_id
     tags = {
