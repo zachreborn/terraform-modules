@@ -18,6 +18,12 @@ variable "lan_sg_name" {
   type        = string
 }
 
+variable "mgmt_sg_name" {
+  description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
+  type        = string
+  default     = "velocloud_mgmt_sg"
+}
+
 variable "snmp_mgmt_access_cidr_blocks" {
   description = "(Optional) List of CIDR blocks allowed to SNMP into the VeloCloud instance."
   type        = list(string)
@@ -30,10 +36,10 @@ variable "ssh_mgmt_access_cidr_blocks" {
   default     = []
 }
 
-variable "wan_mgmt_sg_name" {
+variable "wan_sg_name" {
   description = "(Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name."
   type        = string
-  default     = "velocloud_wan_mgmt_sg"
+  default     = "velocloud_wan_sg"
 }
 
 variable "velocloud_lan_cidr_blocks" {

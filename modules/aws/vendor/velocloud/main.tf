@@ -29,48 +29,6 @@ data "aws_ami" "velocloud" {
 # Security Groups
 ############################################
 
-resource "aws_security_group" "sdwan_wan_mgmt_sg" {
-  name        = var.wan_mgmt_sg_name
-  description = "Security group applied to the VeloCloud SDWAN instance WAN and MGMT NICs for VeloCloud communication"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    description = "SSH access for support"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "TCP"
-    cidr_blocks = var.ssh_mgmt_access_cidr_blocks
-  }
-
-  ingress {
-    description = "SNMP access for management"
-    from_port   = 161
-    to_port     = 161
-    protocol    = "UDP"
-    cidr_blocks = var.snmp_mgmt_access_cidr_blocks
-  }
-
-  ingress {
-    description = "VMware Multipath Protocol"
-    from_port   = 2426
-    to_port     = 2426
-    protocol    = "UDP"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "All traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    # VeloCloud SDWAN requires this port to be open to the internet
-    #tfsec:ignore:aws-ec2-no-public-egress-sgr
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, ({ "Name" = format("%s", var.wan_mgmt_sg_name) }))
-}
-
 resource "aws_security_group" "velocloud_lan_sg" {
   name        = var.lan_sg_name
   description = "Security group applied to VeloCloud SDWAN instance LAN NICs for SDWAN communication"
@@ -97,6 +55,66 @@ resource "aws_security_group" "velocloud_lan_sg" {
   }
 
   tags = merge(var.tags, ({ "Name" = format("%s", var.lan_sg_name) }))
+}
+
+resource "aws_security_group" "sdwan_mgmt_sg" {
+  name        = var.mgmt_sg_name
+  description = "Security group applied to the VeloCloud SDWAN instance WAN and MGMT NICs for VeloCloud communication"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH access for support"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
+    cidr_blocks = var.ssh_mgmt_access_cidr_blocks
+  }
+
+  ingress {
+    description = "SNMP access for management"
+    from_port   = 161
+    to_port     = 161
+    protocol    = "UDP"
+    cidr_blocks = var.snmp_mgmt_access_cidr_blocks
+  }
+
+  egress {
+    description = "All traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    # VeloCloud SDWAN requires this port to be open to the internet
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, ({ "Name" = format("%s", var.mgmt_sg_name) }))
+}
+
+resource "aws_security_group" "sdwan_wan_sg" {
+  name        = var.wan_sg_name
+  description = "Security group applied to the VeloCloud SDWAN instance WAN NIC for VeloCloud communication"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "VMware Multipath Protocol"
+    from_port   = 2426
+    to_port     = 2426
+    protocol    = "UDP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "All traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    # VeloCloud SDWAN requires this port to be open to the internet
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, ({ "Name" = format("%s", var.wan_sg_name) }))
 }
 
 ############################################
@@ -135,7 +153,7 @@ resource "aws_network_interface" "public_nic" {
   count             = var.number
   description       = var.public_nic_description
   private_ips       = var.public_ips == null ? null : [element(var.public_ips, count.index)]
-  security_groups   = [aws_security_group.sdwan_mgmt_sg.id]
+  security_groups   = [aws_security_group.sdwan_wan_sg.id]
   source_dest_check = var.source_dest_check
   subnet_id         = element(var.public_subnet_ids, count.index)
   tags              = merge(var.tags, ({ "Name" = format("%s%d_public", var.instance_name_prefix, count.index + 1) }))
