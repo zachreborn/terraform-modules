@@ -29,7 +29,7 @@ data "aws_ami" "velocloud" {
 # Security Groups
 ############################################
 
-resource "aws_security_group" "sdwan_mgmt_sg" {
+resource "aws_security_group" "sdwan_wan_mgmt_sg" {
   name        = var.wan_mgmt_sg_name
   description = "Security group applied to the VeloCloud SDWAN instance WAN and MGMT NICs for VeloCloud communication"
   vpc_id      = var.vpc_id
@@ -235,7 +235,6 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
   statistic                 = "Maximum"
   threshold                 = "1"
   treat_missing_data        = "missing"
-  #unit                      = var.unit
 }
 
 #####################
@@ -262,5 +261,4 @@ resource "aws_cloudwatch_metric_alarm" "system" {
   statistic                 = "Maximum"
   threshold                 = "1"
   treat_missing_data        = "missing"
-  #unit                      = var.unit
 }
