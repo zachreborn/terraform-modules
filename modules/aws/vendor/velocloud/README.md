@@ -63,7 +63,7 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well.
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will utilize the Velocloud variables to automatically activate against the Orchestrator.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
@@ -89,12 +89,12 @@ module "aws_prod_sdwan" {
 ```
 
 ### Custom AMI Example
-This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well. The AMI ID is provided to use a custom AMI.
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will utilize the Velocloud variables to automatically activate against the Orchestrator. The AMI ID is provided to use a custom AMI.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
-    ami_id                       = "ami-1234567890"
+    ami_id                       = "ami-123456789e"
     key_name                     = module.keypair.key_name
     number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
@@ -152,6 +152,7 @@ No modules.
 | [aws_network_interface.private_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_network_interface.public_nic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 | [aws_security_group.sdwan_mgmt_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.sdwan_wan_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group.velocloud_lan_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_ami.velocloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
@@ -172,6 +173,7 @@ No modules.
 | <a name="input_lan_sg_name"></a> [lan\_sg\_name](#input\_lan\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_lan_sg"` | no |
 | <a name="input_mgmt_ips"></a> [mgmt\_ips](#input\_mgmt\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
 | <a name="input_mgmt_nic_description"></a> [mgmt\_nic\_description](#input\_mgmt\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN mgmt nic Ge1 in VeloCloud"` | no |
+| <a name="input_mgmt_sg_name"></a> [mgmt\_sg\_name](#input\_mgmt\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_mgmt_sg"` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0) | `bool` | `true` | no |
 | <a name="input_number"></a> [number](#input\_number) | (Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1 | `number` | `1` | no |
 | <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
@@ -194,18 +196,21 @@ No modules.
 | <a name="input_velocloud_orchestrator"></a> [velocloud\_orchestrator](#input\_velocloud\_orchestrator) | (Required) The IP address or FQDN of the VeloCloud orchestrator. Example: vco.example.com | `string` | n/a | yes |
 | <a name="input_velocloud_version"></a> [velocloud\_version](#input\_velocloud\_version) | (Optional) The version ID of the VeloCloud VCE AMI to use. Defaults to the latest version. Use semantic versioning to specify a version. Example: 4.5 | `string` | `"4.5"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required, Forces new resource) VPC ID. Defaults to the region's default VPC. | `string` | n/a | yes |
-| <a name="input_wan_mgmt_sg_name"></a> [wan\_mgmt\_sg\_name](#input\_wan\_mgmt\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_wan_mgmt_sg"` | no |
+| <a name="input_wan_sg_name"></a> [wan\_sg\_name](#input\_wan\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_wan_sg"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | n/a |
-| <a name="output_mgmt_network_interface_id"></a> [mgmt\_network\_interface\_id](#output\_mgmt\_network\_interface\_id) | n/a |
-| <a name="output_private_network_interface_id"></a> [private\_network\_interface\_id](#output\_private\_network\_interface\_id) | n/a |
-| <a name="output_public_eip_id"></a> [public\_eip\_id](#output\_public\_eip\_id) | n/a |
-| <a name="output_public_eip_ip"></a> [public\_eip\_ip](#output\_public\_eip\_ip) | n/a |
-| <a name="output_public_network_interface_id"></a> [public\_network\_interface\_id](#output\_public\_network\_interface\_id) | n/a |
+| <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | The EC2 instance IDs as a list |
+| <a name="output_mgmt_network_interface_id"></a> [mgmt\_network\_interface\_id](#output\_mgmt\_network\_interface\_id) | The mgmt network interface IDs as a list |
+| <a name="output_mgmt_network_interface_private_ips"></a> [mgmt\_network\_interface\_private\_ips](#output\_mgmt\_network\_interface\_private\_ips) | The mgmt network interface private IPs as a list |
+| <a name="output_private_network_interface_id"></a> [private\_network\_interface\_id](#output\_private\_network\_interface\_id) | The private network interface IDs as a list |
+| <a name="output_private_network_interface_private_ips"></a> [private\_network\_interface\_private\_ips](#output\_private\_network\_interface\_private\_ips) | The private network interface private IPs as a list |
+| <a name="output_public_eip_id"></a> [public\_eip\_id](#output\_public\_eip\_id) | The EIP IDs as a list |
+| <a name="output_public_eip_ip"></a> [public\_eip\_ip](#output\_public\_eip\_ip) | The EIP public IPs as a list |
+| <a name="output_public_network_interface_id"></a> [public\_network\_interface\_id](#output\_public\_network\_interface\_id) | The public network interface IDs as a list |
+| <a name="output_public_network_interface_private_ips"></a> [public\_network\_interface\_private\_ips](#output\_public\_network\_interface\_private\_ips) | The public network interface private IPs as a list |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
