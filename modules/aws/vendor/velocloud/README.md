@@ -62,25 +62,53 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well.
 ```
 module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
-    availability_zone         = [module.vpc.availability_zone[0]]
-    velocloud_lan_cidr_blocks = ["10.11.0.0/16"]
-    key_name                  = module.keypair.key_name
-    instance_type             = "c5.xlarge"
-    mgmt_subnet_ids           = module.vpc.mgmt_subnet_ids
-    public_subnet_ids         = module.vpc.public_subnet_ids
-    private_subnet_ids        = module.vpc.private_subnet_ids
-    mgmt_ips                  = ["10.200.61.12"]
-    public_ips                = ["10.200.201.12"]
-    private_ips               = ["10.200.1.12"]
-    vpc_id                    = module.vpc.vpc_id
-    velocloud_activation_key  = "1234-5678-90AB-CDEF"
-    velocloud_orchestrator    = "vco.example.com"
-    tags                      = {
+    key_name                     = module.keypair.key_name
+    number                       = 1
+    public_subnet_ids            = module.vpc.public_subnet_ids
+    private_subnet_ids           = module.vpc.private_subnet_ids
+    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_orchestrator       = "vco.example.com"
+    velocloud_ignore_cert_errors = true
+    ssh_mgmt_access_cidr_blocks  = ["0.0.0.0/0"]
+    snmp_mgmt_access_cidr_blocks = ["0.0.0.0/0"]
+    velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
+    vpc_id                       = module.vpc.vpc_id
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "aws_poc"
+        backup      = "true"
+        role        = "sdwan"
+    }
+}
+```
+
+### Custom AMI Example
+This example creates a VeloCloud vEdge instance in the VPC of your choosing. The instance will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instance will be assigned a keypair and the VeloCloud activation key will be provided. The VeloCloud orchestrator is required to be provided as well. The AMI ID is provided to use a custom AMI.
+```
+module "aws_prod_sdwan" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
+
+    ami_id                       = "ami-1234567890"
+    key_name                     = module.keypair.key_name
+    number                       = 1
+    public_subnet_ids            = module.vpc.public_subnet_ids
+    private_subnet_ids           = module.vpc.private_subnet_ids
+    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_orchestrator       = "vco.example.com"
+    velocloud_ignore_cert_errors = true
+    ssh_mgmt_access_cidr_blocks  = ["0.0.0.0/0"]
+    snmp_mgmt_access_cidr_blocks = ["0.0.0.0/0"]
+    velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
+    vpc_id                       = module.vpc.vpc_id
+    tags = {
         terraform   = "true"
         created_by  = "Zachary Hill"
         environment = "prod"
