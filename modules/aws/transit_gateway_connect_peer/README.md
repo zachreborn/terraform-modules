@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Connect Peer</h3>
   <p align="center">
-    This module configures a transit gateway connect peer for use with a transit gateway with a connect resource.
+    This module configures a transit gateway connect peer for use with a transit gateway with a connect resource. This is typically utilized with a network device or appliance such as a firewall or SDWAN device.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,7 +62,7 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
 ```
 module "transit_gateway_sdwan_connect_peer" {
     source                        = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
