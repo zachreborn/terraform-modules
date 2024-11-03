@@ -28,7 +28,8 @@
 
 <h3 align="center">Transit Gateway Connect Peer</h3>
   <p align="center">
-    This module configures a transit gateway connect peer for use with a transit gateway with a connect resource.
+    This module configures a transit gateway connect peer for use with a transit gateway with a connect resource. This is typically utilized with a network device or appliance such as a firewall or SDWAN device.
+    Note, the Connect Peer attachment needs to be created within the same availability zone as the peer.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,7 +63,7 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
+### Simple Example
 ```
 module "transit_gateway_sdwan_connect_peer" {
     source                        = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
@@ -122,7 +123,14 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the transit gateway connect peer |
+| <a name="output_bgp_asn"></a> [bgp\_asn](#output\_bgp\_asn) | The BGP ASN of the connect peer. |
+| <a name="output_bgp_peer_address"></a> [bgp\_peer\_address](#output\_bgp\_peer\_address) | The BGP peer address within the connect tunnel. This is the address peering with the transit gateway. |
+| <a name="output_bgp_transit_gateway_addresses"></a> [bgp\_transit\_gateway\_addresses](#output\_bgp\_transit\_gateway\_addresses) | The BGP transit gateway address within the connect tunnel. This is the address of the transit gateway. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Transit Gateway Connect Peer |
+| <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
+| <a name="output_peer_address"></a> [peer\_address](#output\_peer\_address) | The IP address of the connect peer. |
+| <a name="output_transit_gateway_address"></a> [transit\_gateway\_address](#output\_transit\_gateway\_address) | The IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

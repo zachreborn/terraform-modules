@@ -73,14 +73,14 @@ module "transit_gateway" {
 ```
 
 ### Example with CIDR blocks
-This example creates a transit gateway with the name "sdwan_tgw" and CIDR blocks of `10.100.0.0/24`
+This example creates a transit gateway with the name "sdwan_tgw" and CIDR blocks of `10.255.0.0/24`. When utilizing CIDR blocks with a transit gateway, the CIDR block must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6. The CIDR blocks chosen should fall outside of the VPC CIDR block range to avoid overlap.
 ```
 module "transit_gateway" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway"
 
   name = "sdwan_tgw"
   transit_gateway_cidr_blocks = [
-    "10.100.0.0/24"
+    "10.255.0.0/24"
   ]
 }
 ```
@@ -134,10 +134,11 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_association_default_route_table_id"></a> [association\_default\_route\_table\_id](#output\_association\_default\_route\_table\_id) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_propagation_default_route_table_id"></a> [propagation\_default\_route\_table\_id](#output\_propagation\_default\_route\_table\_id) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the transit gateway |
+| <a name="output_association_default_route_table_id"></a> [association\_default\_route\_table\_id](#output\_association\_default\_route\_table\_id) | The ID of the default association route table |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the transit gateway |
+| <a name="output_propagation_default_route_table_id"></a> [propagation\_default\_route\_table\_id](#output\_propagation\_default\_route\_table\_id) | The ID of the default propagation route table |
+| <a name="output_transit_gateway_cidr_blocks"></a> [transit\_gateway\_cidr\_blocks](#output\_transit\_gateway\_cidr\_blocks) | The CIDR blocks associated with the transit gateway |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
