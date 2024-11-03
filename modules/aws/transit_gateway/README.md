@@ -73,14 +73,14 @@ module "transit_gateway" {
 ```
 
 ### Example with CIDR blocks
-This example creates a transit gateway with the name "sdwan_tgw" and CIDR blocks of `10.100.0.0/24`
+This example creates a transit gateway with the name "sdwan_tgw" and CIDR blocks of `10.255.0.0/24`. When utilizing CIDR blocks with a transit gateway, the CIDR block must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6. The CIDR blocks chosen should fall outside of the VPC CIDR block range to avoid overlap.
 ```
 module "transit_gateway" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway"
 
   name = "sdwan_tgw"
   transit_gateway_cidr_blocks = [
-    "10.100.0.0/24"
+    "10.255.0.0/24"
   ]
 }
 ```
