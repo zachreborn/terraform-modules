@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Module</h3>
   <p align="center">
-    This module creates a transit gateway for routing between VPCs and other AWS accounts.
+    This module creates a transit gateway for routing between VPCs and other AWS accounts. See https://aws.amazon.com/transit-gateway/ for more information.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -136,6 +136,7 @@ No modules.
 |------|-------------|
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the transit gateway |
 | <a name="output_association_default_route_table_id"></a> [association\_default\_route\_table\_id](#output\_association\_default\_route\_table\_id) | The ID of the default association route table |
+| <a name="output_bgp_asn"></a> [bgp\_asn](#output\_bgp\_asn) | The BGP ASN of the transit gateway |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the transit gateway |
 | <a name="output_propagation_default_route_table_id"></a> [propagation\_default\_route\_table\_id](#output\_propagation\_default\_route\_table\_id) | The ID of the default propagation route table |
 | <a name="output_transit_gateway_cidr_blocks"></a> [transit\_gateway\_cidr\_blocks](#output\_transit\_gateway\_cidr\_blocks) | The CIDR blocks associated with the transit gateway |
