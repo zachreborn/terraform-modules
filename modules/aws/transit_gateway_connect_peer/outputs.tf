@@ -15,7 +15,7 @@ output "bgp_peer_address" {
 
 output "bgp_transit_gateway_addresses" {
   description = "The BGP transit gateway address within the connect tunnel. This is the address of the transit gateway."
-  value       = aws_ec2_transit_gateway_connect_peer.peer.bgp_transit_gateway_address
+  value       = aws_ec2_transit_gateway_connect_peer.peer.bgp_transit_gateway_addresses
 }
 
 output "id" {
