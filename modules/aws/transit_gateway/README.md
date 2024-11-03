@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Module</h3>
   <p align="center">
-    This module creates a transit gateway for routing between VPCs and other AWS accounts.
+    This module creates a transit gateway for routing between VPCs and other AWS accounts. See https://aws.amazon.com/transit-gateway/ for more information.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
