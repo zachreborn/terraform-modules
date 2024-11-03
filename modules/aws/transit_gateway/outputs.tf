@@ -8,6 +8,11 @@ output "association_default_route_table_id" {
   value       = aws_ec2_transit_gateway.transit_gateway.association_default_route_table_id
 }
 
+output "bgp_asn" {
+  description = "The BGP ASN of the transit gateway"
+  value      = aws_ec2_transit_gateway.transit_gateway.amazon_side_asn
+}
+
 output "id" {
   description = "The ID of the transit gateway"
   value       = aws_ec2_transit_gateway.transit_gateway.id
