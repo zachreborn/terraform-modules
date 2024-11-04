@@ -63,13 +63,83 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-### VPC Example
-This example configures VPC Flow Logs to capture all traffic in a VPC. The flow logs are delivered to a CloudWatch Logs log group.
+### Simple Example
+This simple example creates a flow log for a VPC. The flow logs are delivered to a CloudWatch Logs log group.
 ```
 module "flow_logs" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/flow_logs"
 
     flow_vpc_id = module.vpc.id
+}
+```
+
+### VPC Example
+This example configures Flow Logs to capture all traffic in a VPC. The flow logs are delivered to a CloudWatch Logs log group.
+```
+module "vpc_flow_logs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/flow_logs"
+
+  cloudwatch_name_prefix          = var.cloudwatch_name_prefix
+  cloudwatch_retention_in_days    = var.cloudwatch_retention_in_days
+  iam_policy_name_prefix          = var.iam_policy_name_prefix
+  iam_policy_path                 = var.iam_policy_path
+  iam_role_description            = var.iam_role_description
+  iam_role_name_prefix            = var.iam_role_name_prefix
+  key_name_prefix                 = var.key_name_prefix
+  flow_deliver_cross_account_role = var.flow_deliver_cross_account_role
+  flow_log_destination_type       = var.flow_log_destination_type
+  flow_log_format                 = var.flow_log_format
+  flow_max_aggregation_interval   = var.flow_max_aggregation_interval
+  flow_traffic_type               = var.flow_traffic_type
+  flow_vpc_id                     = aws_vpc.vpc.id
+  tags                            = var.tags
+}
+```
+
+### Transit Gateway Example
+This example configures Flow Logs to capture all traffic in a Transit Gateway. The flow logs are delivered to a CloudWatch Logs log group.
+```
+module "vpc_flow_logs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/flow_logs"
+
+  cloudwatch_name_prefix          = var.cloudwatch_name_prefix
+  cloudwatch_retention_in_days    = var.cloudwatch_retention_in_days
+  iam_policy_name_prefix          = var.iam_policy_name_prefix
+  iam_policy_path                 = var.iam_policy_path
+  iam_role_description            = var.iam_role_description
+  iam_role_name_prefix            = var.iam_role_name_prefix
+  key_name_prefix                 = var.key_name_prefix
+  flow_deliver_cross_account_role = var.flow_deliver_cross_account_role
+  flow_log_destination_type       = var.flow_log_destination_type
+  flow_log_format                 = var.flow_log_format
+  flow_max_aggregation_interval   = var.flow_max_aggregation_interval
+  flow_traffic_type               = var.flow_traffic_type
+  flow_transit_gateway_id         = aws_ec2_transit_gateway.transit_gateway.id
+  tags                            = var.tags
+}
+
+```
+
+### Transit Gateway Attachment Example
+This example configures Flow Logs to capture all traffic in a Transit Gateway Attachment. The flow logs are delivered to a CloudWatch Logs log group.
+```
+module "vpc_flow_logs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/flow_logs"
+
+  cloudwatch_name_prefix             = var.cloudwatch_name_prefix
+  cloudwatch_retention_in_days       = var.cloudwatch_retention_in_days
+  iam_policy_name_prefix             = var.iam_policy_name_prefix
+  iam_policy_path                    = var.iam_policy_path
+  iam_role_description               = var.iam_role_description
+  iam_role_name_prefix               = var.iam_role_name_prefix
+  key_name_prefix                    = var.key_name_prefix
+  flow_deliver_cross_account_role    = var.flow_deliver_cross_account_role
+  flow_log_destination_type          = var.flow_log_destination_type
+  flow_log_format                    = var.flow_log_format
+  flow_max_aggregation_interval      = var.flow_max_aggregation_interval
+  flow_traffic_type                  = var.flow_traffic_type
+  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this.id
+  tags                               = var.tags
 }
 ```
 
