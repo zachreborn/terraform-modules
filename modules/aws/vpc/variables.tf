@@ -161,25 +161,6 @@ variable "iam_policy_path" {
   default     = "/"
 }
 
-variable "iam_role_assume_role_policy" {
-  type        = string
-  description = "(Required) The policy that grants an entity permission to assume the role."
-  default     = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "vpc-flow-logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-POLICY
-}
-
 variable "iam_role_description" {
   type        = string
   description = "(Optional) The description of the role."
