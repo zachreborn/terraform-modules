@@ -231,8 +231,8 @@ variable "enable_s3_endpoint" {
   type        = bool
 }
 
-variable "enable_vpc_flow_logs" {
-  description = "(Optional) A boolean flag to enable/disable the use of VPC flow logs with the VPC. Defaults True."
+variable "enable_flow_logs" {
+  description = "(Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True."
   default     = true
   type        = bool
 }

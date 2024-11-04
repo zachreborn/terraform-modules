@@ -387,7 +387,7 @@ resource "aws_route_table_association" "workspaces" {
 module "vpc_flow_logs" {
   source = "../flow_logs"
 
-  count                           = var.enable_vpc_flow_logs ? 1 : 0
+  count                           = var.enable_flow_logs ? 1 : 0
   cloudwatch_name_prefix          = var.cloudwatch_name_prefix
   cloudwatch_retention_in_days    = var.cloudwatch_retention_in_days
   iam_policy_name_prefix          = var.iam_policy_name_prefix
