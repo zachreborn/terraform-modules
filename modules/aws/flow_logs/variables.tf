@@ -136,13 +136,30 @@ variable "iam_role_permissions_boundary" {
 }
 
 ###########################
-# VPC Flow Log
+# Flow Log
 ###########################
+variable "flow_deliver_cross_account_role" {
+  type        = string
+  description = "(Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account."
+  default     = null
+}
+
+variable "flow_eni_id" {
+  type        = string
+  description = "(Optional) Elastic Network Interface ID to attach the flow logs to."
+  default     = null
+}
 
 variable "flow_log_destination_type" {
   type        = string
   description = "(Optional) The type of the logging destination. Valid values: cloud-watch-logs, s3. Default: cloud-watch-logs."
   default     = "cloud-watch-logs"
+}
+
+variable "flow_log_format" {
+  type        = string
+  description = "(Optional) The fields to include in the flow log record, in the order in which they should appear. For more information, see Flow Log Records. Default: fields are in the order that they are described in the Flow Log Records section."
+  default     = null
 }
 
 variable "flow_max_aggregation_interval" {
@@ -151,10 +168,28 @@ variable "flow_max_aggregation_interval" {
   default     = 60
 }
 
+variable "flow_subnet_id" {
+  type        = string
+  description = "(Optional) Subnet ID to attach the flow logs to."
+  default     = null
+}
+
 variable "flow_traffic_type" {
   type        = string
   description = "(Optional) The type of traffic to capture. Valid values: ACCEPT,REJECT, ALL."
   default     = "ALL"
+}
+
+variable "flow_transit_gateway_id" {
+  type        = string
+  description = "(Optional) The ID of the transit gateway to attach the flow logs to."
+  default     = null
+}
+
+variable "flow_transit_gateway_attachment_id" {
+  type        = string
+  description = "(Optional) The ID of the transit gateway attachment to attach the flow logs to."
+  default     = null
 }
 
 variable "flow_vpc_id" {
