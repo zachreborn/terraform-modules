@@ -21,7 +21,7 @@ variable "key_deletion_window_in_days" {
 }
 
 variable "key_enable_key_rotation" {
-  description = "(Optional) Specifies whether key rotation is enabled. Defaults to false."
+  description = "(Optional) Specifies whether key rotation is enabled. Defaults to true."
   default     = true
   type        = bool
 }
@@ -66,7 +66,7 @@ variable "cloudwatch_retention_in_days" {
 
 variable "iam_policy_description" {
   description = "(Optional, Forces new resource) Description of the IAM policy."
-  default     = "Used with flow logs to send packet capture logs to a CloudWatch log group"
+  default     = "Used with flow logs to send packet capture logs to a CloudWatch log group."
   type        = string
 }
 
@@ -194,7 +194,8 @@ variable "flow_transit_gateway_attachment_id" {
 
 variable "flow_vpc_id" {
   type        = string
-  description = "(Required) VPC ID to attach to"
+  description = "(Optional) VPC ID to attach to."
+  default     = null
 }
 
 ###############################################################
