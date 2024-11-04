@@ -63,6 +63,8 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+### VPC Example
+This example configures VPC Flow Logs to capture all traffic in a VPC. The flow logs are delivered to a CloudWatch Logs log group.
 ```
 module "flow_logs" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/flow_logs"
