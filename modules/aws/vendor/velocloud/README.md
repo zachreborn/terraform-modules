@@ -72,7 +72,7 @@ module "aws_prod_sdwan" {
     number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
@@ -99,7 +99,7 @@ module "aws_prod_sdwan" {
     number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]

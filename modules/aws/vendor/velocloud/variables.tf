@@ -240,7 +240,7 @@ variable "tags" {
   }
 }
 
-variable "number" {
+variable "quantity" {
   description = "(Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1"
   type        = number
   default     = 1
