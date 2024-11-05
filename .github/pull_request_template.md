@@ -12,6 +12,15 @@ Fixes #000
 - [ ] New feature
 - [ ] Version update
 
+## Breaking Changes
+<!-- Does this PR introduce any breaking changes? -->
+- [ ] Yes
+- [ ] No
+
+### Breaking Changes Description
+<!-- If yes, describe the breaking changes introduced by this PR. -->
+
+
 ## TODOs
 <!-- Complete these tasks prior to requesting a review.-->
 - [ ] Validate your code matches the style of the project.
