@@ -199,12 +199,12 @@ variable "root_ebs_volume_encrypted" {
   default     = true
 }
 
-variable "velocloud_activation_key" {
+variable "velocloud_activation_keys" {
   description = "(Required) The activation key for the VeloCloud instance(s)."
-  type        = string
+  type        = list(string)
   validation {
-    condition     = can(regex("^[A-Z0-9-]{19}$", var.velocloud_activation_key))
-    error_message = "The activation key must be 16 characters long with hyphens every 4 characters and contain only uppercase alphanumeric characters and hyphens. Example (AAA1-2BBB-3C3C-44D4)"
+    condition     = alltrue([for key in var.velocloud_activation_keys : can(regex("^[A-Z0-9-]{19}$", key))])
+    error_message = "Each activation key must be 19 characters long with hyphens every 4 characters and contain only uppercase alphanumeric characters and hyphens. Example (AAA1-2BBB-3C3C-44D4)"
   }
 }
 

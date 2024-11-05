@@ -17,7 +17,7 @@ data "aws_region" "current" {}
 data "aws_ami" "velocloud" {
   most_recent = true
   name_regex  = "VeloCloud VCE ${var.velocloud_version}*"
-  owners      = ["679593333241"]
+  owners      = ["679593333241"] # VMware
 
   filter {
     name   = "state"
@@ -186,7 +186,7 @@ resource "aws_instance" "ec2_instance" {
   volume_tags          = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
   tags                 = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
   user_data = var.user_data != null ? var.user_data : base64encode(templatefile("${path.module}/user_data.tftpl", {
-    velocloud_activation_key     = var.velocloud_activation_key
+    velocloud_activation_key     = element(var.velocloud_activation_keys, count.index)
     velocloud_ignore_cert_errors = var.velocloud_ignore_cert_errors
     velocloud_orchestrator       = var.velocloud_orchestrator
   }))
