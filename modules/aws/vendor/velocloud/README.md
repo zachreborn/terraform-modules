@@ -175,13 +175,13 @@ No modules.
 | <a name="input_mgmt_nic_description"></a> [mgmt\_nic\_description](#input\_mgmt\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN mgmt nic Ge1 in VeloCloud"` | no |
 | <a name="input_mgmt_sg_name"></a> [mgmt\_sg\_name](#input\_mgmt\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_mgmt_sg"` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0) | `bool` | `true` | no |
-| <a name="input_number"></a> [number](#input\_number) | (Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1 | `number` | `1` | no |
 | <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
 | <a name="input_private_nic_description"></a> [private\_nic\_description](#input\_private\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN private nic Ge3 in VeloCloud"` | no |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | (Required) Subnet IDs to create the ENI in. | `list(string)` | n/a | yes |
 | <a name="input_public_ips"></a> [public\_ips](#input\_public\_ips) | (Optional) Private IP addresses to associate with the instance in a VPC. | `list(string)` | `null` | no |
 | <a name="input_public_nic_description"></a> [public\_nic\_description](#input\_public\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN public nic Ge2 in VeloCloud"` | no |
 | <a name="input_public_subnet_ids"></a> [public\_subnet\_ids](#input\_public\_subnet\_ids) | (Required) Subnet IDs to create the ENI in. | `list(string)` | n/a | yes |
+| <a name="input_quantity"></a> [quantity](#input\_quantity) | (Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1 | `number` | `1` | no |
 | <a name="input_root_ebs_volume_encrypted"></a> [root\_ebs\_volume\_encrypted](#input\_root\_ebs\_volume\_encrypted) | (Optional) Whether to enable volume encryption on the root ebs volume. Defaults to true. Must be configured to perform drift detection. | `bool` | `true` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Size of the root volume in gibibytes (GiB). | `number` | `8` | no |
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Type of volume. Valid values include standard, gp2, gp3, io1, io2, sc1, or st1. Defaults to gp3 | `string` | `"gp3"` | no |
