@@ -16,7 +16,7 @@ terraform {
 ###########################
 data "aws_cloudfront_cache_policy" "this" {
   for_each = var.managed_cache_policy_name != null ? [var.managed_cache_policy_name] : []
-  name     = var.managed_cache_policy_name
+  name     = "Managed-${var.managed_cache_policy_name}"
 }
 
 ###########################

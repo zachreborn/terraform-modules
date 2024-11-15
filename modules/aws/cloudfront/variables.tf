@@ -192,7 +192,7 @@ variable "logging_config" {
 }
 
 variable "managed_cache_policy_name" {
-  description = "(Optional) The name of the managed cache policy to use for the default cache behavior. AWS managed policies begin with the `Managed-` prefix. Example: `Managed-CachingOptimized`."
+  description = "(Optional) The name of the managed cache policy to use for the default cache behavior. Example: `CachingOptimized`."
   type        = string
   default     = null
 }
