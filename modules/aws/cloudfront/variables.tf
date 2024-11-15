@@ -216,7 +216,7 @@ variable "managed_cache_policy_name" {
 
 variable "ordered_cache_behavior" {
   description = "(Optional) One or more ordered cache behavior elements (multiples allowed). The values are the same from the default_cache_behaviors with the exception of requiring path_pattern."
-  type = object({
+  type = map(object({
     allowed_methods            = list(string)           # Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin.
     cached_methods             = list(string)           # Controls whether CloudFront caches the response to requests using the specified HTTP methods.
     cache_policy_id            = string                 # The cache policy id to attach to the cache behavior.
@@ -231,17 +231,16 @@ variable "ordered_cache_behavior" {
     trusted_key_groups         = optional(list(string)) # The key groups that CloudFront can use to validate signed URLs or signed cookies.
     trusted_signers            = optional(list(string)) # The AWS accounts, if any, that you want to allow to create signed URLs for private content.
     viewer_protocol_policy     = optional(string)       # The protocol that viewers can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern.
-  })
+  }))
   default = null
 }
 
 variable "origin" {
-  description = "(Required) One or more origins for this distribution (multiples allowed)."
-  type = list(object({
+  description = "(Required) One or more origins for this distribution (multiples allowed). The keys should be the origin ID you'd like to use for the origin."
+  type = map(object({
     connect_attempts   = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.
     connection_timeout = optional(number, 10) # The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
     domain_name        = string               # The DNS domain name of the S3 bucket or the HTTP server where the content is located.
-    origin_id          = string               # A unique identifier for the origin.
     origin_path        = optional(string)     # An optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
     custom_header = optional(object({
       header_name  = string # The name of the header.

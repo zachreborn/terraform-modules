@@ -43,7 +43,7 @@ resource "aws_cloudfront_distribution" "this" {
   web_acl_id                      = var.web_acl_id
 
   dynamic "custom_error_response" {
-    for_each = var.custom_error_response != null ? [var.custom_error_response] : []
+    for_each = var.custom_error_response != null ? var.custom_error_response : []
     content {
       error_caching_min_ttl = custom_error_response.value.error_caching_min_ttl
       error_code            = custom_error_response.value.error_code
@@ -71,7 +71,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "logging_config" {
-    for_each = var.logging_config != null ? [var.logging_config] : []
+    for_each = var.logging_config != null ? var.logging_config : []
     content {
       bucket          = logging_config.value.bucket
       include_cookies = logging_config.value.include_cookies
@@ -80,7 +80,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = var.ordered_cache_behavior != null ? [var.ordered_cache_behavior] : []
+    for_each = var.ordered_cache_behavior != null ? toset(var.ordered_cache_behavior) : []
     content {
       allowed_methods           = ordered_cache_behavior.value.allowed_methods
       cached_methods            = ordered_cache_behavior.value.cached_methods
@@ -102,13 +102,13 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "origin" {
-    for_each = var.origin != null ? [var.origin] : []
+    for_each = var.origin != null ? var.origin : []
     content {
       connection_attempts      = origin.value.connection_attempts
       connection_timeout       = origin.value.connection_timeout
       domain_name              = origin.value.domain_name
       origin_access_control_id = origin.value.origin_access_control_id
-      origin_id                = origin.value.origin_id
+      origin_id                = origin.key
       origin_path              = origin.value.origin_path
 
       dynamic "custom_header" {
