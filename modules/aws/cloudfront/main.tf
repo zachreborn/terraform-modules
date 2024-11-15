@@ -71,7 +71,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "logging_config" {
-    for_each = var.logging_config != null ? var.logging_config : []
+    for_each = var.logging_config != null ? var.logging_config : {}
     content {
       bucket          = logging_config.value.bucket
       include_cookies = logging_config.value.include_cookies
@@ -102,7 +102,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "origin" {
-    for_each = var.origin != null ? var.origin : []
+    for_each = var.origin != null ? var.origin : {}
     content {
       connection_attempts      = origin.value.connection_attempts
       connection_timeout       = origin.value.connection_timeout
