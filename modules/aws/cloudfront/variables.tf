@@ -48,7 +48,17 @@ variable "default_cache_allowed_methods" {
   type        = list(string)
   default     = ["GET", "HEAD"]
   validation {
-    condition     = can(regex("^(GET|HEAD|OPTIONS|PUT|PATCH|POST|DELETE)$", join(",", var.default_cache_allowed_methods)))
+    condition     = alltrue([
+        for item in var.default_cache_allowed_methods : anytrue([
+            item == "GET",
+            item == "HEAD",
+            item == "OPTIONS",
+            item == "PUT",
+            item == "PATCH",
+            item == "POST",
+            item == "DELETE"
+        ])
+    ])
     error_message = "Invalid value for default_cache_allowed_methods. Must be one or more of GET, HEAD, OPTIONS, PUT, PATCH, POST, or DELETE."
   }
 }
@@ -58,7 +68,13 @@ variable "default_cache_cached_methods" {
   type        = list(string)
   default     = ["GET", "HEAD"]
   validation {
-    condition     = can(regex("^(GET|HEAD|OPTIONS)$", join(",", var.default_cache_cached_methods)))
+    condition     = alltrue([
+        for item in var.default_cache_cached_methods : anytrue([
+            item == "GET",
+            item == "HEAD",
+            item == "OPTIONS"
+        ])
+    ])
     error_message = "Invalid value for default_cache_cached_methods. Must be one or more of GET, HEAD, or OPTIONS."
   }
 }
