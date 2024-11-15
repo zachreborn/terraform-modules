@@ -154,8 +154,8 @@ variable "geo_restriction_type" {
   type        = string
   default     = "blacklist"
   validation {
-    condition     = can(regex("^(none|whitelist|blacklist)$", var.geo_restrictions_type))
-    error_message = "Invalid value for geo_restrictions_type. Must be one of none, whitelist, or blacklist."
+    condition     = can(regex("^(none|whitelist|blacklist)$", var.geo_restriction_type))
+    error_message = "Invalid value for geo_restriction_type. Must be one of none, whitelist, or blacklist."
   }
 }
 
@@ -269,8 +269,8 @@ variable "ssl_minimum_protocol_version" {
   type        = string
   default     = "TLSv1.2_2021"
   validation {
-    condition     = can(regex("^(TLSv1|TLSv1_2016|TLSv1.1_2016|TLSv1.2_2018|TLSv1.2_2019|TLSv1.2_2021)$", var.minimum_protocol_version))
-    error_message = "Invalid value for minimum_protocol_version. Must be one of TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019, or TLSv1.2_2021."
+    condition     = can(regex("^(TLSv1|TLSv1_2016|TLSv1.1_2016|TLSv1.2_2018|TLSv1.2_2019|TLSv1.2_2021)$", var.ssl_minimum_protocol_version))
+    error_message = "Invalid value for ssl_minimum_protocol_version. Must be one of TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019, or TLSv1.2_2021."
   }
 }
 
