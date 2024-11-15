@@ -16,7 +16,7 @@ terraform {
 ###########################
 data "aws_cloudfront_cache_policy" "this" {
   count = var.managed_cache_policy_name != null ? 1 : 0
-  name     = "Managed-${var.managed_cache_policy_name}"
+  name  = "Managed-${var.managed_cache_policy_name}"
 }
 
 ###########################
