@@ -238,10 +238,11 @@ variable "ordered_cache_behavior" {
 variable "origin" {
   description = "(Required) One or more origins for this distribution (multiples allowed). The keys should be the origin ID you'd like to use for the origin."
   type = map(object({
-    connect_attempts   = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.
-    connection_timeout = optional(number, 10) # The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
-    domain_name        = string               # The DNS domain name of the S3 bucket or the HTTP server where the content is located.
-    origin_path        = optional(string)     # An optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
+    connection_attempts      = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.
+    connection_timeout       = optional(number, 10) # The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
+    domain_name              = string               # The DNS domain name of the S3 bucket or the HTTP server where the content is located.
+    origin_access_control_id = optional(string)     # The origin access identity to associate with the origin.
+    origin_path              = optional(string)     # An optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
     custom_header = optional(object({
       header_name  = string # The name of the header.
       header_value = string # The value of the header.

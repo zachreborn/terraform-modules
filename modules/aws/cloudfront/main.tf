@@ -112,7 +112,7 @@ resource "aws_cloudfront_distribution" "this" {
       origin_path              = origin.value.origin_path
 
       dynamic "custom_header" {
-        for_each = origin.value.custom_header != null ? origin.value.custom_header : []
+        for_each = origin.value.custom_header != null ? origin.value.custom_header : {}
         content {
           name  = custom_header.value.header_name
           value = custom_header.value.header_value
@@ -120,7 +120,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "custom_origin_config" {
-        for_each = origin.value.custom_origin_config != null ? origin.value.custom_origin_config : []
+        for_each = origin.value.custom_origin_config != null ? origin.value.custom_origin_config : {}
         content {
           http_port                = custom_origin_config.value.http_port
           https_port               = custom_origin_config.value.https_port
@@ -132,7 +132,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "origin_shield" {
-        for_each = origin.value.origin_shield != null ? origin.value.origin_shield : []
+        for_each = origin.value.origin_shield != null ? origin.value.origin_shield : {}
         content {
           enabled              = origin_shield.value.enabled
           origin_shield_region = origin_shield.value.origin_shield_region
@@ -140,7 +140,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "s3_origin_config" {
-        for_each = origin.value.s3_origin_config != null ? origin.value.s3_origin_config : []
+        for_each = origin.value.s3_origin_config != null ? origin.value.s3_origin_config : {}
         content {
           origin_access_identity = s3_origin_config.value.origin_access_identity
         }
