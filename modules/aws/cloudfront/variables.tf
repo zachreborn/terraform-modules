@@ -63,9 +63,10 @@ variable "default_cache_cached_methods" {
   }
 }
 
-variable "default_cache_cache_policy_id" {
-  description = "(Required) The cache policy id to attach to the default cache behavior."
+variable "default_cache_policy_id" {
+  description = "(Optional) The cache policy id to attach to the default cache behavior. This is required if `managed_cache_policy_name` is not set."
   type        = string
+  default     = null
 }
 
 variable "default_cache_compress" {
@@ -188,6 +189,12 @@ variable "logging_config" {
     prefix          = optional(string)      # The prefix for the log files.
   })
   default = null
+}
+
+variable "managed_cache_policy_name" {
+  description = "(Optional) The name of the managed cache policy to use for the default cache behavior. AWS managed policies begin with the `Managed-` prefix. Example: `Managed-CachingOptimized`."
+  type        = string
+  default     = null
 }
 
 variable "ordered_cache_behavior" {

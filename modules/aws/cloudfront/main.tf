@@ -14,7 +14,10 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-
+data "aws_cloudfront_cache_policy" "this" {
+  for_each = var.managed_cache_policy_name != null ? [var.managed_cache_policy_name] : []
+  name     = var.managed_cache_policy_name
+}
 
 ###########################
 # Locals
@@ -52,7 +55,7 @@ resource "aws_cloudfront_distribution" "this" {
   default_cache_behavior {
     allowed_methods           = var.default_cache_allowed_methods
     cached_methods            = var.default_cache_cached_methods
-    cache_policy_id           = var.default_cache_cache_policy_id
+    cache_policy_id           = var.managed_cache_policy_name != null ? data.aws_cloudfront_cache_policy.this.id : var.default_cache_policy_id
     compress                  = var.default_cache_compress
     field_level_encryption_id = var.default_cache_field_level_encryption_id
     # lambda_function_association block
