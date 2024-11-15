@@ -54,12 +54,9 @@ resource "aws_cloudfront_distribution" "this" {
     cached_methods            = var.default_cache_cached_methods
     cache_policy_id           = var.default_cache_cache_policy_id
     compress                  = var.default_cache_compress
-    default_ttl               = var.default_cache_default_ttl
     field_level_encryption_id = var.default_cache_field_level_encryption_id
     # lambda_function_association block
     # function_association block
-    max_ttl                    = var.default_cache_max_ttl
-    min_ttl                    = var.default_cache_min_ttl
     origin_request_policy_id   = var.default_cache_origin_request_policy_id
     realtime_log_config_arn    = var.default_cache_realtime_log_config_arn
     response_headers_policy_id = var.default_cache_response_headers_policy_id
@@ -86,12 +83,9 @@ resource "aws_cloudfront_distribution" "this" {
       cached_methods            = ordered_cache_behavior.value.cached_methods
       cache_policy_id           = ordered_cache_behavior.value.cache_policy_id
       compress                  = ordered_cache_behavior.value.compress
-      default_ttl               = ordered_cache_behavior.value.default_ttl
       field_level_encryption_id = ordered_cache_behavior.value.field_level_encryption_id
       # lambda_function_association block
       # function_association block
-      max_ttl                    = ordered_cache_behavior.value.max_ttl
-      min_ttl                    = ordered_cache_behavior.value.min_ttl
       origin_request_policy_id   = ordered_cache_behavior.value.origin_request_policy_id
       path_pattern               = ordered_cache_behavior.value.path_pattern
       realtime_log_config_arn    = ordered_cache_behavior.value.realtime_log_config_arn

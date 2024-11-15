@@ -44,8 +44,9 @@ variable "custom_error_response" {
 }
 
 variable "default_cache_allowed_methods" {
-  description = "(Required) Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin."
+  description = "(Optional) Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin."
   type        = list(string)
+  default     = ["GET", "HEAD"]
   validation {
     condition     = can(regex("^(GET|HEAD|OPTIONS|PUT|PATCH|POST|DELETE)$", join(",", var.default_cache_allowed_methods)))
     error_message = "Invalid value for default_cache_allowed_methods. Must be one or more of GET, HEAD, OPTIONS, PUT, PATCH, POST, or DELETE."
@@ -73,27 +74,9 @@ variable "default_cache_compress" {
   default     = true
 }
 
-variable "default_cache_default_ttl" {
-  description = "(Optional) The default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated."
-  type        = number
-  default     = null
-}
-
 variable "default_cache_field_level_encryption_id" {
   description = "(Optional) The field level encryption id to attach to the default cache behavior."
   type        = string
-  default     = null
-}
-
-variable "default_cache_max_ttl" {
-  description = "(Optional) The maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated."
-  type        = number
-  default     = null
-}
-
-variable "default_cache_min_ttl" {
-  description = "(Optional) The minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated."
-  type        = number
   default     = null
 }
 
@@ -214,10 +197,7 @@ variable "ordered_cache_behavior" {
     cached_methods             = list(string)           # Controls whether CloudFront caches the response to requests using the specified HTTP methods.
     cache_policy_id            = string                 # The cache policy id to attach to the cache behavior.
     compress                   = optional(bool)         # Whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header.
-    default_ttl                = optional(number)       # The default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated.
     field_level_encryption_id  = optional(string)       # The field level encryption id to attach to the cache behavior.
-    max_ttl                    = optional(number)       # The maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated.
-    min_ttl                    = optional(number)       # The minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
     origin_request_policy_id   = string                 # The origin request policy id to attach to the cache behavior.
     path_pattern               = string                 # The pattern (for example, images/*.jpg) that specifies which requests to apply the behavior to.
     realtime_log_config_arn    = optional(string)       # The ARN of the real-time log configuration to use for the cache behavior.
