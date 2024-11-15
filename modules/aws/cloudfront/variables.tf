@@ -82,8 +82,9 @@ variable "default_cache_field_level_encryption_id" {
 }
 
 variable "default_cache_origin_request_policy_id" {
-  description = "(Required) The origin request policy id to attach to the default cache behavior."
+  description = "(Optional) The origin request policy id to attach to the default cache behavior."
   type        = string
+  default     = null
 }
 
 variable "default_cache_realtime_log_config_arn" {
