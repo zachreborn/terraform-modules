@@ -30,8 +30,8 @@ resource "aws_cloudfront_distribution" "this" {
   continuous_deployment_policy_id = var.continuous_deployment_policy_id
   default_root_object             = var.default_root_object
   enabled                         = var.enabled
-  is_ipv6_enabled                 = var.is_ipv6_enabled
   http_version                    = var.http_version
+  is_ipv6_enabled                 = var.is_ipv6_enabled
   price_class                     = var.price_class
   retain_on_delete                = var.retain_on_delete
   staging                         = var.staging
@@ -50,24 +50,24 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   default_cache_behavior {
-    allowed_methods           = var.allowed_methods
-    cached_methods            = var.cached_methods
-    cache_policy_id           = var.cache_policy_id
-    compress                  = var.compress
-    default_ttl               = var.default_ttl
-    field_level_encryption_id = var.field_level_encryption_id
+    allowed_methods           = var.default_cache_allowed_methods
+    cached_methods            = var.default_cache_cached_methods
+    cache_policy_id           = var.default_cache_cache_policy_id
+    compress                  = var.default_cache_compress
+    default_ttl               = var.default_cache_default_ttl
+    field_level_encryption_id = var.default_cache_field_level_encryption_id
     # lambda_function_association block
     # function_association block
-    max_ttl                    = var.max_ttl
-    min_ttl                    = var.min_ttl
-    origin_request_policy_id   = var.origin_request_policy_id
-    realtime_log_config_arn    = var.realtime_log_config_arn
-    response_headers_policy_id = var.response_headers_policy_id
-    smooth_streaming           = var.smooth_streaming
-    target_origin_id           = var.target_origin_id
-    trusted_key_groups         = var.trusted_key_groups
-    trusted_signers            = var.trusted_signers
-    viewer_protocol_policy     = var.viewer_protocol_policy
+    max_ttl                    = var.default_cache_max_ttl
+    min_ttl                    = var.default_cache_min_ttl
+    origin_request_policy_id   = var.default_cache_origin_request_policy_id
+    realtime_log_config_arn    = var.default_cache_realtime_log_config_arn
+    response_headers_policy_id = var.default_cache_response_headers_policy_id
+    smooth_streaming           = var.default_cache_smooth_streaming
+    target_origin_id           = var.default_cache_target_origin_id
+    trusted_key_groups         = var.default_cache_trusted_key_groups
+    trusted_signers            = var.default_cache_trusted_signers
+    viewer_protocol_policy     = var.default_cache_viewer_protocol_policy
   }
 
   dynamic "logging_config" {
@@ -107,9 +107,8 @@ resource "aws_cloudfront_distribution" "this" {
   dynamic "origin" {
     for_each = var.origin != null ? [var.origin] : []
     content {
-      connection_attempts = origin.value.connection_attempts
-      connection_timeout  = origin.value.connection_timeout
-
+      connection_attempts      = origin.value.connection_attempts
+      connection_timeout       = origin.value.connection_timeout
       domain_name              = origin.value.domain_name
       origin_access_control_id = origin.value.origin_access_control_id
       origin_id                = origin.value.origin_id
@@ -163,7 +162,7 @@ resource "aws_cloudfront_distribution" "this" {
     acm_certificate_arn            = var.acm_certificate_arn
     cloudfront_default_certificate = var.cloudfront_default_certificate
     iam_certificate_id             = var.iam_certificate_id
-    minimum_protocol_version       = var.minimum_protocol_version
+    minimum_protocol_version       = var.ssl_minimum_protocol_version
     ssl_support_method             = var.ssl_support_method
   }
 }
