@@ -9,6 +9,7 @@ terraform {
 }
 
 resource "aws_ec2_transit_gateway_connect_peer" "peer" {
+  # Convert to for_each
   bgp_asn                       = var.bgp_asn
   inside_cidr_blocks            = var.inside_cidr_blocks
   peer_address                  = var.peer_address
