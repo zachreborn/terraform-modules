@@ -235,7 +235,7 @@ variable "ordered_cache_behavior" {
   default = null
 }
 
-variable "origin" {
+variable "origins" {
   description = "(Required) One or more origins for this distribution (multiples allowed). The keys should be the origin ID you'd like to use for the origin."
   type = map(object({
     connection_attempts      = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.

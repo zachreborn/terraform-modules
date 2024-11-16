@@ -102,7 +102,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "origin" {
-    for_each = var.origin != null ? var.origin : {}
+    for_each = var.origins != null ? var.origins : {}
     content {
       connection_attempts      = origin.value.connection_attempts
       connection_timeout       = origin.value.connection_timeout
