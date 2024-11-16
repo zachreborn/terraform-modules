@@ -34,9 +34,9 @@ variable "continuous_deployment_policy_id" {
 
 variable "custom_error_response" {
   description = "(Optional) One or more custom error response elements (multiples allowed)."
-  type = list(object({
-    error_caching_min_ttl = optional(number) # The minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
+  type = map(object({
     error_code            = number           # 4xx or 5xx HTTP status code that you want customized.
+    error_caching_min_ttl = optional(number) # The minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
     response_code         = optional(number) # HTTP status code to return.
     response_page_path    = optional(string) # Path of the custom error page (for example, /custom_404.html). Must begin with a slash (/).
   }))
