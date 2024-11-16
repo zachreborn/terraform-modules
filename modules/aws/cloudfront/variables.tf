@@ -248,11 +248,11 @@ variable "origin" {
       header_value = string # The value of the header.
     }))                     # One or more custom headers that you want to include in the origin request.
     custom_origin_config = optional(object({
-      http_port                 = optional(number, 80)   # The HTTP port the custom origin listens on.
-      https_port                = optional(number, 443)  # The HTTPS port the custom origin listens on.
-      origins_keepalive_timeout = optional(number, 5)    # The keepalive timeout for the origin.
+      http_port                 = optional(number)       # The HTTP port the custom origin listens on.
+      https_port                = optional(number)       # The HTTPS port the custom origin listens on.
+      origins_keepalive_timeout = optional(number)       # The keepalive timeout for the origin.
       origin_protocol_policy    = optional(string)       # The origin protocol policy to apply to your origin. Must be one of http-only, https-only, or match-viewer.
-      origin_read_timeout       = optional(number, 30)   # The read timeout for the origin.
+      origin_read_timeout       = optional(number)       # The read timeout for the origin.
       origin_ssl_protocols      = optional(list(string)) # The SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS.
     }))                                                  # The custom origin configuration information.
     origin_shield = optional(object({
