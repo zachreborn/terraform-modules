@@ -17,8 +17,12 @@ variable "subject_alternative_names" {
 
 variable "key_algorithm" {
   type        = string
-  description = "(Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See ACM Certificate characteristics for more details."
-  default     = "EC_secp384r1"
+  description = "(Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. Valid options are: RSA_1024, RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1. See ACM Certificate documentation for more details - https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate-characteristics.html."
+  default     = "EC_prime256v1"
+  validation {
+    condition     = can(regex("^(RSA_1024|RSA_2048|RSA_3072|RSA_4096|EC_prime256v1|EC_secp384r1|EC_secp521r1)$", var.key_algorithm))
+    error_message = "Invalid key_algorithm specified. Must be one of: RSA_1024, RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1."
+  }
 }
 
 variable "tags" {
