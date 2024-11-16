@@ -80,7 +80,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = var.ordered_cache_behavior != null ? toset(var.ordered_cache_behavior) : []
+    for_each = var.ordered_cache_behavior != null ? var.ordered_cache_behavior : {}
     content {
       allowed_methods           = ordered_cache_behavior.value.allowed_methods
       cached_methods            = ordered_cache_behavior.value.cached_methods
