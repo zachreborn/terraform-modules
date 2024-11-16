@@ -247,7 +247,7 @@ variable "origin" {
       header_name  = string # The name of the header.
       header_value = string # The value of the header.
     }))                     # One or more custom headers that you want to include in the origin request.
-    custom_origin_config = optional(object({
+    custom_origin_config = optional(map({
       http_port                 = optional(number, 80)   # The HTTP port the custom origin listens on.
       https_port                = optional(number, 443)  # The HTTPS port the custom origin listens on.
       origins_keepalive_timeout = optional(number, 5)    # The keepalive timeout for the origin.
