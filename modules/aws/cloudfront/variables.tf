@@ -261,7 +261,7 @@ variable "origin" {
     }))                                       # The region for Origin Shield.
     s3_origin_config = optional(object({
       origin_access_identity = string # The CloudFront origin access identity to associate with the origin.
-    }))                                         # The S3 origin configuration information.
+    }))                               # The S3 origin configuration information.
   }))
 }
 
