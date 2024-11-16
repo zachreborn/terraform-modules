@@ -120,7 +120,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "custom_origin_config" {
-        for_each = origin.value.custom_origin_config != null ? true : false
+        for_each = origin.value.custom_origin_config != null ? [true] : []
         content {
           http_port                = origin.value.custom_origin_config.http_port
           https_port               = origin.value.custom_origin_config.https_port
