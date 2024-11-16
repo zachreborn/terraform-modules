@@ -43,7 +43,7 @@ resource "aws_cloudfront_distribution" "this" {
   web_acl_id                      = var.web_acl_id
 
   dynamic "custom_error_response" {
-    for_each = var.custom_error_response != null ? var.custom_error_response : {}
+    for_each = var.custom_error_responses != null ? var.custom_error_responses : {}
     content {
       error_caching_min_ttl = custom_error_response.value.error_caching_min_ttl
       error_code            = custom_error_response.value.error_code
@@ -132,17 +132,17 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "origin_shield" {
-        for_each = origin.value.origin_shield != null ? origin.value.origin_shield : {}
+        for_each = origin.value.origin_shield.enabled == true ? [true] : []
         content {
-          enabled              = origin_shield.enabled
-          origin_shield_region = origin_shield.origin_shield_region
+          enabled              = origin.value.origin_shield.enabled
+          origin_shield_region = origin.value.origin_shield.origin_shield_region
         }
       }
 
       dynamic "s3_origin_config" {
-        for_each = origin.value.s3_origin_config != null ? origin.value.s3_origin_config : {}
+        for_each = origin.value.s3_origin_config != null ? [true] : []
         content {
-          origin_access_identity = s3_origin_config.origin_access_identity
+          origin_access_identity = origin.value.s3_origin_config.origin_access_identity
         }
       }
     }
