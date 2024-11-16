@@ -169,7 +169,7 @@ variable "geo_restriction_locations" {
 variable "geo_restriction_type" {
   description = "(Optional) The method that you want to use to restrict distribution of your content by country: none, whitelist, or blacklist."
   type        = string
-  default     = "blacklist"
+  default     = "none"
   validation {
     condition     = can(regex("^(none|whitelist|blacklist)$", var.geo_restriction_type))
     error_message = "Invalid value for geo_restriction_type. Must be one of none, whitelist, or blacklist."
