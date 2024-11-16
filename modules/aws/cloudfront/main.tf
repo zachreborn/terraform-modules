@@ -120,7 +120,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "custom_origin_config" {
-        for_each = (origin.value.custom_origin_config != null && origin.value.custom_origin_config != false) ? [true] : []
+        for_each = origin.value.custom_origin_config != null ? [true] : []
         content {
           http_port                = origin.value.custom_origin_config.http_port
           https_port               = origin.value.custom_origin_config.https_port
@@ -132,7 +132,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "origin_shield" {
-        for_each = origin.value.origin_shield.enabled == true ? [true] : []
+        for_each = (origin.value.origin_shield.enabled != null && origin.value.origin_shield.enabled == true) ? [true] : []
         content {
           enabled              = origin.value.origin_shield.enabled
           origin_shield_region = origin.value.origin_shield.origin_shield_region
