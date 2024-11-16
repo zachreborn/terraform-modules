@@ -122,12 +122,12 @@ resource "aws_cloudfront_distribution" "this" {
       dynamic "custom_origin_config" {
         for_each = origin.value.custom_origin_config != null ? origin.value.custom_origin_config : null
         content {
-          http_port                = each.value.http_port
-          https_port               = each.value.https_port
-          origin_keepalive_timeout = each.value.origin_keepalive_timeout
-          origin_protocol_policy   = each.value.origin_protocol_policy
-          origin_read_timeout      = each.value.origin_read_timeout
-          origin_ssl_protocols     = each.value.origin_ssl_protocols
+          http_port                = custom_origin_config.value.http_port
+          https_port               = custom_origin_config.value.https_port
+          origin_keepalive_timeout = custom_origin_config.value.origin_keepalive_timeout
+          origin_protocol_policy   = custom_origin_config.value.origin_protocol_policy
+          origin_read_timeout      = custom_origin_config.value.origin_read_timeout
+          origin_ssl_protocols     = custom_origin_config.value.origin_ssl_protocols
         }
       }
 
