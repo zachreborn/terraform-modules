@@ -254,7 +254,7 @@ variable "origin" {
       origin_protocol_policy    = optional(string)       # The origin protocol policy to apply to your origin. Must be one of http-only, https-only, or match-viewer.
       origin_read_timeout       = optional(number, 30)   # The read timeout for the origin.
       origin_ssl_protocols      = optional(list(string)) # The SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS.
-    }))                                                   # The custom origin configuration information.
+    }))                                                  # The custom origin configuration information.
     origin_shield = optional(object({
       enabled              = bool             # Whether Origin Shield is enabled.
       origin_shield_region = optional(string) # The region for Origin Shield.
