@@ -112,7 +112,7 @@ resource "aws_cloudfront_distribution" "this" {
       origin_path              = origin.value.origin_path
 
       dynamic "custom_header" {
-        for_each = origin.value.custom_header != null ? origin.value.custom_header : {}
+        for_each = origin.value.custom_headers != null ? origin.value.custom_headers : {}
         content {
           name  = custom_header.header_name
           value = custom_header.header_value
@@ -120,14 +120,14 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "custom_origin_config" {
-        for_each = origin.value.custom_origin_config != null ? origin.value.custom_origin_config : null
+        for_each = origin.value.custom_origin_config != null ? true : false
         content {
-          http_port                = custom_origin_config.value.http_port
-          https_port               = custom_origin_config.value.https_port
-          origin_keepalive_timeout = custom_origin_config.value.origin_keepalive_timeout
-          origin_protocol_policy   = custom_origin_config.value.origin_protocol_policy
-          origin_read_timeout      = custom_origin_config.value.origin_read_timeout
-          origin_ssl_protocols     = custom_origin_config.value.origin_ssl_protocols
+          http_port                = origin.value.custom_origin_config.http_port
+          https_port               = origin.value.custom_origin_config.https_port
+          origin_keepalive_timeout = origin.value.custom_origin_config.origin_keepalive_timeout
+          origin_protocol_policy   = origin.value.custom_origin_config.origin_protocol_policy
+          origin_read_timeout      = origin.value.custom_origin_config.origin_read_timeout
+          origin_ssl_protocols     = origin.value.custom_origin_config.origin_ssl_protocols
         }
       }
 
