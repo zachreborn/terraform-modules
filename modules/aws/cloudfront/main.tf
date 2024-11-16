@@ -43,7 +43,7 @@ resource "aws_cloudfront_distribution" "this" {
   web_acl_id                      = var.web_acl_id
 
   dynamic "custom_error_response" {
-    for_each = var.custom_error_response != null ? var.custom_error_response : []
+    for_each = var.custom_error_response != null ? var.custom_error_response : {}
     content {
       error_caching_min_ttl = custom_error_response.value["error_caching_min_ttl"]
       error_code            = custom_error_response.value["error_code"]
