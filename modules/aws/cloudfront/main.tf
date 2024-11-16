@@ -112,7 +112,7 @@ resource "aws_cloudfront_distribution" "this" {
       origin_path              = origin.value.origin_path
 
       dynamic "custom_header" {
-        for_each = origin.value.custom_headers != null ? origin.value.custom_headers : {}
+        for_each = origin.value.custom_headers != null ? origin.value.custom_headers : []
         content {
           name  = custom_header.header_name
           value = custom_header.header_value
