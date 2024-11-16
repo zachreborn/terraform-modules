@@ -114,35 +114,35 @@ resource "aws_cloudfront_distribution" "this" {
       dynamic "custom_header" {
         for_each = origin.value.custom_header != null ? origin.value.custom_header : {}
         content {
-          name  = custom_header.value.header_name
-          value = custom_header.value.header_value
+          name  = custom_header.header_name
+          value = custom_header.header_value
         }
       }
 
       dynamic "custom_origin_config" {
         for_each = origin.value.custom_origin_config != null ? origin.value.custom_origin_config : null
         content {
-          http_port                = custom_origin_config.value.http_port
-          https_port               = custom_origin_config.value.https_port
-          origin_keepalive_timeout = custom_origin_config.value.origin_keepalive_timeout
-          origin_protocol_policy   = custom_origin_config.value.origin_protocol_policy
-          origin_read_timeout      = custom_origin_config.value.origin_read_timeout
-          origin_ssl_protocols     = custom_origin_config.value.origin_ssl_protocols
+          http_port                = custom_origin_config.http_port
+          https_port               = custom_origin_config.https_port
+          origin_keepalive_timeout = custom_origin_config.origin_keepalive_timeout
+          origin_protocol_policy   = custom_origin_config.origin_protocol_policy
+          origin_read_timeout      = custom_origin_config.origin_read_timeout
+          origin_ssl_protocols     = custom_origin_config.origin_ssl_protocols
         }
       }
 
       dynamic "origin_shield" {
         for_each = origin.value.origin_shield != null ? origin.value.origin_shield : {}
         content {
-          enabled              = origin_shield.value.enabled
-          origin_shield_region = origin_shield.value.origin_shield_region
+          enabled              = origin_shield.enabled
+          origin_shield_region = origin_shield.origin_shield_region
         }
       }
 
       dynamic "s3_origin_config" {
         for_each = origin.value.s3_origin_config != null ? origin.value.s3_origin_config : {}
         content {
-          origin_access_identity = s3_origin_config.value.origin_access_identity
+          origin_access_identity = s3_origin_config.origin_access_identity
         }
       }
     }
