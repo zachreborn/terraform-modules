@@ -268,7 +268,7 @@ variable "origin" {
 variable "price_class" {
   description = "(Optional) The price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100. See the AWS documentation for more details at https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_cloudfront/PriceClass.html."
   type        = string
-  default     = "PriceClass_100"
+  default     = "PriceClass_All"
   validation {
     condition     = can(regex("^(PriceClass_All|PriceClass_200|PriceClass_100)$", var.price_class))
     error_message = "Invalid value for price_class. Must be one of PriceClass_All, PriceClass_200, or PriceClass_100."
