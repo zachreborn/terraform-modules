@@ -64,12 +64,12 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates two redundant connect peers with two different peers, such as two Velocloud vEdge instances.
 ```
 module "transit_gateway_sdwan_connect_peer" {
-    source                        = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
 
-    name                          = "sdwan_peer"
-    peer_address                  = "10.100.1.10"
+    name = "sdwan_peer"
     peers = {
       "sdwan_vedge_1" = {
         bgp_asn                       = 64513
@@ -82,7 +82,6 @@ module "transit_gateway_sdwan_connect_peer" {
         peer_address                  = "10.200.0.180"
       }
     }
-    transit_gateway_address       = "10.255.1.11"
     transit_gateway_attachment_id = module.transit_gateway_sdwan_connect.id
 }
 ```

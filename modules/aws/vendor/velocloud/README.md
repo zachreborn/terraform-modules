@@ -71,7 +71,6 @@ module "aws_prod_sdwan" {
     key_name                     = module.keypair.key_name
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    quantity                     = 1
     velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
@@ -98,7 +97,6 @@ module "aws_prod_sdwan" {
     key_name                     = module.keypair.key_name
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    quantity                     = 1
     velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
@@ -125,7 +123,6 @@ module "aws_prod_sdwan" {
     key_name                     = module.keypair.key_name
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    quantity                     = 2
     velocloud_activation_keys    = ["1234-5678-90AB-CDEF", "1234-5678-90AB-GHIJ"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
