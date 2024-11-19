@@ -122,13 +122,13 @@ resource "aws_security_group" "sdwan_wan_sg" {
 ############################################
 
 resource "aws_eip" "wan_external_ip" {
-  count  = var.quantity
+  count  = length(var.velocloud_activation_keys)
   domain = "vpc"
   tags   = merge(var.tags, ({ "Name" = format("%s%d_wan", var.instance_name_prefix, count.index + 1) }))
 }
 
 resource "aws_eip_association" "wan_external_ip" {
-  count                = var.quantity
+  count                = length(var.velocloud_activation_keys)
   allocation_id        = element(aws_eip.wan_external_ip[*].id, count.index)
   network_interface_id = element(aws_network_interface.public_nic[*].id, count.index)
 }
@@ -139,7 +139,7 @@ resource "aws_eip_association" "wan_external_ip" {
 
 resource "aws_network_interface" "mgmt_nic" {
   # Ge1 is the management interface in VeloCloud and attached at eth0
-  count             = var.quantity
+  count             = length(var.velocloud_activation_keys)
   description       = var.mgmt_nic_description
   private_ips       = var.mgmt_ips == null ? null : [element(var.mgmt_ips, count.index)]
   security_groups   = [aws_security_group.sdwan_mgmt_sg.id]
@@ -150,7 +150,7 @@ resource "aws_network_interface" "mgmt_nic" {
 
 resource "aws_network_interface" "public_nic" {
   # Ge2 is the public interface in VeloCloud and attached at eth1
-  count             = var.quantity
+  count             = length(var.velocloud_activation_keys)
   description       = var.public_nic_description
   private_ips       = var.public_ips == null ? null : [element(var.public_ips, count.index)]
   security_groups   = [aws_security_group.sdwan_wan_sg.id]
@@ -161,7 +161,7 @@ resource "aws_network_interface" "public_nic" {
 
 resource "aws_network_interface" "private_nic" {
   # Ge3 is the private interface in VeloCloud and attached at eth2
-  count             = var.quantity
+  count             = length(var.velocloud_activation_keys)
   description       = var.private_nic_description
   private_ips       = var.private_ips == null ? null : [element(var.private_ips, count.index)]
   security_groups   = [aws_security_group.velocloud_lan_sg.id]
@@ -176,7 +176,7 @@ resource "aws_network_interface" "private_nic" {
 
 resource "aws_instance" "ec2_instance" {
   ami                  = var.ami_id != null ? var.ami_id : data.aws_ami.velocloud.id
-  count                = var.quantity
+  count                = length(var.velocloud_activation_keys)
   ebs_optimized        = var.ebs_optimized
   hibernation          = var.hibernation
   iam_instance_profile = var.iam_instance_profile
@@ -239,7 +239,7 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
   alarm_description   = "EC2 instance StatusCheckFailed_Instance alarm"
   alarm_name          = format("%s-instance-alarm", element(aws_instance.ec2_instance[*].id, count.index))
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  count               = var.quantity
+  count               = length(var.velocloud_activation_keys)
   datapoints_to_alarm = 2
   dimensions = {
     InstanceId = element(aws_instance.ec2_instance[*].id, count.index)
@@ -265,7 +265,7 @@ resource "aws_cloudwatch_metric_alarm" "system" {
   alarm_description   = "EC2 instance StatusCheckFailed_System alarm"
   alarm_name          = format("%s-system-alarm", element(aws_instance.ec2_instance[*].id, count.index))
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  count               = var.quantity
+  count               = length(var.velocloud_activation_keys)
   datapoints_to_alarm = 2
   dimensions = {
     InstanceId = element(aws_instance.ec2_instance[*].id, count.index)

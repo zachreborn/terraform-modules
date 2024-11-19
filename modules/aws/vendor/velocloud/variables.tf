@@ -200,7 +200,7 @@ variable "root_ebs_volume_encrypted" {
 }
 
 variable "velocloud_activation_keys" {
-  description = "(Required) The activation key for the VeloCloud instance(s)."
+  description = "(Required) The activation key for the VeloCloud instance(s). The quantity of keys also determines the quantity of instances to launch."
   type        = list(string)
   validation {
     condition     = alltrue([for key in var.velocloud_activation_keys : can(regex("^[A-Z0-9-]{19}$", key))])
@@ -238,10 +238,4 @@ variable "tags" {
     environment = "prod"
     role        = "sdwan"
   }
-}
-
-variable "quantity" {
-  description = "(Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1"
-  type        = number
-  default     = 1
 }
