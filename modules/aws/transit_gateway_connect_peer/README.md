@@ -64,15 +64,24 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
+This example creates two redundant connect peers with two different peers, such as two Velocloud vEdge instances.
 ```
 module "transit_gateway_sdwan_connect_peer" {
-    source                        = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
 
-    bgp_asn                       = 64513
-    inside_cidr_blocks            = "169.254.6.0/29"
-    name                          = "sdwan_peer"
-    peer_address                  = "10.100.1.10"
-    transit_gateway_address       = "10.255.1.11"
+    name = "sdwan_peer"
+    peers = {
+      "sdwan_vedge_1" = {
+        bgp_asn                       = 64513
+        inside_cidr_blocks            = ["169.254.6.0/29"]
+        peer_address                  = "10.200.0.157"
+      }
+      "sdwan_vedge_1" = {
+        bgp_asn                       = 64513
+        inside_cidr_blocks            = ["169.254.6.8/29"]
+        peer_address                  = "10.200.0.180"
+      }
+    }
     transit_gateway_attachment_id = module.transit_gateway_sdwan_connect.id
 }
 ```
@@ -111,26 +120,22 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_bgp_asn"></a> [bgp\_asn](#input\_bgp\_asn) | (Optional) The BGP ASN number assigned customer device. If not provided, it will use the same BGP ASN as is associated with Transit Gateway. | `number` | `64512` | no |
-| <a name="input_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#input\_inside\_cidr\_blocks) | (Required) The CIDR block that will be used for addressing within the tunnel. It must contain exactly one IPv4 CIDR block and up to one IPv6 CIDR block. The IPv4 CIDR block must be /29 size and must be within 169.254.0.0/16 range, with exception of: 169.254.0.0/29, 169.254.1.0/29, 169.254.2.0/29, 169.254.3.0/29, 169.254.4.0/29, 169.254.5.0/29, 169.254.169.248/29. The IPv6 CIDR block must be /125 size and must be within fd00::/8. The first IP from each CIDR block is assigned for customer gateway, the second and third is for Transit Gateway (An example: from range 169.254.100.0/29, .1 is assigned to customer gateway and .2 and .3 are assigned to Transit Gateway) | `list(string)` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway | `string` | n/a | yes |
-| <a name="input_peer_address"></a> [peer\_address](#input\_peer\_address) | (Required) The IP addressed assigned to customer device, which will be used as tunnel endpoint. It can be IPv4 or IPv6 address, but must be the same address family as transit\_gateway\_address | `string` | n/a | yes |
+| <a name="input_peers"></a> [peers](#input\_peers) | (Required) A map of Transit Gateway Connect Peers, where the key is the name of the peer and the value is a map of peer configuration options. | <pre>map(object({<br/>    bgp_asn                 = optional(number, 64512) # (Optional) The BGP ASN number assigned customer device. If not provided, it will use the same BGP ASN as is associated with Transit Gateway.<br/>    inside_cidr_blocks      = list(string)            # (Required) The CIDR block that will be used for addressing within the tunnel. It must contain exactly one IPv4 CIDR block and up to one IPv6 CIDR block. The IPv4 CIDR block must be /29 size and must be within 169.254.0.0/16 range, with exception of: 169.254.0.0/29, 169.254.1.0/29, 169.254.2.0/29, 169.254.3.0/29, 169.254.4.0/29, 169.254.5.0/29, 169.254.169.248/29. The IPv6 CIDR block must be /125 size and must be within fd00::/8. The first IP from each CIDR block is assigned for customer gateway, the second and third is for Transit Gateway (An example: from range 169.254.100.0/29, .1 is assigned to customer gateway and .2 and .3 are assigned to Transit Gateway)<br/>    peer_address            = string                  # (Required) The IP addressed assigned to customer device, which will be used as tunnel endpoint. It can be IPv4 or IPv6 address, but must be the same address family as transit_gateway_address<br/>    transit_gateway_address = optional(string)        # (Optional) The IP address assigned to Transit Gateway, which will be used as tunnel endpoint. This address must be from associated Transit Gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated Transit Gateway CIDR blocks.<br/>  }))</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | <pre>{<br/>  "environment": "prod",<br/>  "project": "core_infrastructure",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_transit_gateway_address"></a> [transit\_gateway\_address](#input\_transit\_gateway\_address) | (Optional) The IP address assigned to Transit Gateway, which will be used as tunnel endpoint. This address must be from associated Transit Gateway CIDR block. The address must be from the same address family as peer\_address. If not set explicitly, it will be selected from associated Transit Gateway CIDR blocks | `string` | `null` | no |
 | <a name="input_transit_gateway_attachment_id"></a> [transit\_gateway\_attachment\_id](#input\_transit\_gateway\_attachment\_id) | (Required) The Transit Gateway Connect | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the transit gateway connect peer |
-| <a name="output_bgp_asn"></a> [bgp\_asn](#output\_bgp\_asn) | The BGP ASN of the connect peer. |
-| <a name="output_bgp_peer_address"></a> [bgp\_peer\_address](#output\_bgp\_peer\_address) | The BGP peer address within the connect tunnel. This is the address peering with the transit gateway. |
-| <a name="output_bgp_transit_gateway_addresses"></a> [bgp\_transit\_gateway\_addresses](#output\_bgp\_transit\_gateway\_addresses) | The BGP transit gateway address within the connect tunnel. This is the address of the transit gateway. |
-| <a name="output_id"></a> [id](#output\_id) | The ID of the Transit Gateway Connect Peer |
+| <a name="output_arns"></a> [arns](#output\_arns) | A map of ARNs of the transit gateway connect peers. |
+| <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |
+| <a name="output_configurations"></a> [configurations](#output\_configurations) | A map of the transit gateway connect peer configurations. |
+| <a name="output_ids"></a> [ids](#output\_ids) | A map of the IDs of the Transit Gateway Connect Peers |
 | <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
-| <a name="output_peer_address"></a> [peer\_address](#output\_peer\_address) | The IP address of the connect peer. |
-| <a name="output_transit_gateway_address"></a> [transit\_gateway\_address](#output\_transit\_gateway\_address) | The IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
+| <a name="output_peer_addresses"></a> [peer\_addresses](#output\_peer\_addresses) | A map of the IP address of the connect peers. |
+| <a name="output_transit_gateway_addresses"></a> [transit\_gateway\_addresses](#output\_transit\_gateway\_addresses) | A map of IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

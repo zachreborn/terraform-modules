@@ -69,10 +69,9 @@ module "aws_prod_sdwan" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
 
     key_name                     = module.keypair.key_name
-    number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
@@ -96,10 +95,35 @@ module "aws_prod_sdwan" {
 
     ami_id                       = "ami-123456789e"
     key_name                     = module.keypair.key_name
-    number                       = 1
     public_subnet_ids            = module.vpc.public_subnet_ids
     private_subnet_ids           = module.vpc.private_subnet_ids
-    velocloud_activation_key     = "1234-5678-90AB-CDEF"
+    velocloud_activation_keys    = ["1234-5678-90AB-CDEF"]
+    velocloud_orchestrator       = "vco.example.com"
+    velocloud_ignore_cert_errors = true
+    velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
+    vpc_id                       = module.vpc.vpc_id
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "aws_poc"
+        backup      = "true"
+        role        = "sdwan"
+    }
+}
+```
+
+### Redundant vEdge's Example
+This example creates two VeloCloud vEdge instance in the VPC of your choosing. The instances will have a NIC in up to three subnets: public, private, and management. The public subnet will have an EIP attached to it. The instances will utilize the Velocloud variables to automatically activate against the Orchestrator. The AMI ID is provided to use a custom AMI.
+```
+module "aws_prod_sdwan" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vendor/velocloud"
+
+    ami_id                       = "ami-123456789e"
+    key_name                     = module.keypair.key_name
+    public_subnet_ids            = module.vpc.public_subnet_ids
+    private_subnet_ids           = module.vpc.private_subnet_ids
+    velocloud_activation_keys    = ["1234-5678-90AB-CDEF", "1234-5678-90AB-GHIJ"]
     velocloud_orchestrator       = "vco.example.com"
     velocloud_ignore_cert_errors = true
     velocloud_lan_cidr_blocks    = ["0.0.0.0/0"]
@@ -175,7 +199,6 @@ No modules.
 | <a name="input_mgmt_nic_description"></a> [mgmt\_nic\_description](#input\_mgmt\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN mgmt nic Ge1 in VeloCloud"` | no |
 | <a name="input_mgmt_sg_name"></a> [mgmt\_sg\_name](#input\_mgmt\_sg\_name) | (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name. | `string` | `"velocloud_mgmt_sg"` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0) | `bool` | `true` | no |
-| <a name="input_number"></a> [number](#input\_number) | (Optional) Quantity of resources to make with this module. Example: Setting this to 2 will create 2 of all the required resources. Default: 1 | `number` | `1` | no |
 | <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | `null` | no |
 | <a name="input_private_nic_description"></a> [private\_nic\_description](#input\_private\_nic\_description) | (Optional) Description for the network interface. | `string` | `"SDWAN private nic Ge3 in VeloCloud"` | no |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | (Required) Subnet IDs to create the ENI in. | `list(string)` | n/a | yes |
@@ -190,7 +213,7 @@ No modules.
 | <a name="input_ssh_mgmt_access_cidr_blocks"></a> [ssh\_mgmt\_access\_cidr\_blocks](#input\_ssh\_mgmt\_access\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to SSH into the VeloCloud instance. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "role": "sdwan",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | (Optional) The user data to provide when launching the instance. By default, the velocloud variables will generate a unique user\_data cloud-init configuration for you. This allows specifying custom cloud-init scripting. | `string` | `null` | no |
-| <a name="input_velocloud_activation_key"></a> [velocloud\_activation\_key](#input\_velocloud\_activation\_key) | (Required) The activation key for the VeloCloud instance(s). | `string` | n/a | yes |
+| <a name="input_velocloud_activation_keys"></a> [velocloud\_activation\_keys](#input\_velocloud\_activation\_keys) | (Required) The activation key for the VeloCloud instance(s). The quantity of keys also determines the quantity of instances to launch. | `list(string)` | n/a | yes |
 | <a name="input_velocloud_ignore_cert_errors"></a> [velocloud\_ignore\_cert\_errors](#input\_velocloud\_ignore\_cert\_errors) | (Optional) Whether or not to ignore certificate errors when connecting to the VeloCloud orchestrator. Set to true if using private or self-signed certificates on the orchestrator. Defaults to false. | `bool` | `false` | no |
 | <a name="input_velocloud_lan_cidr_blocks"></a> [velocloud\_lan\_cidr\_blocks](#input\_velocloud\_lan\_cidr\_blocks) | (Optional) List of CIDR blocks allowed to utilize the VeloCloud instance for SDWAN communication. | `list(string)` | `null` | no |
 | <a name="input_velocloud_orchestrator"></a> [velocloud\_orchestrator](#input\_velocloud\_orchestrator) | (Required) The IP address or FQDN of the VeloCloud orchestrator. Example: vco.example.com | `string` | n/a | yes |
