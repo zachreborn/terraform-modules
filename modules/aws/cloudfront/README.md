@@ -62,12 +62,27 @@
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Simple Example
+### S3 Bucket Website Redirect Example
+This example creates a Cloudfront distribution which sets the origin as a publicly accessible S3 bucket website endpoint. The S3 bucket is configured as a 301 redirect for example.com. The Cloudfront distribution listens on HTTPS with an ACM certificate for example.com. The distribution is configured to use the `CachingOptimized` managed cache policy.
 ```
-module test {
-  source = 
+module "example_com_redirect_cloudfront" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudfront"
 
-  variable = 
+  acm_certificate_arn            = module.www_example_com_cert.arn
+  aliases                        = ["example.com"]
+  default_cache_target_origin_id = module.example_com_redirect_bucket.s3_website_endpoint
+  managed_cache_policy_name      = "CachingOptimized"
+  origins = {
+    (module.example_com_redirect_bucket.s3_website_endpoint) = {
+      domain_name = module.example_com_redirect_bucket.s3_website_endpoint
+      custom_origin_config = {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "http-only"
+        origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+      }
+    }
+  }
 }
 ```
 
