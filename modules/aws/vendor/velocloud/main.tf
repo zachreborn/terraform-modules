@@ -234,7 +234,7 @@ resource "aws_instance" "ec2_instance" {
 #####################
 
 resource "aws_cloudwatch_metric_alarm" "instance" {
-  for_each            = aws_instance.ec2_instance
+  for_each            = toset(aws_instance.ec2_instance)
   actions_enabled     = true
   alarm_actions       = []
   alarm_description   = "EC2 instance StatusCheckFailed_Instance alarm"
@@ -260,7 +260,7 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
 #####################
 
 resource "aws_cloudwatch_metric_alarm" "system" {
-  for_each            = aws_instance.ec2_instance
+  for_each            = toset(aws_instance.ec2_instance)
   actions_enabled     = true
   alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
   alarm_description   = "EC2 instance StatusCheckFailed_System alarm"
