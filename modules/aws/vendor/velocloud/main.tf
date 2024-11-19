@@ -234,15 +234,15 @@ resource "aws_instance" "ec2_instance" {
 #####################
 
 resource "aws_cloudwatch_metric_alarm" "instance" {
-  for_each            = aws_instance.ec2_instance
   actions_enabled     = true
   alarm_actions       = []
   alarm_description   = "EC2 instance StatusCheckFailed_Instance alarm"
-  alarm_name          = format("%s-instance-alarm", each.value.id)
+  alarm_name          = format("%s-instance-alarm", element(aws_instance.ec2_instance[*].id, count.index))
   comparison_operator = "GreaterThanOrEqualToThreshold"
+  count               = var.quantity
   datapoints_to_alarm = 2
   dimensions = {
-    InstanceId = each.value.id
+    InstanceId = element(aws_instance.ec2_instance[*].id, count.index)
   }
   evaluation_periods        = "2"
   insufficient_data_actions = []
@@ -260,15 +260,15 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
 #####################
 
 resource "aws_cloudwatch_metric_alarm" "system" {
-  for_each            = aws_instance.ec2_instance
   actions_enabled     = true
   alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
   alarm_description   = "EC2 instance StatusCheckFailed_System alarm"
-  alarm_name          = format("%s-system-alarm", each.value.id)
+  alarm_name          = format("%s-system-alarm", element(aws_instance.ec2_instance[*].id, count.index))
   comparison_operator = "GreaterThanOrEqualToThreshold"
+  count               = var.quantity
   datapoints_to_alarm = 2
   dimensions = {
-    InstanceId = each.value.id
+    InstanceId = element(aws_instance.ec2_instance[*].id, count.index)
   }
   evaluation_periods        = "2"
   insufficient_data_actions = []
