@@ -1,6 +1,6 @@
 output "arns" {
-  description = "A list of ARNs of the transit gateway connect peers."
-  value       = aws_ec2_transit_gateway_connect_peer.peer[*].arn
+  description = "A map of ARNs of the transit gateway connect peers."
+  value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.arn }
 }
 
 output "bgp_asns" {
@@ -19,8 +19,8 @@ output "bgp_transit_gateway_addresses" {
 }
 
 output "ids" {
-  description = "A list of the IDs of the Transit Gateway Connect Peers"
-  value       = aws_ec2_transit_gateway_connect_peer.peer[*].id
+  description = "A map of the IDs of the Transit Gateway Connect Peers"
+  value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.id }
 }
 
 output "inside_cidr_blocks" {
