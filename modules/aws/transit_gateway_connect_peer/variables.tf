@@ -12,7 +12,7 @@ variable "peers" {
   }))
   description = "(Required) A map of Transit Gateway Connect Peers, where the key is the name of the peer and the value is a map of peer configuration options."
   # Example:
-  # var.peers = {
+  # peers = {
   #   "sdwan_vedge_1" = {
   #     bgp_asn                       = 64513
   #     inside_cidr_blocks            = ["169.254.6.0/29"]
@@ -20,7 +20,7 @@ variable "peers" {
   #   }
   #   "sdwan_vedge_1" = {
   #     bgp_asn                       = 64513
-  #     inside_cidr_blocks            = ["169.254.7.0/29"]
+  #     inside_cidr_blocks            = ["169.254.6.8/29"]
   #     peer_address                  = "10.200.0.180"
   #   }
   # }

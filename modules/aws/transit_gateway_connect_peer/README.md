@@ -68,10 +68,20 @@
 module "transit_gateway_sdwan_connect_peer" {
     source                        = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
 
-    bgp_asn                       = 64513
-    inside_cidr_blocks            = "169.254.6.0/29"
     name                          = "sdwan_peer"
     peer_address                  = "10.100.1.10"
+    peers = {
+      "sdwan_vedge_1" = {
+        bgp_asn                       = 64513
+        inside_cidr_blocks            = ["169.254.6.0/29"]
+        peer_address                  = "10.200.0.157"
+      }
+      "sdwan_vedge_1" = {
+        bgp_asn                       = 64513
+        inside_cidr_blocks            = ["169.254.6.8/29"]
+        peer_address                  = "10.200.0.180"
+      }
+    }
     transit_gateway_address       = "10.255.1.11"
     transit_gateway_attachment_id = module.transit_gateway_sdwan_connect.id
 }
