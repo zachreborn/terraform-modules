@@ -132,10 +132,10 @@ No modules.
 |------|-------------|
 | <a name="output_arns"></a> [arns](#output\_arns) | A map of ARNs of the transit gateway connect peers. |
 | <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |
+| <a name="output_configurations"></a> [configurations](#output\_configurations) | A map of the transit gateway connect peer configurations. |
 | <a name="output_ids"></a> [ids](#output\_ids) | A map of the IDs of the Transit Gateway Connect Peers |
 | <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
 | <a name="output_peer_addresses"></a> [peer\_addresses](#output\_peer\_addresses) | A map of the IP address of the connect peers. |
-| <a name="output_peer_configurations"></a> [peer\_configurations](#output\_peer\_configurations) | A map of the transit gateway connect peer configurations. |
 | <a name="output_transit_gateway_addresses"></a> [transit\_gateway\_addresses](#output\_transit\_gateway\_addresses) | A map of IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
 <!-- END_TF_DOCS -->
 
