@@ -25,7 +25,7 @@ output "ids" {
 
 output "inside_cidr_blocks" {
   description = "The CIDR blocks associated with the inside IP addresses of the connect peer."
-  value = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.inside_cidr_blocks }
+  value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.inside_cidr_blocks }
 }
 
 output "peer_addresses" {

@@ -130,14 +130,14 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the transit gateway connect peer |
-| <a name="output_bgp_asn"></a> [bgp\_asn](#output\_bgp\_asn) | The BGP ASN of the connect peer. |
-| <a name="output_bgp_peer_address"></a> [bgp\_peer\_address](#output\_bgp\_peer\_address) | The BGP peer address within the connect tunnel. This is the address peering with the transit gateway. |
-| <a name="output_bgp_transit_gateway_addresses"></a> [bgp\_transit\_gateway\_addresses](#output\_bgp\_transit\_gateway\_addresses) | The BGP transit gateway address within the connect tunnel. This is the address of the transit gateway. |
-| <a name="output_id"></a> [id](#output\_id) | The ID of the Transit Gateway Connect Peer |
+| <a name="output_arns"></a> [arns](#output\_arns) | A list of ARNs of the transit gateway connect peers. |
+| <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |
+| <a name="output_bgp_peer_addresses"></a> [bgp\_peer\_addresses](#output\_bgp\_peer\_addresses) | A map of BGP peer address within the connect tunnels. This is the address peering with the transit gateway. |
+| <a name="output_bgp_transit_gateway_addresses"></a> [bgp\_transit\_gateway\_addresses](#output\_bgp\_transit\_gateway\_addresses) | A map of the BGP transit gateway addresses within the connect tunnel. This is the address of the transit gateway. |
+| <a name="output_ids"></a> [ids](#output\_ids) | A list of the IDs of the Transit Gateway Connect Peers |
 | <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
-| <a name="output_peer_address"></a> [peer\_address](#output\_peer\_address) | The IP address of the connect peer. |
-| <a name="output_transit_gateway_address"></a> [transit\_gateway\_address](#output\_transit\_gateway\_address) | The IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
+| <a name="output_peer_addresses"></a> [peer\_addresses](#output\_peer\_addresses) | A map of the IP address of the connect peers. |
+| <a name="output_transit_gateway_addresses"></a> [transit\_gateway\_addresses](#output\_transit\_gateway\_addresses) | A map of IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
