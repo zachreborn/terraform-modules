@@ -1,3 +1,4 @@
+# Simple Outputs
 output "arns" {
   description = "A map of ARNs of the transit gateway connect peers."
   value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.arn }
@@ -29,10 +30,11 @@ output "transit_gateway_addresses" {
 }
 
 # Complex Outputs
-output "peer_configurations" {
+output "configurations" {
   description = "A map of the transit gateway connect peer configurations."
   value = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => {
     bgp_asn                 = value.bgp_asn
+    id                      = value.id
     insider_cidr_blocks     = value.inside_cidr_blocks
     peer_address            = value.peer_address
     transit_gateway_address = value.transit_gateway_address
