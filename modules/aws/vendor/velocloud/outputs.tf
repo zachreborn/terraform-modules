@@ -20,7 +20,7 @@ output "mgmt_network_interface_id" {
 
 output "mgmt_network_interface_private_ips" {
   description = "The mgmt network interface private IPs as a list"
-  value       = aws_network_interface.mgmt_nic[*].private_ips
+  value       = flatten(aws_network_interface.mgmt_nic[*].private_ips)
 }
 
 output "public_network_interface_id" {
@@ -30,7 +30,7 @@ output "public_network_interface_id" {
 
 output "public_network_interface_private_ips" {
   description = "The public network interface private IPs as a list"
-  value       = aws_network_interface.public_nic[*].private_ips
+  value       = flatten(aws_network_interface.public_nic[*].private_ips)
 }
 
 output "private_network_interface_id" {
@@ -40,5 +40,5 @@ output "private_network_interface_id" {
 
 output "private_network_interface_private_ips" {
   description = "The private network interface private IPs as a list"
-  value       = aws_network_interface.private_nic[*].private_ips
+  value       = flatten(aws_network_interface.private_nic[*].private_ips)
 }
