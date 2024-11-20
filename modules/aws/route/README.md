@@ -28,7 +28,7 @@
 
 <h3 align="center">Route Module</h3>
   <p align="center">
-    This module configures a route 
+    This module configures a route within a VPC.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -69,7 +69,7 @@ module "sdwan_route_branches" {
   # Branches - Summary route for all branches
   destination_cidr_block = "10.0.0.0/8"
   network_interface_id   = module.aws_prod_meraki.primary_network_interface_id[0]
-  route_table_id         = [module.vpc.db_route_table_ids, module.vpc.dmz_route_table_ids, module.vpc.mgmt_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids, module.vpc.workspaces_route_table_ids]
+  route_table_ids        = [module.vpc.db_route_table_ids, module.vpc.dmz_route_table_ids, module.vpc.mgmt_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids, module.vpc.workspaces_route_table_ids]
 }
 ```
 
