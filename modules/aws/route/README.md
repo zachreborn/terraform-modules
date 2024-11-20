@@ -28,7 +28,7 @@
 
 <h3 align="center">Route Module</h3>
   <p align="center">
-    This module configures a route 
+    This module configures a route within a VPC.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -69,7 +69,7 @@ module "sdwan_route_branches" {
   # Branches - Summary route for all branches
   destination_cidr_block = "10.0.0.0/8"
   network_interface_id   = module.aws_prod_meraki.primary_network_interface_id[0]
-  route_table_id         = [module.vpc.db_route_table_ids, module.vpc.dmz_route_table_ids, module.vpc.mgmt_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids, module.vpc.workspaces_route_table_ids]
+  route_table_ids        = [module.vpc.db_route_table_ids, module.vpc.dmz_route_table_ids, module.vpc.mgmt_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids, module.vpc.workspaces_route_table_ids]
 }
 ```
 
@@ -115,7 +115,7 @@ No modules.
 | <a name="input_local_gateway_id"></a> [local\_gateway\_id](#input\_local\_gateway\_id) | (Optional) Identifier of a Outpost local gateway. | `string` | `null` | no |
 | <a name="input_nat_gateway_id"></a> [nat\_gateway\_id](#input\_nat\_gateway\_id) | (Optional) An ID of a VPC NAT gateway. | `string` | `null` | no |
 | <a name="input_network_interface_id"></a> [network\_interface\_id](#input\_network\_interface\_id) | (Optional) An ID of a network interface. | `string` | `null` | no |
-| <a name="input_route_table_id"></a> [route\_table\_id](#input\_route\_table\_id) | (Required) The ID of the routing table. | `list(any)` | n/a | yes |
+| <a name="input_route_table_ids"></a> [route\_table\_ids](#input\_route\_table\_ids) | (Required) The IDs of the routing tables to apply the route to. | `list(any)` | n/a | yes |
 | <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Optional) Identifier of an EC2 Transit Gateway. | `string` | `null` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) Identifier of a VPC Endpoint. | `string` | `null` | no |
 | <a name="input_vpc_peering_connection_id"></a> [vpc\_peering\_connection\_id](#input\_vpc\_peering\_connection\_id) | (Optional) An ID of a VPC peering connection. | `string` | `null` | no |

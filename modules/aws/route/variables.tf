@@ -51,9 +51,9 @@ variable "transit_gateway_id" {
   default     = null
 }
 
-variable "route_table_id" {
+variable "route_table_ids" {
   type        = list(any)
-  description = "(Required) The ID of the routing table."
+  description = "(Required) The IDs of the routing tables to apply the route to."
 }
 
 variable "vpc_endpoint_id" {
