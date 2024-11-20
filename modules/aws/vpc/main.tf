@@ -228,7 +228,7 @@ resource "aws_nat_gateway" "natgw" {
 ###########################
 
 resource "aws_route_table" "private_route_table" {
-  count            = length(var.azs)
+  count            = length(var.private_subnets_list)
   propagating_vgws = var.private_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-private-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
@@ -249,7 +249,7 @@ resource "aws_route" "private_default_route_fw" {
 }
 
 resource "aws_route_table" "db_route_table" {
-  count            = length(var.azs)
+  count            = length(var.db_subnets_list)
   propagating_vgws = var.db_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-db-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
@@ -270,7 +270,7 @@ resource "aws_route" "db_default_route_fw" {
 }
 
 resource "aws_route_table" "dmz_route_table" {
-  count            = length(var.azs)
+  count            = length(var.dmz_subnets_list)
   propagating_vgws = var.dmz_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-dmz-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
@@ -291,7 +291,7 @@ resource "aws_route" "dmz_default_route_fw" {
 }
 
 resource "aws_route_table" "mgmt_route_table" {
-  count            = length(var.azs)
+  count            = length(var.mgmt_subnets_list)
   propagating_vgws = var.mgmt_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-mgmt-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
@@ -312,7 +312,7 @@ resource "aws_route" "mgmt_default_route_fw" {
 }
 
 resource "aws_route_table" "workspaces_route_table" {
-  count            = length(var.azs)
+  count            = length(var.workspaces_subnets_list)
   propagating_vgws = var.workspaces_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-workspaces-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
