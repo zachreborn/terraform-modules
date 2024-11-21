@@ -24,6 +24,9 @@ terraform {
 # Module Configuration
 ###########################
 
+###########################
+# Amplify App
+###########################
 resource "aws_amplify_app" "this" {
   access_token                  = var.access_token
   auto_branch_creation_patterns = var.auto_branch_creation_patterns
@@ -43,6 +46,10 @@ resource "aws_amplify_app" "this" {
   repository                    = var.repository
   tags                          = var.tags
 
+
+###########################
+# Amplify App Branch
+###########################
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
@@ -76,6 +83,9 @@ resource "aws_amplify_app" "this" {
   }
 }
 
+###########################
+# Amplify App Backend
+###########################
 resource "aws_amplify_backend_environment" "this" {
   app_id               = var.app_id
   environment_name     = var.environment_name
@@ -104,6 +114,9 @@ resource "aws_amplify_branch" "this" {
   ttl                           = branch.value.ttl
 }
 
+###########################
+# Amplify App Domain Association
+###########################
 resource "aws_amplify_domain_association" "this" {
   app_id                 = aws_amplify_app.this.id
   domain_name            = var.domain_name
