@@ -47,9 +47,9 @@ resource "aws_amplify_app" "this" {
   tags                          = var.tags
 
 
-###########################
-# Amplify App Branch
-###########################
+  ###########################
+  # Amplify App Branch
+  ###########################
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
