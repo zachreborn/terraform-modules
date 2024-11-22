@@ -21,7 +21,51 @@ data "aws_region" "current" {}
 ###########################
 # Locals
 ###########################
+locals {
+  # The default session policy used by the transfer family server and each user.
+  default_session_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "AllowListingOfUserFolder",
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ],
+        Effect   = "Allow",
+        Resource = [
+          "arn:aws:s3:::${Transfer:HomeBucket}"
+        ]
+        Condition = {
+          StringLike = {
+            "s3:prefix": [
+              "${Transfer:HomeDirectory}/*",
+              "${Transfer:HomeDirectory}"
+            ]
+          }
+        }
+      },
+      {
+        Sid = "HomeDirObjectAccess",
+        Action = [
+          "s3:DeleteObject",
+          "s3:DeleteObjectVersion",
+          "s3:GetObject",
+          "s3:GetObjectACL",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:PutObjectACL"
+        ],
+        Effect   = "Allow",
+        Resource = [
+          "arn:aws:s3:::${Transfer:HomeBucket}/${Transfer:HomeDirectory}/*"
+        ]
+      }
+    ]
+  })
 
+ })
+}
 ###########################
 # Module Configuration
 ###########################
@@ -109,11 +153,11 @@ module "transfer_family_iam_role_policy" {
       {
         Sid = "HomeDirObjectAccess",
         Action = [
+          "s3:DeleteObject",
+          "s3:DeleteObjectVersion",
           "s3:GetObject",
           "s3:GetObjectACL",
           "s3:GetObjectVersion",
-          "s3:DeleteObject",
-          "s3:DeleteObjectVersion",
           "s3:PutObject",
           "s3:PutObjectACL"
         ],
@@ -163,14 +207,14 @@ resource "aws_transfer_user" "this" {
 
   home_directory      = each.value.home_directory
   home_directory_type = each.value.home_directory_type
-  policy              = each.value.policy
+  policy              = each.value.policy != null ? each.value.policy : local.default_session_policy
   role                = module.transfer_family_iam_role.arn
   server_id           = aws_transfer_server.this.id
   tags                = var.tags
   user_name           = each.value.username
 
   dynamic "home_directory_mappings" {
-    # Disables the dynamic block of home_directory_mappings if home_directory_type is not "LOGICAL".
+    # Disables the dynamic block of home_directory_mappings if home_directory_type is not `LOGICAL`.
     for_each = each.value.home_directory_type == "LOGICAL" ? [1] : []
     content {
       entry  = "/"
