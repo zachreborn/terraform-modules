@@ -22,7 +22,7 @@ data "aws_region" "current" {}
 # Locals
 ###########################
 locals {
-  # The default session policy used by the transfer family server and each user.
+  # The default session policy used by the transfer family server and each user. This policy allows each user access to ONLY their home directory.
   default_session_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -206,7 +206,7 @@ resource "aws_transfer_user" "this" {
 
   home_directory      = each.value.home_directory
   home_directory_type = each.value.home_directory_type
-  policy              = each.value.policy != null ? each.value.policy : local.default_session_policy
+  policy              = each.value.home_directory_type == "LOGICAL" ? null : (each.value.policy == null ? local.default_session_policy : each.value.policy)
   role                = module.transfer_family_iam_role.arn
   server_id           = aws_transfer_server.this.id
   tags                = var.tags
