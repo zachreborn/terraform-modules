@@ -121,6 +121,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
 | [aws_transfer_ssh_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_ssh_key) | resource |
 | [aws_transfer_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_user) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -130,7 +132,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_as2_transports"></a> [as2\_transports](#input\_as2\_transports) | (Optional) The transport method for AS2 messages. Valid values are HTTP. | `list(string)` | `null` | no |
 | <a name="input_certificate"></a> [certificate](#input\_certificate) | (Optional) The ARN of the AWS Certificate Manager certificate to use with the server | `string` | `null` | no |
 | <a name="input_directory_id"></a> [directory\_id](#input\_directory\_id) | (Optional) The ID of the AWS Directory Service directory that you want to associate with the server | `string` | `null` | no |
-| <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are VPC and PUBLIC | `string` | `"PUBLIC"` | no |
+| <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC\_ENDPOINT. Default value is PUBLIC. | `string` | `"PUBLIC"` | no |
 | <a name="input_function"></a> [function](#input\_function) | (Optional) The ARN of the AWS Lambda function that is invoked for user authentication | `string` | `null` | no |
 | <a name="input_host_key"></a> [host\_key](#input\_host\_key) | (Optional) The RSA, ECDSA, or ED25519 private key. This must be created ahead of time. | `string` | `null` | no |
 | <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
@@ -150,7 +152,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_tls_session_resumption_mode"></a> [tls\_session\_resumption\_mode](#input\_tls\_session\_resumption\_mode) | (Optional) Specifies the mode of the TLS session resumption. Valid values are: DISABLED, ENABLED, and ENFORCED. | `string` | `null` | no |
 | <a name="input_url"></a> [url](#input\_url) | (Optional) The URL of the file transfer protocol endpoint that is used to authentication users through an API\_GATEWAY. | `string` | `null` | no |
-| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br/>    home_directory      = optional(string)            # Cannot be set if home_directory_type is set to "LOGICAL".<br/>    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"<br/>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br/>    public_key          = optional(string)            # The public key portion of an SSH key pair<br/>    username            = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br/>    home_directory      = optional(string)            # The landing directory for a user. Cannot be set if home_directory_type is set to "LOGICAL".<br/>    home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.<br/>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br/>    public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.<br/>    username            = string                      # The username of the user.<br/>  }))</pre> | `{}` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) The ID of the VPC endpoint. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) The ID of the VPC that is used for the transfer server. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 
@@ -158,6 +160,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Description |
 |------|-------------|
+| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | The ARN of the S3 bucket |
 | <a name="output_server_arn"></a> [server\_arn](#output\_server\_arn) | The ARN of the transfer family server |
 | <a name="output_server_endpoint"></a> [server\_endpoint](#output\_server\_endpoint) | The endpoint of the transfer family server |
 | <a name="output_server_host_key_fingerprint"></a> [server\_host\_key\_fingerprint](#output\_server\_host\_key\_fingerprint) | The RSA private key fingerprint of the transfer family server |

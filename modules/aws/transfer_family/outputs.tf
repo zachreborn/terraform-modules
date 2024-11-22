@@ -2,6 +2,11 @@
 # Resource Outputs
 ###########################
 
+output "s3_bucket_arn" {
+  description = "The ARN of the S3 bucket"
+  value       = module.bucket.s3_bucket_arn
+}
+
 output "server_arn" {
   description = "The ARN of the transfer family server"
   value       = aws_transfer_server.this.arn
