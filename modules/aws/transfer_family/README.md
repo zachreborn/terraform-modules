@@ -132,7 +132,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_as2_transports"></a> [as2\_transports](#input\_as2\_transports) | (Optional) The transport method for AS2 messages. Valid values are HTTP. | `list(string)` | `null` | no |
 | <a name="input_certificate"></a> [certificate](#input\_certificate) | (Optional) The ARN of the AWS Certificate Manager certificate to use with the server | `string` | `null` | no |
 | <a name="input_directory_id"></a> [directory\_id](#input\_directory\_id) | (Optional) The ID of the AWS Directory Service directory that you want to associate with the server | `string` | `null` | no |
-| <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are VPC and PUBLIC | `string` | `"PUBLIC"` | no |
+| <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC\_ENDPOINT. Default value is PUBLIC. | `string` | `"PUBLIC"` | no |
 | <a name="input_function"></a> [function](#input\_function) | (Optional) The ARN of the AWS Lambda function that is invoked for user authentication | `string` | `null` | no |
 | <a name="input_host_key"></a> [host\_key](#input\_host\_key) | (Optional) The RSA, ECDSA, or ED25519 private key. This must be created ahead of time. | `string` | `null` | no |
 | <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
