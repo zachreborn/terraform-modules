@@ -135,10 +135,10 @@ module "transfer_family_iam_role" {
         Action = "sts:AssumeRole",
         Condition = {
           StringEquals = {
-            "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
           },
           ArnLike = {
-            "aws:SourceArn": "arn:aws:transfer:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:user/*"
+            "aws:SourceArn" : "arn:aws:transfer:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:user/*"
           }
         },
         Effect = "Allow",
