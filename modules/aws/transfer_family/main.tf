@@ -32,15 +32,15 @@ locals {
           "s3:ListBucket",
           "s3:GetBucketLocation"
         ],
-        Effect   = "Allow",
+        Effect = "Allow",
         Resource = [
-          "arn:aws:s3:::${Transfer:HomeBucket}"
+          "arn:aws:s3:::$${Transfer:HomeBucket}"
         ]
         Condition = {
           StringLike = {
-            "s3:prefix": [
-              "${Transfer:HomeDirectory}/*",
-              "${Transfer:HomeDirectory}"
+            "s3:prefix" : [
+              "$${Transfer:HomeDirectory}/*",
+              "$${Transfer:HomeDirectory}"
             ]
           }
         }
@@ -56,16 +56,15 @@ locals {
           "s3:PutObject",
           "s3:PutObjectACL"
         ],
-        Effect   = "Allow",
+        Effect = "Allow",
         Resource = [
-          "arn:aws:s3:::${Transfer:HomeBucket}/${Transfer:HomeDirectory}/*"
+          "arn:aws:s3:::$${Transfer:HomeBucket}/$${Transfer:HomeDirectory}/*"
         ]
       }
     ]
   })
-
- })
 }
+
 ###########################
 # Module Configuration
 ###########################
