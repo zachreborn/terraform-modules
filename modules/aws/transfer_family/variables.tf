@@ -35,9 +35,13 @@ variable "directory_id" {
 }
 
 variable "endpoint_type" {
-  description = "(Optional) The type of endpoint that you want your server to use. Valid values are VPC and PUBLIC"
+  description = "(Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC_ENDPOINT. Default value is PUBLIC."
   type        = string
   default     = "PUBLIC"
+  validation {
+    condition     = can(regex("^(PUBLIC|VPC|VPC_ENDPOINT)$", var.endpoint_type))
+    error_message = "The value of endpoint_type must be either PUBLIC, VPC, or VPC_ENDPOINT."
+  }
 }
 
 variable "function" {
