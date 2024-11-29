@@ -1,3 +1,5 @@
 {
-    "ignore": ["*/README.md"]
+    "ignore": [
+        "**/*.md"
+    ]
 }
