@@ -10,6 +10,9 @@ jobs:
     name: Build - Terraform
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: HashiCorp - Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -35,16 +38,27 @@ jobs:
           config-file: ./modules/.terraform-docs.yml
           find-dir: ./modules
 
-      - name: List all files
-        run: ls -lha
+      - name: Super-Linter
+        uses: super-linter/super-linter@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIX_MARKDOWN_PRETTIER: true
+          VALIDATE_MARKDOWN: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_TERRAFORM_TERRASCAN: false
+          VALIDATE_ALL_CODEBASE: false
+      
+      # - name: List all files
+      #   run: ls -lha
 
-      - name: stat .git/objects
-        run: stat .git/objects
+      # - name: stat .git/objects
+      #   run: stat .git/objects
 
-      - name: Fix .git owner
-        run: sudo chown runner:docker -R .git
+      # - name: Fix .git owner
+      #   run: sudo chown runner:docker -R .git
 
       - name: Git stage all, commit, and push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: Continuous Integration - terraform fmt and terraform-docs
+          commit_message: "chore: terraform fmt and terraform-docs"
+          commit_user_name: github-actions
