@@ -74,8 +74,62 @@ locals {
 ##############
 
 ##############
+# Create KMS Key
+##############
+module "kms_key" {
+  source = "../kms"
+
+  description = var.key_description
+  name_prefix = var.key_name_prefix
+  tags        = var.tags
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Sid"    = "Enable IAM User Permissions",
+        "Effect" = "Allow",
+        "Principal" = {
+          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action"   = "kms:*",
+        "Resource" = "*"
+      },
+      {
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "logs.${data.aws_region.current.name}.amazonaws.com"
+        },
+        "Action" = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ],
+        "Resource" = "*",
+        "Condition" = {
+          "ArnEquals" = {
+            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+##############
 # Create CloudWatch log group
 ##############
+
+module "cloudwatch_log_group" {
+  source = "../cloudwatch/log_group"
+
+  kms_key_id        = module.kms_key.arn
+  log_group_class   = var.log_group_class
+  name_prefix       = var.log_group_name_prefix
+  retention_in_days = var.log_group_retention_in_days
+  tags              = var.tags
+}
 
 ##############
 # Create the AWS transfer family server
