@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Route Module</h3>
   <p align="center">
-    This module configures a route within a transit gateway route table.
+    This module configures one or more routes in a route table of a transit gateway. The module requires one or more CIDR blocks and destination transit gateway attachment id to route those CIDR blocks to. The module can also be used to create blackhole routes by setting the blackhole variable to true.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,13 +62,37 @@
 
 ## Usage
 
+### Simple Example
+
+This example creates two routes, one for each CIDR block, in the default route table of a transit gateway. The routes next hop are set to the transit gateway attachment id specified in the transit_gateway_attachment_id variable.
+
 ```
-module "destination_name_transit_gateway_route" {
+module "tgw_routes" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/route"
 
     # Destination Name Comment
-    destination_cidr_blocks        = "192.168.0.0/16"
+    destination_cidr_blocks = [
+      "10.255.0.0/24",
+      "192.168.0.0/16"
+    ]
     transit_gateway_attachment_id  = module.transit_gateway_attachment.id
+    transit_gateway_route_table_id = module.transit_gateway.propagation_default_route_table_id
+}
+```
+
+### Blackhole Example
+
+This example creates two blackhole routes, one for each CIDR block, in the default route table of a transit gateway. Blackhole routes can be used to drop traffic that matches the specified CIDR block. The blackhole variable is set to true to create blackhole routes.
+
+```
+module "tgw_blackhole_routes" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/route"
+
+    blackhole = true
+    destination_cidr_blocks = [
+      "10.255.0.0/24",
+      "192.168.0.0/16"
+    ]
     transit_gateway_route_table_id = module.transit_gateway.propagation_default_route_table_id
 }
 ```
