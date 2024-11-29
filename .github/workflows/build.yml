@@ -48,14 +48,14 @@ jobs:
       #     VALIDATE_TERRAFORM_TERRASCAN: false
       #     VALIDATE_ALL_CODEBASE: false
       
-      # - name: List all files
-      #   run: ls -lha
+      - name: List all files
+        run: ls -lha
 
-      # - name: stat .git/objects
-      #   run: stat .git/objects
+      - name: stat .git/objects
+        run: stat .git/objects
 
-      # - name: Fix .git owner
-      #   run: sudo chown runner:docker -R .git
+      - name: Fix .git owner
+        run: sudo chown runner:docker -R .git
 
       - name: Git stage all, commit, and push
         uses: stefanzweifel/git-auto-commit-action@v5
