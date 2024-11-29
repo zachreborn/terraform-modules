@@ -113,7 +113,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_vpc_flow_logs"></a> [vpc\_flow\_logs](#module\_vpc\_flow\_logs) | ../flow_logs | n/a |
+| <a name="module_vpc_flow_logs"></a> [vpc\_flow\_logs](#module\_vpc\_flow\_logs) | ../../flow_logs | n/a |
 
 ## Resources
 
