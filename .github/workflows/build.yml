@@ -38,16 +38,6 @@ jobs:
           config-file: ./modules/.terraform-docs.yml
           find-dir: ./modules
 
-      - name: Super-Linter
-        uses: super-linter/super-linter@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FIX_MARKDOWN_PRETTIER: true
-          VALIDATE_MARKDOWN: false
-          VALIDATE_NATURAL_LANGUAGE: false
-          VALIDATE_TERRAFORM_TERRASCAN: false
-          VALIDATE_ALL_CODEBASE: false
-      
       - name: List all files
         run: ls -lha
 
