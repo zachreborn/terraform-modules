@@ -65,7 +65,7 @@
 
 ```
 module "transit_gateway_sdwan_connect" {
-    source                  = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect"
+    source                  = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/connect"
 
     name                    = "tgw_sdwan_connect"
     transport_attachment_id = module.prod_vpc_attachment.id

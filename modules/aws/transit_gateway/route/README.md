@@ -65,7 +65,7 @@
 
 ```
 module "destination_name_transit_gateway_route" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_route"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/route"
 
     # Destination Name Comment
     destination_cidr_block         = "192.168.0.0/16"

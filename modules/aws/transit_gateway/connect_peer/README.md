@@ -67,7 +67,7 @@
 This example creates two redundant connect peers with two different peers, such as two Velocloud vEdge instances.
 ```
 module "transit_gateway_sdwan_connect_peer" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/connect_peer"
 
     name = "sdwan_peer"
     peers = {

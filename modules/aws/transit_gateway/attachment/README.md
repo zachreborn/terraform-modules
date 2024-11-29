@@ -65,7 +65,7 @@
 
 ```
 module "sdwan_vpc_transit_gateway_attachment" {
-    source             = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_attachment"
+    source             = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/attachment"
 
     name               = "sdwan_vpc_attachment"
     subnet_ids         = ["subnet-fdsjklafjlkds8421", "subnet-290102034fjkdsa"]
