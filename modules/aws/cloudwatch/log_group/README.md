@@ -87,7 +87,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -95,15 +97,26 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_log_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | (Optiona) The ARN of the KMS key to use for encryption | `string` | `null` | no |
+| <a name="input_log_group_class"></a> [log\_group\_class](#input\_log\_group\_class) | (Optional) The class of the log group. Valid values are 'STANDARD' and 'INFREQUENT\_ACCESS'. Defaults to 'STANDARD'. | `string` | `"STANDARD"` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The name prefix of the log group | `string` | n/a | yes |
+| <a name="input_retention_in_days"></a> [retention\_in\_days](#input\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Valid values are: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653. Defaults to 90. | `number` | `90` | no |
+| <a name="input_skip_destroy"></a> [skip\_destroy](#input\_skip\_destroy) | (Optional) If set to true, the log group will not be destroyed at the end of the lifecycle. Defaults to false. | `bool` | `false` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the log group |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
