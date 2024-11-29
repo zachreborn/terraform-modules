@@ -43,6 +43,6 @@ module "vpc_flow_logs" {
   flow_log_format                    = var.flow_log_format
   flow_max_aggregation_interval      = var.flow_max_aggregation_interval
   flow_traffic_type                  = var.flow_traffic_type
-  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this.id
+  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
   tags                               = var.tags
 }
