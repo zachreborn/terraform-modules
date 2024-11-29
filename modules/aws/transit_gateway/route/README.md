@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Route Module</h3>
   <p align="center">
-    This module configures a route within a transit gateway route table.
+    This module configures one or more routes in a route table of a transit gateway. The module requires one or more CIDR blocks and destination transit gateway attachment id to route those CIDR blocks to. The module can also be used to create blackhole routes by setting the blackhole variable to true.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,13 +62,37 @@
 
 ## Usage
 
+### Simple Example
+
+This example creates two routes, one for each CIDR block, in the default route table of a transit gateway. The routes next hop are set to the transit gateway attachment id specified in the transit_gateway_attachment_id variable.
+
 ```
-module "destination_name_transit_gateway_route" {
+module "tgw_routes" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/route"
 
     # Destination Name Comment
-    destination_cidr_block         = "192.168.0.0/16"
+    destination_cidr_blocks = [
+      "10.255.0.0/24",
+      "192.168.0.0/16"
+    ]
     transit_gateway_attachment_id  = module.transit_gateway_attachment.id
+    transit_gateway_route_table_id = module.transit_gateway.propagation_default_route_table_id
+}
+```
+
+### Blackhole Example
+
+This example creates two blackhole routes, one for each CIDR block, in the default route table of a transit gateway. Blackhole routes can be used to drop traffic that matches the specified CIDR block. The blackhole variable is set to true to create blackhole routes.
+
+```
+module "tgw_blackhole_routes" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/route"
+
+    blackhole = true
+    destination_cidr_blocks = [
+      "10.255.0.0/24",
+      "192.168.0.0/16"
+    ]
     transit_gateway_route_table_id = module.transit_gateway.propagation_default_route_table_id
 }
 ```
@@ -108,13 +132,15 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_blackhole"></a> [blackhole](#input\_blackhole) | (Optional) Indicates whether to drop traffic that matches this route (default to false). | `bool` | `false` | no |
-| <a name="input_destination_cidr_block"></a> [destination\_cidr\_block](#input\_destination\_cidr\_block) | (Required) IPv4 or IPv6 RFC1924 CIDR used for destination matches. Routing decisions are based on the most specific match. | `string` | n/a | yes |
+| <a name="input_destination_cidr_blocks"></a> [destination\_cidr\_blocks](#input\_destination\_cidr\_blocks) | (Required) List of IPv4 or IPv6 RFC1924 CIDR blocks used for destination matches. Routing decisions are based on the most specific match. | `set(string)` | n/a | yes |
 | <a name="input_transit_gateway_attachment_id"></a> [transit\_gateway\_attachment\_id](#input\_transit\_gateway\_attachment\_id) | (Optional) Identifier of EC2 Transit Gateway Attachment (required if blackhole is set to false). | `string` | `null` | no |
 | <a name="input_transit_gateway_route_table_id"></a> [transit\_gateway\_route\_table\_id](#input\_transit\_gateway\_route\_table\_id) | (Required) Identifier of EC2 Transit Gateway Route Table. | `string` | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_routes"></a> [routes](#output\_routes) | Map of routes and their next hops |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
