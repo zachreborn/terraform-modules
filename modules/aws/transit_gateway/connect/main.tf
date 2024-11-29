@@ -28,7 +28,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "peer" {
   bgp_asn                       = each.value.bgp_asn
   inside_cidr_blocks            = each.value.inside_cidr_blocks
   peer_address                  = each.value.peer_address
-  tags                          = merge(tomap({ Name = var.name }), var.tags)
+  tags                          = merge(tomap({ Name = each.key }), var.tags)
   transit_gateway_attachment_id = aws_ec2_transit_gateway_connect.connect_attachment.id
   transit_gateway_address       = each.value.transit_gateway_address
 }
