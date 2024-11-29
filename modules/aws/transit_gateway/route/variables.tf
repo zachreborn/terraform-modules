@@ -4,9 +4,9 @@ variable "blackhole" {
   type        = bool
 }
 
-variable "destination_cidr_block" {
-  description = "(Required) IPv4 or IPv6 RFC1924 CIDR used for destination matches. Routing decisions are based on the most specific match."
-  type        = string
+variable "destination_cidr_blocks" {
+  description = "(Required) List of IPv4 or IPv6 RFC1924 CIDR blocks used for destination matches. Routing decisions are based on the most specific match."
+  type        = set(string)
 }
 
 variable "transit_gateway_attachment_id" {
