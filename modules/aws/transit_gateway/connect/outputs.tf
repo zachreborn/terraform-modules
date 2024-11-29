@@ -3,7 +3,7 @@
 ##################################
 output "attachment_id" {
   description = "The ID of the transit gateway connect attachment."
-  value = aws_ec2_transit_gateway_connect.connect_attachment.id
+  value       = aws_ec2_transit_gateway_connect.connect_attachment.id
 }
 
 ##################################
