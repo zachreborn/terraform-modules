@@ -28,7 +28,7 @@
 
 <h3 align="center">Transit Gateway Attachment Module</h3>
   <p align="center">
-    This module attaches a transit gateway to subnets.
+    This module attaches one or more VPCs to transit gateway. Transit gateways attach to VPCs using VPC attachments. VPC attachments create ENI's in the VPC's subnets allowing traffic to route between the VPC and the transit gateway. This module also supports enabling flow logs on the VPC attachments by default.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,14 +62,21 @@
 
 ## Usage
 
+### Simple Example
+
+This example attaches a single VPC to the transit gateway.
+
 ```
 module "sdwan_vpc_transit_gateway_attachment" {
     source             = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway/attachment"
 
-    name               = "sdwan_vpc_attachment"
-    subnet_ids         = ["subnet-fdsjklafjlkds8421", "subnet-290102034fjkdsa"]
     transit_gateway_id = module.transit_gateway.id
-    vpc_id             = "vpc-4289104jk21lsda"
+    vpc_ids = {
+     "transit_vpc" = {
+       subnet_ids             = ["subnet-12345678", "subnet-87654321"]
+       vpc_id                 = "vpc-12345678"
+     }
+   }
 }
 ```
 
@@ -109,10 +116,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_appliance_mode_support"></a> [appliance\_mode\_support](#input\_appliance\_mode\_support) | (Optional) Whether Appliance Mode support is enabled. If enabled, a traffic flow between a source and destination uses the same Availability Zone for the VPC attachment for the lifetime of that flow. | `string` | `"disable"` | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. | `string` | `"flow_logs_"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire. | `number` | `90` | no |
-| <a name="input_dns_support"></a> [dns\_support](#input\_dns\_support) | (Optional) Whether DNS support is enabled. Valid values: disable, enable. Default value: enable. | `string` | `"enable"` | no |
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
 | <a name="input_flow_deliver_cross_account_role"></a> [flow\_deliver\_cross\_account\_role](#input\_flow\_deliver\_cross\_account\_role) | (Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account. | `string` | `null` | no |
 | <a name="input_flow_log_destination_type"></a> [flow\_log\_destination\_type](#input\_flow\_log\_destination\_type) | (Optional) The type of the logging destination. Valid values: cloud-watch-logs, s3. Default: cloud-watch-logs. | `string` | `"cloud-watch-logs"` | no |
@@ -123,22 +128,20 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | (Optional, default '/') Path in which to create the policy. See IAM Identifiers for more information. | `string` | `"/"` | no |
 | <a name="input_iam_role_description"></a> [iam\_role\_description](#input\_iam\_role\_description) | (Optional) The description of the role. | `string` | `"Role utilized for VPC flow logs. This role allows creation of log streams and adding logs to the log streams in cloudwatch"` | no |
 | <a name="input_iam_role_name_prefix"></a> [iam\_role\_name\_prefix](#input\_iam\_role\_name\_prefix) | (Required, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with name. | `string` | `"flow_logs_role_"` | no |
-| <a name="input_ipv6_support"></a> [ipv6\_support](#input\_ipv6\_support) | (Optional) Whether IPv6 support is enabled. Valid values: disable, enable. Default value: disable. | `string` | `"disable"` | no |
 | <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/flow_logs_key_"` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway attachment | `string` | n/a | yes |
-| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) Identifiers of EC2 Subnets. | `list(any)` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags for the EC2 Transit Gateway. | `map(any)` | <pre>{<br/>  "environment": "prod",<br/>  "project": "core_infrastructure",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_transit_gateway_default_route_table_association"></a> [transit\_gateway\_default\_route\_table\_association](#input\_transit\_gateway\_default\_route\_table\_association) | (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
-| <a name="input_transit_gateway_default_route_table_propagation"></a> [transit\_gateway\_default\_route\_table\_propagation](#input\_transit\_gateway\_default\_route\_table\_propagation) | (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
-| <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of EC2 Transit Gateway. | `string` | n/a | yes |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) Identifier of the VPC. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags for the EC2 transit gateway. | `map(any)` | <pre>{<br/>  "environment": "prod",<br/>  "project": "core_infrastructure",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_transit_gateway_default_route_table_association"></a> [transit\_gateway\_default\_route\_table\_association](#input\_transit\_gateway\_default\_route\_table\_association) | (Optional) Boolean whether the VPC attachment should be associated with the EC2 transit gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 transit gateways. Default value: true. | `bool` | `true` | no |
+| <a name="input_transit_gateway_default_route_table_propagation"></a> [transit\_gateway\_default\_route\_table\_propagation](#input\_transit\_gateway\_default\_route\_table\_propagation) | (Optional) Boolean whether the VPC attachment should propagate routes with the EC2 transit gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 transit gateways. Default value: true. | `bool` | `true` | no |
+| <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of EC2 transit gateway. | `string` | n/a | yes |
+| <a name="input_vpc_ids"></a> [vpc\_ids](#input\_vpc\_ids) | (Required) Identifier of the VPC. | <pre>map(object({<br/>    appliance_mode_support = optional(string, "disable") # (Optional) Whether Appliance Mode support is enabled. If enabled, a traffic flow between a source and destination uses the same Availability Zone for the VPC attachment for the lifetime of that flow.<br/>    dns_support            = optional(string, "enable")  # (Optional) Whether DNS support is enabled. Valid values: disable, enable. Default value: enable.<br/>    ipv6_support           = optional(string, "disable") # (Optional) Whether IPv6 support is enabled. Valid values: disable, enable. Default value: disable.<br/>    subnet_ids             = list(string)                # (Required) Subnet IDs where the transit gateway attachments will be made. Typically this should be private subnets.<br/>    vpc_id                 = string                      # The VPC ID where the transit gateway attachments will be made.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_vpc_owner_id"></a> [vpc\_owner\_id](#output\_vpc\_owner\_id) | n/a |
+| <a name="output_ids"></a> [ids](#output\_ids) | Map of VPC IDs and their transit gateway attachment IDs. |
+| <a name="output_ids_list"></a> [ids\_list](#output\_ids\_list) | List of transit gateway attachment IDs |
+| <a name="output_vpc_owner_id"></a> [vpc\_owner\_id](#output\_vpc\_owner\_id) | Map of VPC IDs and their owner IDs |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
