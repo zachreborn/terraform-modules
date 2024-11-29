@@ -29,7 +29,7 @@ resource "aws_ec2_transit_gateway" "transit_gateway" {
 ###########################
 
 module "vpc_flow_logs" {
-  source = "../flow_logs"
+  source = "../../flow_logs"
 
   count                           = var.enable_flow_logs ? 1 : 0
   cloudwatch_name_prefix          = var.cloudwatch_name_prefix
