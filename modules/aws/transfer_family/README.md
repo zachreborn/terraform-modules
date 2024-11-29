@@ -111,6 +111,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_bucket"></a> [bucket](#module\_bucket) | ../s3/bucket | n/a |
+| <a name="module_cloudwatch_log_group"></a> [cloudwatch\_log\_group](#module\_cloudwatch\_log\_group) | ../cloudwatch/log_group | n/a |
+| <a name="module_kms_key"></a> [kms\_key](#module\_kms\_key) | ../kms | n/a |
 | <a name="module_transfer_family_iam_role"></a> [transfer\_family\_iam\_role](#module\_transfer\_family\_iam\_role) | ../iam/role | n/a |
 | <a name="module_transfer_family_iam_role_policy"></a> [transfer\_family\_iam\_role\_policy](#module\_transfer\_family\_iam\_role\_policy) | ../iam/policy | n/a |
 
@@ -137,7 +139,12 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_host_key"></a> [host\_key](#input\_host\_key) | (Optional) The RSA, ECDSA, or ED25519 private key. This must be created ahead of time. | `string` | `null` | no |
 | <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
 | <a name="input_invocation_role"></a> [invocation\_role](#input\_invocation\_role) | (Optional) The ARN of the IAM role that controls your authentication with an identity provider\_type through API\_GATEWAY. | `string` | `null` | no |
+| <a name="input_key_description"></a> [key\_description](#input\_key\_description) | (Optional) The description of the key as viewed in AWS console. | `string` | `"CloudWatch kms key used to encrypt transfer family logs"` | no |
+| <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/transfer_family_logs_key_"` | no |
 | <a name="input_lifecycle_rules"></a> [lifecycle\_rules](#input\_lifecycle\_rules) | (Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration. | `any` | `null` | no |
+| <a name="input_log_group_class"></a> [log\_group\_class](#input\_log\_group\_class) | (Optional) The class of the log group. Valid values are 'STANDARD' and 'INFREQUENT\_ACCESS'. Defaults to 'STANDARD'. | `string` | `"STANDARD"` | no |
+| <a name="input_log_group_name_prefix"></a> [log\_group\_name\_prefix](#input\_log\_group\_name\_prefix) | (Optional) The name prefix of the log group | `string` | `"transfer_family_logs_"` | no |
+| <a name="input_log_group_retention_in_days"></a> [log\_group\_retention\_in\_days](#input\_log\_group\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Valid values are: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653. Defaults to 30. | `number` | `90` | no |
 | <a name="input_logging_role"></a> [logging\_role](#input\_logging\_role) | (Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Transfer Family server used to name the resources created. | `string` | n/a | yes |
 | <a name="input_passive_ip"></a> [passive\_ip](#input\_passive\_ip) | (Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate. | `string` | `null` | no |
