@@ -30,7 +30,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 module "vpc_flow_logs" {
   source = "../../flow_logs"
 
-  for_each                           = var.enable_flow_logs ? var.vpc_ids : {}
+  count                              = var.enable_flow_logs ? 1 : 0
   cloudwatch_name_prefix             = var.cloudwatch_name_prefix
   cloudwatch_retention_in_days       = var.cloudwatch_retention_in_days
   iam_policy_name_prefix             = var.iam_policy_name_prefix
@@ -43,6 +43,6 @@ module "vpc_flow_logs" {
   flow_log_format                    = var.flow_log_format
   flow_max_aggregation_interval      = var.flow_max_aggregation_interval
   flow_traffic_type                  = var.flow_traffic_type
-  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
+  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this[*].id
   tags                               = var.tags
 }
