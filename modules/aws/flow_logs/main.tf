@@ -29,7 +29,7 @@ locals {
 
   flow_logs_source = {
     for id in local.flow_logs_source_selector :
-    "ID-${id.index}" => {
+    index(local.flow_logs_source_selector, id) => {
       id = id
     }
   }
