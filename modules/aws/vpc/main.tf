@@ -400,6 +400,6 @@ module "vpc_flow_logs" {
   flow_log_format                 = var.flow_log_format
   flow_max_aggregation_interval   = var.flow_max_aggregation_interval
   flow_traffic_type               = var.flow_traffic_type
-  flow_vpc_ids                    = tolist(aws_vpc.vpc.id)
+  flow_vpc_ids                    = [aws_vpc.vpc.id]
   tags                            = var.tags
 }
