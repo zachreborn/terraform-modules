@@ -18,13 +18,21 @@ data "aws_region" "current" {}
 # Locals
 ###########################
 locals {
-  flow_logs_source = coalesce(
+
+  flow_logs_source_selector = coalesce(
     var.flow_eni_ids,
     var.flow_subnet_ids,
     var.flow_transit_gateway_ids,
     var.flow_transit_gateway_attachment_ids,
     var.flow_vpc_ids
   )
+
+  flow_logs_source = {
+    for id in local.flow_logs_source_selector :
+    "ID-${id.index}" => {
+      id = id
+    }
+  }
 }
 
 ###########################
@@ -139,18 +147,18 @@ resource "aws_iam_role_policy_attachment" "role_attach" {
 # Flow Log
 ###########################
 resource "aws_flow_log" "vpc_flow" {
-  for_each                      = toset(local.flow_logs_source)
+  for_each                      = local.flow_logs_source
   deliver_cross_account_role    = var.flow_deliver_cross_account_role
-  eni_id                        = var.flow_eni_ids != null ? each.value : null
+  eni_id                        = var.flow_eni_ids != null ? each.value.id : null
   iam_role_arn                  = aws_iam_role.role.arn
   log_destination_type          = var.flow_log_destination_type
   log_destination               = aws_cloudwatch_log_group.log_group.arn
   log_format                    = var.flow_log_format
   max_aggregation_interval      = var.flow_max_aggregation_interval
-  subnet_id                     = var.flow_subnet_ids != null ? each.value : null
+  subnet_id                     = var.flow_subnet_ids != null ? each.value.id : null
   tags                          = var.tags
-  transit_gateway_id            = var.flow_transit_gateway_ids != null ? each.value : null
-  transit_gateway_attachment_id = var.flow_transit_gateway_attachment_ids != null ? each.value : null
+  transit_gateway_id            = var.flow_transit_gateway_ids != null ? each.value.id : null
+  transit_gateway_attachment_id = var.flow_transit_gateway_attachment_ids != null ? each.value.id : null
   traffic_type                  = var.flow_traffic_type
-  vpc_id                        = var.flow_vpc_ids != null ? each.value : null
+  vpc_id                        = var.flow_vpc_ids != null ? each.value.id : null
 }
