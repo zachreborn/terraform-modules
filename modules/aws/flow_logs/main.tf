@@ -139,7 +139,7 @@ resource "aws_iam_role_policy_attachment" "role_attach" {
 ###########################
 # Flow Log
 ###########################
-resource "aws_flow_log" "vpc_flow" {
+resource "aws_flow_log" "this" {
   count                         = length(local.flow_logs_source)
   deliver_cross_account_role    = var.flow_deliver_cross_account_role
   eni_id                        = var.flow_eni_ids != null ? local.flow_logs_source[count.index] : null
