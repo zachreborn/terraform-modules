@@ -141,6 +141,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 |------|-------------|
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of VPC IDs and their transit gateway attachment IDs. |
 | <a name="output_ids_list"></a> [ids\_list](#output\_ids\_list) | List of transit gateway attachment IDs |
+| <a name="output_info"></a> [info](#output\_info) | A map with information about the transit gateway attachment. |
 | <a name="output_vpc_owner_id"></a> [vpc\_owner\_id](#output\_vpc\_owner\_id) | Map of VPC IDs and their owner IDs |
 <!-- END_TF_DOCS -->
 
