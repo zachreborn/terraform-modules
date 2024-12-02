@@ -8,15 +8,11 @@ terraform {
   }
 }
 
-locals {
-  vpc_ids = { for vpc_id, values in var.vpc_ids : vpc_id => values }
-}
-
 ###########################
 # Transit Gateway Attachment
 ###########################
 resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  for_each                                        = local.vpc_ids
+  for_each                                        = var.vpc_ids
   appliance_mode_support                          = each.value.appliance_mode_support
   dns_support                                     = each.value.dns_support
   ipv6_support                                    = each.value.ipv6_support
