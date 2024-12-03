@@ -30,19 +30,19 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 module "vpc_flow_logs" {
   source = "../../flow_logs"
 
-  for_each                           = var.enable_flow_logs ? var.vpc_ids : {}
-  cloudwatch_name_prefix             = var.cloudwatch_name_prefix
-  cloudwatch_retention_in_days       = var.cloudwatch_retention_in_days
-  iam_policy_name_prefix             = var.iam_policy_name_prefix
-  iam_policy_path                    = var.iam_policy_path
-  iam_role_description               = var.iam_role_description
-  iam_role_name_prefix               = var.iam_role_name_prefix
-  key_name_prefix                    = var.key_name_prefix
-  flow_deliver_cross_account_role    = var.flow_deliver_cross_account_role
-  flow_log_destination_type          = var.flow_log_destination_type
-  flow_log_format                    = var.flow_log_format
-  flow_max_aggregation_interval      = var.flow_max_aggregation_interval
-  flow_traffic_type                  = var.flow_traffic_type
-  flow_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
-  tags                               = var.tags
+  count                               = var.enable_flow_logs ? 1 : 0
+  cloudwatch_name_prefix              = var.cloudwatch_name_prefix
+  cloudwatch_retention_in_days        = var.cloudwatch_retention_in_days
+  iam_policy_name_prefix              = var.iam_policy_name_prefix
+  iam_policy_path                     = var.iam_policy_path
+  iam_role_description                = var.iam_role_description
+  iam_role_name_prefix                = var.iam_role_name_prefix
+  key_name_prefix                     = var.key_name_prefix
+  flow_deliver_cross_account_role     = var.flow_deliver_cross_account_role
+  flow_log_destination_type           = var.flow_log_destination_type
+  flow_log_format                     = var.flow_log_format
+  flow_max_aggregation_interval       = var.flow_max_aggregation_interval
+  flow_traffic_type                   = var.flow_traffic_type
+  flow_transit_gateway_attachment_ids = [for attachment, value in aws_ec2_transit_gateway_vpc_attachment.this : value.id]
+  tags                                = var.tags
 }

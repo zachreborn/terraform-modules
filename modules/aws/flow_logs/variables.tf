@@ -144,9 +144,9 @@ variable "flow_deliver_cross_account_role" {
   default     = null
 }
 
-variable "flow_eni_id" {
-  type        = string
-  description = "(Optional) Elastic Network Interface ID to attach the flow logs to."
+variable "flow_eni_ids" {
+  type        = list(string)
+  description = "(Optional) List of Elastic Network Interface IDs to attach the flow logs to."
   default     = null
 }
 
@@ -168,9 +168,9 @@ variable "flow_max_aggregation_interval" {
   default     = 60
 }
 
-variable "flow_subnet_id" {
-  type        = string
-  description = "(Optional) Subnet ID to attach the flow logs to."
+variable "flow_subnet_ids" {
+  type        = list(string)
+  description = "(Optional) List of Subnet IDs to attach the flow logs to."
   default     = null
 }
 
@@ -180,21 +180,21 @@ variable "flow_traffic_type" {
   default     = "ALL"
 }
 
-variable "flow_transit_gateway_id" {
-  type        = string
-  description = "(Optional) The ID of the transit gateway to attach the flow logs to."
+variable "flow_transit_gateway_ids" {
+  type        = list(string)
+  description = "(Optional) List of IDs of the transit gateways to attach the flow logs to."
   default     = null
 }
 
-variable "flow_transit_gateway_attachment_id" {
-  type        = string
-  description = "(Optional) The ID of the transit gateway attachment to attach the flow logs to."
+variable "flow_transit_gateway_attachment_ids" {
+  type        = list(string)
+  description = "(Optional) List of IDs of the transit gateway attachments to attach the flow logs to."
   default     = null
 }
 
-variable "flow_vpc_id" {
-  type        = string
-  description = "(Optional) VPC ID to attach to."
+variable "flow_vpc_ids" {
+  type        = list(string)
+  description = "(Optional) List of VPC IDs to attach the flow logs to."
   default     = null
 }
 
