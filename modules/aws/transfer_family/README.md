@@ -111,6 +111,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_bucket"></a> [bucket](#module\_bucket) | ../s3/bucket | n/a |
+| <a name="module_cloudwatch_iam_policy"></a> [cloudwatch\_iam\_policy](#module\_cloudwatch\_iam\_policy) | ../iam/policy | n/a |
+| <a name="module_cloudwatch_iam_role"></a> [cloudwatch\_iam\_role](#module\_cloudwatch\_iam\_role) | ../iam/role | n/a |
 | <a name="module_cloudwatch_log_group"></a> [cloudwatch\_log\_group](#module\_cloudwatch\_log\_group) | ../cloudwatch/log_group | n/a |
 | <a name="module_kms_key"></a> [kms\_key](#module\_kms\_key) | ../kms | n/a |
 | <a name="module_transfer_family_iam_role"></a> [transfer\_family\_iam\_role](#module\_transfer\_family\_iam\_role) | ../iam/role | n/a |
