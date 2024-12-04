@@ -304,7 +304,7 @@ module "transfer_family_iam_role" {
 resource "aws_transfer_user" "this" {
   for_each = var.users
 
-  home_directory      = each.value.home_directory
+  home_directory      = each.value.home_directory_type == "LOGICAL" ? null : (each.value.home_directory == null ? "/${module.bucket.s3_bucket_id}" : "/${module.bucket.s3_bucket_id}/${each.value.home_directory}")
   home_directory_type = each.value.home_directory_type
   policy              = each.value.home_directory_type == "LOGICAL" ? null : (each.value.policy == null ? local.default_session_policy : each.value.policy)
   role                = module.transfer_family_iam_role.arn

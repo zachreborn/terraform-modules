@@ -281,6 +281,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_igw_id"></a> [igw\_id](#output\_igw\_id) | n/a |
 | <a name="output_mgmt_route_table_ids"></a> [mgmt\_route\_table\_ids](#output\_mgmt\_route\_table\_ids) | n/a |
 | <a name="output_mgmt_subnet_ids"></a> [mgmt\_subnet\_ids](#output\_mgmt\_subnet\_ids) | n/a |
+| <a name="output_name"></a> [name](#output\_name) | The name of the VPC |
 | <a name="output_nat_eips"></a> [nat\_eips](#output\_nat\_eips) | n/a |
 | <a name="output_nat_eips_public_ips"></a> [nat\_eips\_public\_ips](#output\_nat\_eips\_public\_ips) | n/a |
 | <a name="output_natgw_ids"></a> [natgw\_ids](#output\_natgw\_ids) | n/a |

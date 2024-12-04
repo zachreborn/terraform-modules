@@ -1,4 +1,14 @@
-# Simple Outputs
+##################################
+# Transit Gateway Connect Outputs
+##################################
+output "attachment_id" {
+  description = "The ID of the transit gateway connect attachment."
+  value       = aws_ec2_transit_gateway_connect.connect_attachment.id
+}
+
+##################################
+# Transit Gateway Connect Peer Outputs
+##################################
 output "arns" {
   description = "A map of ARNs of the transit gateway connect peers."
   value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.arn }
@@ -10,7 +20,7 @@ output "bgp_asns" {
 }
 
 output "ids" {
-  description = "A map of the IDs of the Transit Gateway Connect Peers"
+  description = "A map of the IDs of the transit gateway connect peers"
   value       = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => value.id }
 }
 
