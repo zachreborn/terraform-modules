@@ -26,20 +26,20 @@ resource "aws_apigatewayv2_api" "example" {
   #Optional
   api_key_selection_expression = var.api_key_selection_expression
   cors_configuration {
-      allow_credentials = lookup(var.cors_configuration, "allow_credentials", null)
-      allow_headers    = lookup(var.cors_configuration, "allow_headers", null)
-      allow_methods    = lookup(var.cors_configuration, "allow_methods", null)
-      allow_origins    = lookup(var.cors_configuration, "allow_origins", null)
-      expose_headers   = lookup(var.cors_configuration, "expose_headers", null)
-      max_age         = lookup(var.cors_configuration, "max_age", null)
-    }
-  credentials_arn          = var.credentials_arn
-  description             = var.description
+    allow_credentials = lookup(var.cors_configuration, "allow_credentials", null)
+    allow_headers     = lookup(var.cors_configuration, "allow_headers", null)
+    allow_methods     = lookup(var.cors_configuration, "allow_methods", null)
+    allow_origins     = lookup(var.cors_configuration, "allow_origins", null)
+    expose_headers    = lookup(var.cors_configuration, "expose_headers", null)
+    max_age           = lookup(var.cors_configuration, "max_age", null)
+  }
+  credentials_arn              = var.credentials_arn
+  description                  = var.description
   disable_execute_api_endpoint = var.disable_execute_api_endpoint
-  fail_on_warnings        = var.fail_on_warnings
-  tags                    = var.tags
-  target                  = var.target
-  version                 = var.version
-  body                   = var.body
+  fail_on_warnings             = var.fail_on_warnings
+  tags                         = var.tags
+  target                       = var.target
+  version                      = var.version
+  body                         = var.body
 
 }
