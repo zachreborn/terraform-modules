@@ -24,21 +24,21 @@ variable "api_key_selection_expression" {
 
 variable "cors_configuration" {
   description = "CORS configuration for the API Gateway"
-  type        = object({
+  type = object({
     allow_credentials = bool
-    allow_headers    = list(string)
-    allow_methods    = list(string)
-    allow_origins    = list(string)
-    expose_headers   = list(string)
-    max_age          = number
+    allow_headers     = list(string)
+    allow_methods     = list(string)
+    allow_origins     = list(string)
+    expose_headers    = list(string)
+    max_age           = number
   })
-  default     = {
+  default = {
     allow_credentials = false
-    allow_headers    = []
-    allow_methods    = []
-    allow_origins    = []
-    expose_headers   = []
-    max_age          = 0
+    allow_headers     = []
+    allow_methods     = []
+    allow_origins     = []
+    expose_headers    = []
+    max_age           = 0
   }
 }
 
