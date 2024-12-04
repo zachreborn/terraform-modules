@@ -1,3 +1,7 @@
+#####################
+# Outputs
+#####################
+
 output "id" {
   description = "The API identifier"
   value       = aws_apigatewayv2_api.example.id

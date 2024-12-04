@@ -17,7 +17,7 @@ data "aws_region" "current" {}
 #############################
 # API Gateway
 #############################
-resource "aws_apigatewayv2_api" "example" {
+resource "aws_apigatewayv2_api" "api" {
   #Required
   name                       = var.name
   protocol_type              = var.protocol_type
@@ -42,4 +42,7 @@ resource "aws_apigatewayv2_api" "example" {
   version                      = var.version
   body                         = var.body
 
+  lifecycle {
+    ignore_changes = [body]
+  }
 }
