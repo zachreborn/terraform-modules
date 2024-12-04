@@ -185,6 +185,15 @@ module "cloudwatch_log_group" {
 }
 
 ##############
+# Create CloudWatch log group IAM policy
+##############
+
+##############
+# Create CloudWatch log group IAM role
+##############
+
+
+##############
 # Create the AWS transfer family server
 ##############
 
