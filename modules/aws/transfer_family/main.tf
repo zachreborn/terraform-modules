@@ -216,7 +216,7 @@ resource "aws_transfer_user" "this" {
     # Disables the dynamic block of home_directory_mappings if home_directory_type is not `LOGICAL`.
     for_each = each.value.home_directory_type == "LOGICAL" ? [1] : []
     content {
-      entry  = "/${module.bucket.s3_bucket_id}"
+      entry  = "/"
       target = "/${module.bucket.s3_bucket_id}/${each.value.username}"
     }
   }
