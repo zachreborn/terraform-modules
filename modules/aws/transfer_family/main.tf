@@ -70,10 +70,6 @@ locals {
 ###########################
 
 ##############
-# Create logging IAM role
-##############
-
-##############
 # Create KMS Key
 ##############
 module "kms_key" {
@@ -134,11 +130,52 @@ module "cloudwatch_log_group" {
 ##############
 # Create CloudWatch log group IAM policy
 ##############
+module "cloudwatch_iam_policy" {
+  source = "../iam/policy"
+
+  description = "CloudWatch Log Group IAM policy for ${var.name} Transfer Family"
+  name_prefix = "${var.name}_cloudwatch_log_group_policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "AllowLogging",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect   = "Allow",
+        Resource = module.cloudwatch_log_group.arn
+      }
+    ]
+  })
+  tags = var.tags
+}
 
 ##############
 # Create CloudWatch log group IAM role
 ##############
 
+module "cloudwatch_iam_role" {
+  source = "../iam/role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "transfer.amazonaws.com"
+        }
+      }
+    ]
+  })
+  description = "CloudWatch Log Group IAM role for ${var.name}"
+  name_prefix = "${var.name}-cloudwatch-log-group-role"
+  policy_arns = [module.cloudwatch_iam_policy.arn]
+  tags        = var.tags
+}
 
 ##############
 # Create the AWS transfer family server
