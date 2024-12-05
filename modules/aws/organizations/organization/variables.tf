@@ -30,3 +30,7 @@ variable "feature_set" {
     error_message = "Value must be ALL or CONSOLIDATED_BILLING."
   }
 }
+
+############################################################
+# General Variables
+############################################################
