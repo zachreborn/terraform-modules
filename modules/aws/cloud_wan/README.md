@@ -106,7 +106,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_description"></a> [description](#input\_description) | (Required) The description of the global network | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the global network | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the global network | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_transit_gateway_arns"></a> [transit\_gateway\_arns](#input\_transit\_gateway\_arns) | (Required) List of ARNs of the transit gateways to register with the global network | `list(string)` | n/a | yes |
 
