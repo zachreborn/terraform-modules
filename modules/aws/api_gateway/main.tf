@@ -39,7 +39,7 @@ resource "aws_apigatewayv2_api" "api" {
   fail_on_warnings             = var.fail_on_warnings
   tags                         = var.tags
   target                       = var.target
-  version                      = var.version
+  version                      = var.api_gateway_version
   body                         = var.body
 
   lifecycle {

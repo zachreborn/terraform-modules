@@ -78,7 +78,7 @@ variable "target" {
   default     = null
 }
 
-variable "version" {
+variable "api_gateway_version" {
   description = "Version of the API Gateway"
   type        = string
   default     = null
