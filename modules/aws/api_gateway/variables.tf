@@ -19,7 +19,7 @@ variable "protocol_type" {
 variable "api_key_selection_expression" {
   description = "API key selection expression for the API Gateway"
   type        = string
-  default     = ""
+  default     = "$request.header.x-api-key"
 }
 
 variable "cors_configuration" {
