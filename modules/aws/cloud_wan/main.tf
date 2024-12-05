@@ -26,7 +26,7 @@ terraform {
 
 resource "aws_networkmanager_global_network" "this" {
   description = var.description
-  tags        = var.tags
+  tags        = merge(var.tags, { Name = var.name })
 }
 
 # resource "aws_networkmanager_core_network" "this" {

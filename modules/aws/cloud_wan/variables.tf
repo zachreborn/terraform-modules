@@ -3,8 +3,9 @@
 ###########################
 
 variable "description" {
-  description = "(Required) The description of the global network"
+  description = "(Optional) The description of the global network"
   type        = string
+  default     = null
 }
 
 ###########################
@@ -19,6 +20,11 @@ variable "transit_gateway_arns" {
 ###########################
 # General Variables
 ###########################
+
+variable "name" {
+  description = "(Required) The name of the global network"
+  type        = string
+}
 
 variable "tags" {
   description = "(Optional) Map of tags to assign to the device."
