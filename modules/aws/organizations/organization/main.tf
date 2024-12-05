@@ -21,3 +21,13 @@ resource "aws_organizations_organization" "org" {
     prevent_destroy = true
   }
 }
+
+###########################################################
+# AWS Organization Delegated Administrator
+###########################################################
+
+resource "aws_organizations_delegated_administrator" "this" {
+  for_each          = var.delegated_administrators != null ? var.delegated_administrators : {}
+  account_id        = each.key
+  service_principal = each.value
+}
