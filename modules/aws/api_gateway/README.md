@@ -101,7 +101,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_apigatewayv2_api.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
+| [aws_apigatewayv2_api.api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -109,15 +109,30 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the API | `string` | n/a | yes |
-| <a name="input_protocol_type"></a> [protocol_type](#input\_protocol_type) | (Required) The API protocol. Valid values: HTTP, WEBSOCKET | `string` | n/a | yes |
+| <a name="input_api_gateway_version"></a> [api\_gateway\_version](#input\_api\_gateway\_version) | Version of the API Gateway | `string` | `null` | no |
+| <a name="input_api_key_selection_expression"></a> [api\_key\_selection\_expression](#input\_api\_key\_selection\_expression) | API key selection expression for the API Gateway | `string` | `""` | no |
+| <a name="input_body"></a> [body](#input\_body) | OpenAPI specification for the API Gateway | `string` | `null` | no |
+| <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | CORS configuration for the API Gateway | <pre>object({<br/>    allow_credentials = bool<br/>    allow_headers     = list(string)<br/>    allow_methods     = list(string)<br/>    allow_origins     = list(string)<br/>    expose_headers    = list(string)<br/>    max_age           = number<br/>  })</pre> | <pre>{<br/>  "allow_credentials": false,<br/>  "allow_headers": [],<br/>  "allow_methods": [],<br/>  "allow_origins": [],<br/>  "expose_headers": [],<br/>  "max_age": 0<br/>}</pre> | no |
+| <a name="input_credentials_arn"></a> [credentials\_arn](#input\_credentials\_arn) | ARN of the credentials for the API Gateway | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | Description of the API Gateway | `string` | `null` | no |
+| <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Whether to disable the execute-api endpoint | `bool` | `false` | no |
+| <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Whether to fail on warnings during API Gateway creation | `bool` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the API Gateway | `string` | n/a | yes |
+| <a name="input_protocol_type"></a> [protocol\_type](#input\_protocol\_type) | Protocol type of the API Gateway (HTTP or WEBSOCKET) | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the API Gateway | `map(string)` | `{}` | no |
+| <a name="input_target"></a> [target](#input\_target) | Target for the API Gateway | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_api_endpoint"></a> [api\_endpoint](#output\_api\_endpoint) | The URI of the API |
-| <a name="output_api_id"></a> [api\_id](#output\_api\_id) | The API identifier |
+| <a name="output_api_key_selection_expression"></a> [api\_key\_selection\_expression](#output\_api\_key\_selection\_expression) | The API key selection expression for the API |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the API |
+| <a name="output_cors_configuration"></a> [cors\_configuration](#output\_cors\_configuration) | The CORS configuration for the API |
+| <a name="output_execution_arn"></a> [execution\_arn](#output\_execution\_arn) | The ARN prefix to be used in permission policies |
+| <a name="output_id"></a> [id](#output\_id) | The API identifier |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | Map of tags assigned to the resource |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
