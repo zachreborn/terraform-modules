@@ -87,7 +87,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -95,15 +97,24 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_networkmanager_global_network.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_global_network) | resource |
+| [aws_networkmanager_transit_gateway_registration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_transit_gateway_registration) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_description"></a> [description](#input\_description) | (Required) The description of the global network | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the device. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_transit_gateway_arns"></a> [transit\_gateway\_arns](#input\_transit\_gateway\_arns) | (Required) List of ARNs of the transit gateways to register with the global network | `list(string)` | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_global_network_arn"></a> [global\_network\_arn](#output\_global\_network\_arn) | ARN of the global network |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
