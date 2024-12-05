@@ -13,7 +13,7 @@ terraform {
 ###########################################################
 
 resource "aws_organizations_delegated_administrator" "this" {
-  for_each          = var.delegated_administrators
+  for_each          = var.delegated_admins
   account_id        = each.key
   service_principal = each.value
 }
