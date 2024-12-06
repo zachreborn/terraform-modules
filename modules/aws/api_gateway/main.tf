@@ -21,7 +21,7 @@ resource "aws_apigatewayv2_api" "api" {
   #Required
   name                       = var.name
   protocol_type              = var.protocol_type
-  route_selection_expression = "$request.body.action"
+  route_selection_expression = "$request.method $request.path"
 
   #Optional
   api_key_selection_expression = var.api_key_selection_expression
