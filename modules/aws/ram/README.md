@@ -106,7 +106,6 @@ No modules.
 | [aws_ram_principal_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_principal_association) | resource |
 | [aws_ram_resource_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_association) | resource |
 | [aws_ram_resource_share.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share) | resource |
-| [aws_ram_sharing_with_organization.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_sharing_with_organization) | resource |
 | [aws_organizations_organization.current_org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
 
 ## Inputs
@@ -114,7 +113,6 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_allow_external_principals"></a> [allow\_external\_principals](#input\_allow\_external\_principals) | Indicates whether principals outside your AWS organization can be associated with a resource share. | `bool` | `false` | no |
-| <a name="input_enable_organization_sharing"></a> [enable\_organization\_sharing](#input\_enable\_organization\_sharing) | Enable sharing with AWS Organizations. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the resource share. | `string` | n/a | yes |
 | <a name="input_permission_arns"></a> [permission\_arns](#input\_permission\_arns) | The ARNs of the permissions to associate with the resource share. | `list(string)` | `null` | no |
 | <a name="input_principal"></a> [principal](#input\_principal) | The principal to associate with the resource share. | `string` | `null` | no |
