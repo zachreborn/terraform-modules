@@ -21,6 +21,7 @@ data "aws_organizations_organization" "current_org" {}
 # Locals
 ###########################
 
+
 ###########################
 # Module Configuration
 ###########################
