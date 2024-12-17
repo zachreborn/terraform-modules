@@ -8,12 +8,6 @@ variable "allow_external_principals" {
   default     = false
 }
 
-variable "enable_organization_sharing" {
-  description = "Enable sharing with AWS Organizations."
-  type        = bool
-  default     = false
-}
-
 variable "name" {
   description = "The name of the resource share."
   type        = string
