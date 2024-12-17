@@ -120,7 +120,10 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the resource share. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the resource share. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
