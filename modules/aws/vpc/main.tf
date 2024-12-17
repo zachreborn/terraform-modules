@@ -194,17 +194,20 @@ resource "aws_subnet" "workspaces_subnets" {
 ###########################
 
 resource "aws_internet_gateway" "igw" {
+  count  = var.enable_internet_gateway ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
   vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_route_table" "public_route_table" {
+  count            = var.enable_internet_gateway ? 1 : 0
   propagating_vgws = var.public_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-public", var.name) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "public_default_route" {
+  count                  = var.enable_internet_gateway ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
   route_table_id         = aws_route_table.public_route_table.id
