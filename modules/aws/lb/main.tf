@@ -4,7 +4,7 @@ locals {
 }
 
 # Load Balancer
-resource "aws_lb" "this" {
+resource "aws_lb" "load_balancer" {
   name                             = var.name
   internal                         = var.internal
   load_balancer_type               = var.load_balancer_type
@@ -44,7 +44,7 @@ resource "aws_lb" "this" {
 }
 
 # Target Groups
-resource "aws_lb_target_group" "this" {
+resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
 
   name                          = lookup(each.value, "name", null)
@@ -90,10 +90,10 @@ resource "aws_lb_target_group" "this" {
 }
 
 # Listeners
-resource "aws_lb_listener" "this" {
+resource "aws_lb_listener" "listener" {
   for_each = var.listeners
 
-  load_balancer_arn = aws_lb.this.arn
+  load_balancer_arn = aws_lb.load_balancer.arn
   port              = each.value.port
   protocol          = each.value.protocol
   ssl_policy        = lookup(each.value, "ssl_policy", null)
@@ -130,10 +130,10 @@ resource "aws_lb_listener" "this" {
 }
 
 # Listener Rules
-resource "aws_lb_listener_rule" "this" {
+resource "aws_lb_listener_rule" "listener_rule" {
   for_each = var.listener_rules
 
-  listener_arn = aws_lb_listener.this[each.value.listener_key].arn
+  listener_arn = aws_lb_listener.listener[each.value.listener_key].arn
   priority     = lookup(each.value, "priority", null)
 
   dynamic "action" {
