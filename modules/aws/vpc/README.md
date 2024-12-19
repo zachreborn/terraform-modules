@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -41,7 +41,6 @@
   </p>
 </div>
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -59,11 +58,14 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
+
 This example sends uses an internet gateway for the public subnets and NAT gateways for the internal subnets. It utilizes the 10.11.0.0/16 subnet space with /24 subnets for each segmented subnet per availability zone.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -81,7 +83,9 @@ module "vpc" {
 ```
 
 ### Firewall Example
+
 This example sends all egress traffic out a EC2 instance acting as a firewall. It also changes the default VPC CIDR block and subnets.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -101,7 +105,9 @@ module "vpc" {
 ```
 
 ### Setting Subnet Example
+
 This example sends uses an internet gateway for the public subnets and NAT gateways for the internal subnets. It utilizes a unique 10.100.0.0/16 subnet space with /24 subnets for each segmented subnet per availability zone.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -125,7 +131,9 @@ module "vpc" {
 ```
 
 ### Disabling Unneeded Subnets
+
 This example disabled unused subnets and associated resources. In the example we leave only the public and private subnets enabled.
+
 ```hcl
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -139,6 +147,57 @@ module "vpc" {
     private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
     public_subnets_list     = ["10.11.200.0/24", "10.11.201.0/24", "10.11.202.0/24"]
     workspaces_subnets_list = []
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+### Disabling the Internet Gateway
+
+This example disables the internet gateway, making this VPC a private VPC. This is useful for VPCs which do not need to communicate with the internet, or do so via an egress inspection VPC, SDWAN, or other solution.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                    = "client_prod_vpc"
+    vpc_cidr                = "10.11.0.0/16"
+    azs                     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    db_subnets_list         = []
+    dmz_subnets_list        = []
+    mgmt_subnets_list       = []
+    private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
+    public_subnets_list     = []
+    workspaces_subnets_list = []
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+Alternatively, you can disable the internet gateway by setting the `enable_internet_gateway` variable to `false`. This is useful if you still want to have public subnets.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                    = "client_prod_vpc"
+    vpc_cidr                = "10.11.0.0/16"
+    azs                     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    db_subnets_list         = []
+    dmz_subnets_list        = []
+    mgmt_subnets_list       = []
+    private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
+    public_subnets_list     = ["10.11.200.0/24", "10.11.201.0/24", "10.11.202.0/24"]
+    workspaces_subnets_list = []
+    enable_internet_gateway = false
     tags = {
         terraform   = "true"
         created_by  = "Zachary Hill"
@@ -238,6 +297,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_firewall"></a> [enable\_firewall](#input\_enable\_firewall) | (Optional) A boolean flag to enable/disable the use of a firewall instance within the VPC. Defaults False. | `bool` | `false` | no |
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
+| <a name="input_enable_internet_gateway"></a> [enable\_internet\_gateway](#input\_enable\_internet\_gateway) | (Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False | `bool` | `false` | no |
 | <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. Defaults true. | `bool` | `false` | no |
@@ -298,15 +358,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -315,19 +375,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

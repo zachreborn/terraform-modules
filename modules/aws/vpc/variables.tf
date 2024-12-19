@@ -225,6 +225,12 @@ variable "enable_nat_gateway" {
   type        = bool
 }
 
+variable "enable_internet_gateway" {
+  description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True."
+  default     = true
+  type        = bool
+}
+
 variable "enable_s3_endpoint" {
   description = "(Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False"
   default     = false
