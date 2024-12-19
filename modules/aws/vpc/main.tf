@@ -197,6 +197,7 @@ resource "aws_subnet" "workspaces_subnets" {
 ###########################
 # Gateways
 ###########################
+
 resource "aws_internet_gateway" "igw" {
   count  = local.enable_igw ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
