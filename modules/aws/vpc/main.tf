@@ -14,7 +14,12 @@ terraform {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+###########################
+# Locals
+###########################
+
 locals {
+  enable_igw   = var.enable_nat_gateway ? ((var.public_subnets_list != [] || var.public_subnets_list != null) ? true : false) : false
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
@@ -192,22 +197,21 @@ resource "aws_subnet" "workspaces_subnets" {
 ###########################
 # Gateways
 ###########################
-
 resource "aws_internet_gateway" "igw" {
-  count  = var.enable_internet_gateway ? 1 : 0
+  count  = local.enable_igw ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
   vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_route_table" "public_route_table" {
-  count            = var.enable_internet_gateway ? 1 : 0
+  count            = var.public_subnets_list != [] ? 1 : 0
   propagating_vgws = var.public_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-public", var.name) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "public_default_route" {
-  count                  = var.enable_internet_gateway ? 1 : 0
+  count                  = local.enable_igw ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
   route_table_id         = aws_route_table.public_route_table.id
@@ -221,8 +225,8 @@ resource "aws_eip" "nateip" {
 resource "aws_nat_gateway" "natgw" {
   depends_on = [aws_internet_gateway.igw]
 
+  count         = var.enable_nat_gateway ? (local.enable_igw ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0) : 0
   allocation_id = element(aws_eip.nateip[*].id, (var.single_nat_gateway ? 0 : count.index))
-  count         = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
   subnet_id     = element(aws_subnet.public_subnets[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
