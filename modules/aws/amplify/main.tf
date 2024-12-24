@@ -46,10 +46,6 @@ resource "aws_amplify_app" "this" {
   repository                    = var.repository
   tags                          = var.tags
 
-
-  ###########################
-  # Amplify App Branch
-  ###########################
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
@@ -84,7 +80,7 @@ resource "aws_amplify_app" "this" {
 }
 
 ###########################
-# Amplify App Backend
+# Amplify App Branch
 ###########################
 resource "aws_amplify_branch" "this" {
   for_each                      = var.branches != null ? var.branches : {}

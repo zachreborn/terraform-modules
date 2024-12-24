@@ -9,6 +9,7 @@
 variable "access_token" {
   description = "Access token for the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "auto_branch_creation_config" {
@@ -25,21 +26,25 @@ variable "auto_branch_creation_config" {
     pull_request_environment_name = optional(string)
     stage                         = optional(string) # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
   }))
+  default = null
 }
 
 variable "auto_branch_creation_patterns" {
   description = "Patterns for auto branch creation."
   type        = list(string)
+  default     = null
 }
 
 variable "basic_auth_credentials" {
   description = "Basic auth credentials for the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "build_spec" {
   description = "Build spec for the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "cache_config_type" {
@@ -55,6 +60,7 @@ variable "cache_config_type" {
 variable "custom_headers" {
   description = "Custom headers in a map for the Amplify App."
   type        = map(string)
+  default     = null
 }
 
 variable "custom_rules" {
@@ -70,31 +76,37 @@ variable "custom_rules" {
 variable "description" {
   description = "Description of the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "enable_auto_branch_creation" {
   description = "Enable auto branch creation for the Amplify App."
   type        = bool
+  default     = false
 }
 
 variable "enable_basic_auth" {
   description = "Enable basic auth for the Amplify App."
   type        = bool
+  default     = false
 }
 
 variable "enable_branch_auto_build" {
   description = "Enable branch auto build for the Amplify App."
   type        = bool
+  default     = false
 }
 
 variable "enable_branch_auto_deletion" {
   description = "Enable branch auto deletion for the Amplify App."
   type        = bool
+  default     = false
 }
 
 variable "environment_variables" {
   description = "Environment variables in a map for the Amplify App."
   type        = map(string)
+  default     = null
 }
 
 variable "name" {
@@ -105,11 +117,13 @@ variable "name" {
 variable "iam_service_role_arn" {
   description = "IAM service role ARN for the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "oauth_token" {
   description = "OAuth token for the Amplify App."
   type        = string
+  default     = null
 }
 
 variable "platform" {
@@ -123,8 +137,9 @@ variable "platform" {
 }
 
 variable "repository" {
-  description = "Repository for the Amplify App."
+  description = "Repository for the Amplify App. This could be hosted in AWS Code Commit, Bitbucket, GitHub, GitLab, etc."
   type        = string
+  default     = null
 }
 
 ###########################
