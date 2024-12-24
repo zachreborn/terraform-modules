@@ -67,13 +67,13 @@ resource "aws_amplify_app" "this" {
   }
 
   dynamic "cache_config" {
-    for_each = var.cache_config != null ? var.cache_config : {}
+    for_each = var.cache_config_type != null ? 1 : 0
     content {
-      type = cache_config.value.type
+      type = var.cache_config_type
     }
   }
   dynamic "custom_rule" {
-    for_each = var.custom_rule != null ? var.custom_rule : {}
+    for_each = var.custom_rules != null ? var.custom_rules : {}
     content {
       condition = custom_rule.value.condition
       source    = custom_rule.value.source
@@ -86,19 +86,11 @@ resource "aws_amplify_app" "this" {
 ###########################
 # Amplify App Backend
 ###########################
-resource "aws_amplify_backend_environment" "this" {
-  app_id               = var.app_id
-  environment_name     = var.environment_name
-  deployment_artifacts = var.deployment_artifacts
-  stack_name           = var.stack_name
-}
-
 resource "aws_amplify_branch" "this" {
-  for_each                      = var.branch != null ? var.branch : {}
+  for_each                      = var.branches != null ? var.branches : {}
   app_id                        = aws_amplify_app.this.id
+  basic_auth_credentials        = branch.value.basic_auth_credentials
   branch_name                   = branch.value.branch_name
-  backend_environment_arn       = aws_amplify_backend_environment.this.arn
-  basic_auth_credentials        = var.basic_auth_credentials
   description                   = branch.value.description
   display_name                  = branch.value.display_name
   enable_auto_build             = branch.value.enable_auto_build
@@ -110,7 +102,7 @@ resource "aws_amplify_branch" "this" {
   framework                     = branch.value.framework
   pull_request_environment_name = branch.value.pull_request_environment_name
   stage                         = branch.value.stage
-  tags                          = branch.value.tags
+  tags                          = var.tags
   ttl                           = branch.value.ttl
 }
 
@@ -118,20 +110,21 @@ resource "aws_amplify_branch" "this" {
 # Amplify App Domain Association
 ###########################
 resource "aws_amplify_domain_association" "this" {
+  for_each               = var.domains != null ? var.domains : {}
   app_id                 = aws_amplify_app.this.id
-  domain_name            = var.domain_name
-  enable_auto_sub_domain = var.enable_auto_sub_domain
-  wait_for_verification  = var.wait_for_verification
+  domain_name            = domain.value.domain_name
+  enable_auto_sub_domain = domain.value.enable_auto_sub_domain
+  wait_for_verification  = domain.value.wait_for_verification
   dynamic "certificate_settings" {
-    for_each = var.certificate_settings != null ? var.certificate_settings : {}
+    for_each = domain.value.enable_certificate ? 1 : 0
     content {
-      custom_certificate_arn = certificate_settings.value.custom_certificate_arn
-      type                   = certificate_settings.value.type
+      custom_certificate_arn = domain.value.custom_certificate_arn
+      type                   = domain.value.certificate_type
     }
   }
 
   dynamic "sub_domain" {
-    for_each = var.sub_domains != null ? var.sub_domains : {}
+    for_each = domain.value.sub_domains != null ? domain.value.sub_domains : {}
     content {
       branch_name = sub_domain.value.branch_name
       prefix      = sub_domain.value.prefix
