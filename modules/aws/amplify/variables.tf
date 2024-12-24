@@ -16,7 +16,7 @@ variable "auto_branch_creation_config" {
   description = "Auto branch creation config for the Amplify App."
   type = map(object({
     basic_auth_credentials        = optional(string)
-    build_spec                    = optiona(string)
+    build_spec                    = optional(string)
     enable_auto_build             = optional(bool)
     enable_basic_auth             = optional(bool)
     enable_performance_mode       = optional(bool)
