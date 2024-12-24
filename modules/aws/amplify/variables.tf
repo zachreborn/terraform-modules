@@ -71,6 +71,7 @@ variable "custom_rules" {
     status    = optional(string) # Status code for URL redirect or rewrite. Valid values are 200, 301, 302, 404, 404-200.
     target    = string           # Target pattern for URL redirect or rewrite.
   }))
+  default = null
 }
 
 variable "description" {
@@ -194,4 +195,9 @@ variable "domains" {
 variable "tags" {
   description = "Tags for the Amplify App."
   type        = map(string)
+  default = {
+    created_by  = "terraform" # Your name goes here
+    terraform   = "true"
+    environment = "prod"
+  }
 }
