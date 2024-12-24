@@ -184,6 +184,7 @@ variable "domains" {
     })))                                         # The sub domains for the domain association.
     wait_for_verification = optional(bool, true) # Wait for verification for the domain association.
   }))
+  default = null
 }
 
 ###########################
