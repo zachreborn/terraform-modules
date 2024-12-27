@@ -106,7 +106,8 @@ resource "aws_amplify_branch" "this" {
 # Amplify App Domain Association
 ###########################
 resource "aws_amplify_domain_association" "this" {
-  for_each               = var.branches.domain_name != null ? var.branches : {}
+  # for_each               = var.branches.domain_name != null ? var.branches : {}
+  for_each               = var.branches
   app_id                 = aws_amplify_app.this.id
   domain_name            = each.value.domain_name
   enable_auto_sub_domain = each.value.enable_auto_sub_domain
