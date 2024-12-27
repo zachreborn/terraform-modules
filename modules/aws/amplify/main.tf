@@ -124,7 +124,7 @@ resource "aws_amplify_domain_association" "this" {
     for_each = each.value.sub_domains != null ? each.value.sub_domains : []
     content {
       branch_name = each.value.branch_name
-      prefix      = each.value.prefix
+      prefix      = each.key
     }
   }
 }
