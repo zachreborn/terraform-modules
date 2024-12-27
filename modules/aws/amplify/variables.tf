@@ -168,12 +168,9 @@ variable "branches" {
     framework                     = optional(string)      # The framework for the branch.
     pull_request_environment_name = optional(string)      # The name of the pull request environment.
     stage                         = optional(string)      # The stage for the branch. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
-    sub_domains = optional(map(object({
-      branch_name = string                       # The branch name for the sub domain.
-      prefix      = string                       # The prefix for the sub domain.
-    })))                                         # The sub domains for the domain association.
-    ttl                   = optional(number)     # The TTL for the branch.
-    wait_for_verification = optional(bool, true) # Wait for verification for the domain association.
+    sub_domains                   = optional(set(string))
+    ttl                           = optional(number)     # The TTL for the branch.
+    wait_for_verification         = optional(bool, true) # Wait for verification for the domain association.
   }))
 }
 
