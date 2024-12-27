@@ -58,8 +58,8 @@ variable "cache_config_type" {
 }
 
 variable "custom_headers" {
-  description = "Custom headers in a map for the Amplify App."
-  type        = map(string)
+  description = "Custom headers string for the Amplify App."
+  type        = string
   default     = null
 }
 

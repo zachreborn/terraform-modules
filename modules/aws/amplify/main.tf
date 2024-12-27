@@ -63,7 +63,7 @@ resource "aws_amplify_app" "this" {
   }
 
   dynamic "cache_config" {
-    for_each = var.cache_config_type != null ? 1 : 0
+    for_each = var.cache_config_type != null ? [true] : []
     content {
       type = var.cache_config_type
     }
