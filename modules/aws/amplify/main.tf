@@ -49,16 +49,16 @@ resource "aws_amplify_app" "this" {
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
-      basic_auth_credentials        = auto_branch_creation_config.value.basic_auth_credentials
-      build_spec                    = auto_branch_creation_config.value.build_spec
-      enable_auto_build             = auto_branch_creation_config.value.enable_auto_build
-      enable_basic_auth             = auto_branch_creation_config.value.enable_basic_auth
-      enable_performance_mode       = auto_branch_creation_config.value.enable_performance_mode
-      enable_pull_request_preview   = auto_branch_creation_config.value.enable_pull_request_preview
-      environment_variables         = auto_branch_creation_config.value.environment_variables
-      framework                     = auto_branch_creation_config.value.framework
-      pull_request_environment_name = auto_branch_creation_config.value.pull_request_environment_name
-      stage                         = auto_branch_creation_config.value.stage
+      basic_auth_credentials        = each.value.basic_auth_credentials
+      build_spec                    = each.value.build_spec
+      enable_auto_build             = each.value.enable_auto_build
+      enable_basic_auth             = each.value.enable_basic_auth
+      enable_performance_mode       = each.value.enable_performance_mode
+      enable_pull_request_preview   = each.value.enable_pull_request_preview
+      environment_variables         = each.value.environment_variables
+      framework                     = each.value.framework
+      pull_request_environment_name = each.value.pull_request_environment_name
+      stage                         = each.value.stage
     }
   }
 
@@ -71,10 +71,10 @@ resource "aws_amplify_app" "this" {
   dynamic "custom_rule" {
     for_each = var.custom_rules != null ? var.custom_rules : {}
     content {
-      condition = custom_rule.value.condition
-      source    = custom_rule.value.source
-      status    = custom_rule.value.status
-      target    = custom_rule.value.target
+      condition = each.value.condition
+      source    = each.value.source
+      status    = each.value.status
+      target    = each.value.target
     }
   }
 }
@@ -85,21 +85,21 @@ resource "aws_amplify_app" "this" {
 resource "aws_amplify_branch" "this" {
   for_each                      = var.branches != null ? var.branches : {}
   app_id                        = aws_amplify_app.this.id
-  basic_auth_credentials        = branch.value.basic_auth_credentials
-  branch_name                   = branch.value.branch_name
-  description                   = branch.value.description
-  display_name                  = branch.value.display_name
-  enable_auto_build             = branch.value.enable_auto_build
-  enable_basic_auth             = branch.value.enable_basic_auth
-  enable_notification           = branch.value.enable_notification
-  enable_performance_mode       = branch.value.enable_performance_mode
-  enable_pull_request_preview   = branch.value.enable_pull_request_preview
-  environment_variables         = branch.value.environment_variables
-  framework                     = branch.value.framework
-  pull_request_environment_name = branch.value.pull_request_environment_name
-  stage                         = branch.value.stage
+  basic_auth_credentials        = each.value.basic_auth_credentials
+  branch_name                   = each.value.branch_name
+  description                   = each.value.description
+  display_name                  = each.value.display_name
+  enable_auto_build             = each.value.enable_auto_build
+  enable_basic_auth             = each.value.enable_basic_auth
+  enable_notification           = each.value.enable_notification
+  enable_performance_mode       = each.value.enable_performance_mode
+  enable_pull_request_preview   = each.value.enable_pull_request_preview
+  environment_variables         = each.value.environment_variables
+  framework                     = each.value.framework
+  pull_request_environment_name = each.value.pull_request_environment_name
+  stage                         = each.value.stage
   tags                          = var.tags
-  ttl                           = branch.value.ttl
+  ttl                           = each.value.ttl
 }
 
 ###########################
@@ -108,22 +108,22 @@ resource "aws_amplify_branch" "this" {
 resource "aws_amplify_domain_association" "this" {
   for_each               = var.domains != null ? var.domains : {}
   app_id                 = aws_amplify_app.this.id
-  domain_name            = domain.value.domain_name
-  enable_auto_sub_domain = domain.value.enable_auto_sub_domain
-  wait_for_verification  = domain.value.wait_for_verification
+  domain_name            = each.value.domain_name
+  enable_auto_sub_domain = each.value.enable_auto_sub_domain
+  wait_for_verification  = each.value.wait_for_verification
   dynamic "certificate_settings" {
-    for_each = domain.value.enable_certificate ? 1 : 0
+    for_each = each.value.enable_certificate ? 1 : 0
     content {
-      custom_certificate_arn = domain.value.custom_certificate_arn
-      type                   = domain.value.certificate_type
+      custom_certificate_arn = each.value.custom_certificate_arn
+      type                   = each.value.certificate_type
     }
   }
 
   dynamic "sub_domain" {
-    for_each = domain.value.sub_domains != null ? domain.value.sub_domains : {}
+    for_each = each.value.sub_domains != null ? each.value.sub_domains : {}
     content {
-      branch_name = sub_domain.value.branch_name
-      prefix      = sub_domain.value.prefix
+      branch_name = each.value.branch_name
+      prefix      = each.value.prefix
     }
   }
 }
