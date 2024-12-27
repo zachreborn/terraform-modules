@@ -152,10 +152,15 @@ variable "branches" {
   type = map(object({
     basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch.
     branch_name                   = string                # The name of the branch.
+    certificate_type              = optional(string)      # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
+    custom_certificate_arn        = optional(string)      # The ARN for the custom certificate.
     description                   = optional(string)      # The description of the branch.
     display_name                  = optional(string)      # The display name of the branch. This gets used as the default domain prefix.
+    domain_name                   = string                # The domain name for the domain association.
     enable_auto_build             = optional(bool, true)  # Enable auto build for the branch.
+    enable_auto_sub_domain        = optional(bool, false) # Enable auto sub domain for the domain association.
     enable_basic_auth             = optional(bool)        # Enable basic auth for the branch.
+    enable_certificate            = optional(bool, true)  # Enable certificate for the domain association.
     enable_notification           = optional(bool)        # Enable notification for the branch.
     enable_performance_mode       = optional(bool)        # Enable performance mode for the branch.
     enable_pull_request_preview   = optional(bool)        # Enable pull request preview for the branch.
@@ -163,29 +168,13 @@ variable "branches" {
     framework                     = optional(string)      # The framework for the branch.
     pull_request_environment_name = optional(string)      # The name of the pull request environment.
     stage                         = optional(string)      # The stage for the branch. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
-    ttl                           = optional(number)      # The TTL for the branch.
-  }))
-}
-
-###########################
-# Amplify Domain Association
-###########################
-
-variable "domains" {
-  description = "Domains for the Amplify App."
-  type = map(object({
-    enable_certificate     = optional(bool, true)  # Enable certificate for the domain association.
-    certificate_type       = optional(string)      # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
-    custom_certificate_arn = optional(string)      # The ARN for the custom certificate.
-    domain_name            = string                # The domain name for the domain association.
-    enable_auto_sub_domain = optional(bool, false) # Enable auto sub domain for the domain association.
     sub_domains = optional(map(object({
       branch_name = string                       # The branch name for the sub domain.
       prefix      = string                       # The prefix for the sub domain.
     })))                                         # The sub domains for the domain association.
+    ttl                   = optional(number)     # The TTL for the branch.
     wait_for_verification = optional(bool, true) # Wait for verification for the domain association.
   }))
-  default = null
 }
 
 ###########################
