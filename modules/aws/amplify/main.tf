@@ -112,7 +112,7 @@ resource "aws_amplify_domain_association" "this" {
   enable_auto_sub_domain = each.value.enable_auto_sub_domain
   wait_for_verification  = each.value.wait_for_verification
   dynamic "certificate_settings" {
-    for_each = each.value.enable_certificate ? 1 : 0
+    for_each = each.value.enable_certificate ? [true] : []
     content {
       custom_certificate_arn = each.value.custom_certificate_arn
       type                   = each.value.certificate_type
