@@ -143,7 +143,6 @@ variable "target_group_preserve_client_ip" {
   default     = null
 }
 
-# The target_groups variable should now only contain the nested objects
 variable "target_groups" {
   description = "Map of target group configurations"
   type = map(object({
