@@ -97,7 +97,7 @@ resource "aws_lb_listener" "listener" {
   port              = each.value.port
   protocol          = each.value.protocol
   ssl_policy        = each.value.ssl_policy
-  certificate_arn   = each.value
+  certificate_arn   = each.value.certificate_arn
 
   dynamic "default_action" {
     for_each = [each.value.default_action]
