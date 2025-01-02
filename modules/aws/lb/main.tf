@@ -103,7 +103,7 @@ resource "aws_lb_listener" "listener" {
     for_each = [each.value.default_action]
     content {
       type             = default_action.value.type
-      target_group_arn = default_action.value.target_group_arn
+      target_group_arn = aws_lb_target_group.target_group.arn
 
       dynamic "fixed_response" {
         for_each = default_action.value.fixed_response != null ? [default_action.value.fixed_response] : []
@@ -140,7 +140,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
     for_each = [each.value.action]
     content {
       type             = action.value.type
-      target_group_arn = action.value.target_group_arn
+      target_group_arn = aws_lb_target_group.target_group.arn
 
       dynamic "fixed_response" {
         for_each = action.value.fixed_response != null ? [action.value.fixed_response] : []
