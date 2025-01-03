@@ -224,8 +224,7 @@ variable "listeners" {
     }))
 
     mutual_authentication = optional(object({
-      mode            = string
-      trust_store_uri = optional(string)
+      mode = string # Only valid field, can be "verify" or "strict"
     }))
 
     default_action = object({

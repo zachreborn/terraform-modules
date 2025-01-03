@@ -118,6 +118,15 @@ resource "aws_lb_listener" "listener" {
   # Application Load Balancer specific settings
   alpn_policy = local.is_application ? each.value.alpn_policy : null
 
+  dynamic "mutual_authentication" {
+    for_each = (local.is_network && each.value.mutual_authentication != null) ? [each.value.mutual_authentication] : []
+    content {
+      mode = mutual_authentication.value.mode
+    }
+  }
+
+
+
   dynamic "default_action" {
     for_each = [each.value.default_action]
     content {
@@ -167,15 +176,6 @@ resource "aws_lb_listener" "listener" {
           user_pool_arn       = authenticate_cognito.value.user_pool_arn
           user_pool_client_id = authenticate_cognito.value.user_pool_client_id
           user_pool_domain    = authenticate_cognito.value.user_pool_domain
-        }
-      }
-
-      # Network Load Balancer specific settings
-      dynamic "mutual_authentication" {
-        for_each = each.value.mutual_authentication != null && local.is_network ? [each.value.mutual_authentication] : []
-        content {
-          mode            = mutual_authentication.value.mode
-          trust_store_uri = mutual_authentication.value.trust_store_uri
         }
       }
     }
