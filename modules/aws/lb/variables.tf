@@ -79,6 +79,30 @@ variable "access_logs" {
   default = null
 }
 
+variable "idle_timeout" {
+  description = "The time in seconds that the connection is allowed to be idle"
+  type        = number
+  default     = 60
+}
+
+variable "enable_http2" {
+  description = "Indicates whether HTTP/2 is enabled in application load balancers"
+  type        = bool
+  default     = true
+}
+
+variable "enable_waf_fail_open" {
+  description = "Indicates whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF"
+  type        = bool
+  default     = false
+}
+
+variable "drop_invalid_header_fields" {
+  description = "Indicates whether invalid header fields are dropped in application load balancers"
+  type        = bool
+  default     = false
+}
+
 # Target Group Variables
 variable "target_group_name" {
   description = "Name of the target group"
@@ -146,16 +170,21 @@ variable "target_group_preserve_client_ip" {
 variable "target_groups" {
   description = "Map of target group configurations"
   type = map(object({
+    protocol_version                   = optional(string)
+    connection_termination             = optional(bool)
+    lambda_multi_value_headers_enabled = optional(bool)
     health_check = optional(object({
-      enabled             = optional(bool, true)
-      healthy_threshold   = optional(number, 3)
-      interval            = optional(number, 30)
-      matcher             = optional(string)
-      path                = optional(string)
-      port                = optional(string, "traffic-port")
-      protocol            = optional(string, "HTTP")
-      timeout             = optional(number, 5)
-      unhealthy_threshold = optional(number, 3)
+      enabled              = optional(bool, true)
+      healthy_threshold    = optional(number, 3)
+      interval             = optional(number, 30)
+      matcher              = optional(string)
+      path                 = optional(string)
+      port                 = optional(string, "traffic-port")
+      protocol             = optional(string, "HTTP")
+      timeout              = optional(number, 5)
+      unhealthy_threshold  = optional(number, 3)
+      success_codes        = optional(string)
+      grace_period_seconds = optional(number)
     }))
 
     stickiness = optional(object({
@@ -177,6 +206,27 @@ variable "listeners" {
     protocol        = string
     ssl_policy      = optional(string)
     certificate_arn = optional(string)
+    alpn_policy     = optional(string)
+
+    authenticate_oidc = optional(object({
+      authorization_endpoint = string
+      client_id              = string
+      client_secret          = string
+      issuer                 = string
+      token_endpoint         = string
+      user_info_endpoint     = string
+    }))
+
+    authenticate_cognito = optional(object({
+      user_pool_arn       = string
+      user_pool_client_id = string
+      user_pool_domain    = string
+    }))
+
+    mutual_authentication = optional(object({
+      mode            = string
+      trust_store_uri = optional(string)
+    }))
 
     default_action = object({
       type             = string
