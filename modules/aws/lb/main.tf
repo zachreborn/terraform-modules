@@ -5,16 +5,25 @@ locals {
 
 # Load Balancer
 resource "aws_lb" "load_balancer" {
-  name                             = var.name
-  internal                         = var.internal
-  load_balancer_type               = var.load_balancer_type
-  security_groups                  = local.is_application ? var.security_groups : null
-  subnets                          = var.subnets
-  enable_deletion_protection       = var.enable_deletion_protection
+  # Common settings
+  name                       = var.name
+  internal                   = var.internal
+  load_balancer_type         = var.load_balancer_type
+  subnets                    = var.subnets
+  enable_deletion_protection = var.enable_deletion_protection
+  customer_owned_ipv4_pool   = var.customer_owned_ipv4_pool
+  ip_address_type            = var.ip_address_type
+
+  # Application Load Balancer specific settings
+  security_groups            = local.is_application ? var.security_groups : null
+  desync_mitigation_mode     = local.is_application ? var.desync_mitigation_mode : null
+  idle_timeout               = local.is_application ? var.idle_timeout : null
+  drop_invalid_header_fields = local.is_application ? var.drop_invalid_header_fields : null
+  enable_http2               = local.is_application ? var.enable_http2 : null
+  enable_waf_fail_open       = local.is_application ? var.enable_waf_fail_open : null
+
+  # Network Load Balancer specific settings
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null
-  customer_owned_ipv4_pool         = var.customer_owned_ipv4_pool
-  ip_address_type                  = var.ip_address_type
-  desync_mitigation_mode           = local.is_application ? var.desync_mitigation_mode : null
 
   dynamic "access_logs" {
     for_each = var.access_logs != null ? [var.access_logs] : []
@@ -43,21 +52,25 @@ resource "aws_lb" "load_balancer" {
   )
 }
 
-# Target Groups
 resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
 
-  name                          = var.target_group_name
-  name_prefix                   = var.target_group_name_prefix
-  port                          = var.target_group_port
-  protocol                      = var.target_group_protocol
-  vpc_id                        = var.target_group_vpc_id
-  target_type                   = var.target_group_target_type
-  deregistration_delay          = var.target_group_deregistration_delay
-  slow_start                    = var.target_group_slow_start
-  proxy_protocol_v2             = var.target_group_proxy_protocol_v2
-  load_balancing_algorithm_type = var.target_group_load_balancing_algorithm_type
-  preserve_client_ip            = var.target_group_preserve_client_ip
+  # Common settings
+  name                 = var.target_group_name
+  name_prefix          = var.target_group_name_prefix
+  port                 = var.target_group_port
+  protocol             = var.target_group_protocol
+  vpc_id               = var.target_group_vpc_id
+  target_type          = var.target_group_target_type
+  deregistration_delay = var.target_group_deregistration_delay
+
+  # Application Load Balancer specific settings
+  slow_start                    = local.is_application ? var.target_group_slow_start : null
+  load_balancing_algorithm_type = local.is_application ? var.target_group_load_balancing_algorithm_type : null
+
+  # Network Load Balancer specific settings
+  proxy_protocol_v2  = local.is_network ? var.target_group_proxy_protocol_v2 : null
+  preserve_client_ip = local.is_network ? var.target_group_preserve_client_ip : null
 
   dynamic "health_check" {
     for_each = each.value.health_check != null ? [each.value.health_check] : []
@@ -93,18 +106,26 @@ resource "aws_lb_target_group" "target_group" {
 resource "aws_lb_listener" "listener" {
   for_each = var.listeners
 
+  # Common settings
   load_balancer_arn = aws_lb.load_balancer.arn
   port              = each.value.port
   protocol          = each.value.protocol
-  ssl_policy        = each.value.ssl_policy
-  certificate_arn   = each.value.certificate_arn
+
+  # SSL/TLS settings
+  ssl_policy      = each.value.ssl_policy
+  certificate_arn = each.value.certificate_arn
+
+  # Application Load Balancer specific settings
+  alpn_policy = local.is_application ? each.value.alpn_policy : null
 
   dynamic "default_action" {
     for_each = [each.value.default_action]
     content {
+      # Common settings
       type             = default_action.value.type
       target_group_arn = aws_lb_target_group.target_group["main"].arn
 
+      # Application Load Balancer specific fixed response action
       dynamic "fixed_response" {
         for_each = default_action.value.fixed_response != null ? [default_action.value.fixed_response] : []
         content {
@@ -114,6 +135,7 @@ resource "aws_lb_listener" "listener" {
         }
       }
 
+      # Application Load Balancer specific redirect action
       dynamic "redirect" {
         for_each = default_action.value.redirect != null ? [default_action.value.redirect] : []
         content {
@@ -125,23 +147,57 @@ resource "aws_lb_listener" "listener" {
           status_code = redirect.value.status_code
         }
       }
+
+      # Application Load Balancer authentication settings
+      dynamic "authenticate_oidc" {
+        for_each = each.value.authenticate_oidc != null && local.is_application ? [each.value.authenticate_oidc] : []
+        content {
+          authorization_endpoint = authenticate_oidc.value.authorization_endpoint
+          client_id              = authenticate_oidc.value.client_id
+          client_secret          = authenticate_oidc.value.client_secret
+          issuer                 = authenticate_oidc.value.issuer
+          token_endpoint         = authenticate_oidc.value.token_endpoint
+          user_info_endpoint     = authenticate_oidc.value.user_info_endpoint
+        }
+      }
+
+      dynamic "authenticate_cognito" {
+        for_each = each.value.authenticate_cognito != null && local.is_application ? [each.value.authenticate_cognito] : []
+        content {
+          user_pool_arn       = authenticate_cognito.value.user_pool_arn
+          user_pool_client_id = authenticate_cognito.value.user_pool_client_id
+          user_pool_domain    = authenticate_cognito.value.user_pool_domain
+        }
+      }
+
+      # Network Load Balancer specific settings
+      dynamic "mutual_authentication" {
+        for_each = each.value.mutual_authentication != null && local.is_network ? [each.value.mutual_authentication] : []
+        content {
+          mode            = mutual_authentication.value.mode
+          trust_store_uri = mutual_authentication.value.trust_store_uri
+        }
+      }
     }
   }
 }
 
-# Listener Rules
-resource "aws_lb_listener_rule" "listener_rule" {
-  for_each = var.listener_rules
 
+# Listener Rules (Application Load Balancer only)
+resource "aws_lb_listener_rule" "listener_rule" {
+  # Common settings
+  for_each     = var.listener_rules
   listener_arn = aws_lb_listener.listener[each.value.listener_key].arn
   priority     = each.value.priority
 
+  # Application Load Balancer action settings
   dynamic "action" {
     for_each = [each.value.action]
     content {
       type             = action.value.type
       target_group_arn = aws_lb_target_group.target_group["main"].arn
 
+      # ALB fixed response action
       dynamic "fixed_response" {
         for_each = action.value.fixed_response != null ? [action.value.fixed_response] : []
         content {
@@ -151,6 +207,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
         }
       }
 
+      # ALB redirect action
       dynamic "redirect" {
         for_each = action.value.redirect != null ? [action.value.redirect] : []
         content {
@@ -165,9 +222,11 @@ resource "aws_lb_listener_rule" "listener_rule" {
     }
   }
 
+  # Application Load Balancer condition settings
   dynamic "condition" {
     for_each = each.value.conditions
     content {
+      # ALB host header condition
       dynamic "host_header" {
         for_each = condition.value.host_header != null ? [condition.value.host_header] : []
         content {
@@ -175,6 +234,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
         }
       }
 
+      # ALB http header condition
       dynamic "http_header" {
         for_each = condition.value.http_header != null ? [condition.value.http_header] : []
         content {
@@ -183,6 +243,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
         }
       }
 
+      # ALB path pattern condition
       dynamic "path_pattern" {
         for_each = condition.value.path_pattern != null ? [condition.value.path_pattern] : []
         content {
@@ -190,6 +251,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
         }
       }
 
+      # ALB query string condition
       dynamic "query_string" {
         for_each = condition.value.query_string != null ? [condition.value.query_string] : []
         content {
@@ -198,6 +260,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
         }
       }
 
+      # Common source IP condition (works for both ALB and NLB)
       dynamic "source_ip" {
         for_each = condition.value.source_ip != null ? [condition.value.source_ip] : []
         content {
