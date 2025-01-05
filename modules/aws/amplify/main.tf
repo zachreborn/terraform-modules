@@ -49,16 +49,16 @@ resource "aws_amplify_app" "this" {
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
-      basic_auth_credentials        = each.value.basic_auth_credentials
-      build_spec                    = each.value.build_spec
-      enable_auto_build             = each.value.enable_auto_build
-      enable_basic_auth             = each.value.enable_basic_auth
-      enable_performance_mode       = each.value.enable_performance_mode
-      enable_pull_request_preview   = each.value.enable_pull_request_preview
-      environment_variables         = each.value.environment_variables
-      framework                     = each.value.framework
-      pull_request_environment_name = each.value.pull_request_environment_name
-      stage                         = each.value.stage
+      basic_auth_credentials        = auto_branch_creation_config.value.basic_auth_credentials
+      build_spec                    = auto_branch_creation_config.value.build_spec
+      enable_auto_build             = auto_branch_creation_config.value.enable_auto_build
+      enable_basic_auth             = auto_branch_creation_config.value.enable_basic_auth
+      enable_performance_mode       = auto_branch_creation_config.value.enable_performance_mode
+      enable_pull_request_preview   = auto_branch_creation_config.value.enable_pull_request_preview
+      environment_variables         = auto_branch_creation_config.value.environment_variables
+      framework                     = auto_branch_creation_config.value.framework
+      pull_request_environment_name = auto_branch_creation_config.value.pull_request_environment_name
+      stage                         = auto_branch_creation_config.value.stage
     }
   }
 
@@ -71,10 +71,10 @@ resource "aws_amplify_app" "this" {
   dynamic "custom_rule" {
     for_each = var.custom_rules != null ? var.custom_rules : {}
     content {
-      condition = each.value.condition
-      source    = each.value.source
-      status    = each.value.status
-      target    = each.value.target
+      condition = custom_rule.value.condition
+      source    = custom_rule.value.source
+      status    = custom_rule.value.status
+      target    = custom_rule.value.target
     }
   }
 }
