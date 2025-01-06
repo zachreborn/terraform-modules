@@ -71,12 +71,12 @@ variable "desync_mitigation_mode" {
 
 variable "access_logs" {
   description = "Access logs configuration for the LB"
-  type = set(object({
+  type = map(object({
     bucket  = string
     prefix  = string
     enabled = bool
   }))
-  default = []
+  default = null
 }
 
 variable "idle_timeout" {
