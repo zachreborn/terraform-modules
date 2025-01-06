@@ -26,7 +26,7 @@ resource "aws_lb" "load_balancer" {
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null
 
   dynamic "access_logs" {
-    for_each = var.access_logs != null ? var.access_logs : {}
+    for_each = var.access_logs
     content {
       bucket  = access_logs.value.bucket
       prefix  = access_logs.value.prefix
@@ -56,21 +56,21 @@ resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
 
   # Common settings
-  name                 = var.target_group_name
-  name_prefix          = var.target_group_name_prefix
-  port                 = var.target_group_port
-  protocol             = var.target_group_protocol
-  vpc_id               = var.target_group_vpc_id
-  target_type          = var.target_group_target_type
-  deregistration_delay = var.target_group_deregistration_delay
+  name                 = each.value.name
+  name_prefix          = each.value.name_prefix
+  port                 = each.value.port
+  protocol             = each.value.protocol
+  vpc_id               = each.value.vpc_id
+  target_type          = each.value.target_type
+  deregistration_delay = each.value.deregistration_delay
 
   # Application Load Balancer specific settings
-  slow_start                    = local.is_application ? var.target_group_slow_start : null
-  load_balancing_algorithm_type = local.is_application ? var.target_group_load_balancing_algorithm_type : null
+  slow_start                    = local.is_application ? each.value.slow_start : null
+  load_balancing_algorithm_type = local.is_application ? each.value.load_balancing_algorithm_type : null
 
   # Network Load Balancer specific settings
-  proxy_protocol_v2  = local.is_network ? var.target_group_proxy_protocol_v2 : null
-  preserve_client_ip = local.is_network ? var.target_group_preserve_client_ip : null
+  proxy_protocol_v2  = local.is_network ? each.value.target_group_proxy_protocol_v2 : null
+  preserve_client_ip = local.is_network ? each.value.target_group_preserve_client_ip : null
 
   dynamic "health_check" {
     for_each = each.value.health_check != null ? { "key" = each.value.health_check } : {}
