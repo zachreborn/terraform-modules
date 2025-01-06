@@ -131,41 +131,41 @@ variable "target_group_name_prefix" {
 #   type        = string
 # }
 
-variable "target_group_target_type" {
-  description = "Type of target that you must specify when registering targets with this target group"
-  type        = string
-  default     = "instance"
-}
+# variable "target_group_target_type" {
+#   description = "Type of target that you must specify when registering targets with this target group"
+#   type        = string
+#   default     = "instance"
+# }
 
-variable "target_group_deregistration_delay" {
-  description = "Amount of time to wait for in-flight requests to complete before deregistering a target"
-  type        = number
-  default     = 300
-}
+# variable "target_group_deregistration_delay" {
+#   description = "Amount of time to wait for in-flight requests to complete before deregistering a target"
+#   type        = number
+#   default     = 300
+# }
 
-variable "target_group_slow_start" {
-  description = "Amount of time for targets to warm up before the load balancer sends them a full share of requests"
-  type        = number
-  default     = 0
-}
+# variable "target_group_slow_start" {
+#   description = "Amount of time for targets to warm up before the load balancer sends them a full share of requests"
+#   type        = number
+#   default     = 0
+# }
 
-variable "target_group_proxy_protocol_v2" {
-  description = "Whether to enable support for proxy protocol v2"
-  type        = bool
-  default     = false
-}
+# variable "target_group_proxy_protocol_v2" {
+#   description = "Whether to enable support for proxy protocol v2"
+#   type        = bool
+#   default     = false
+# }
 
-variable "target_group_load_balancing_algorithm_type" {
-  description = "Determines how the load balancer selects targets when routing requests"
-  type        = string
-  default     = null
-}
+# variable "target_group_load_balancing_algorithm_type" {
+#   description = "Determines how the load balancer selects targets when routing requests"
+#   type        = string
+#   default     = null
+# }
 
-variable "target_group_preserve_client_ip" {
-  description = "Whether client IP preservation is enabled"
-  type        = bool
-  default     = null
-}
+# variable "target_group_preserve_client_ip" {
+#   description = "Whether client IP preservation is enabled"
+#   type        = bool
+#   default     = null
+# }
 
 variable "target_groups" {
   description = "Map of target group configurations"
