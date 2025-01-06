@@ -116,20 +116,20 @@ variable "target_group_name_prefix" {
   default     = null
 }
 
-variable "target_group_port" {
-  description = "Port on which targets receive traffic"
-  type        = number
-}
+# variable "target_group_port" {
+#   description = "Port on which targets receive traffic"
+#   type        = number
+# }
 
-variable "target_group_protocol" {
-  description = "Protocol to use for routing traffic to the targets"
-  type        = string
-}
+# variable "target_group_protocol" {
+#   description = "Protocol to use for routing traffic to the targets"
+#   type        = string
+# }
 
-variable "target_group_vpc_id" {
-  description = "Identifier of the VPC in which to create the target group"
-  type        = string
-}
+# variable "target_group_vpc_id" {
+#   description = "Identifier of the VPC in which to create the target group"
+#   type        = string
+# }
 
 variable "target_group_target_type" {
   description = "Type of target that you must specify when registering targets with this target group"
