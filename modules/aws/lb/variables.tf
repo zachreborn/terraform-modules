@@ -71,12 +71,12 @@ variable "desync_mitigation_mode" {
 
 variable "access_logs" {
   description = "Access logs configuration for the LB"
-  type = object(set({
+  type = set(object({
     bucket  = string
     prefix  = string
     enabled = bool
   }))
-  default = null
+  default = []
 }
 
 variable "idle_timeout" {
@@ -187,7 +187,7 @@ variable "target_groups" {
       grace_period_seconds = optional(number)
     }))
 
-    stickiness = object(set({
+    stickiness = set(object({
       type            = string
       cookie_duration = optional(number)
       cookie_name     = optional(string)
