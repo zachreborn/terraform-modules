@@ -71,11 +71,11 @@ variable "desync_mitigation_mode" {
 
 variable "access_logs" {
   description = "Access logs configuration for the LB"
-  type = object({
+  type = object(set({
     bucket  = string
     prefix  = string
     enabled = bool
-  })
+  }))
   default = null
 }
 
@@ -173,7 +173,7 @@ variable "target_groups" {
     protocol_version                   = optional(string)
     connection_termination             = optional(bool)
     lambda_multi_value_headers_enabled = optional(bool)
-    health_check = optional(object({
+    health_check = map(object({
       enabled              = optional(bool, true)
       healthy_threshold    = optional(number, 3)
       interval             = optional(number, 30)
@@ -187,7 +187,7 @@ variable "target_groups" {
       grace_period_seconds = optional(number)
     }))
 
-    stickiness = optional(object({
+    stickiness = object(set({
       type            = string
       cookie_duration = optional(number)
       cookie_name     = optional(string)
@@ -277,9 +277,9 @@ variable "listener_rules" {
       }))
     })
 
-    conditions = list(object({
+    conditions = list(object({ #no set, order matters
       host_header = optional(object({
-        values = list(string)
+        values = set(string)
       }))
 
       http_header = optional(object({
