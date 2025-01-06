@@ -73,7 +73,7 @@ resource "aws_lb_target_group" "target_group" {
   preserve_client_ip = local.is_network ? each.value.target_group_preserve_client_ip : null
 
   dynamic "health_check" {
-    for_each = each.value.health_check != null ? { "key" = each.value.health_check } : {}
+    for_each = each.value.health_check != null ? { each.value.health_check } : {}
     content {
       enabled             = health_check.value.enabled
       healthy_threshold   = health_check.value.healthy_threshold
@@ -88,7 +88,7 @@ resource "aws_lb_target_group" "target_group" {
   }
 
   dynamic "stickiness" {
-    for_each = each.value.stickiness != null ? { "key" = each.value.stickiness } : {}
+    for_each = each.value.stickiness != null ? { each.value.stickiness } : {}
     content {
       type            = stickiness.value.type
       cookie_duration = stickiness.value.cookie_duration
@@ -119,7 +119,7 @@ resource "aws_lb_listener" "listener" {
   alpn_policy = local.is_application ? each.value.alpn_policy : null
 
   dynamic "mutual_authentication" {
-    for_each = local.is_network && each.value.mutual_authentication != null ? { "key" = each.value.mutual_authentication } : {}
+    for_each = local.is_network && each.value.mutual_authentication != null ? { each.value.mutual_authentication } : {}
     content {
       mode = mutual_authentication.value.mode
     }
@@ -136,7 +136,7 @@ resource "aws_lb_listener" "listener" {
 
       # Application Load Balancer specific fixed response action
       dynamic "fixed_response" {
-        for_each = default_action.value.fixed_response != null ? { "key" = default_action.value.fixed_response } : {}
+        for_each = default_action.value.fixed_response != null ? { default_action.value.fixed_response } : {}
         content {
           content_type = fixed_response.value.content_type
           message_body = fixed_response.value.message_body
@@ -146,7 +146,7 @@ resource "aws_lb_listener" "listener" {
 
       # Application Load Balancer specific redirect action
       dynamic "redirect" {
-        for_each = default_action.value.redirect != null ? { "key" = default_action.value.redirect } : {}
+        for_each = default_action.value.redirect != null ? { default_action.value.redirect } : {}
         content {
           path        = redirect.value.path
           host        = redirect.value.host
@@ -159,7 +159,7 @@ resource "aws_lb_listener" "listener" {
 
       # Application Load Balancer authentication settings
       dynamic "authenticate_oidc" {
-        for_each = each.value.authenticate_oidc != null && local.is_application ? { "key" = each.value.authenticate_oidc } : {}
+        for_each = each.value.authenticate_oidc != null && local.is_application ? { each.value.authenticate_oidc } : {}
         content {
           authorization_endpoint = authenticate_oidc.value.authorization_endpoint
           client_id              = authenticate_oidc.value.client_id
@@ -171,7 +171,7 @@ resource "aws_lb_listener" "listener" {
       }
 
       dynamic "authenticate_cognito" {
-        for_each = each.value.authenticate_cognito != null && local.is_application ? { "key" = each.value.authenticate_cognito } : {}
+        for_each = each.value.authenticate_cognito != null && local.is_application ? { each.value.authenticate_cognito } : {}
         content {
           user_pool_arn       = authenticate_cognito.value.user_pool_arn
           user_pool_client_id = authenticate_cognito.value.user_pool_client_id
@@ -199,7 +199,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # ALB fixed response action
       dynamic "fixed_response" {
-        for_each = action.value.fixed_response != null ? { "key" = action.value.fixed_response } : {}
+        for_each = action.value.fixed_response != null ? { action.value.fixed_response } : {}
         content {
           content_type = fixed_response.value.content_type
           message_body = fixed_response.value.message_body
@@ -209,7 +209,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # ALB redirect action
       dynamic "redirect" {
-        for_each = action.value.redirect != null ? { "key" = action.value.redirect } : {}
+        for_each = action.value.redirect != null ? { action.value.redirect } : {}
         content {
           path        = redirect.value.path
           host        = redirect.value.host
@@ -228,7 +228,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
     content {
       # ALB host header condition
       dynamic "host_header" {
-        for_each = condition.value.host_header != null ? { "key" = condition.value.host_header } : {}
+        for_each = condition.value.host_header != null ? { condition.value.host_header } : {}
         content {
           values = host_header.value.values
         }
@@ -236,7 +236,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # ALB http header condition
       dynamic "http_header" {
-        for_each = condition.value.http_header != null ? { "key" = condition.value.http_header } : {}
+        for_each = condition.value.http_header != null ? { condition.value.http_header } : {}
         content {
           http_header_name = http_header.value.http_header_name
           values           = http_header.value.values
@@ -245,7 +245,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # ALB path pattern condition
       dynamic "path_pattern" {
-        for_each = condition.value.path_pattern != null ? { "key" = condition.value.path_pattern } : {}
+        for_each = condition.value.path_pattern != null ? { condition.value.path_pattern } : {}
         content {
           values = path_pattern.value.values
         }
@@ -253,7 +253,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # ALB query string condition
       dynamic "query_string" {
-        for_each = condition.value.query_string != null ? { "key" = condition.value.query_string } : {}
+        for_each = condition.value.query_string != null ? { condition.value.query_string } : {}
         content {
           key   = query_string.value.key
           value = query_string.value.value
@@ -262,7 +262,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # Common source IP condition (works for both ALB and NLB)
       dynamic "source_ip" {
-        for_each = condition.value.source_ip != null ? { "key" = condition.value.source_ip } : {}
+        for_each = condition.value.source_ip != null ? { condition.value.source_ip } : {}
         content {
           values = source_ip.value.values
         }
