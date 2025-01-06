@@ -73,7 +73,7 @@ resource "aws_lb_target_group" "target_group" {
   preserve_client_ip = local.is_network ? each.value.target_group_preserve_client_ip : null
 
   dynamic "health_check" {
-    for_each = each.value.health_check != null ?  each.value.health_check  : {}
+    for_each = each.value.health_check != null ? each.value.health_check : {}
     content {
       enabled             = health_check.value.enabled
       healthy_threshold   = health_check.value.healthy_threshold
@@ -119,7 +119,7 @@ resource "aws_lb_listener" "listener" {
   alpn_policy = local.is_application ? each.value.alpn_policy : null
 
   dynamic "mutual_authentication" {
-    for_each = local.is_network && each.value.mutual_authentication != null ? { each.value.mutual_authentication } : {}
+    for_each = local.is_network && each.value.mutual_authentication != null ? each.value.mutual_authentication : {}
     content {
       mode = mutual_authentication.value.mode
     }
