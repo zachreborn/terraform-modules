@@ -15,16 +15,16 @@ variable "access_token" {
 variable "auto_branch_creation_config" {
   description = "Auto branch creation config for the Amplify App."
   type = map(object({
-    basic_auth_credentials        = optional(string)
-    build_spec                    = optional(string)
-    enable_auto_build             = optional(bool)
-    enable_basic_auth             = optional(bool)
-    enable_performance_mode       = optional(bool)
-    enable_pull_request_preview   = optional(bool)
-    environment_variables         = optional(map(string))
-    framework                     = optional(string)
-    pull_request_environment_name = optional(string)
-    stage                         = optional(string) # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
+    basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch. Must be input as "username:password".
+    build_spec                    = optional(string)      # Build spec for the branch.
+    enable_auto_build             = optional(bool)        # Enable auto build for the branch.
+    enable_basic_auth             = optional(bool)        # Enable basic auth for the branch.
+    enable_performance_mode       = optional(bool)        # Enable performance mode for the branch.
+    enable_pull_request_preview   = optional(bool)        # Enable pull request preview for the branch.
+    environment_variables         = optional(map(string)) # Map of environment variables for the branch.
+    framework                     = optional(string)      # The framework for the branch.
+    pull_request_environment_name = optional(string)      # The name of the pull request environment.
+    stage                         = optional(string)      # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
   }))
   default = null
 }
@@ -36,7 +36,7 @@ variable "auto_branch_creation_patterns" {
 }
 
 variable "basic_auth_credentials" {
-  description = "Basic auth credentials for the Amplify App."
+  description = "Basic auth credentials for the Amplify App. Must be input as 'username:password'."
   type        = string
   default     = null
 }
@@ -150,7 +150,7 @@ variable "repository" {
 variable "branches" {
   description = "Branches for the Amplify App."
   type = map(object({
-    basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch.
+    basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
     branch_name                   = string                              # The name of the branch.
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
     custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.
