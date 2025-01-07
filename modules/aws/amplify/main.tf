@@ -69,7 +69,7 @@ resource "aws_amplify_app" "this" {
     }
   }
   dynamic "custom_rule" {
-    for_each = var.custom_rules != null ? var.custom_rules : {}
+    for_each = var.custom_rules != null ? var.custom_rules : []
     content {
       condition = custom_rule.value.condition
       source    = custom_rule.value.source
