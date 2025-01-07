@@ -65,8 +65,8 @@ variable "custom_headers" {
 }
 
 variable "custom_rules" {
-  description = "Custom rules for the Amplify App."
-  type = map(object({
+  description = "List of custom rules for the Amplify App."
+  type = list(object({
     condition = optional(string) # Condition for a URL redirect or rewrite.
     source    = string           # Source pattern for URL redirect or rewrite.
     status    = optional(string) # Status code for URL redirect or rewrite. Valid values are 200, 301, 302, 404, 404-200.
