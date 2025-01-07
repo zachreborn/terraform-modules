@@ -30,7 +30,7 @@ terraform {
 resource "aws_amplify_app" "this" {
   access_token                  = var.access_token
   auto_branch_creation_patterns = var.auto_branch_creation_patterns
-  basic_auth_credentials        = base64encode(var.basic_auth_credentials)
+  basic_auth_credentials        = var.basic_auth_credentials != null ? base64encode(var.basic_auth_credentials) : null
   build_spec                    = var.build_spec
   custom_headers                = var.custom_headers
   description                   = var.description
@@ -49,7 +49,7 @@ resource "aws_amplify_app" "this" {
   dynamic "auto_branch_creation_config" {
     for_each = var.auto_branch_creation_config != null ? var.auto_branch_creation_config : {}
     content {
-      basic_auth_credentials        = base64encode(auto_branch_creation_config.value.basic_auth_credentials)
+      basic_auth_credentials        = auto_branch_creation_config.value.basic_auth_credentials != null ? base64encode(auto_branch_creation_config.value.basic_auth_credentials) : null
       build_spec                    = auto_branch_creation_config.value.build_spec
       enable_auto_build             = auto_branch_creation_config.value.enable_auto_build
       enable_basic_auth             = auto_branch_creation_config.value.enable_basic_auth
@@ -85,7 +85,7 @@ resource "aws_amplify_app" "this" {
 resource "aws_amplify_branch" "this" {
   for_each                      = var.branches != null ? var.branches : {}
   app_id                        = aws_amplify_app.this.id
-  basic_auth_credentials        = base64encode(each.value.basic_auth_credentials)
+  basic_auth_credentials        = each.value.basic_auth_credentials != null ? base64encode(each.value.basic_auth_credentials) : null
   branch_name                   = each.value.branch_name
   description                   = each.value.description
   display_name                  = each.value.display_name
