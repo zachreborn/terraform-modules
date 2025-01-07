@@ -73,6 +73,19 @@ variable "custom_rules" {
     target    = string           # Target pattern for URL redirect or rewrite.
   }))
   default = null
+  # Example:
+  # custom_rules = [
+  #   {
+  #     source = "/<*>"
+  #     status = "404-200"
+  #     target = "/404"
+  #   },
+  #   {
+  #     source = "https://www.example.org"
+  #     status = "301"
+  #     target = "https://example.org"
+  #   }
+  # ]
 }
 
 variable "description" {
@@ -173,6 +186,32 @@ variable "branches" {
     ttl                           = optional(number)                    # The TTL for the branch.
     wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.
   }))
+  # Example:
+  # branches = {
+  #   main = {
+  #     branch_name  = "main"
+  #     domain_name  = "example.org"
+  #     display_name = "main"
+  #     framework    = "Astro"
+  #     stage        = "PRODUCTION"
+  #     sub_domains  = ["www"]
+  #   },
+  #   staging = {
+  #     basic_auth_credentials = var.example_basic_auth_credentials
+  #     branch_name            = "staging"
+  #     domain_name            = "staging.example.org"
+  #     display_name           = "staging"
+  #     enable_basic_auth      = true
+  #     framework              = "Astro"
+  #   },
+  #   dev = {
+  #     basic_auth_credentials = var.example_basic_auth_credentials
+  #     branch_name            = "dev"
+  #     domain_name            = "dev.example.org"
+  #     display_name           = "dev"
+  #     enable_basic_auth      = true
+  #     framework              = "Astro"
+  #   }
 }
 
 ###########################
