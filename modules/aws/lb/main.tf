@@ -56,12 +56,12 @@ resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
 
   # Common settings
-  name                 = each.value.name
-  port                 = each.value.port
-  protocol             = each.value.protocol
-  vpc_id               = each.value.vpc_id
-  target_type          = each.value.target_type
-  deregistration_delay = each.value.deregistration_delay
+  name                 = target_group.value.name
+  port                 = target_group.value.port
+  protocol             = target_group.value.protocol
+  vpc_id               = target_group.value.vpc_id
+  target_type          = target_group.value.target_type
+  deregistration_delay = target_group.value.deregistration_delay
 
   # Application Load Balancer specific settings
   slow_start                    = local.is_application ? each.value.slow_start : null
