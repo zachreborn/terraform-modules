@@ -56,7 +56,7 @@ resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
 
   # Common settings
-  name                 = each.value.name
+  name                 = var.target_group_name
   name_prefix          = each.value.name_prefix
   port                 = each.value.port
   protocol             = each.value.protocol
