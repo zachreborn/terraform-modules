@@ -123,7 +123,7 @@ resource "aws_amplify_domain_association" "this" {
   dynamic "sub_domain" {
     for_each = var.branches
     content {
-      branch_name = each.value.branch_name
+      branch_name = each.key
       prefix      = ""
     }
   }
@@ -131,7 +131,7 @@ resource "aws_amplify_domain_association" "this" {
   dynamic "sub_domain" {
     for_each = each.value.sub_domains != null ? each.value.sub_domains : []
     content {
-      branch_name = each.value.branch_name
+      branch_name = each.key
       prefix      = sub_domain.key
     }
   }
