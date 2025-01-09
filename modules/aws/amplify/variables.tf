@@ -162,10 +162,9 @@ variable "repository" {
 ###########################
 
 variable "branches" {
-  description = "Branches for the Amplify App."
+  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings."
   type = map(object({
     basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
-    branch_name                   = string                              # The name of the branch.
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
     custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.
     description                   = optional(string)                    # The description of the branch.
@@ -189,26 +188,20 @@ variable "branches" {
   # Example:
   # branches = {
   #   main = {
-  #     branch_name  = "main"
   #     domain_name  = "example.org"
-  #     display_name = "main"
   #     framework    = "Astro"
   #     stage        = "PRODUCTION"
   #     sub_domains  = ["www"]
   #   },
   #   staging = {
   #     basic_auth_credentials = var.example_basic_auth_credentials
-  #     branch_name            = "staging"
   #     domain_name            = "staging.example.org"
-  #     display_name           = "staging"
   #     enable_basic_auth      = true
   #     framework              = "Astro"
   #   },
   #   dev = {
   #     basic_auth_credentials = var.example_basic_auth_credentials
-  #     branch_name            = "dev"
   #     domain_name            = "dev.example.org"
-  #     display_name           = "dev"
   #     enable_basic_auth      = true
   #     framework              = "Astro"
   #   }

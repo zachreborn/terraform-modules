@@ -86,9 +86,9 @@ resource "aws_amplify_branch" "this" {
   for_each                      = var.branches != null ? var.branches : {}
   app_id                        = aws_amplify_app.this.id
   basic_auth_credentials        = each.value.basic_auth_credentials != null ? base64encode(each.value.basic_auth_credentials) : null
-  branch_name                   = each.value.branch_name
+  branch_name                   = each.key
   description                   = each.value.description
-  display_name                  = each.value.display_name
+  display_name                  = each.value.display_name != null ? each.value.display_name : each.key
   enable_auto_build             = each.value.enable_auto_build
   enable_basic_auth             = each.value.enable_basic_auth
   enable_notification           = each.value.enable_notification
