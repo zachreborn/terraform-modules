@@ -38,7 +38,7 @@ variable "auto_branch_creation_patterns" {
 variable "basic_auth_credentials" {
   description = "Basic auth credentials for the Amplify App. Must be input as 'username:password'."
   type        = string
-  sensitive   = true
+  sensitive   = false
   default     = null
 }
 
