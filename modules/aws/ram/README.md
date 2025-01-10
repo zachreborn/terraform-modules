@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">Transit Gateway Connect Module</h3>
+<h3 align="center">AWS Resource Access Manager (RAM)</h3>
   <p align="center">
-    This module creates a transit gateway (tgw) connect resource. This allows attaching other network devices to a transit gateway over an encrypted tunnel.
+    This modules creates and configures RAM resources, allowing for existing resources to be shared with your organization or other AWS accounts.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,17 +58,20 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
 
-```
-module "transit_gateway_sdwan_connect" {
-    source                  = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect"
+### Simple Example
 
-    name                    = "tgw_sdwan_connect"
-    transport_attachment_id = module.prod_vpc_attachment.id
-    transit_gateway_id      = module.transit_gateway.id
+This example shares a transit gateway with the current AWS organization. This allows all accounts in the organization to use the transit gateway and attach VPCs from other accounts.
+
+```
+module "tgw_ram_share" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ram"
+
+  name         = "transit_tgw"
+  resource_arn = module.transit_gateway.arn
 }
 ```
 
@@ -101,37 +103,40 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_ec2_transit_gateway_connect.connect_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect) | resource |
+| [aws_ram_principal_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_principal_association) | resource |
+| [aws_ram_resource_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_association) | resource |
+| [aws_ram_resource_share.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share) | resource |
+| [aws_organizations_organization.current_org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway | `string` | n/a | yes |
-| <a name="input_protocol"></a> [protocol](#input\_protocol) | (Optional) The tunnel protocol. Valida values: gre. Default is gre. | `string` | `"gre"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | <pre>{<br/>  "environment": "prod",<br/>  "project": "core_infrastructure",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_transit_gateway_default_route_table_association"></a> [transit\_gateway\_default\_route\_table\_association](#input\_transit\_gateway\_default\_route\_table\_association) | (Optional) Boolean whether the Connect should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
-| <a name="input_transit_gateway_default_route_table_propagation"></a> [transit\_gateway\_default\_route\_table\_propagation](#input\_transit\_gateway\_default\_route\_table\_propagation) | (Optional) Boolean whether the Connect should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
-| <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of EC2 Transit Gateway. | `string` | n/a | yes |
-| <a name="input_transport_attachment_id"></a> [transport\_attachment\_id](#input\_transport\_attachment\_id) | (Required) The underlaying VPC attachment | `string` | n/a | yes |
+| <a name="input_allow_external_principals"></a> [allow\_external\_principals](#input\_allow\_external\_principals) | Indicates whether principals outside your AWS organization can be associated with a resource share. | `bool` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | The name of the resource share. | `string` | n/a | yes |
+| <a name="input_permission_arns"></a> [permission\_arns](#input\_permission\_arns) | The ARNs of the permissions to associate with the resource share. | `list(string)` | `null` | no |
+| <a name="input_principal"></a> [principal](#input\_principal) | The principal to associate with the resource share. | `string` | `null` | no |
+| <a name="input_resource_arn"></a> [resource\_arn](#input\_resource\_arn) | The ARN of the resource to associate with the resource share. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource share. | `map(string)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the resource share. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the resource share. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -140,19 +145,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

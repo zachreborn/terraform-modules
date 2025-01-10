@@ -29,7 +29,7 @@ resource "aws_ec2_transit_gateway" "transit_gateway" {
 ###########################
 
 module "vpc_flow_logs" {
-  source = "../flow_logs"
+  source = "../../flow_logs"
 
   count                           = var.enable_flow_logs ? 1 : 0
   cloudwatch_name_prefix          = var.cloudwatch_name_prefix
@@ -44,6 +44,6 @@ module "vpc_flow_logs" {
   flow_log_format                 = var.flow_log_format
   flow_max_aggregation_interval   = var.flow_max_aggregation_interval
   flow_traffic_type               = var.flow_traffic_type
-  flow_transit_gateway_id         = aws_ec2_transit_gateway.transit_gateway.id
+  flow_transit_gateway_ids        = [aws_ec2_transit_gateway.transit_gateway.id]
   tags                            = var.tags
 }

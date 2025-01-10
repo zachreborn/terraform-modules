@@ -85,3 +85,8 @@ output "igw_id" {
 output "availability_zone" {
   value = aws_subnet.private_subnets[*].availability_zone
 }
+
+output "name" {
+  description = "The name of the VPC"
+  value       = aws_vpc.vpc.tags["Name"]
+}

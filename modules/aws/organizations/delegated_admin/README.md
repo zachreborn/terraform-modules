@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -26,10 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">Transit Gateway Connect Peer</h3>
+<h3 align="center">AWS Organization Delegated Admins Module</h3>
   <p align="center">
-    This module configures a transit gateway connect peer for use with a transit gateway with a connect resource. This is typically utilized with a network device or appliance such as a firewall or SDWAN device.
-    Note, the Connect Peer attachment needs to be created within the same availability zone as the peer.
+    This module generates and manages AWS organization delegated administrators. This delegates administrative functionality of a service to an account within an organization. This module takes a map of AWS account IDs and the service principal name to associate with the account. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services_list.html) for more information.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -41,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -60,29 +58,22 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
-## Usage
-### Simple Example
-This example creates two redundant connect peers with two different peers, such as two Velocloud vEdge instances.
-```
-module "transit_gateway_sdwan_connect_peer" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/transit_gateway_connect_peer"
 
-    name = "sdwan_peer"
-    peers = {
-      "sdwan_vedge_1" = {
-        bgp_asn                       = 64513
-        inside_cidr_blocks            = ["169.254.6.0/29"]
-        peer_address                  = "10.200.0.157"
-      }
-      "sdwan_vedge_1" = {
-        bgp_asn                       = 64513
-        inside_cidr_blocks            = ["169.254.6.8/29"]
-        peer_address                  = "10.200.0.180"
-      }
+## Usage
+
+### Simple Example
+
+This example delegates administrative functionality of a service to an account.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+
+    delegated_admins = {
+        "123456789012" = "service-abbreviation.amazonaws.com",
+        (module.prod_network.id) = "networkmanager.amazonaws.com"
     }
-    transit_gateway_attachment_id = module.transit_gateway_sdwan_connect.id
 }
 ```
 
@@ -114,40 +105,29 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_ec2_transit_gateway_connect_peer.peer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect_peer) | resource |
+| [aws_organizations_delegated_administrator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_delegated_administrator) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway | `string` | n/a | yes |
-| <a name="input_peers"></a> [peers](#input\_peers) | (Required) A map of Transit Gateway Connect Peers, where the key is the name of the peer and the value is a map of peer configuration options. | <pre>map(object({<br/>    bgp_asn                 = optional(number, 64512) # (Optional) The BGP ASN number assigned customer device. If not provided, it will use the same BGP ASN as is associated with Transit Gateway.<br/>    inside_cidr_blocks      = list(string)            # (Required) The CIDR block that will be used for addressing within the tunnel. It must contain exactly one IPv4 CIDR block and up to one IPv6 CIDR block. The IPv4 CIDR block must be /29 size and must be within 169.254.0.0/16 range, with exception of: 169.254.0.0/29, 169.254.1.0/29, 169.254.2.0/29, 169.254.3.0/29, 169.254.4.0/29, 169.254.5.0/29, 169.254.169.248/29. The IPv6 CIDR block must be /125 size and must be within fd00::/8. The first IP from each CIDR block is assigned for customer gateway, the second and third is for Transit Gateway (An example: from range 169.254.100.0/29, .1 is assigned to customer gateway and .2 and .3 are assigned to Transit Gateway)<br/>    peer_address            = string                  # (Required) The IP addressed assigned to customer device, which will be used as tunnel endpoint. It can be IPv4 or IPv6 address, but must be the same address family as transit_gateway_address<br/>    transit_gateway_address = optional(string)        # (Optional) The IP address assigned to Transit Gateway, which will be used as tunnel endpoint. This address must be from associated Transit Gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated Transit Gateway CIDR blocks.<br/>  }))</pre> | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | <pre>{<br/>  "environment": "prod",<br/>  "project": "core_infrastructure",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_transit_gateway_attachment_id"></a> [transit\_gateway\_attachment\_id](#input\_transit\_gateway\_attachment\_id) | (Required) The Transit Gateway Connect | `string` | n/a | yes |
+| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Required) Map where the keys are AWS account IDs and the value is the service principal name to associate with the account. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. | `map(string)` | n/a | yes |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_arns"></a> [arns](#output\_arns) | A map of ARNs of the transit gateway connect peers. |
-| <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |
-| <a name="output_configurations"></a> [configurations](#output\_configurations) | A map of the transit gateway connect peer configurations. |
-| <a name="output_ids"></a> [ids](#output\_ids) | A map of the IDs of the Transit Gateway Connect Peers |
-| <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
-| <a name="output_peer_addresses"></a> [peer\_addresses](#output\_peer\_addresses) | A map of the IP address of the connect peers. |
-| <a name="output_transit_gateway_addresses"></a> [transit\_gateway\_addresses](#output\_transit\_gateway\_addresses) | A map of IP address of the transit gateway. This is the IP used to connect to the transit gateway. |
+No outputs.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -156,19 +136,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

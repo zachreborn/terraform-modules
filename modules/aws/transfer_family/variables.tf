@@ -35,9 +35,13 @@ variable "directory_id" {
 }
 
 variable "endpoint_type" {
-  description = "(Optional) The type of endpoint that you want your server to use. Valid values are VPC and PUBLIC"
+  description = "(Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC_ENDPOINT. Default value is PUBLIC."
   type        = string
   default     = "PUBLIC"
+  validation {
+    condition     = can(regex("^(PUBLIC|VPC|VPC_ENDPOINT)$", var.endpoint_type))
+    error_message = "The value of endpoint_type must be either PUBLIC, VPC, or VPC_ENDPOINT."
+  }
 }
 
 variable "function" {
@@ -222,11 +226,11 @@ variable "lifecycle_rules" {
 variable "users" {
   description = "(Optional) A map of user names and their configuration"
   type = map(object({
-    home_directory      = optional(string)            # Cannot be set if home_directory_type is set to "LOGICAL".
-    home_directory_type = optional(string, "LOGICAL") # Default is "LOGICAL"
+    home_directory      = optional(string)            # The landing directory for a user. Cannot be set if home_directory_type is set to "LOGICAL".
+    home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.
     policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information
-    public_key          = optional(string)            # The public key portion of an SSH key pair
-    username            = string
+    public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.
+    username            = string                      # The username of the user.
   }))
   default = {}
 }
