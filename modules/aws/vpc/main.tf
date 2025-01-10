@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 
 locals {
   # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
-  enable_igw   = var.enable_internet_gateway ? ((var.public_subnets_list != [] || var.public_subnets_list != null) ? true : false) : false
+  enable_igw   = var.enable_internet_gateway ? ((length(var.public_subnets_list) != 0 || var.public_subnets_list != null) ? true : false) : false
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
@@ -206,7 +206,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_route_table" "public_route_table" {
-  count            = var.public_subnets_list != [] ? 1 : 0
+  count            = length(var.public_subnets_list) != 0 ? 1 : 0
   propagating_vgws = var.public_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-public", var.name) }))
   vpc_id           = aws_vpc.vpc.id
