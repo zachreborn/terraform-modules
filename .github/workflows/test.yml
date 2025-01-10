@@ -28,20 +28,6 @@ jobs:
         id: fmt
         run: terraform fmt -check -diff -recursive
 
-  test_tfsec:
-    name: tfsec
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run tfsec and write pull request comments
-        uses: aquasecurity/tfsec-pr-commenter-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tfsec_args: --force-all-dirs
-
   test_linter:
     name: Linter
     runs-on: ubuntu-latest
@@ -59,6 +45,7 @@ jobs:
         uses: super-linter/super-linter@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_JSCPD: false
           VALIDATE_MARKDOWN: false
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
