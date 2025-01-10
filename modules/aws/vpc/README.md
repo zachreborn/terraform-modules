@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -41,7 +41,6 @@
   </p>
 </div>
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -59,11 +58,14 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
+
 This example sends uses an internet gateway for the public subnets and NAT gateways for the internal subnets. It utilizes the 10.11.0.0/16 subnet space with /24 subnets for each segmented subnet per availability zone.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -81,7 +83,9 @@ module "vpc" {
 ```
 
 ### Firewall Example
+
 This example sends all egress traffic out a EC2 instance acting as a firewall. It also changes the default VPC CIDR block and subnets.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -101,7 +105,9 @@ module "vpc" {
 ```
 
 ### Setting Subnet Example
+
 This example sends uses an internet gateway for the public subnets and NAT gateways for the internal subnets. It utilizes a unique 10.100.0.0/16 subnet space with /24 subnets for each segmented subnet per availability zone.
+
 ```
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -125,7 +131,9 @@ module "vpc" {
 ```
 
 ### Disabling Unneeded Subnets
+
 This example disabled unused subnets and associated resources. In the example we leave only the public and private subnets enabled.
+
 ```hcl
 module "vpc" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
@@ -139,6 +147,57 @@ module "vpc" {
     private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
     public_subnets_list     = ["10.11.200.0/24", "10.11.201.0/24", "10.11.202.0/24"]
     workspaces_subnets_list = []
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+### Disabling the Internet Gateway
+
+This example disables the internet gateway, making this VPC a private VPC. This is useful for VPCs which do not need to communicate with the internet, or do so via an egress inspection VPC, SDWAN, or other solution.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                    = "client_prod_vpc"
+    vpc_cidr                = "10.11.0.0/16"
+    azs                     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    db_subnets_list         = []
+    dmz_subnets_list        = []
+    mgmt_subnets_list       = []
+    private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
+    public_subnets_list     = []
+    workspaces_subnets_list = []
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+Alternatively, you can disable the internet gateway by setting the `enable_internet_gateway` variable to `false`. This is useful if you still want to have public subnets.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                    = "client_prod_vpc"
+    vpc_cidr                = "10.11.0.0/16"
+    azs                     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    db_subnets_list         = []
+    dmz_subnets_list        = []
+    mgmt_subnets_list       = []
+    private_subnets_list    = ["10.11.0.0/24", "10.11.1.0/24", "10.11.2.0/24"]
+    public_subnets_list     = ["10.11.200.0/24", "10.11.201.0/24", "10.11.202.0/24"]
+    workspaces_subnets_list = []
+    enable_internet_gateway = false
     tags = {
         terraform   = "true"
         created_by  = "Zachary Hill"
@@ -227,17 +286,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_azs"></a> [azs](#input\_azs) | A list of Availability zones in the region | `list` | <pre>[<br/>  "us-east-2a",<br/>  "us-east-2b",<br/>  "us-east-2c"<br/>]</pre> | no |
+| <a name="input_azs"></a> [azs](#input\_azs) | A list of Availability zones in the region | `list(string)` | <pre>[<br/>  "us-east-2a",<br/>  "us-east-2b",<br/>  "us-east-2c"<br/>]</pre> | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. | `string` | `"flow_logs_"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire. | `number` | `90` | no |
-| <a name="input_db_propagating_vgws"></a> [db\_propagating\_vgws](#input\_db\_propagating\_vgws) | A list of VGWs the db route table should propagate. | `list` | `[]` | no |
-| <a name="input_db_subnets_list"></a> [db\_subnets\_list](#input\_db\_subnets\_list) | A list of database subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.11.0/24",<br/>  "10.11.12.0/24",<br/>  "10.11.13.0/24"<br/>]</pre> | no |
-| <a name="input_dmz_propagating_vgws"></a> [dmz\_propagating\_vgws](#input\_dmz\_propagating\_vgws) | A list of VGWs the DMZ route table should propagate. | `list` | `[]` | no |
-| <a name="input_dmz_subnets_list"></a> [dmz\_subnets\_list](#input\_dmz\_subnets\_list) | A list of DMZ subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.101.0/24",<br/>  "10.11.102.0/24",<br/>  "10.11.103.0/24"<br/>]</pre> | no |
+| <a name="input_db_propagating_vgws"></a> [db\_propagating\_vgws](#input\_db\_propagating\_vgws) | A list of VGWs the db route table should propagate. | `list(string)` | `null` | no |
+| <a name="input_db_subnets_list"></a> [db\_subnets\_list](#input\_db\_subnets\_list) | A list of database subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.11.0/24",<br/>  "10.11.12.0/24",<br/>  "10.11.13.0/24"<br/>]</pre> | no |
+| <a name="input_dmz_propagating_vgws"></a> [dmz\_propagating\_vgws](#input\_dmz\_propagating\_vgws) | A list of VGWs the DMZ route table should propagate. | `list(string)` | `null` | no |
+| <a name="input_dmz_subnets_list"></a> [dmz\_subnets\_list](#input\_dmz\_subnets\_list) | A list of DMZ subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.101.0/24",<br/>  "10.11.102.0/24",<br/>  "10.11.103.0/24"<br/>]</pre> | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false. | `bool` | `true` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_firewall"></a> [enable\_firewall](#input\_enable\_firewall) | (Optional) A boolean flag to enable/disable the use of a firewall instance within the VPC. Defaults False. | `bool` | `false` | no |
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
+| <a name="input_enable_internet_gateway"></a> [enable\_internet\_gateway](#input\_enable\_internet\_gateway) | (Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False | `bool` | `false` | no |
 | <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. Defaults true. | `bool` | `false` | no |
@@ -246,8 +306,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_flow_log_format"></a> [flow\_log\_format](#input\_flow\_log\_format) | (Optional) The fields to include in the flow log record, in the order in which they should appear. For more information, see Flow Log Records. Default: fields are in the order that they are described in the Flow Log Records section. | `string` | `null` | no |
 | <a name="input_flow_max_aggregation_interval"></a> [flow\_max\_aggregation\_interval](#input\_flow\_max\_aggregation\_interval) | (Optional) The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: 60 seconds (1 minute) or 600 seconds (10 minutes). Default: 600. | `number` | `60` | no |
 | <a name="input_flow_traffic_type"></a> [flow\_traffic\_type](#input\_flow\_traffic\_type) | (Optional) The type of traffic to capture. Valid values: ACCEPT,REJECT, ALL. | `string` | `"ALL"` | no |
-| <a name="input_fw_dmz_network_interface_id"></a> [fw\_dmz\_network\_interface\_id](#input\_fw\_dmz\_network\_interface\_id) | Firewall DMZ eni id | `list(any)` | `[]` | no |
-| <a name="input_fw_network_interface_id"></a> [fw\_network\_interface\_id](#input\_fw\_network\_interface\_id) | Firewall network interface id | `list` | `[]` | no |
+| <a name="input_fw_dmz_network_interface_id"></a> [fw\_dmz\_network\_interface\_id](#input\_fw\_dmz\_network\_interface\_id) | Firewall DMZ eni id | `list(string)` | `null` | no |
+| <a name="input_fw_network_interface_id"></a> [fw\_network\_interface\_id](#input\_fw\_network\_interface\_id) | Firewall network interface id | `list(string)` | `null` | no |
 | <a name="input_iam_policy_name_prefix"></a> [iam\_policy\_name\_prefix](#input\_iam\_policy\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with name. | `string` | `"flow_log_policy_"` | no |
 | <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | (Optional, default '/') Path in which to create the policy. See IAM Identifiers for more information. | `string` | `"/"` | no |
 | <a name="input_iam_role_description"></a> [iam\_role\_description](#input\_iam\_role\_description) | (Optional) The description of the role. | `string` | `"Role utilized for VPC flow logs. This role allows creation of log streams and adding logs to the log streams in cloudwatch"` | no |
@@ -255,18 +315,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_instance_tenancy"></a> [instance\_tenancy](#input\_instance\_tenancy) | A tenancy option for instances launched into the VPC | `string` | `"default"` | no |
 | <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/flow_logs_key_"` | no |
 | <a name="input_map_public_ip_on_launch"></a> [map\_public\_ip\_on\_launch](#input\_map\_public\_ip\_on\_launch) | (Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is false. | `bool` | `true` | no |
-| <a name="input_mgmt_propagating_vgws"></a> [mgmt\_propagating\_vgws](#input\_mgmt\_propagating\_vgws) | A list of VGWs the mgmt route table should propagate. | `list` | `[]` | no |
-| <a name="input_mgmt_subnets_list"></a> [mgmt\_subnets\_list](#input\_mgmt\_subnets\_list) | A list of mgmt subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.61.0/24",<br/>  "10.11.62.0/24",<br/>  "10.11.63.0/24"<br/>]</pre> | no |
+| <a name="input_mgmt_propagating_vgws"></a> [mgmt\_propagating\_vgws](#input\_mgmt\_propagating\_vgws) | A list of VGWs the mgmt route table should propagate. | `list(any)` | `null` | no |
+| <a name="input_mgmt_subnets_list"></a> [mgmt\_subnets\_list](#input\_mgmt\_subnets\_list) | A list of mgmt subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.61.0/24",<br/>  "10.11.62.0/24",<br/>  "10.11.63.0/24"<br/>]</pre> | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Name to be tagged on all of the resources as an identifier | `string` | n/a | yes |
-| <a name="input_private_propagating_vgws"></a> [private\_propagating\_vgws](#input\_private\_propagating\_vgws) | A list of VGWs the private route table should propagate. | `list` | `[]` | no |
-| <a name="input_private_subnets_list"></a> [private\_subnets\_list](#input\_private\_subnets\_list) | A list of private subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.1.0/24",<br/>  "10.11.2.0/24",<br/>  "10.11.3.0/24"<br/>]</pre> | no |
-| <a name="input_public_propagating_vgws"></a> [public\_propagating\_vgws](#input\_public\_propagating\_vgws) | A list of VGWs the public route table should propagate. | `list` | `[]` | no |
-| <a name="input_public_subnets_list"></a> [public\_subnets\_list](#input\_public\_subnets\_list) | A list of public subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.201.0/24",<br/>  "10.11.202.0/24",<br/>  "10.11.203.0/24"<br/>]</pre> | no |
+| <a name="input_private_propagating_vgws"></a> [private\_propagating\_vgws](#input\_private\_propagating\_vgws) | A list of VGWs the private route table should propagate. | `list(any)` | `null` | no |
+| <a name="input_private_subnets_list"></a> [private\_subnets\_list](#input\_private\_subnets\_list) | A list of private subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.1.0/24",<br/>  "10.11.2.0/24",<br/>  "10.11.3.0/24"<br/>]</pre> | no |
+| <a name="input_public_propagating_vgws"></a> [public\_propagating\_vgws](#input\_public\_propagating\_vgws) | A list of VGWs the public route table should propagate. | `list(any)` | `null` | no |
+| <a name="input_public_subnets_list"></a> [public\_subnets\_list](#input\_public\_subnets\_list) | A list of public subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.201.0/24",<br/>  "10.11.202.0/24",<br/>  "10.11.203.0/24"<br/>]</pre> | no |
 | <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | (Optional) A boolean flag to enable/disable use of only a single shared NAT Gateway across all of your private networks. Defaults False. | `bool` | `false` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "high",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(string)` | <pre>{<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "high",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | The CIDR block for the VPC | `string` | `"10.11.0.0/16"` | no |
-| <a name="input_workspaces_propagating_vgws"></a> [workspaces\_propagating\_vgws](#input\_workspaces\_propagating\_vgws) | A list of VGWs the workspaces route table should propagate. | `list` | `[]` | no |
-| <a name="input_workspaces_subnets_list"></a> [workspaces\_subnets\_list](#input\_workspaces\_subnets\_list) | A list of workspaces subnets inside the VPC. | `list` | <pre>[<br/>  "10.11.21.0/24",<br/>  "10.11.22.0/24",<br/>  "10.11.23.0/24"<br/>]</pre> | no |
+| <a name="input_workspaces_propagating_vgws"></a> [workspaces\_propagating\_vgws](#input\_workspaces\_propagating\_vgws) | A list of VGWs the workspaces route table should propagate. | `list(any)` | `null` | no |
+| <a name="input_workspaces_subnets_list"></a> [workspaces\_subnets\_list](#input\_workspaces\_subnets\_list) | A list of workspaces subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.21.0/24",<br/>  "10.11.22.0/24",<br/>  "10.11.23.0/24"<br/>]</pre> | no |
 
 ## Outputs
 
@@ -298,15 +358,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -315,19 +375,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
