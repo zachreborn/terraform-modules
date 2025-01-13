@@ -87,7 +87,7 @@ resource "aws_lb_target_group" "target_group" {
   }
 
   dynamic "stickiness" {
-    for_each = each.value.stickiness != null ? each.value.stickiness : {}
+    for_each = each.value.stickiness != null ? each.value.stickiness : []
     content {
       type            = stickiness.value.type
       cookie_duration = stickiness.value.cookie_duration
