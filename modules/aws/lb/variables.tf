@@ -287,21 +287,21 @@ variable "listener_rules" {
       }))
     })
 
-    conditions = list(object({ #no set, order matters
+    conditions = list(object({
       host_header = optional(object({
-        values = set(string)
+        values = list(string)
       }))
 
-      http_header = optional(object({
+      http_header = optional(map(object({
         http_header_name = string
         values           = list(string)
-      }))
+      })))
 
       path_pattern = optional(object({
         values = list(string)
       }))
 
-      query_string = optional(list(object({
+      query_string = optional(map(object({
         key   = optional(string)
         value = string
       })))
