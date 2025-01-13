@@ -175,6 +175,11 @@ variable "target_groups" {
     protocol                           = string
     target_type                        = string
     vpc_id                             = string
+    deregistration_delay               = optional(number)
+    slow_start                         = optional(number)
+    load_balancing_algorithm_type      = optional(string)
+    target_group_proxy_protocol_v2     = optional(bool)
+    target_group_preserve_client_ip    = optional(bool)
     protocol_version                   = optional(string)
     connection_termination             = optional(bool)
     lambda_multi_value_headers_enabled = optional(bool)
@@ -202,6 +207,7 @@ variable "target_groups" {
   }))
   default = {}
 }
+
 # Listener Variables
 variable "listeners" {
   description = "Map of listener configurations"
