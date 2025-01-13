@@ -261,7 +261,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
       # Common source IP condition (works for both ALB and NLB)
       dynamic "source_ip" {
-        for_each = condition.value.source_ip != null ? condition.value.source_ip : {}
+        for_each = condition.value.source_ip != null ? { source_ip = condition.value.source_ip } : {}
         content {
           values = source_ip.value.values
         }
