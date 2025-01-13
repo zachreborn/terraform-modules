@@ -170,6 +170,11 @@ variable "target_group_name_prefix" {
 variable "target_groups" {
   description = "Map of target group configurations"
   type = map(object({
+    name                               = string
+    port                               = number
+    protocol                           = string
+    target_type                        = string
+    vpc_id                             = string
     protocol_version                   = optional(string)
     connection_termination             = optional(bool)
     lambda_multi_value_headers_enabled = optional(bool)
@@ -197,7 +202,6 @@ variable "target_groups" {
   }))
   default = {}
 }
-
 # Listener Variables
 variable "listeners" {
   description = "Map of listener configurations"
