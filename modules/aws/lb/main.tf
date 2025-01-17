@@ -1,9 +1,29 @@
+###########################
+# Provider Configuration
+###########################
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.0.0"
+    }
+  }
+}
+
+###########################
+# Locals
+###########################
+
 locals {
   is_application = var.load_balancer_type == "application"
   is_network     = var.load_balancer_type == "network"
 }
 
+###########################################################
 # Load Balancer
+###########################################################
+
 resource "aws_lb" "load_balancer" {
   # Common settings
   name                       = var.name
@@ -51,6 +71,10 @@ resource "aws_lb" "load_balancer" {
     },
   )
 }
+
+###########################################################
+# Target Group
+###########################################################
 
 resource "aws_lb_target_group" "target_group" {
   for_each = var.target_groups
@@ -101,7 +125,10 @@ resource "aws_lb_target_group" "target_group" {
   )
 }
 
+###########################################################
 # Listeners
+###########################################################
+
 resource "aws_lb_listener" "listener" {
   for_each = var.listeners
 
@@ -181,8 +208,11 @@ resource "aws_lb_listener" "listener" {
   }
 }
 
+###########################################################
+# Listener Rules
+###########################################################
 
-# Listener Rules (Application Load Balancer only)
+# (Application Load Balancer only)
 resource "aws_lb_listener_rule" "listener_rule" {
   # Common settings
   for_each     = var.listener_rules
