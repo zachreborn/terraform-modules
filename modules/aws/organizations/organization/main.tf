@@ -22,6 +22,9 @@ resource "aws_organizations_organization" "org" {
   }
 }
 
+###########################################################
+# Centralized Root Management
+###########################################################
 module "centralized_root" {
   source = "../../iam/organizations_features"
 
