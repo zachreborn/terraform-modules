@@ -21,3 +21,9 @@ resource "aws_organizations_organization" "org" {
     prevent_destroy = true
   }
 }
+
+module "centralized_root" {
+  source = "../../iam/organizations_features"
+
+  enabled_features = var.enabled_features
+}
