@@ -95,6 +95,12 @@ variable "connection_logs" {
   default = null
 }
 
+variable "dns_record_client_routing_policy" {
+  description = "(Optional) How traffic is distributed among the load balancer Availability Zones. Possible values are any_availability_zone (default), availability_zone_affinity, or partial_availability_zone_affinity. See Availability Zone DNS affinity for additional details. Only valid for network type load balancers."
+  type        = string
+  default     = "any_availability_zone"
+}
+
 variable "idle_timeout" {
   description = "The time in seconds that the connection is allowed to be idle"
   type        = number

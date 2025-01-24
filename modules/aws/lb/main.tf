@@ -46,7 +46,7 @@ resource "aws_lb" "load_balancer" {
 
   # Network Load Balancer specific settings
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null
-
+  dns_record_client_routing_policy = var.dns_record_client_routing_policy
   dynamic "access_logs" {
     for_each = var.access_logs != null ? { create = var.access_logs } : {}
     content {
