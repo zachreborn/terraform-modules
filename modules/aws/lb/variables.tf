@@ -119,6 +119,12 @@ variable "enable_waf_fail_open" {
   default     = false
 }
 
+variable "enable_zonal_shift" {
+  description = "(Optional) Whether zonal shift is enabled. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "enable_tls_version_and_cipher_suite_headers" {
   description = "(Optional) Whether the two headers (x-amzn-tls-version and x-amzn-tls-cipher-suite), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type application. Defaults to false"
   type        = bool

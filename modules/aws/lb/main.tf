@@ -34,6 +34,7 @@ resource "aws_lb" "load_balancer" {
   customer_owned_ipv4_pool   = var.customer_owned_ipv4_pool
   ip_address_type            = var.ip_address_type
   security_groups            = var.security_groups
+  enable_zonal_shift         = var.enable_zonal_shift
 
   # Application Load Balancer specific settings
   desync_mitigation_mode                      = local.is_application ? var.desync_mitigation_mode : null
