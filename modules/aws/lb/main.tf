@@ -54,6 +54,15 @@ resource "aws_lb" "load_balancer" {
     }
   }
 
+  dynamic "connection_logs" {
+    for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
+    content {
+      bucket  = connection_logs.value.bucket
+      prefix  = conenction_logs.value.prefix
+      enabled = connection_logs.value.enabled
+    }
+  }
+
   dynamic "subnet_mapping" {
     for_each = var.subnet_mappings
     content {

@@ -79,6 +79,16 @@ variable "access_logs" {
   default = null
 }
 
+variable "connection_logs" {
+  description = "(Optional) Connection Logs block. See below. Only valid for Load Balancers of type application."
+  type = map(object({
+    bucket  = string
+    prefix  = string
+    enabled = bool
+  }))
+  default = null
+}
+
 variable "idle_timeout" {
   description = "The time in seconds that the connection is allowed to be idle"
   type        = number
