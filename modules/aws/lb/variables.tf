@@ -1,13 +1,9 @@
-# Load Balancer Variables
+###########################
+# Common Load Balancer Variables
+###########################
 variable "name" {
   description = "Name of the load balancer"
   type        = string
-}
-
-variable "internal" {
-  description = "If true, the LB will be internal"
-  type        = bool
-  default     = false
 }
 
 variable "load_balancer_type" {
@@ -21,16 +17,20 @@ variable "load_balancer_type" {
   }
 }
 
-variable "security_groups" {
-  description = "List of security group IDs to assign to the LB"
-  type        = list(string)
-  default     = []
+variable "internal" {
+  description = "If true, the LB will be internal"
+  type        = bool
+  default     = false
 }
 
 variable "subnets" {
   description = "List of subnet IDs to attach to the LB"
   type        = list(string)
   default     = []
+  validation {
+    condition     = length(var.subnets) > 0 || var.subnet_mappings != null
+    error_message = "Either subnets or subnet_mappings must be specified."
+  }
 }
 
 variable "subnet_mappings" {
@@ -45,28 +45,10 @@ variable "enable_deletion_protection" {
   default     = false
 }
 
-variable "enable_cross_zone_load_balancing" {
-  description = "If true, cross-zone load balancing of the load balancer will be enabled"
-  type        = bool
-  default     = false
-}
-
-variable "client_keep_alive" {
-  description = "(Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds."
-  type        = number
-  default     = 3600
-}
-
 variable "customer_owned_ipv4_pool" {
   description = "The ID of the customer owned ipv4 pool to use for this load balancer"
   type        = string
   default     = null
-}
-
-variable "preserve_host_header" {
-  description = "Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to false."
-  type        = bool
-  default     = false
 }
 
 variable "ip_address_type" {
@@ -75,20 +57,43 @@ variable "ip_address_type" {
   default     = "ipv4"
 }
 
+variable "enable_zonal_shift" {
+  description = "(Optional) Whether zonal shift is enabled. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "tags" {
+  description = "A map of tags to assign to the resource"
+  type        = map(string)
+  default     = {}
+}
+
+###########################
+# Application Load Balancer Variables
+###########################
+variable "security_groups" {
+  description = "List of security group IDs to assign to the LB"
+  type        = list(string)
+  default     = []
+}
+
+variable "client_keep_alive" {
+  description = "(Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds."
+  type        = number
+  default     = 3600
+}
+
+variable "preserve_host_header" {
+  description = "Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "desync_mitigation_mode" {
   description = "Determines how the load balancer handles requests that might pose a security risk to your application"
   type        = string
   default     = "defensive"
-}
-
-variable "access_logs" {
-  description = "Access logs configuration for the LB"
-  type = map(object({
-    bucket  = string
-    prefix  = string
-    enabled = bool
-  }))
-  default = null
 }
 
 variable "connection_logs" {
@@ -99,12 +104,6 @@ variable "connection_logs" {
     enabled = bool
   }))
   default = null
-}
-
-variable "dns_record_client_routing_policy" {
-  description = "(Optional) How traffic is distributed among the load balancer Availability Zones. Possible values are any_availability_zone (default), availability_zone_affinity, or partial_availability_zone_affinity. See Availability Zone DNS affinity for additional details. Only valid for network type load balancers."
-  type        = string
-  default     = "any_availability_zone"
 }
 
 variable "idle_timeout" {
@@ -125,18 +124,6 @@ variable "enable_waf_fail_open" {
   default     = false
 }
 
-variable "enable_zonal_shift" {
-  description = "(Optional) Whether zonal shift is enabled. Defaults to false."
-  type        = bool
-  default     = false
-}
-
-variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
-  description = "(Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type network. The possible values are on and off."
-  type        = string
-  default     = null
-}
-
 variable "enable_tls_version_and_cipher_suite_headers" {
   description = "(Optional) Whether the two headers (x-amzn-tls-version and x-amzn-tls-cipher-suite), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type application. Defaults to false"
   type        = bool
@@ -155,7 +142,40 @@ variable "drop_invalid_header_fields" {
   default     = false
 }
 
+###########################
+# Network Load Balancer Variables
+###########################
+variable "enable_cross_zone_load_balancing" {
+  description = "If true, cross-zone load balancing of the load balancer will be enabled"
+  type        = bool
+  default     = false
+}
+
+variable "access_logs" {
+  description = "Access logs configuration for the LB"
+  type = map(object({
+    bucket  = string
+    prefix  = string
+    enabled = bool
+  }))
+  default = null
+}
+
+variable "dns_record_client_routing_policy" {
+  description = "(Optional) How traffic is distributed among the load balancer Availability Zones. Possible values are any_availability_zone (default), availability_zone_affinity, or partial_availability_zone_affinity. See Availability Zone DNS affinity for additional details. Only valid for network type load balancers."
+  type        = string
+  default     = "any_availability_zone"
+}
+
+variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
+  description = "(Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type network. The possible values are on and off."
+  type        = string
+  default     = null
+}
+
+###########################
 # Target Group Variables
+###########################
 variable "target_group_name" {
   description = "Name of the target group"
   type        = string
@@ -167,57 +187,6 @@ variable "target_group_name_prefix" {
   type        = string
   default     = null
 }
-
-# variable "target_group_port" {
-#   description = "Port on which targets receive traffic"
-#   type        = number
-# }
-
-# variable "target_group_protocol" {
-#   description = "Protocol to use for routing traffic to the targets"
-#   type        = string
-# }
-
-# variable "target_group_vpc_id" {
-#   description = "Identifier of the VPC in which to create the target group"
-#   type        = string
-# }
-
-# variable "target_group_target_type" {
-#   description = "Type of target that you must specify when registering targets with this target group"
-#   type        = string
-#   default     = "instance"
-# }
-
-# variable "target_group_deregistration_delay" {
-#   description = "Amount of time to wait for in-flight requests to complete before deregistering a target"
-#   type        = number
-#   default     = 300
-# }
-
-# variable "target_group_slow_start" {
-#   description = "Amount of time for targets to warm up before the load balancer sends them a full share of requests"
-#   type        = number
-#   default     = 0
-# }
-
-# variable "target_group_proxy_protocol_v2" {
-#   description = "Whether to enable support for proxy protocol v2"
-#   type        = bool
-#   default     = false
-# }
-
-# variable "target_group_load_balancing_algorithm_type" {
-#   description = "Determines how the load balancer selects targets when routing requests"
-#   type        = string
-#   default     = null
-# }
-
-# variable "target_group_preserve_client_ip" {
-#   description = "Whether client IP preservation is enabled"
-#   type        = bool
-#   default     = null
-# }
 
 variable "target_groups" {
   description = "Map of target group configurations"
@@ -260,7 +229,9 @@ variable "target_groups" {
   default = {}
 }
 
+###########################
 # Listener Variables
+###########################
 variable "listeners" {
   description = "Map of listener configurations"
   type = map(object({
@@ -364,10 +335,4 @@ variable "listener_rules" {
     }))
   }))
   default = {}
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resource"
-  type        = map(string)
-  default     = {}
 }

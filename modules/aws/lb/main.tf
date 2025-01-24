@@ -16,8 +16,10 @@ terraform {
 ###########################
 
 locals {
-  is_application = var.load_balancer_type == "application"
-  is_network     = var.load_balancer_type == "network"
+  is_application      = var.load_balancer_type == "application"
+  is_network          = var.load_balancer_type == "network"
+  use_subnet_mappings = var.subnet_mappings != null && length(var.subnet_mappings) > 0
+  use_subnets         = var.subnets != null && length(var.subnets) > 0
 }
 
 ###########################################################
@@ -50,7 +52,7 @@ resource "aws_lb" "load_balancer" {
     for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
     content {
       bucket  = connection_logs.value.bucket
-      prefix  = conenction_logs.value.prefix
+      prefix  = connection_logs.value.prefix
       enabled = connection_logs.value.enabled
     }
   }
@@ -69,12 +71,19 @@ resource "aws_lb" "load_balancer" {
   }
 
   dynamic "subnet_mapping" {
-    for_each = var.subnet_mappings
+    for_each = local.use_subnet_mappings ? var.subnet_mappings : []
     content {
       subnet_id            = subnet_mapping.value.subnet_id
       allocation_id        = subnet_mapping.value.allocation_id
       private_ipv4_address = subnet_mapping.value.private_ipv4_address
       ipv6_address         = subnet_mapping.value.ipv6_address
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = (local.use_subnets && !local.use_subnet_mappings) || (!local.use_subnets && local.use_subnet_mappings)
+      error_message = "Either subnets or subnet_mappings must be specified, but not both."
     }
   }
 
