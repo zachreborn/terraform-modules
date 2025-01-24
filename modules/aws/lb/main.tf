@@ -36,17 +36,17 @@ resource "aws_lb" "load_balancer" {
   security_groups            = var.security_groups
 
   # Application Load Balancer specific settings
-  desync_mitigation_mode     = local.is_application ? var.desync_mitigation_mode : null
-  idle_timeout               = local.is_application ? var.idle_timeout : null
-  drop_invalid_header_fields = local.is_application ? var.drop_invalid_header_fields : null
-  enable_http2               = local.is_application ? var.enable_http2 : null
-  enable_waf_fail_open       = local.is_application ? var.enable_waf_fail_open : null
-  client_keep_alive          = local.is_application ? var.client_keep_alive : null
-
+  desync_mitigation_mode                      = local.is_application ? var.desync_mitigation_mode : null
+  idle_timeout                                = local.is_application ? var.idle_timeout : null
+  drop_invalid_header_fields                  = local.is_application ? var.drop_invalid_header_fields : null
+  enable_http2                                = local.is_application ? var.enable_http2 : null
+  enable_waf_fail_open                        = local.is_application ? var.enable_waf_fail_open : null
+  client_keep_alive                           = local.is_application ? var.client_keep_alive : null
+  enable_tls_version_and_cipher_suite_headers = local.is_application ? var.enable_tls_version_and_cipher_suite_headers : null
 
   # Network Load Balancer specific settings
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null
-  dns_record_client_routing_policy = var.dns_record_client_routing_policy
+  dns_record_client_routing_policy = local.is_network ? var.dns_record_client_routing_policy : null
   dynamic "access_logs" {
     for_each = var.access_logs != null ? { create = var.access_logs } : {}
     content {
