@@ -63,6 +63,12 @@ variable "customer_owned_ipv4_pool" {
   default     = null
 }
 
+variable "preserve_host_header" {
+  description = "Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "ip_address_type" {
   description = "The type of IP addresses used by the subnets for your load balancer"
   type        = string
