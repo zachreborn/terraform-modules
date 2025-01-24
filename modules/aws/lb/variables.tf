@@ -182,17 +182,6 @@ variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
 ###########################
 # Target Group Variables
 ###########################
-# variable "target_group_name" {
-#   description = "Name of the target group"
-#   type        = string
-#   default     = null
-# }
-
-# variable "target_group_name_prefix" {
-#   description = "Prefix for the target group name"
-#   type        = string
-#   default     = null
-# }
 
 variable "target_groups" {
   description = "Map of target group configurations"
