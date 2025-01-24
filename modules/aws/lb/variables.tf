@@ -125,6 +125,12 @@ variable "enable_tls_version_and_cipher_suite_headers" {
   default     = false
 }
 
+variable "enable_xff_client_port" {
+  description = "(Optional) Whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer in application load balancers. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "drop_invalid_header_fields" {
   description = "Indicates whether invalid header fields are dropped in application load balancers"
   type        = bool

@@ -43,6 +43,7 @@ resource "aws_lb" "load_balancer" {
   enable_waf_fail_open                        = local.is_application ? var.enable_waf_fail_open : null
   client_keep_alive                           = local.is_application ? var.client_keep_alive : null
   enable_tls_version_and_cipher_suite_headers = local.is_application ? var.enable_tls_version_and_cipher_suite_headers : null
+  enable_xff_client_port                      = local.is_application ? var.enable_xff_client_port : null
   dynamic "connection_logs" {
     for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
     content {
