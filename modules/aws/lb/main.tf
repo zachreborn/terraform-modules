@@ -33,9 +33,9 @@ resource "aws_lb" "load_balancer" {
   enable_deletion_protection = var.enable_deletion_protection
   customer_owned_ipv4_pool   = var.customer_owned_ipv4_pool
   ip_address_type            = var.ip_address_type
+  security_groups            = var.security_groups
 
   # Application Load Balancer specific settings
-  security_groups            = local.is_application ? var.security_groups : null
   desync_mitigation_mode     = local.is_application ? var.desync_mitigation_mode : null
   idle_timeout               = local.is_application ? var.idle_timeout : null
   drop_invalid_header_fields = local.is_application ? var.drop_invalid_header_fields : null
