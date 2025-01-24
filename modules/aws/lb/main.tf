@@ -41,6 +41,8 @@ resource "aws_lb" "load_balancer" {
   drop_invalid_header_fields = local.is_application ? var.drop_invalid_header_fields : null
   enable_http2               = local.is_application ? var.enable_http2 : null
   enable_waf_fail_open       = local.is_application ? var.enable_waf_fail_open : null
+  client_keep_alive          = local.is_application ? var.client_keep_alive : null
+
 
   # Network Load Balancer specific settings
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null

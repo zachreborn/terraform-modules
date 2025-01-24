@@ -51,6 +51,12 @@ variable "enable_cross_zone_load_balancing" {
   default     = false
 }
 
+variable "client_keep_alive" {
+  description = "(Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds."
+  type        = number
+  default     = 3600
+}
+
 variable "customer_owned_ipv4_pool" {
   description = "The ID of the customer owned ipv4 pool to use for this load balancer"
   type        = string
