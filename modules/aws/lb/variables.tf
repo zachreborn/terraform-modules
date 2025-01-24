@@ -188,11 +188,11 @@ variable "target_group_name" {
   default     = null
 }
 
-variable "target_group_name_prefix" {
-  description = "Prefix for the target group name"
-  type        = string
-  default     = null
-}
+# variable "target_group_name_prefix" {
+#   description = "Prefix for the target group name"
+#   type        = string
+#   default     = null
+# }
 
 variable "target_groups" {
   description = "Map of target group configurations"
