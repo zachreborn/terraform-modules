@@ -125,6 +125,12 @@ variable "enable_zonal_shift" {
   default     = false
 }
 
+variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
+  description = "(Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type network. The possible values are on and off."
+  type        = string
+  default     = null
+}
+
 variable "enable_tls_version_and_cipher_suite_headers" {
   description = "(Optional) Whether the two headers (x-amzn-tls-version and x-amzn-tls-cipher-suite), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type application. Defaults to false"
   type        = bool
