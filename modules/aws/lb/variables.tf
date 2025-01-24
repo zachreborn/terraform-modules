@@ -136,6 +136,12 @@ variable "enable_xff_client_port" {
   default     = false
 }
 
+variable "xff_header_processing_mode" {
+  description = "(Optional) Determines how the load balancer modifies the X-Forwarded-For header in the HTTP request before sending the request to the target. The possible values are append, preserve, and remove. Only valid for Load Balancers of type application. The default is append."
+  type        = string
+  default     = "append"
+}
+
 variable "drop_invalid_header_fields" {
   description = "Indicates whether invalid header fields are dropped in application load balancers"
   type        = bool

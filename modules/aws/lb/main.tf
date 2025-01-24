@@ -47,6 +47,7 @@ resource "aws_lb" "load_balancer" {
   client_keep_alive                           = local.is_application ? var.client_keep_alive : null
   enable_tls_version_and_cipher_suite_headers = local.is_application ? var.enable_tls_version_and_cipher_suite_headers : null
   enable_xff_client_port                      = local.is_application ? var.enable_xff_client_port : null
+  xff_header_processing_mode                  = local.is_application ? var.xff_header_processing_mode : null
   preserve_host_header                        = local.is_application ? var.preserve_host_header : null
   dynamic "connection_logs" {
     for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
