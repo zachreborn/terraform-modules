@@ -43,6 +43,14 @@ resource "aws_lb" "load_balancer" {
   enable_waf_fail_open                        = local.is_application ? var.enable_waf_fail_open : null
   client_keep_alive                           = local.is_application ? var.client_keep_alive : null
   enable_tls_version_and_cipher_suite_headers = local.is_application ? var.enable_tls_version_and_cipher_suite_headers : null
+  dynamic "connection_logs" {
+    for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
+    content {
+      bucket  = connection_logs.value.bucket
+      prefix  = conenction_logs.value.prefix
+      enabled = connection_logs.value.enabled
+    }
+  }
 
   # Network Load Balancer specific settings
   enable_cross_zone_load_balancing = local.is_network ? var.enable_cross_zone_load_balancing : null
@@ -53,15 +61,6 @@ resource "aws_lb" "load_balancer" {
       bucket  = access_logs.value.bucket
       prefix  = access_logs.value.prefix
       enabled = access_logs.value.enabled
-    }
-  }
-
-  dynamic "connection_logs" {
-    for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
-    content {
-      bucket  = connection_logs.value.bucket
-      prefix  = conenction_logs.value.prefix
-      enabled = connection_logs.value.enabled
     }
   }
 
