@@ -11,13 +11,13 @@ variable "internal" {
 }
 
 variable "load_balancer_type" {
-  description = "Type of load balancer. Valid values are application or network"
+  description = "Type of load balancer. Valid values are application, gateway, or network"
   type        = string
   default     = "network"
 
   validation {
-    condition     = contains(["application", "network"], var.load_balancer_type)
-    error_message = "Valid values for load_balancer_type are (application, network)."
+    condition     = contains(["application", "gateway", "network"], var.load_balancer_type)
+    error_message = "Valid values for load_balancer_type are (application, gateway, network)."
   }
 }
 
