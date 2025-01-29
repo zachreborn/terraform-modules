@@ -28,7 +28,7 @@ locals {
 
 resource "aws_lb" "load_balancer" {
   # Common settings
-  name                       = var.name
+  name_prefix                = var.name_prefix
   internal                   = var.internal
   load_balancer_type         = var.load_balancer_type
   subnets                    = var.subnets
@@ -91,7 +91,7 @@ resource "aws_lb" "load_balancer" {
   tags = merge(
     var.tags,
     {
-      Name = var.name
+      Name = var.name_prefix
     },
   )
 }
