@@ -124,8 +124,7 @@ module "example_nlb" {
 This example creates an Application Load Balancer (ALB) in AWS with associated target groups, listeners, and listener rules. The ALB is configured as internal-facing within the specified VPC private subnets and uses a security group for access control. The target group is configured to use instance targets with HTTP protocol on port 80, including health checks. An HTTP listener is created on port 80 that forwards traffic to the target group. The module also includes listener rules for source IP-based routing, allowing traffic from specific CIDR ranges (192.168.1.0/24 and 10.0.0.0/8). The configuration supports sticky sessions using load balancer cookies and allows for customization of health check parameters, security settings, and tags.
 ```
 module "example_alb" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/lb?ref=dev_lb_maps"
-
+  source = "github.com/zachreborn/terraform-modules//modules/aws/lb?ref=LATEST-VERSION-HERE"
   # Load Balancer Configuration
   name                       = "example-alb"
   internal                   = true
