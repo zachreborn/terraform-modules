@@ -18,29 +18,31 @@ data "aws_region" "current" {}
 # API Gateway
 #############################
 resource "aws_apigatewayv2_api" "api" {
-  #Required
-  name                       = var.name
-  protocol_type              = var.protocol_type
-  route_selection_expression = "$request.method $request.path"
-
-  #Optional
   api_key_selection_expression = var.api_key_selection_expression
-  cors_configuration {
-    allow_credentials = lookup(var.cors_configuration, "allow_credentials", null)
-    allow_headers     = lookup(var.cors_configuration, "allow_headers", null)
-    allow_methods     = lookup(var.cors_configuration, "allow_methods", null)
-    allow_origins     = lookup(var.cors_configuration, "allow_origins", null)
-    expose_headers    = lookup(var.cors_configuration, "expose_headers", null)
-    max_age           = lookup(var.cors_configuration, "max_age", null)
-  }
+  body                         = var.body
   credentials_arn              = var.credentials_arn
   description                  = var.description
   disable_execute_api_endpoint = var.disable_execute_api_endpoint
   fail_on_warnings             = var.fail_on_warnings
+  name                         = var.name
+  protocol_type                = var.protocol_type
+  route_key                    = var.route_key
+  route_selection_expression   = var.route_selection_expression
   tags                         = var.tags
   target                       = var.target
   version                      = var.api_gateway_version
-  body                         = var.body
+
+  dynamic "cors_configuration" {
+    for_each = var.cors_configuration != null ? [var.cors_configuration] : []
+    content {
+      allow_credentials = cors_configuration.value.allow_credentials
+      allow_headers     = cors_configuration.value.allow_headers
+      allow_methods     = cors_configuration.value.allow_methods
+      allow_origins     = cors_configuration.value.allow_origins
+      expose_headers    = cors_configuration.value.expose_headers
+      max_age           = cors_configuration.value.max_age
+    }
+  }
 
   lifecycle {
     ignore_changes = [body]
