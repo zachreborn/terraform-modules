@@ -48,3 +48,29 @@ resource "aws_apigatewayv2_api" "api" {
     ignore_changes = [body]
   }
 }
+
+
+# Domain Name
+resource "aws_apigatewayv2_domain_name" "this" {
+  for_each = var.domain_names != null ? var.domain_names : {}
+
+  domain_name = each.key
+  tags        = var.tags
+
+  domain_name_configuration {
+    certificate_arn                        = each.value.certificate_arn
+    endpoint_type                          = each.value.endpoint_type
+    hosted_zone_id                         = each.value.hosted_zone_id
+    ownership_verification_certificate_arn = each.value.ownership_verification_certificate_arn
+    security_policy                        = each.value.security_policy
+    target_domain_name                     = each.value.target_domain_name
+  }
+
+  dynamic "mutual_tls_authentication" {
+    for_each = var.mutual_tls_authentication != null ? [var.mutual_tls_authentication] : []
+    content {
+      truststore_uri     = mutual_tls_authentication.value.truststore_uri
+      truststore_version = mutual_tls_authentication.value.truststore_version
+    }
+  }
+}
