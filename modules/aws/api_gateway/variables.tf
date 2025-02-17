@@ -68,6 +68,18 @@ variable "protocol_type" {
   type        = string
 }
 
+variable "route_key" {
+  description = "Route key for the API Gateway"
+  type        = string
+  default     = null
+}
+
+variable "route_selection_expression" {
+  description = "Route selection expression for the API Gateway"
+  type        = string
+  default     = "$request.method $request.path"
+}
+
 variable "target" {
   description = "Target for the API Gateway"
   type        = string
