@@ -118,6 +118,8 @@ No modules.
 | <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Whether to fail on warnings during API Gateway creation | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the API Gateway | `string` | n/a | yes |
 | <a name="input_protocol_type"></a> [protocol\_type](#input\_protocol\_type) | Protocol type of the API Gateway (HTTP or WEBSOCKET) | `string` | n/a | yes |
+| <a name="input_route_key"></a> [route\_key](#input\_route\_key) | Route key for the API Gateway | `string` | `null` | no |
+| <a name="input_route_selection_expression"></a> [route\_selection\_expression](#input\_route\_selection\_expression) | Route selection expression for the API Gateway | `string` | `"$request.method $request.path"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_target"></a> [target](#input\_target) | Target for the API Gateway | `string` | `null` | no |
 | <a name="input_version"></a> [version](#input\_version) | Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null. | `string` | `null` | no |
