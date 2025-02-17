@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 5.78.0"
     }
   }
 }
@@ -20,4 +20,13 @@ resource "aws_organizations_organization" "org" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+###########################################################
+# Centralized Root Management
+###########################################################
+module "centralized_root" {
+  source = "../../iam/organizations_features"
+
+  enabled_features = var.enabled_features
 }
