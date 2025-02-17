@@ -109,18 +109,18 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_api_gateway_version"></a> [api\_gateway\_version](#input\_api\_gateway\_version) | Version of the API Gateway | `string` | `null` | no |
 | <a name="input_api_key_selection_expression"></a> [api\_key\_selection\_expression](#input\_api\_key\_selection\_expression) | API key selection expression for the API Gateway | `string` | `"$request.header.x-api-key"` | no |
 | <a name="input_body"></a> [body](#input\_body) | OpenAPI specification for the API Gateway | `string` | `null` | no |
-| <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | CORS configuration for the API Gateway | <pre>object({<br/>    allow_credentials = bool<br/>    allow_headers     = list(string)<br/>    allow_methods     = list(string)<br/>    allow_origins     = list(string)<br/>    expose_headers    = list(string)<br/>    max_age           = number<br/>  })</pre> | <pre>{<br/>  "allow_credentials": false,<br/>  "allow_headers": [],<br/>  "allow_methods": [],<br/>  "allow_origins": [],<br/>  "expose_headers": [],<br/>  "max_age": 0<br/>}</pre> | no |
+| <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | CORS configuration for the API Gateway | <pre>object({<br/>    allow_credentials = optional(bool)         # Whether or not credentials are part of the CORS request.<br/>    allow_headers     = optional(list(string)) # List of allowed HTTP headers.<br/>    allow_methods     = optional(list(string)) # List of allowed methods.<br/>    allow_origins     = optional(list(string)) # List of allowed origins.<br/>    expose_headers    = optional(list(string)) # List of exposed headers in the response.<br/>    max_age           = optional(number)       # Number of seconds for which the browser should cache the preflight response.<br/>  })</pre> | <pre>{<br/>  "allow_credentials": false,<br/>  "allow_headers": [],<br/>  "allow_methods": [],<br/>  "allow_origins": [],<br/>  "expose_headers": [],<br/>  "max_age": 0<br/>}</pre> | no |
 | <a name="input_credentials_arn"></a> [credentials\_arn](#input\_credentials\_arn) | ARN of the credentials for the API Gateway | `string` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the API Gateway | `string` | `null` | no |
 | <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Whether to disable the execute-api endpoint | `bool` | `false` | no |
 | <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Whether to fail on warnings during API Gateway creation | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the API Gateway | `string` | n/a | yes |
 | <a name="input_protocol_type"></a> [protocol\_type](#input\_protocol\_type) | Protocol type of the API Gateway (HTTP or WEBSOCKET) | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the API Gateway | `map(string)` | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_target"></a> [target](#input\_target) | Target for the API Gateway | `string` | `null` | no |
+| <a name="input_version"></a> [version](#input\_version) | Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null. | `string` | `null` | no |
 
 ## Outputs
 
