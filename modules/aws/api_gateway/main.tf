@@ -30,7 +30,7 @@ resource "aws_apigatewayv2_api" "api" {
   route_selection_expression   = var.route_selection_expression
   tags                         = var.tags
   target                       = var.target
-  version                      = var.api_gateway_version
+  version                      = var.version
 
   dynamic "cors_configuration" {
     for_each = var.cors_configuration != null ? [var.cors_configuration] : []

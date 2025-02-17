@@ -1,36 +1,28 @@
 ############################################
-# Required
+# API Gateway Variables
 ############################################
-
-variable "name" {
-  description = "Name of the API Gateway"
-  type        = string
-}
-
-variable "protocol_type" {
-  description = "Protocol type of the API Gateway (HTTP or WEBSOCKET)"
-  type        = string
-}
-
-############################################
-# Optional
-############################################
-
 variable "api_key_selection_expression" {
   description = "API key selection expression for the API Gateway"
   type        = string
   default     = "$request.header.x-api-key"
 }
 
+variable "body" {
+  description = "OpenAPI specification for the API Gateway"
+  type        = string
+  default     = null
+}
+
+
 variable "cors_configuration" {
   description = "CORS configuration for the API Gateway"
   type = object({
-    allow_credentials = bool
-    allow_headers     = list(string)
-    allow_methods     = list(string)
-    allow_origins     = list(string)
-    expose_headers    = list(string)
-    max_age           = number
+    allow_credentials = optional(bool)         # Whether or not credentials are part of the CORS request.
+    allow_headers     = optional(list(string)) # List of allowed HTTP headers.
+    allow_methods     = optional(list(string)) # List of allowed methods.
+    allow_origins     = optional(list(string)) # List of allowed origins.
+    expose_headers    = optional(list(string)) # List of exposed headers in the response.
+    max_age           = optional(number)       # Number of seconds for which the browser should cache the preflight response.
   })
   default = {
     allow_credentials = false
@@ -66,10 +58,14 @@ variable "fail_on_warnings" {
   default     = false
 }
 
-variable "tags" {
-  description = "Tags to apply to the API Gateway"
-  type        = map(string)
-  default     = {}
+variable "name" {
+  description = "Name of the API Gateway"
+  type        = string
+}
+
+variable "protocol_type" {
+  description = "Protocol type of the API Gateway (HTTP or WEBSOCKET)"
+  type        = string
 }
 
 variable "target" {
@@ -78,14 +74,24 @@ variable "target" {
   default     = null
 }
 
-variable "api_gateway_version" {
-  description = "Version of the API Gateway"
+variable "version" {
+  description = "Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null."
   type        = string
   default     = null
+  validation {
+    condition     = var.version == null || (length(var.version) >= 1 && length(var.version) <= 64)
+    error_message = "Version identifier must be between 1 and 64 characters in length or null."
+  }
 }
 
-variable "body" {
-  description = "OpenAPI specification for the API Gateway"
-  type        = string
-  default     = null
+
+###############################
+# General Variables
+###############################
+variable "tags" {
+  description = "Tags to apply to the resources."
+  type        = map(string)
+  default = {
+    terraform = "true"
+  }
 }
