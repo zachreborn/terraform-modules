@@ -101,12 +101,12 @@ variable "version" {
 ############################################
 variable "domain_names" {
   description = "Map of domain names to create for the API Gateway"
-  type        = map(object({
+  type = map(object({
     domain_name_configuration = object({
-      certificate_arn = string
-      endpoint_type   = optional(string, "REGIONAL")
+      certificate_arn                        = string
+      endpoint_type                          = optional(string, "REGIONAL")
       ownership_verification_certificate_arn = optional(string)
-      security_policy = optional(string, "TLS_1_2")
+      security_policy                        = optional(string, "TLS_1_2")
     })
   }))
   default = {}
