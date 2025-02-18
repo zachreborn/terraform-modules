@@ -50,7 +50,9 @@ resource "aws_apigatewayv2_api" "api" {
 }
 
 
-# Domain Name
+############################################
+# Custom Domain Names
+############################################
 resource "aws_apigatewayv2_domain_name" "this" {
   for_each = var.domain_names != null ? var.domain_names : {}
 
@@ -60,10 +62,8 @@ resource "aws_apigatewayv2_domain_name" "this" {
   domain_name_configuration {
     certificate_arn                        = each.value.certificate_arn
     endpoint_type                          = each.value.endpoint_type
-    hosted_zone_id                         = each.value.hosted_zone_id
     ownership_verification_certificate_arn = each.value.ownership_verification_certificate_arn
     security_policy                        = each.value.security_policy
-    target_domain_name                     = each.value.target_domain_name
   }
 
   dynamic "mutual_tls_authentication" {

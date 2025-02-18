@@ -96,6 +96,31 @@ variable "version" {
   }
 }
 
+############################################
+# Custom Domain Names
+############################################
+variable "domain_names" {
+  description = "Map of domain names to create for the API Gateway"
+  type        = map(object({
+    domain_name_configuration = object({
+      certificate_arn = string
+      endpoint_type   = optional(string, "REGIONAL")
+      ownership_verification_certificate_arn = optional(string)
+      security_policy = optional(string, "TLS_1_2")
+    })
+  }))
+  default = {}
+}
+
+
+variable "mutual_tls_authentication" {
+  description = "Mutual TLS authentication configuration for the API Gateway"
+  type = object({
+    truststore_uri     = string
+    truststore_version = optional(string) # Version of the S3 object that contains the truststore. If not specified, the latest version is used. Versioning must first be enabled on the S3 bucket.
+  })
+  default = null
+}
 
 ###############################
 # General Variables
