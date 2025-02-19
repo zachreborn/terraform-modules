@@ -17,21 +17,14 @@ variable "body" {
 variable "cors_configuration" {
   description = "CORS configuration for the API Gateway"
   type = object({
-    allow_credentials = optional(bool)         # Whether or not credentials are part of the CORS request.
+    allow_credentials = optional(bool, false)  # Whether or not credentials are part of the CORS request.
     allow_headers     = optional(list(string)) # List of allowed HTTP headers.
     allow_methods     = optional(list(string)) # List of allowed methods.
     allow_origins     = optional(list(string)) # List of allowed origins.
     expose_headers    = optional(list(string)) # List of exposed headers in the response.
-    max_age           = optional(number)       # Number of seconds for which the browser should cache the preflight response.
+    max_age           = optional(number, 0)    # Number of seconds for which the browser should cache the preflight response.
   })
-  default = {
-    allow_credentials = false
-    allow_headers     = []
-    allow_methods     = []
-    allow_origins     = []
-    expose_headers    = []
-    max_age           = 0
-  }
+  default = {}
 }
 
 variable "credentials_arn" {
