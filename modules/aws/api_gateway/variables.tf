@@ -8,7 +8,7 @@ variable "api_key_selection_expression" {
 }
 
 variable "body" {
-  description = "OpenAPI specification for the API Gateway"
+  description = "The OpenAPI specification for the API Gateway. This will conflict with 'cors_configuration', 'integrations', 'routes', and 'version' as the OpenAPI specification would also set these configurations."
   type        = string
   default     = null
 }
@@ -34,9 +34,13 @@ variable "credentials_arn" {
 }
 
 variable "description" {
-  description = "Description of the API Gateway"
+  description = "Description of the API Gateway. Must be less than or equal to 1024 characters in length."
   type        = string
   default     = null
+  validation {
+    condition     = var.description == null || length(var.description) <= 1024
+    error_message = "Description must be less than or equal to 1024 characters in length."
+  }
 }
 
 variable "disable_execute_api_endpoint" {
@@ -57,8 +61,12 @@ variable "name" {
 }
 
 variable "protocol_type" {
-  description = "Protocol type of the API Gateway (HTTP or WEBSOCKET)"
+  description = "Protocol type of the API Gateway. Must be either 'HTTP' or 'WEBSOCKET'."
   type        = string
+  validation {
+    condition     = contains(["HTTP", "WEBSOCKET"], var.protocol_type)
+    error_message = "Protocol type must be either 'HTTP' or 'WEBSOCKET'."
+  }
 }
 
 variable "route_key" {
