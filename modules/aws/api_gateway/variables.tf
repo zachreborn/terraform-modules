@@ -122,6 +122,62 @@ variable "mutual_tls_authentication" {
   default = null
 }
 
+############################################
+# Integrations Variables
+############################################
+variable "integrations" {
+  description = "Map of integrations to create for the API Gateway"
+  type = map(object({
+    connection_id             = optional(string)      # ID of the VPC link for the integration.
+    connection_type           = optional(string)      # Type of the VPC link for the integration. Valid values are "VPC_LINK".
+    content_handling_strategy = optional(string)      # How to handle request payload content type conversions. Valid values are "CONVERT_TO_BINARY" and "CONVERT_TO_TEXT".
+    credentials_arn           = optional(string)      # ARN of the credentials to use for the integration.
+    description               = optional(string)      # Description of the integration.
+    integration_method        = optional(string)      # HTTP method for the integration.
+    integration_type          = optional(string)      # Type of the integration. Valid values are "AWS", "AWS_PROXY", "HTTP", "HTTP_PROXY", "MOCK".
+    integration_uri           = optional(string)      # URI of the integration.
+    passthrough_behavior      = optional(string)      # How to handle request payload content type conversions. Valid values are "WHEN_NO_MATCH" and "WHEN_NO_TEMPLATES".
+    request_parameters        = optional(map(string)) # Map of request parameters for the integration.
+    request_templates         = optional(map(string)) # Map of request templates for the integration.
+    timeout_milliseconds      = optional(number)      # Timeout in milliseconds for the integration.
+  }))
+  default = {}
+}
+
+############################################
+# Routes Variables
+############################################
+variable "routes" {
+  description = "Map of routes to create for the API Gateway"
+  type = map(object({
+    api_key_required                    = optional(bool)         # Whether an API key is required for the route.
+    authorization_scopes                = optional(list(string)) # List of authorization scopes for the route.
+    authorization_type                  = optional(string)       # Type of authorization for the route. Valid values are "NONE", "AWS_IAM", "CUSTOM", "JWT".
+    authorizer_id                       = optional(string)       # ID of the authorizer to use for the route.
+    model_selection_expression          = optional(string)       # Expression to select the model for the route.
+    operation_name                      = optional(string)       # Operation name for the route.
+    request_models                      = optional(map(string))  # Map of request models for the route.
+    request_parameters                  = optional(map(string))  # Map of request parameters for the route.
+    route_key                           = optional(string)       # Route key for the route.
+    route_response_selection_expression = optional(string)       # Expression to select the route response for the route.
+    target                              = optional(string)       # Target for the route.
+  }))
+  default = {}
+}
+
+############################################
+# Stages
+############################################
+variable "stages" {
+  description = "Map of stages to create for the API Gateway"
+  type = map(object({
+    auto_deploy = optional(bool)   # Whether to automatically deploy the stage.
+    description = optional(string) # Description of the stage.
+    stage_name  = optional(string) # Name of the stage.
+  }))
+  default = {}
+}
+
 ###############################
 # General Variables
 ###############################
