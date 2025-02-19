@@ -159,7 +159,7 @@ variable "routes" {
 }
 
 ############################################
-# Stages
+# Stages Variables
 ############################################
 variable "stages" {
   description = "Map of stages to create for the API Gateway"
@@ -169,6 +169,31 @@ variable "stages" {
     stage_name  = optional(string) # Name of the stage.
   }))
   default = {}
+}
+
+############################################
+# VPC Links Variables
+############################################
+
+variable "vpc_links" {
+  description = "Map of VPC links to create for the API Gateway"
+  type = map(object({
+    security_group_ids = list(string)          # List of security group IDs for the VPC link.
+    subnet_ids         = list(string)          # List of subnet IDs for the VPC link.
+    tags               = optional(map(string)) # Map of tags to apply to the VPC link.
+  }))
+  default = {}
+  # Example: 
+  # vpc_links = {
+  #   my_vpc_link_name = {
+  #     security_group_ids = ["sg-12345678"]
+  #     subnet_ids         = ["subnet-12345678"]
+  #   },
+  #   link_2_name = {
+  #     security_group_ids = ["sg-87654321"]
+  #     subnet_ids         = ["subnet-87654321"]
+  #   }
+  # }
 }
 
 ###############################
