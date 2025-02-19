@@ -43,10 +43,6 @@ resource "aws_apigatewayv2_api" "api" {
       max_age           = cors_configuration.value.max_age
     }
   }
-
-  lifecycle {
-    ignore_changes = [body]
-  }
 }
 
 
@@ -71,6 +67,49 @@ resource "aws_apigatewayv2_domain_name" "this" {
     content {
       truststore_uri     = mutual_tls_authentication.value.truststore_uri
       truststore_version = mutual_tls_authentication.value.truststore_version
+    }
+  }
+}
+
+############################################
+# Stages
+############################################
+resource "aws_apigatewayv2_stage" "this" {
+  for_each = var.stages != null ? var.stages : {}
+
+  api_id      = aws_apigatewayv2_api.api.id
+  auto_deploy = each.value.auto_deploy
+  name        = each.key
+  tags        = var.tags
+
+  dynamic "access_log_settings" {
+    for_each = each.value.access_log_settings != null ? [each.value.access_log_settings] : []
+    content {
+      destination_arn = access_log_settings.value.destination_arn
+      format          = access_log_settings.value.format
+    }
+  }
+
+  dynamic "default_route_settings" {
+    for_each = each.value.default_route_settings != null ? [each.value.default_route_settings] : []
+    content {
+      data_trace_enabled       = default_route_settings.value.data_trace_enabled
+      detailed_metrics_enabled = default_route_settings.value.detailed_metrics_enabled
+      logging_level            = default_route_settings.value.logging_level
+      throttling_burst_limit   = default_route_settings.value.throttling_burst_limit
+      throttling_rate_limit    = default_route_settings.value.throttling_rate_limit
+    }
+  }
+
+  dynamic "route_settings" {
+    for_each = each.value.route_settings != null ? each.value.route_settings : {}
+    content {
+      route_key                = route_settings.key
+      data_trace_enabled       = route_settings.value.data_trace_enabled
+      detailed_metrics_enabled = route_settings.value.detailed_metrics_enabled
+      logging_level            = route_settings.value.logging_level
+      throttling_burst_limit   = route_settings.value.throttling_burst_limit
+      throttling_rate_limit    = route_settings.value.throttling_rate_limit
     }
   }
 }
