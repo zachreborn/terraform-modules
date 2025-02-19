@@ -106,6 +106,7 @@ No modules.
 | [aws_apigatewayv2_integration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_integration) | resource |
 | [aws_apigatewayv2_route.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route) | resource |
 | [aws_apigatewayv2_stage.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage) | resource |
+| [aws_apigatewayv2_vpc_link.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_vpc_link) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -132,6 +133,7 @@ No modules.
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_target"></a> [target](#input\_target) | Target for the API Gateway | `string` | `null` | no |
 | <a name="input_version"></a> [version](#input\_version) | Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null. | `string` | `null` | no |
+| <a name="input_vpc_links"></a> [vpc\_links](#input\_vpc\_links) | Map of VPC links to create for the API Gateway | <pre>map(object({<br/>    security_group_ids = list(string)          # List of security group IDs for the VPC link.<br/>    subnet_ids         = list(string)          # List of subnet IDs for the VPC link.<br/>    tags               = optional(map(string)) # Map of tags to apply to the VPC link.<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
