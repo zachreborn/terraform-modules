@@ -77,6 +77,7 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "this" {
   }
 }
 
+#updated to allow multiple managed policies
 resource "aws_ssoadmin_managed_policy_attachment" "this" {
   for_each           = var.managed_policy_arns != null ? toset(var.managed_policy_arns) : toset([])
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
