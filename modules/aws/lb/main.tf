@@ -27,7 +27,7 @@ locals {
 
 resource "aws_lb" "load_balancer" {
   # Common settings
-  name_prefix                = var.name_prefix
+  name                       = var.name
   internal                   = var.internal
   load_balancer_type         = var.load_balancer_type
   enable_deletion_protection = var.enable_deletion_protection

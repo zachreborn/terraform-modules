@@ -1,8 +1,8 @@
 ###########################
 # Common Load Balancer Variables
 ###########################
-variable "name_prefix" {
-  description = "Name prefix of the load balancer"
+variable "name" {
+  description = "Name of the load balancer"
   type        = string
 }
 
