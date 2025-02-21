@@ -83,7 +83,7 @@ resource "aws_lb" "load_balancer" {
   tags = merge(
     var.tags,
     {
-      Name = var.name_prefix
+      Name = var.name
     },
   )
 }
