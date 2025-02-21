@@ -37,7 +37,7 @@ resource "aws_lb" "load_balancer" {
   enable_zonal_shift         = var.enable_zonal_shift
 
   dynamic "subnet_mapping" {
-    for_each = local.use_subnet_mappings ? var.subnet_mappings : []
+    for_each = local.use_subnet_mappings ? var.subnet_mappings : {}
     content {
       subnet_id            = subnet_mapping.value.subnet_id
       allocation_id        = subnet_mapping.value.allocation_id
