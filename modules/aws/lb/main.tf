@@ -19,7 +19,6 @@ locals {
   is_application      = var.load_balancer_type == "application"
   is_network          = var.load_balancer_type == "network"
   use_subnet_mappings = var.subnet_mappings != null && length(var.subnet_mappings) > 0
-  use_subnets         = var.subnets != null && length(var.subnets) > 0
 }
 
 ###########################################################
@@ -78,13 +77,6 @@ resource "aws_lb" "load_balancer" {
       bucket  = access_logs.value.bucket
       prefix  = access_logs.value.prefix
       enabled = access_logs.value.enabled
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition     = (local.use_subnets && !local.use_subnet_mappings) || (!local.use_subnets && local.use_subnet_mappings)
-      error_message = "Either subnets or subnet_mappings must be specified, but not both."
     }
   }
 
