@@ -24,9 +24,14 @@ variable "internal" {
 }
 
 variable "subnet_mappings" {
-  description = "List of subnet mapping configurations"
-  type        = list(map(string))
-  default     = []
+  description = "A list of subnet mapping configurations with optional values."
+  type = list(object({
+    subnet_id            = string
+    allocation_id        = optional(string, null)
+    private_ipv4_address = optional(string, null)
+    ipv6_address         = optional(string, null)
+  }))
+  default = []
 }
 
 variable "enable_deletion_protection" {
