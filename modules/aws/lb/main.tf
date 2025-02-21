@@ -37,6 +37,16 @@ resource "aws_lb" "load_balancer" {
   security_groups            = var.security_groups
   enable_zonal_shift         = var.enable_zonal_shift
 
+  dynamic "subnet_mapping" {
+    for_each = local.use_subnet_mappings ? var.subnet_mappings : []
+    content {
+      subnet_id            = subnet_mapping.value.subnet_id
+      allocation_id        = subnet_mapping.value.allocation_id
+      private_ipv4_address = subnet_mapping.value.private_ipv4_address
+      ipv6_address         = subnet_mapping.value.ipv6_address
+    }
+  }
+
   # Application Load Balancer specific settings
   desync_mitigation_mode                      = local.is_application ? var.desync_mitigation_mode : null
   idle_timeout                                = local.is_application ? var.idle_timeout : null
@@ -48,6 +58,7 @@ resource "aws_lb" "load_balancer" {
   enable_xff_client_port                      = local.is_application ? var.enable_xff_client_port : null
   xff_header_processing_mode                  = local.is_application ? var.xff_header_processing_mode : null
   preserve_host_header                        = local.is_application ? var.preserve_host_header : null
+
   dynamic "connection_logs" {
     for_each = local.is_application && var.connection_logs != null ? { create = var.connection_logs } : {}
     content {
@@ -67,16 +78,6 @@ resource "aws_lb" "load_balancer" {
       bucket  = access_logs.value.bucket
       prefix  = access_logs.value.prefix
       enabled = access_logs.value.enabled
-    }
-  }
-
-  dynamic "subnet_mapping" {
-    for_each = local.use_subnet_mappings ? var.subnet_mappings : []
-    content {
-      subnet_id            = subnet_mapping.value.subnet_id
-      allocation_id        = subnet_mapping.value.allocation_id
-      private_ipv4_address = subnet_mapping.value.private_ipv4_address
-      ipv6_address         = subnet_mapping.value.ipv6_address
     }
   }
 
