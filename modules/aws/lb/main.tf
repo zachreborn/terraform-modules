@@ -31,7 +31,6 @@ resource "aws_lb" "load_balancer" {
   name_prefix                = var.name_prefix
   internal                   = var.internal
   load_balancer_type         = var.load_balancer_type
-  subnets                    = var.subnets
   enable_deletion_protection = var.enable_deletion_protection
   customer_owned_ipv4_pool   = var.customer_owned_ipv4_pool
   ip_address_type            = var.ip_address_type

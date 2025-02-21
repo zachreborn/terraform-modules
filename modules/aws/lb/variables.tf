@@ -23,16 +23,6 @@ variable "internal" {
   default     = false
 }
 
-variable "subnets" {
-  description = "List of subnet IDs to attach to the LB"
-  type        = list(string)
-  default     = []
-  validation {
-    condition     = length(var.subnets) > 0 || var.subnet_mappings != null
-    error_message = "Either subnets or subnet_mappings must be specified."
-  }
-}
-
 variable "subnet_mappings" {
   description = "List of subnet mapping configurations"
   type        = list(map(string))
