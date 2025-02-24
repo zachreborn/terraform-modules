@@ -14,7 +14,7 @@ variable "access_token" {
 
 variable "auto_branch_creation_config" {
   description = "Auto branch creation config for the Amplify App."
-  type = map(object({
+  type = object({
     basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch. Must be input as "username:password".
     build_spec                    = optional(string)      # Build spec for the branch.
     enable_auto_build             = optional(bool)        # Enable auto build for the branch.
@@ -25,7 +25,7 @@ variable "auto_branch_creation_config" {
     framework                     = optional(string)      # The framework for the branch.
     pull_request_environment_name = optional(string)      # The name of the pull request environment.
     stage                         = optional(string)      # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.
-  }))
+  })
   default = null
 }
 
