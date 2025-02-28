@@ -45,6 +45,30 @@ resource "aws_apigatewayv2_api" "this" {
   }
 }
 
+############################################
+# Authorizers
+############################################
+
+resource "aws_apigatewayv2_authorizer" "this" {
+  for_each = var.authorizers != null ? var.authorizers : {}
+
+  api_id                            = aws_apigatewayv2_api.this.id
+  authorizer_type                   = each.value.authorizer_type
+  identity_sources                  = each.value.identity_sources
+  name                              = each.key
+  authorizer_uri                    = each.value.authorizer_uri
+  authorizer_credentials_arn        = each.value.authorizer_credentials_arn
+  authorizer_payload_format_version = each.value.authorizer_payload_format_version
+  enable_simple_responses           = each.value.enable_simple_responses
+
+  dynamic "jwt_configuration" {
+    for_each = var.jwt_configuration != null ? [var.jwt_configuration] : []
+    content {
+      audience = each.value.audience
+      issuer   = each.value.issuer
+    }
+  }
+}
 
 ############################################
 # Custom Domain Names
@@ -107,6 +131,21 @@ resource "aws_apigatewayv2_integration" "this" {
       server_name_to_verify = tls_config.value.server_name_to_verify
     }
   }
+}
+
+############################################
+# Integration Responses
+############################################
+
+resource "aws_apigatewayv2_integration_response" "this" {
+  for_each = var.integration_responses != null ? var.integration_responses : {}
+
+  api_id                        = aws_apigatewayv2_api.this.id
+  integration_id                = each.value.integration_id
+  integration_response_key      = each.value.integration_response_key
+  content_handling_strategy     = each.value.content_handling_strategy
+  response_templates            = each.value.response_templates
+  template_selection_expression = each.value.template_selection_expression
 }
 
 ############################################

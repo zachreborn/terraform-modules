@@ -98,6 +98,35 @@ variable "version" {
 }
 
 ############################################
+# Authorizers Variables
+############################################
+
+variable "authorizers" {
+  description = "Map of authorizers to create for the API Gateway"
+  type = map(object({
+    authorizer_credentials_arn  = optional(string)       # ARN of the credentials to use for the authorizer.
+    authorizer_result_ttl       = optional(number)       # TTL in seconds for the authorizer.
+    authorizer_type             = optional(string)       # Type of the authorizer. Valid values are "REQUEST" and "JWT".
+    authorizer_uri              = optional(string)       # URI of the authorizer.
+    identity_sources            = optional(list(string)) # List of identity sources for the authorizer.
+    name                        = optional(string)       # Name of the authorizer.
+    provider_arns               = optional(list(string)) # List of provider ARNs for the authorizer.
+    scopes                      = optional(list(string)) # List of scopes for the authorizer.
+    token_validation_expression = optional(string)       # Validation expression for the token.
+  }))
+  default = {}
+}
+
+variable "jwt_configuration" {
+  description = "JWT configuration for the API Gateway"
+  type = object({
+    audience = optional(list(string)) # List of audience values for the JWT configuration.
+    issuer   = optional(string)       # Issuer for the JWT configuration.
+  })
+  default = {}
+}
+
+############################################
 # Custom Domain Names
 ############################################
 variable "domain_names" {
@@ -141,6 +170,22 @@ variable "integrations" {
     request_parameters        = optional(map(string)) # Map of request parameters for the integration.
     request_templates         = optional(map(string)) # Map of request templates for the integration.
     timeout_milliseconds      = optional(number)      # Timeout in milliseconds for the integration.
+  }))
+  default = {}
+}
+
+############################################
+# Integration Responses Variables
+############################################
+
+variable "integration_responses" {
+  description = "Map of integration responses to create for the API Gateway"
+  type = map(object({
+    integration_id                = string                # ID of the integration for the integration response.
+    integration_response_key      = string                # Key of the integration response.
+    content_handling_strategy     = optional(string)      # How to handle request payload content type conversions. Valid values are "CONVERT_TO_BINARY" and "CONVERT_TO_TEXT".
+    response_templates            = optional(map(string)) # Map of response templates for the integration response.
+    template_selection_expression = optional(string)      # Expression to select the template for the integration response.
   }))
   default = {}
 }
