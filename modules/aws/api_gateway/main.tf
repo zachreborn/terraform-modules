@@ -149,6 +149,21 @@ resource "aws_apigatewayv2_integration_response" "this" {
 }
 
 ############################################
+# Models
+############################################
+
+resource "aws_apigatewayv2_model" "this" {
+  for_each = var.models != null ? var.models : {}
+
+  api_id       = aws_apigatewayv2_api.this.id
+  content_type = each.value.content_type
+  description  = each.value.description
+  name         = each.key
+  schema       = each.value.schema
+}
+
+
+############################################
 # Routes
 ############################################
 
@@ -175,6 +190,21 @@ resource "aws_apigatewayv2_route" "this" {
     }
   }
 }
+
+############################################
+# Route Responses
+############################################
+
+resource "aws_apigatewayv2_route_response" "this" {
+  for_each = var.route_responses != null ? var.route_responses : {}
+
+  api_id                     = aws_apigatewayv2_api.this.id
+  route_id                   = each.value.route_id
+  route_response_key         = each.value.route_response_key
+  response_models            = each.value.response_models
+  model_selection_expression = each.value.model_selection_expression
+}
+
 
 ############################################
 # Stages

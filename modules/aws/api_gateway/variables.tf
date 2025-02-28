@@ -190,6 +190,23 @@ variable "integration_responses" {
   default = {}
 }
 
+############################################ 
+# Models Variables
+############################################
+
+variable "models" {
+  description = "Map of models to create for the API Gateway"
+  type = map(object({
+    content_type = string           # Content type of the model.
+    description  = optional(string) # Description of the model.
+    name         = string           # Name of the model.
+    schema       = string           # Schema of the model.
+  }))
+  default = {}
+}
+
+
+
 ############################################
 # Routes Variables
 ############################################
@@ -207,6 +224,21 @@ variable "routes" {
     route_key                           = optional(string)       # Route key for the route.
     route_response_selection_expression = optional(string)       # Expression to select the route response for the route.
     target                              = optional(string)       # Target for the route.
+  }))
+  default = {}
+}
+
+############################################
+# Route Responses Variables
+############################################
+
+variable "route_responses" {
+  description = "Map of route responses to create for the API Gateway"
+  type = map(object({
+    route_id                   = string                # ID of the route for the route response.
+    route_response_key         = string                # Key of the route response.
+    response_models            = optional(map(string)) # Map of response models for the route response.
+    model_selection_expression = optional(string)      # Expression to select the template for the route response.
   }))
   default = {}
 }
