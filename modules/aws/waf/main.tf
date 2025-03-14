@@ -31,17 +31,19 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   name        = var.name
   scope       = var.scope # REGIONAL(default) or CLOUDFRONT
   description = var.description
+
+  # FIX: need to fix this and add a variable for the default_action. Probably do a default_action with  = var.default_action where var has a default map setting block. If allow then allow else default block. 
   dynamic "default_action" {
-    # TODO: start here for default action and add logic for allow/block for default.  
+    content { 
+    var.default_action
+    }  
   }
   dynamic "rule" {
     for_each = each.value.rule != null ? each.value.rule : {}
     content {
       name     = rule.value.name
       priority = rule.value.priority
-      action {
-        block {}
-      }
+
       statement {
         managed_rule_group_statement {
           name        = rule.value.managed_rule_group_statement.name
