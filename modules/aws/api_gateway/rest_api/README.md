@@ -103,7 +103,12 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [aws_api_gateway_integration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
+| [aws_api_gateway_method.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
+| [aws_api_gateway_method_response.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_response) | resource |
+| [aws_api_gateway_resource.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
 | [aws_api_gateway_rest_api.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
+| [aws_api_gateway_vpc_link.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_vpc_link) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -117,13 +122,18 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | A description of the API. | `string` | `null` | no |
 | <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Specifies whether the execute API endpoint is disabled. Defaults to false. | `bool` | `false` | no |
 | <a name="input_endpoint_configuration"></a> [endpoint\_configuration](#input\_endpoint\_configuration) | The endpoint configuration for the API. This is a complex object. | <pre>object({<br/>    types            = list(string)           # List of endpoint types. Valid values are 'EDGE', 'REGIONAL', and 'PRIVATE'.<br/>    vpc_endpoint_ids = optional(list(string)) # List of VPC endpoint IDs for private endpoints. Only supported if the type is 'PRIVATE'.<br/>  })</pre> | `null` | no |
-| <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Specifies whether to fail on warnings when creating the API. Defaults to true. | `bool` | `true` | no |
-| <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | The minimum compression size in bytes. Defaults to 0, which disables compression. | `number` | `0` | no |
+| <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Specifies whether to fail on warnings when creating the API. Defaults to false. | `bool` | `false` | no |
+| <a name="input_integrations"></a> [integrations](#input\_integrations) | A map of integrations for the API. Each key is a combination of HTTP method and resource path, and the value is a map of integration settings. | <pre>map(object({<br/>    type                 = string<br/>    uri                  = string<br/>    http_method          = optional(string)<br/>    request_parameters   = optional(map(string))<br/>    request_templates    = optional(map(string))<br/>    passthrough_behavior = optional(string)<br/>    content_handling     = optional(string)<br/>    timeout_milliseconds = optional(number)<br/>    cache_key_parameters = optional(list(string))<br/>    cache_namespace      = optional(string)<br/>    connection_type      = optional(string)<br/>    connection_id        = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_method_responses"></a> [method\_responses](#input\_method\_responses) | A map of method responses for the API. Each key is a combination of HTTP method and resource path, and the value is a map of response settings. | <pre>map(object({<br/>    status_code         = string<br/>    response_models     = optional(map(string))<br/>    response_parameters = optional(map(string))<br/>    resource            = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_methods"></a> [methods](#input\_methods) | A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings. | <pre>map(object({<br/>    authorization_type  = string<br/>    authorizer_id       = optional(string)<br/>    api_key_required    = optional(bool)<br/>    request_models      = optional(map(string))<br/>    request_parameters  = optional(map(string))<br/>    response_models     = optional(map(string))<br/>    response_parameters = optional(map(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | The minimum compression size in bytes. Must be either a string containing an integer between -1 and 10485760 or set to null. Defaults to null, which disables compression. | `number` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the API. This is required. | `string` | n/a | yes |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | A map of API Gateway-specific parameters that can be used to configure the API. | `map(string)` | `{}` | no |
 | <a name="input_policy"></a> [policy](#input\_policy) | The resource policy for the API in JSON format. | `string` | `null` | no |
-| <a name="input_put_rest_api_mode"></a> [put\_rest\_api\_mode](#input\_put\_rest\_api\_mode) | The mode for the PUT Rest API operation. Valid values are 'merge' and 'overwrite'. | `string` | `"merge"` | no |
+| <a name="input_put_rest_api_mode"></a> [put\_rest\_api\_mode](#input\_put\_rest\_api\_mode) | The mode for the PUT Rest API operation. Valid values are 'merge' and 'overwrite'. | `string` | `"overwrite"` | no |
+| <a name="input_resource_paths"></a> [resource\_paths](#input\_resource\_paths) | A list of resource paths to create under the API. Each path is a string. | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the API. | `map(string)` | `{}` | no |
+| <a name="input_vpc_links"></a> [vpc\_links](#input\_vpc\_links) | A map of VPC links for the API. Each key is the name of the VPC link and the value is a map of VPC link settings. | <pre>map(object({<br/>    description = string<br/>    target_arns = list(string)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
