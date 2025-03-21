@@ -45,9 +45,13 @@ variable "endpoint_configuration" {
 }
 
 variable "minimum_compression_size" {
-  description = "The minimum compression size in bytes. Defaults to 0, which disables compression."
+  description = "The minimum compression size in bytes. Must be either a string containing an integer between -1 and 10485760 or set to null. Defaults to null, which disables compression."
   type        = number
-  default     = 0
+  default     = null
+  validation {
+    condition     = var.minimum_compression_size == null || (var.minimum_compression_size >= -1 && var.minimum_compression_size <= 10485760)
+    error_message = "minimum_compression_size must null or an integer be between -1 and 10485760."
+  }
 }
 
 variable "name" {
@@ -56,9 +60,9 @@ variable "name" {
 }
 
 variable "fail_on_warnings" {
-  description = "Specifies whether to fail on warnings when creating the API. Defaults to true."
+  description = "Specifies whether to fail on warnings when creating the API. Defaults to false."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "parameters" {
