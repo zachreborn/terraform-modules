@@ -87,7 +87,7 @@ variable "target" {
   default     = null
 }
 
-variable "version" {
+variable "api_version" {
   description = "Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null."
   type        = string
   default     = null
