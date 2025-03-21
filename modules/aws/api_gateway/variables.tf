@@ -92,7 +92,7 @@ variable "api_version" {
   type        = string
   default     = null
   validation {
-    condition     = var.api_version == null || (length(var.api_version) >= 1 && length(var.api_version) <= 64)
+    condition     = var.api_version == null || can(length(var.api_version) >= 1 && length(var.api_version) <= 64)
     error_message = "Version identifier must be between 1 and 64 characters in length or null."
   }
 }
