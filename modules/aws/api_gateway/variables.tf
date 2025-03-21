@@ -38,7 +38,7 @@ variable "description" {
   type        = string
   default     = null
   validation {
-    condition     = var.description == null || length(var.description) <= 1024
+    condition     = var.description == null || can(length(var.description) <= 1024)
     error_message = "Description must be less than or equal to 1024 characters in length."
   }
 }
