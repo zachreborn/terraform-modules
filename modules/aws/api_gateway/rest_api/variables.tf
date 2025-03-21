@@ -80,7 +80,11 @@ variable "policy" {
 variable "put_rest_api_mode" {
   description = "The mode for the PUT Rest API operation. Valid values are 'merge' and 'overwrite'."
   type        = string
-  default     = "merge"
+  default     = "overwrite"
+  validation {
+    condition     = contains(["merge", "overwrite"], var.put_rest_api_mode)
+    error_message = "put_rest_api_mode must be either 'merge' or 'overwrite'."
+  }
 }
 
 ############################################
