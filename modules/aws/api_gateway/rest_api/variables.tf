@@ -108,9 +108,9 @@ variable "methods" {
     authorization_type   = string
     authorizer_id        = optional(string)
     api_key_required     = optional(bool)
-    method               = optional(string)       #NOTE: Zach
-    operation_name       = optional(string)       #NOTE: Zach
-    resource             = optional(list(string)) #NOTE: Zach
+    method               = optional(string) #NOTE: Zach
+    operation_name       = optional(string) #NOTE: Zach
+    resource             = optional(string) #NOTE: Zach
     request_models       = optional(map(string))
     request_parameters   = optional(map(string))
     request_validator_id = optional(map(string)) #NOTE: Zach
