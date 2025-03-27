@@ -113,7 +113,7 @@ variable "methods" {
     resource             = optional(string) #NOTE: Zach
     request_models       = optional(map(string))
     request_parameters   = optional(map(string))
-    request_validator_id = optional(map(string)) #NOTE: Zach
+    request_validator_id = optional(string) #NOTE: Zach
     response_models      = optional(map(string))
     response_parameters  = optional(map(string))
   }))
