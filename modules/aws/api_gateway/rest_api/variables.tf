@@ -105,7 +105,7 @@ variable "methods" {
   description = "A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings."
   type = map(object({
     authorization_scopes = optional(list(string)) #NOTE: Zach
-    authorization_type   = string
+    authorization        = string
     authorizer_id        = optional(string)
     api_key_required     = optional(bool)
     method               = optional(string) #NOTE: Zach
