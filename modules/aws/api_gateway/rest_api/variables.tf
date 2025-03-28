@@ -134,18 +134,21 @@ variable "method_responses" {
 variable "integrations" {
   description = "A map of integrations for the API. Each key is a combination of HTTP method and resource path, and the value is a map of integration settings."
   type = map(object({
-    type                 = string
-    uri                  = string
-    http_method          = optional(string)
-    request_parameters   = optional(map(string))
-    request_templates    = optional(map(string))
-    passthrough_behavior = optional(string)
-    content_handling     = optional(string)
-    timeout_milliseconds = optional(number)
-    cache_key_parameters = optional(list(string))
-    cache_namespace      = optional(string)
-    connection_type      = optional(string)
-    connection_id        = optional(string)
+    type                    = string
+    uri                     = string
+    resource                = string
+    credentials             = optional(string)
+    http_method             = optional(string)
+    integration_http_method = optional(string)
+    request_parameters      = optional(map(string))
+    request_templates       = optional(map(string))
+    passthrough_behavior    = optional(string)
+    content_handling        = optional(string)
+    timeout_milliseconds    = optional(number)
+    cache_key_parameters    = optional(list(string))
+    cache_namespace         = optional(string)
+    connection_type         = optional(string)
+    connection_id           = optional(string)
   }))
   default = {}
 }
