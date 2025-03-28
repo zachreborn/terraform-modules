@@ -91,11 +91,15 @@ variable "put_rest_api_mode" {
 # API Gateway Resource Variables
 ############################################
 
-variable "resource_paths" {
-  description = "A list of resource paths to create under the API. Each path is a string."
-  type        = list(string)
+variable "resources" {
+  description = "A map of resources to create under the API. Each key is the resource path and the value is a map of resource settings."
+  type = map(object({
+    rest_api_id = string
+    parent_id   = string
+    path_part   = string
+  }))
+  default = {}
 }
-
 
 ############################################
 # API Gateway Method Variables
