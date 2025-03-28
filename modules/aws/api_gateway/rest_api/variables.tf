@@ -106,15 +106,15 @@ variable "resources" {
 variable "methods" {
   description = "A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings."
   type = map(object({
-    authorization_scopes = optional(list(string)) #NOTE: Zach
+    authorization_scopes = optional(list(string))
     authorization        = required(string)
     authorizer_id        = optional(string)
     api_key_required     = optional(bool)
-    http_method          = required(string) #NOTE: Zach
-    operation_name       = optional(string) #NOTE: Zach
+    http_method          = required(string)
+    operation_name       = optional(string)
     request_models       = optional(map(string))
     request_parameters   = optional(map(string))
-    request_validator_id = optional(string) #NOTE: Zach
+    request_validator_id = optional(string)
     response_models      = optional(map(string))
     response_parameters  = optional(map(string))
   }))
