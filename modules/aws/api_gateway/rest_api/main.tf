@@ -44,6 +44,7 @@ resource "aws_api_gateway_rest_api" "this" {
 ############################################
 
 resource "aws_api_gateway_resource" "this" {
+  #BUG: Something up with terraform lsp seeing no variables named resources, but it is there. 
   for_each = var.resources != null ? var.resources : {}
   # Points to the api gateway.
   rest_api_id = aws_api_gateway_rest_api.this.id
