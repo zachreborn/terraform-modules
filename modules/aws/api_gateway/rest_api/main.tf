@@ -45,10 +45,11 @@ resource "aws_api_gateway_rest_api" "this" {
 
 resource "aws_api_gateway_resource" "this" {
   for_each = var.resources != null ? var.resources : {}
-
+  # Points to the api gateway.
   rest_api_id = aws_api_gateway_rest_api.this.id
   parent_id   = aws_api_gateway_rest_api.this.root_resource_id
-  path_part   = each.key
+  # Allows for different paths for different resources. 
+  path_part = each.value.path_part
 }
 
 ############################################
@@ -57,15 +58,16 @@ resource "aws_api_gateway_resource" "this" {
 
 resource "aws_api_gateway_method" "this" {
   for_each = var.methods != null ? var.methods : {}
-
+  # Points methods to the api gateway
+  resource_id = aws_api_gateway_resource.this.id
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  # Method details
   api_key_required     = each.value.api_key_required
   authorization        = each.value.authorization
   authorizer_id        = each.value.authorizer_id
   authorization_scopes = each.value.authorization_scopes
-  http_method          = each.value.method
+  http_method          = each.value.http_method
   operation_name       = each.value.operation_name
-  resource_id          = aws_api_gateway_resource.this.id
-  rest_api_id          = aws_api_gateway_rest_api.this.id
   request_models       = each.value.request_models
   request_parameters   = each.value.request_parameters
   request_validator_id = each.value.request_validator_id
@@ -74,7 +76,7 @@ resource "aws_api_gateway_method" "this" {
 resource "aws_api_gateway_method_response" "this" {
   for_each = var.method_responses != null ? var.method_responses : {}
 
-  http_method         = aws_api_gateway_method.this[each.key].http_method
+  http_method         = aws_api_gateway_method.this.http_method
   rest_api_id         = aws_api_gateway_rest_api.this.id
   resource_id         = aws_api_gateway_resource.this.id
   response_models     = each.value.response_models
@@ -91,7 +93,7 @@ resource "aws_api_gateway_integration" "this" {
   connection_id           = each.value.connection_id
   content_handling        = each.value.content_handling
   credentials             = each.value.credentials
-  http_method             = aws_api_gateway_method.this[each.key].http_method
+  http_method             = aws_api_gateway_method.this.http_method
   integration_http_method = each.value.integration_http_method
   passthrough_behavior    = each.value.passthrough_behavior
   rest_api_id             = aws_api_gateway_rest_api.this.id
@@ -110,7 +112,7 @@ resource "aws_api_gateway_integration" "this" {
 resource "aws_api_gateway_vpc_link" "this" {
   for_each = var.vpc_links != null ? var.vpc_links : {}
 
-  name        = each.key
+  name        = each.value.name
   description = each.value.description
   target_arns = each.value.target_arns
   tags        = var.tags

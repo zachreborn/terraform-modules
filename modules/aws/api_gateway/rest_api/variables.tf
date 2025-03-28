@@ -94,9 +94,7 @@ variable "put_rest_api_mode" {
 variable "resources" {
   description = "A map of resources to create under the API. Each key is the resource path and the value is a map of resource settings."
   type = map(object({
-    rest_api_id = string
-    parent_id   = string
-    path_part   = string
+    path_part = string
   }))
   default = {}
 }
@@ -109,12 +107,11 @@ variable "methods" {
   description = "A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings."
   type = map(object({
     authorization_scopes = optional(list(string)) #NOTE: Zach
-    authorization        = string
+    authorization        = required(string)
     authorizer_id        = optional(string)
     api_key_required     = optional(bool)
-    method               = optional(string) #NOTE: Zach
+    http_method          = required(string) #NOTE: Zach
     operation_name       = optional(string) #NOTE: Zach
-    resource             = optional(string) #NOTE: Zach
     request_models       = optional(map(string))
     request_parameters   = optional(map(string))
     request_validator_id = optional(string) #NOTE: Zach
@@ -130,7 +127,6 @@ variable "method_responses" {
     status_code         = string
     response_models     = optional(map(string))
     response_parameters = optional(map(string))
-    resource            = string
   }))
   default = {}
 }
@@ -157,6 +153,10 @@ variable "integrations" {
   default = {}
 }
 
+############################################
+# VPC Link Variables
+############################################
+
 variable "vpc_links" {
   description = "A map of VPC links for the API. Each key is the name of the VPC link and the value is a map of VPC link settings."
   type = map(object({
@@ -172,7 +172,11 @@ variable "vpc_links" {
 
 variable "tags" {
   description = "A map of tags to assign to the API."
-  type        = map(string)
-  default     = {}
+  type = map(object({
+    name        = required(string)
+    description = optional(string)
+    target_arns = optional(list(string))
+  }))
+  default = {}
 }
 
