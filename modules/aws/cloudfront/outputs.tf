@@ -1,5 +1,5 @@
 ###########################
-# Resource Outputs
+# API Gateway Outputs
 ###########################
 output "arn" {
   description = "ARN of the CloudFront distribution"
