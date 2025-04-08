@@ -12,7 +12,7 @@ terraform {
   }
 }
 
-resource "aws_vpc_dhcp_options" "dc_dns" {
+resource "aws_vpc_dhcp_options" "this" {
   count               = var.enable_dhcp_options ? 1 : 0
   domain_name         = var.domain_name
   domain_name_servers = var.domain_name_servers
@@ -20,7 +20,7 @@ resource "aws_vpc_dhcp_options" "dc_dns" {
   tags                = var.tags
 }
 
-resource "aws_vpc_dhcp_options_association" "dc_dns" {
+resource "aws_vpc_dhcp_options_association" "this" {
   count           = var.enable_dhcp_options ? 1 : 0
   dhcp_options_id = aws_vpc_dhcp_options.dc_dns[0].id
   vpc_id          = var.vpc_id
