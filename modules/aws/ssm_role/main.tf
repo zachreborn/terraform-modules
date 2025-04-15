@@ -10,6 +10,7 @@ terraform {
 
 resource "aws_iam_role" "this" {
   name               = "ssm-service-role"
+  tags               = var.tags
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
