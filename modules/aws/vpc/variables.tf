@@ -43,11 +43,8 @@ variable "ssm_vpc_endpoint_sg_tags" {
   description = "(Optional) A mapping of tags to assign to the object."
   type        = map(string)
   default = {
-    Name        = "ssm_vpc_endpoint_sg"
-    terraform   = "true"
-    created_by  = "<YOUR_NAME>"
-    environment = "prod"
-    priority    = "high"
+    Name      = "ssm_vpc_endpoint_sg"
+    terraform = "true"
   }
 }
 
