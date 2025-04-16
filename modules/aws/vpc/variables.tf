@@ -39,15 +39,6 @@ variable "enable_ssm_vpc_endpoints" {
   default     = false
 }
 
-variable "ssm_vpc_endpoint_sg_tags" {
-  description = "(Optional) A mapping of tags to assign to the object."
-  type        = map(string)
-  default = {
-    Name      = "ssm_vpc_endpoint_sg"
-    terraform = "true"
-  }
-}
-
 ###########################
 # Subnets
 ###########################
