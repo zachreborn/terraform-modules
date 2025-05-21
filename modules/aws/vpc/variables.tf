@@ -253,7 +253,7 @@ variable "enable_nat_gateway" {
 }
 
 variable "enable_internet_gateway" {
-  description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True."
+  description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults False."
   type        = bool
   default     = false
 }
