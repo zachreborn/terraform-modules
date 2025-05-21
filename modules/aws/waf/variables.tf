@@ -21,6 +21,18 @@ variable "description" {
 # Rule Configuration
 ############################################
 
+variable "default_action" {
+  description = "Default action for the WAF ACL"
+  type = object({
+    allow = optional(bool)
+    block = optional(bool)
+  })
+  default = {
+    allow = false
+    block = true
+  }
+}
+
 variable "rule" {
   description = "Map of rule configuration"
   type = map(object({

@@ -34,9 +34,11 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 
   # FIX: need to fix this and add a variable for the default_action. Probably do a default_action with  = var.default_action where var has a default map setting block. If allow then allow else default block. 
   dynamic "default_action" {
-    content { 
-    var.default_action
-    }  
+    for_each = each.value.default_action != null ? each.value.default_action : {}
+    content {
+      allow = default_action.value.allow
+      block = default_action.value.block
+    }
   }
   dynamic "rule" {
     for_each = each.value.rule != null ? each.value.rule : {}
