@@ -33,6 +33,12 @@ variable "instance_tenancy" {
 # VPC Endpoints
 ###########################
 
+variable "enable_s3_endpoint" {
+  description = "(Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False"
+  type        = bool
+  default     = false
+}
+
 variable "enable_ssm_vpc_endpoints" {
   description = "(Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. Defaults true."
   type        = bool
@@ -256,12 +262,6 @@ variable "enable_internet_gateway" {
   description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True."
   type        = bool
   default     = true
-}
-
-variable "enable_s3_endpoint" {
-  description = "(Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False"
-  type        = bool
-  default     = false
 }
 
 variable "enable_flow_logs" {
