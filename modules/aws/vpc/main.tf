@@ -71,6 +71,10 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
