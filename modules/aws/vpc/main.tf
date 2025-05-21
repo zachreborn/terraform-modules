@@ -40,10 +40,10 @@ resource "aws_vpc" "vpc" {
 # VPC Endpoints
 ###########################
 
-resource "aws_security_group" "security_group" {
+resource "aws_security_group" "ssm_vpc_endpoint" {
   description = "SSM VPC service endpoint SG."
   name        = "ssm_vpc_endpoint_sg"
-  tags        = var.tags
+  tags        = merge({ Name = "ssm_vpc_endpoint_sg" }, var.tags)
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
@@ -71,6 +71,10 @@ resource "aws_security_group" "security_group" {
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -78,10 +82,10 @@ resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -89,10 +93,10 @@ resource "aws_vpc_endpoint" "kms" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.kms"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -100,10 +104,10 @@ resource "aws_vpc_endpoint" "ssm" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -111,10 +115,10 @@ resource "aws_vpc_endpoint" "ssm-contacts" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-contacts"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -122,10 +126,10 @@ resource "aws_vpc_endpoint" "ssm-incidents" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-incidents"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -133,10 +137,10 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
-  security_group_ids  = [aws_security_group.security_group.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -212,6 +216,7 @@ resource "aws_route_table" "public_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# !FIX: We should probably update this to just disable the igw if there are no public subnets present and default to disable since we are unlikely to use it in our infra.  
 resource "aws_route" "public_default_route" {
   count                  = local.enable_igw ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
