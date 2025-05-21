@@ -179,7 +179,7 @@ No modules.
 | <a name="input_group_attribute_path"></a> [group\_attribute\_path](#input\_group\_attribute\_path) | (Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO. | `string` | `"DisplayName"` | no |
 | <a name="input_groups"></a> [groups](#input\_groups) | (Required) The group names to lookup and associate with the permission set. | `set(string)` | n/a | yes |
 | <a name="input_inline_policy"></a> [inline\_policy](#input\_inline\_policy) | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline\_policy. | `string` | `null` | no |
-| <a name="input_managed_policy_arn"></a> [managed\_policy\_arn](#input\_managed\_policy\_arn) | (Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `string` | `null` | no |
+| <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `list(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the permission set. | `string` | n/a | yes |
 | <a name="input_relay_state"></a> [relay\_state](#input\_relay\_state) | (Optional) The relay state URL used to redirect users within the application during the federation authentication process. | `string` | `null` | no |
 | <a name="input_session_duration"></a> [session\_duration](#input\_session\_duration) | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. | `string` | `"PT1H"` | no |
