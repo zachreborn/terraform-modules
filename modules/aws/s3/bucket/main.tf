@@ -61,6 +61,14 @@ resource "aws_s3_bucket" "this" {
   tags                = var.tags
 }
 
+resource "aws_s3_bucket_ownership_controls" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    object_ownership = var.object_ownership
+  }
+}
+
 resource "aws_s3_bucket_acl" "this" {
   count  = var.acl != null ? 1 : 0
   bucket = aws_s3_bucket.this.id
