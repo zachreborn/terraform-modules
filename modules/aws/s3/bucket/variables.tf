@@ -110,7 +110,7 @@ variable "bucket_object_lock_enabled" {
 }
 
 ######################
-# S3 ACL Variables
+# S3 Ownership Controls
 ######################
 variable "object_ownership" {
   type        = string
