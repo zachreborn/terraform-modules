@@ -114,7 +114,7 @@ variable "bucket_object_lock_enabled" {
 ######################
 variable "object_ownership" {
   type        = string
-  description = "(Optional) The Object Ownership setting for the bucket. Valid values: BucketOwnerPreferred, BucketOwnerEnforced, ObjectWriter. Defaults to BucketOwnerEnforced."
+  description = "(Optional) The Object Ownership setting for the bucket. When set to BucketOwnerEnforced, S3 bucket ACLs are not allowed to be utilized. Valid values: BucketOwnerPreferred, BucketOwnerEnforced, ObjectWriter. Defaults to BucketOwnerEnforced."
   default     = "BucketOwnerEnforced"
   validation {
     condition     = can(regex("^(BucketOwnerPreferred|BucketOwnerEnforced|ObjectWriter)$", var.object_ownership))
