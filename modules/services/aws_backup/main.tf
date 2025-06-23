@@ -10,11 +10,20 @@ terraform {
 }
 
 ###############################################################
+# AWS Backup Global Settings
+###############################################################
+resource "aws_backup_global_settings" "this" {
+  global_settings = {
+    "isCrossAccountBackupEnabled" = var.cross_account_backup_enabled
+  }
+}
+
+###############################################################
 # KMS Encryption Key
 ###############################################################
 
 # Production region key
-resource "aws_kms_key" "key" {
+resource "aws_kms_key" "prod_key" {
   provider                           = aws.aws_prod_region
   bypass_policy_lockout_safety_check = var.key_bypass_policy_lockout_safety_check
   customer_master_key_spec           = var.key_customer_master_key_spec
@@ -27,10 +36,10 @@ resource "aws_kms_key" "key" {
   tags                               = var.tags
 }
 
-resource "aws_kms_alias" "alias" {
+resource "aws_kms_alias" "prod_alias" {
   provider      = aws.aws_prod_region
   name          = var.key_name
-  target_key_id = aws_kms_key.key.key_id
+  target_key_id = aws_kms_key.prod_key.key_id
 }
 
 # Disaster recovery region key
@@ -97,7 +106,7 @@ resource "aws_iam_role_policy_attachment" "restores" {
 resource "aws_backup_vault" "vault_prod_hourly" {
   provider    = aws.aws_prod_region
   name        = var.vault_prod_hourly_name
-  kms_key_arn = aws_kms_key.key.arn
+  kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
 }
 
@@ -105,7 +114,7 @@ resource "aws_backup_vault" "vault_prod_hourly" {
 resource "aws_backup_vault" "vault_prod_daily" {
   provider    = aws.aws_prod_region
   name        = var.vault_prod_daily_name
-  kms_key_arn = aws_kms_key.key.arn
+  kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
 }
 
@@ -113,7 +122,7 @@ resource "aws_backup_vault" "vault_prod_daily" {
 resource "aws_backup_vault" "vault_prod_monthly" {
   provider    = aws.aws_prod_region
   name        = var.vault_prod_monthly_name
-  kms_key_arn = aws_kms_key.key.arn
+  kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
 }
 

@@ -1,4 +1,13 @@
 ###############################################################
+# AWS Backup Global Setting Variables
+###############################################################
+variable "cross_account_backup_enabled" {
+  description = "(Optional) Specifies whether cross-account backup is enabled. This is used in AWS organizations in order to centrally manage AWS Backups in either the organization management account or a delegated admin backups account. Defaults to true."
+  default     = true
+  type        = bool
+}
+
+###############################################################
 # KMS Key Variables
 ###############################################################
 variable "key_bypass_policy_lockout_safety_check" {
@@ -148,5 +157,6 @@ variable "tags" {
     environment = "prod"
     priority    = "critical"
     aws_backup  = "true"
+    service     = "backups"
   }
 }
