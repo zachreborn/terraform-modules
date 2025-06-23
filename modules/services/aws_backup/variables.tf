@@ -2,8 +2,8 @@
 # AWS Backup Global Setting Variables
 ###############################################################
 variable "cross_account_backup_enabled" {
-  description = "(Optional) Specifies whether cross-account backup is enabled. This is used in AWS organizations in order to centrally manage AWS Backups in either the organization management account or a delegated admin backups account. Defaults to true."
-  default     = true
+  description = "(Optional) Specifies whether cross-account backup is enabled. This is used in AWS organizations in order to centrally manage AWS Backups in either the organization management account or a delegated admin backups account. Defaults to false."
+  default     = false
   type        = bool
 }
 
