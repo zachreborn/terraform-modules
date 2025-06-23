@@ -249,25 +249,25 @@ POLICY
 resource "aws_backup_vault_lock_configuration" "vault_prod_hourly" {
   provider            = aws.aws_prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_hourly.name
-  changeable_for_days = 3
+  changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_prod_daily" {
   provider            = aws.aws_prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_daily.name
-  changeable_for_days = 3
+  changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_prod_monthly" {
   provider            = aws.aws_prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_monthly.name
-  changeable_for_days = 3
+  changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
   provider            = aws.aws_dr_region
   backup_vault_name   = aws_backup_vault.vault_disaster_recovery.name
-  changeable_for_days = 3
+  changeable_for_days = var.changeable_for_days
 }
 
 ###############################################################

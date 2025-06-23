@@ -93,6 +93,19 @@ variable "vault_disaster_recovery_name" {
 }
 
 ###############################################################
+# Vault Lock Variables
+###############################################################
+variable "changeable_for_days" {
+  description = "(Optional) The number of days after which the vault lock configuration is no longer changeable. Setting this variable will utilize vault lock compliance mode. Omit the variable if you wish to create the vault lock in governance mode. Defaults to 3 days."
+  default     = 3
+  type        = number
+  validation {
+    condition     = var.changeable_for_days == null || (var.changeable_for_days >= 0 && var.changeable_for_days <= 36500)
+    error_message = "changeable_for_days must be null or between 0 and 36500 days."
+  }
+}
+
+###############################################################
 # Plan Variables
 ###############################################################
 
