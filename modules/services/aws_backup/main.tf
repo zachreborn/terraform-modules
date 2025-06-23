@@ -286,7 +286,7 @@ resource "aws_backup_plan" "plan" {
   rule {
     rule_name                = "hourly_backup_rule"
     target_vault_name        = aws_backup_vault.vault_prod_hourly.name
-    schedule                 = "cron(20 * * * ? *)"
+    schedule                 = var.hourly_backup_schedule
     enable_continuous_backup = false
     start_window             = var.backup_plan_start_window
     completion_window        = var.backup_plan_completion_window
@@ -298,7 +298,7 @@ resource "aws_backup_plan" "plan" {
   rule {
     rule_name                = "daily_backup_rule"
     target_vault_name        = aws_backup_vault.vault_prod_daily.name
-    schedule                 = "cron(20 7 * * ? *)"
+    schedule                 = var.daily_backup_schedule
     enable_continuous_backup = false
     start_window             = var.backup_plan_start_window
     completion_window        = var.backup_plan_completion_window
@@ -316,7 +316,7 @@ resource "aws_backup_plan" "plan" {
   rule {
     rule_name                = "monthly_backup_rule"
     target_vault_name        = aws_backup_vault.vault_prod_monthly.name
-    schedule                 = "cron(20 7 1 * ? *)"
+    schedule                 = var.monthly_backup_schedule
     enable_continuous_backup = false
     start_window             = var.backup_plan_start_window
     completion_window        = var.backup_plan_completion_window

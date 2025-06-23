@@ -127,16 +127,34 @@ variable "hourly_backup_retention" {
   type        = number
 }
 
+variable "hourly_backup_schedule" {
+  description = "(Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour."
+  default     = "cron(20 * * * ? *)"
+  type        = string
+}
+
 variable "daily_backup_retention" {
   description = "(Required) The daily backup plan retention in days. By default this is 30 days"
   default     = 30
   type        = number
 }
 
+variable "daily_backup_schedule" {
+  description = "(Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC."
+  default     = "cron(20 7 * * ? *)"
+  type        = string
+}
+
 variable "monthly_backup_retention" {
   description = "(Required) The daily backup plan retention in days. By default this is 365 days."
   default     = 365
   type        = number
+}
+
+variable "monthly_backup_schedule" {
+  description = "(Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC."
+  default     = "cron(20 9 1 * ? *)"
+  type        = string
 }
 
 variable "dr_backup_retention" {
