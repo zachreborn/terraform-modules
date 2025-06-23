@@ -108,7 +108,6 @@ variable "changeable_for_days" {
 ###############################################################
 # Plan Variables
 ###############################################################
-
 variable "backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "prod_backups"
