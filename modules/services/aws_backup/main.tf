@@ -19,12 +19,6 @@ terraform {
 #   }
 # }
 
-resource "aws_backup_region_settings" "this" {
-  provider                            = aws.aws_prod_region
-  resource_type_management_preference = var.resource_type_management_preference
-  resource_type_opt_in_preference     = var.resource_type_opt_in_preference
-}
-
 ###############################################################
 # KMS Encryption Key
 ###############################################################
