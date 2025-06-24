@@ -4,7 +4,7 @@ terraform {
     aws = {
       source                = "hashicorp/aws"
       version               = ">= 4.0.0"
-      configuration_aliases = [aws.aws_prod_region, aws.aws_dr_region]
+      configuration_aliases = [aws.prod_region, aws.dr_region]
     }
   }
 }
@@ -25,7 +25,7 @@ terraform {
 
 # Production region key
 resource "aws_kms_key" "prod_key" {
-  provider                           = aws.aws_prod_region
+  provider                           = aws.prod_region
   bypass_policy_lockout_safety_check = var.key_bypass_policy_lockout_safety_check
   customer_master_key_spec           = var.key_customer_master_key_spec
   description                        = var.key_description
@@ -38,14 +38,14 @@ resource "aws_kms_key" "prod_key" {
 }
 
 resource "aws_kms_alias" "prod_alias" {
-  provider      = aws.aws_prod_region
+  provider      = aws.prod_region
   name          = var.key_name
   target_key_id = aws_kms_key.prod_key.key_id
 }
 
 # Disaster recovery region key
 resource "aws_kms_key" "dr_key" {
-  provider                           = aws.aws_dr_region
+  provider                           = aws.dr_region
   bypass_policy_lockout_safety_check = var.key_bypass_policy_lockout_safety_check
   customer_master_key_spec           = var.key_customer_master_key_spec
   description                        = var.key_description
@@ -58,7 +58,7 @@ resource "aws_kms_key" "dr_key" {
 }
 
 resource "aws_kms_alias" "dr_alias" {
-  provider      = aws.aws_dr_region
+  provider      = aws.dr_region
   name          = var.key_name
   target_key_id = aws_kms_key.dr_key.key_id
 }
@@ -68,7 +68,7 @@ resource "aws_kms_alias" "dr_alias" {
 ###############################################################
 # Assume Role
 resource "aws_iam_role" "backup" {
-  provider           = aws.aws_prod_region
+  provider           = aws.prod_region
   name               = "aws_backup_role"
   assume_role_policy = <<POLICY
 {
@@ -88,13 +88,13 @@ POLICY
 
 # Policy Attachment
 resource "aws_iam_role_policy_attachment" "backup" {
-  provider   = aws.aws_prod_region
+  provider   = aws.prod_region
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
   role       = aws_iam_role.backup.name
 }
 
 resource "aws_iam_role_policy_attachment" "restores" {
-  provider   = aws.aws_prod_region
+  provider   = aws.prod_region
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
   role       = aws_iam_role.backup.name
 }
@@ -105,7 +105,7 @@ resource "aws_iam_role_policy_attachment" "restores" {
 
 ### Hourly
 resource "aws_backup_vault" "vault_prod_hourly" {
-  provider    = aws.aws_prod_region
+  provider    = aws.prod_region
   name        = var.vault_prod_hourly_name
   kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
@@ -113,7 +113,7 @@ resource "aws_backup_vault" "vault_prod_hourly" {
 
 ### Daily
 resource "aws_backup_vault" "vault_prod_daily" {
-  provider    = aws.aws_prod_region
+  provider    = aws.prod_region
   name        = var.vault_prod_daily_name
   kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
@@ -121,7 +121,7 @@ resource "aws_backup_vault" "vault_prod_daily" {
 
 ### Monthly
 resource "aws_backup_vault" "vault_prod_monthly" {
-  provider    = aws.aws_prod_region
+  provider    = aws.prod_region
   name        = var.vault_prod_monthly_name
   kms_key_arn = aws_kms_key.prod_key.arn
   tags        = var.tags
@@ -129,7 +129,7 @@ resource "aws_backup_vault" "vault_prod_monthly" {
 
 ### Disaster Recovery
 resource "aws_backup_vault" "vault_disaster_recovery" {
-  provider    = aws.aws_dr_region
+  provider    = aws.dr_region
   name        = var.vault_disaster_recovery_name
   kms_key_arn = aws_kms_key.dr_key.arn
   tags        = var.tags
@@ -140,7 +140,7 @@ resource "aws_backup_vault" "vault_disaster_recovery" {
 ###############################################################
 
 resource "aws_backup_vault_policy" "vault_prod_hourly" {
-  provider          = aws.aws_prod_region
+  provider          = aws.prod_region
   backup_vault_name = aws_backup_vault.vault_prod_hourly.name
   policy            = <<POLICY
 {
@@ -166,7 +166,7 @@ POLICY
 }
 
 resource "aws_backup_vault_policy" "vault_prod_daily" {
-  provider          = aws.aws_prod_region
+  provider          = aws.prod_region
   backup_vault_name = aws_backup_vault.vault_prod_daily.name
   policy            = <<POLICY
 {
@@ -192,7 +192,7 @@ POLICY
 }
 
 resource "aws_backup_vault_policy" "vault_prod_monthly" {
-  provider          = aws.aws_prod_region
+  provider          = aws.prod_region
   backup_vault_name = aws_backup_vault.vault_prod_monthly.name
   policy            = <<POLICY
 {
@@ -218,7 +218,7 @@ POLICY
 }
 
 resource "aws_backup_vault_policy" "vault_disaster_recovery" {
-  provider          = aws.aws_dr_region
+  provider          = aws.dr_region
   backup_vault_name = aws_backup_vault.vault_disaster_recovery.name
   policy            = <<POLICY
 {
@@ -248,25 +248,25 @@ POLICY
 ###############################################################
 
 resource "aws_backup_vault_lock_configuration" "vault_prod_hourly" {
-  provider            = aws.aws_prod_region
+  provider            = aws.prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_hourly.name
   changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_prod_daily" {
-  provider            = aws.aws_prod_region
+  provider            = aws.prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_daily.name
   changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_prod_monthly" {
-  provider            = aws.aws_prod_region
+  provider            = aws.prod_region
   backup_vault_name   = aws_backup_vault.vault_prod_monthly.name
   changeable_for_days = var.changeable_for_days
 }
 
 resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
-  provider            = aws.aws_dr_region
+  provider            = aws.dr_region
   backup_vault_name   = aws_backup_vault.vault_disaster_recovery.name
   changeable_for_days = var.changeable_for_days
 }
@@ -280,7 +280,7 @@ resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
 #######################################
 # The following plan and selection are for all services except EC2 instances or AMI
 resource "aws_backup_plan" "plan" {
-  provider = aws.aws_prod_region
+  provider = aws.prod_region
   name     = var.backup_plan_name
   tags     = var.tags
 
@@ -340,7 +340,7 @@ resource "aws_backup_plan" "plan" {
 #######################################
 
 resource "aws_backup_selection" "all_resources" {
-  provider     = aws.aws_prod_region
+  provider     = aws.prod_region
   iam_role_arn = aws_iam_role.backup.arn
   name         = "all_except_ec2_and_s3"
   plan_id      = aws_backup_plan.plan.id
@@ -358,7 +358,7 @@ resource "aws_backup_selection" "all_resources" {
 #######################################
 # The following plan and selection are for EC2 resources
 resource "aws_backup_plan" "ec2_plan" {
-  provider = aws.aws_prod_region
+  provider = aws.prod_region
   name     = var.ec2_backup_plan_name
   tags     = var.tags
 
@@ -393,7 +393,7 @@ resource "aws_backup_plan" "ec2_plan" {
 #######################################
 
 resource "aws_backup_selection" "all_ec2" {
-  provider     = aws.aws_prod_region
+  provider     = aws.prod_region
   iam_role_arn = aws_iam_role.backup.arn
   name         = "all_ec2"
   plan_id      = aws_backup_plan.ec2_plan.id
