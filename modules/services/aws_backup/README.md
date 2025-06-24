@@ -107,7 +107,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 | <a name="provider_aws.aws_dr_region"></a> [aws.aws\_dr\_region](#provider\_aws.aws\_dr\_region) | >= 4.0.0 |
 | <a name="provider_aws.aws_prod_region"></a> [aws.aws\_prod\_region](#provider\_aws.aws\_prod\_region) | >= 4.0.0 |
 
@@ -119,9 +118,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_backup_global_settings.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_global_settings) | resource |
 | [aws_backup_plan.ec2_plan](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_plan) | resource |
 | [aws_backup_plan.plan](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_plan) | resource |
+| [aws_backup_region_settings.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_region_settings) | resource |
 | [aws_backup_selection.all_ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection) | resource |
 | [aws_backup_selection.all_resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection) | resource |
 | [aws_backup_vault.vault_disaster_recovery](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
@@ -170,6 +169,8 @@ No modules.
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
 | <a name="input_monthly_backup_retention"></a> [monthly\_backup\_retention](#input\_monthly\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 365 days. | `number` | `365` | no |
 | <a name="input_monthly_backup_schedule"></a> [monthly\_backup\_schedule](#input\_monthly\_backup\_schedule) | (Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC. | `string` | `"cron(20 9 1 * ? *)"` | no |
+| <a name="input_resource_type_management_preference"></a> [resource\_type\_management\_preference](#input\_resource\_type\_management\_preference) | (Optional) Specifies the resource type management preference for AWS Backup. This is used to manage the backup preferences for different resource types. Defaults to an empty map, which means no specific preferences are set. | `map(string)` | `null` | no |
+| <a name="input_resource_type_opt_in_preference"></a> [resource\_type\_opt\_in\_preference](#input\_resource\_type\_opt\_in\_preference) | (Optional) Specifies the resource type opt-in preference for AWS Backup. This is used to manage the opt-in preferences for different resource types. Defaults to an empty map, which means no specific preferences are set. | `map(string)` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br/>  "aws_backup": "true",<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "critical",<br/>  "service": "backups",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_vault_disaster_recovery_name"></a> [vault\_disaster\_recovery\_name](#input\_vault\_disaster\_recovery\_name) | value | `string` | `"vault_disaster_recovery"` | no |
 | <a name="input_vault_prod_daily_name"></a> [vault\_prod\_daily\_name](#input\_vault\_prod\_daily\_name) | value | `string` | `"vault_prod_daily"` | no |
