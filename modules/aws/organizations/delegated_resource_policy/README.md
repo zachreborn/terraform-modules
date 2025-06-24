@@ -154,19 +154,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -174,20 +173,23 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                                                | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [aws_organizations_delegated_administrator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_delegated_administrator) | resource |
+| Name | Type |
+|------|------|
+| [aws_organizations_resource_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_resource_policy) | resource |
 
 ## Inputs
 
-| Name                                                                              | Description                                                                                                                                                                                                      | Type          | Default | Required |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- | :------: |
-| <a name="input_delegated_admins"></a> [delegated_admins](#input_delegated_admins) | (Required) Map where the keys are AWS account IDs and the value is the service principal name to associate with the account. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. | `map(string)` | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_content"></a> [content](#input\_content) | (Required) The content of the AWS Organization's delegated resource policy in JSON format. This policy defines the permissions and actions that are allowed or denied for the delegated administrator. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization's delegated resource policy. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-No outputs.
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the AWS Organization's delegated resource policy. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the AWS Organization's delegated resource policy. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
