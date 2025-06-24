@@ -7,6 +7,18 @@ variable "cross_account_backup_enabled" {
   type        = bool
 }
 
+variable "resource_type_management_preference" {
+  description = "(Optional) Specifies the resource type management preference for AWS Backup. This is used to manage the backup preferences for different resource types. Defaults to an empty map, which means no specific preferences are set."
+  default     = null
+  type        = map(string)
+}
+
+variable "resource_type_opt_in_preference" {
+  description = "(Optional) Specifies the resource type opt-in preference for AWS Backup. This is used to manage the opt-in preferences for different resource types. Defaults to an empty map, which means no specific preferences are set."
+  default     = null
+  type        = map(string)
+}
+
 ###############################################################
 # KMS Key Variables
 ###############################################################

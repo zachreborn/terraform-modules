@@ -10,12 +10,19 @@ terraform {
 }
 
 ###############################################################
-# AWS Backup Global Settings
+# AWS Backup Settings
 ###############################################################
-resource "aws_backup_global_settings" "this" {
-  global_settings = {
-    "isCrossAccountBackupEnabled" = var.cross_account_backup_enabled
-  }
+# Returns an error if this is not run on the AWS Organization management account.
+# resource "aws_backup_global_settings" "this" {
+#   global_settings = {
+#     "isCrossAccountBackupEnabled" = var.cross_account_backup_enabled
+#   }
+# }
+
+resource "aws_backup_region_settings" "this" {
+  provider                            = aws.aws_prod_region
+  resource_type_management_preference = var.resource_type_management_preference
+  resource_type_opt_in_preference     = var.resource_type_opt_in_preference
 }
 
 ###############################################################
@@ -277,7 +284,7 @@ resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
 #######################################
 # Primary Backup
 #######################################
-# The following plan and selection are for all services except EC2 instances or AMI backups
+# The following plan and selection are for all services except EC2 instances or AMI
 resource "aws_backup_plan" "plan" {
   provider = aws.aws_prod_region
   name     = var.backup_plan_name
@@ -355,7 +362,7 @@ resource "aws_backup_selection" "all_resources" {
 #######################################
 # EC2 AMI Backup
 #######################################
-# The following plan and selection are for EC2 AMI
+# The following plan and selection are for EC2 resources
 resource "aws_backup_plan" "ec2_plan" {
   provider = aws.aws_prod_region
   name     = var.ec2_backup_plan_name
