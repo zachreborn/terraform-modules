@@ -107,8 +107,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws.aws_dr_region"></a> [aws.aws\_dr\_region](#provider\_aws.aws\_dr\_region) | >= 4.0.0 |
-| <a name="provider_aws.aws_prod_region"></a> [aws.aws\_prod\_region](#provider\_aws.aws\_prod\_region) | >= 4.0.0 |
+| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 4.0.0 |
+| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 4.0.0 |
 
 ## Modules
 
