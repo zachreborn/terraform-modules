@@ -143,19 +143,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -163,42 +162,41 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                                                            | Type        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [aws_ssoadmin_account_assignment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment)                                 | resource    |
-| [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource    |
-| [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment)                   | resource    |
-| [aws_ssoadmin_permission_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set)                                         | resource    |
-| [aws_ssoadmin_permission_set_inline_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set_inline_policy)             | resource    |
-| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/identitystore_group)                                              | data source |
-| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances)                                                | data source |
+| Name | Type |
+|------|------|
+| [aws_ssoadmin_account_assignment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment) | resource |
+| [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
+| [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
+| [aws_ssoadmin_permission_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set) | resource |
+| [aws_ssoadmin_permission_set_inline_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set_inline_policy) | resource |
+| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/identitystore_group) | data source |
+| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
-| Name                                                                                                                              | Description                                                                                                                                                         | Type           | Default         | Required |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | --------------- | :------: |
-| <a name="input_customer_managed_iam_policy_name"></a> [customer_managed_iam_policy_name](#input_customer_managed_iam_policy_name) | (Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer_managed_policy_attachment. | `string`       | `null`          |    no    |
-| <a name="input_customer_managed_iam_policy_path"></a> [customer_managed_iam_policy_path](#input_customer_managed_iam_policy_path) | (Optional) The path of the customer managed IAM policy to attach to a Permission Set.                                                                               | `string`       | `"/"`           |    no    |
-| <a name="input_description"></a> [description](#input_description)                                                                | (Optional) The description of the permission set.                                                                                                                   | `string`       | `null`          |    no    |
-| <a name="input_group_attribute_path"></a> [group_attribute_path](#input_group_attribute_path)                                     | (Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO.                                                   | `string`       | `"DisplayName"` |    no    |
-| <a name="input_groups"></a> [groups](#input_groups)                                                                               | (Required) The group names to lookup and associate with the permission set.                                                                                         | `set(string)`  | n/a             |   yes    |
-| <a name="input_inline_policy"></a> [inline_policy](#input_inline_policy)                                                          | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline_policy.                                           | `string`       | `null`          |    no    |
-| <a name="input_managed_policy_arns"></a> [managed_policy_arns](#input_managed_policy_arns)                                        | (Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed_policy_attachment.                    | `list(string)` | `[]`            |    no    |
-| <a name="input_name"></a> [name](#input_name)                                                                                     | (Required) The name of the permission set.                                                                                                                          | `string`       | n/a             |   yes    |
-| <a name="input_relay_state"></a> [relay_state](#input_relay_state)                                                                | (Optional) The relay state URL used to redirect users within the application during the federation authentication process.                                          | `string`       | `null`          |    no    |
-| <a name="input_session_duration"></a> [session_duration](#input_session_duration)                                                 | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard.                                                                | `string`       | `"PT1H"`        |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                                                     | (Optional) Key-value map of resource tags.                                                                                                                          | `map(string)`  | `{}`            |    no    |
-| <a name="input_target_accounts"></a> [target_accounts](#input_target_accounts)                                                    | (Required) The list of AWS account IDs to assign the permission set to.                                                                                             | `set(string)`  | n/a             |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_customer_managed_iam_policy_name"></a> [customer\_managed\_iam\_policy\_name](#input\_customer\_managed\_iam\_policy\_name) | (Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer\_managed\_policy\_attachment. | `string` | `null` | no |
+| <a name="input_customer_managed_iam_policy_path"></a> [customer\_managed\_iam\_policy\_path](#input\_customer\_managed\_iam\_policy\_path) | (Optional) The path of the customer managed IAM policy to attach to a Permission Set. | `string` | `"/"` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the permission set. | `string` | `null` | no |
+| <a name="input_group_attribute_path"></a> [group\_attribute\_path](#input\_group\_attribute\_path) | (Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO. | `string` | `"DisplayName"` | no |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The group names to lookup and associate with the permission set. | `set(string)` | n/a | yes |
+| <a name="input_inline_policy"></a> [inline\_policy](#input\_inline\_policy) | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline\_policy. | `string` | `null` | no |
+| <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) List of ARNs of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `list(string)` | `[]` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the permission set. | `string` | n/a | yes |
+| <a name="input_relay_state"></a> [relay\_state](#input\_relay\_state) | (Optional) The relay state URL used to redirect users within the application during the federation authentication process. | `string` | `null` | no |
+| <a name="input_session_duration"></a> [session\_duration](#input\_session\_duration) | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. | `string` | `"PT1H"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. | `map(string)` | `{}` | no |
+| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) The list of AWS account IDs to assign the permission set to. | `set(string)` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                          | Description                                                                            |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| <a name="output_arn"></a> [arn](#output_arn)                                  | The ARN of the permission set                                                          |
-| <a name="output_assignment_ids"></a> [assignment_ids](#output_assignment_ids) | Map of the IDs of the permission set assignments and their corresponding configuration |
-| <a name="output_created_date"></a> [created_date](#output_created_date)       | The date the permission set was created                                                |
-| <a name="output_id"></a> [id](#output_id)                                     | The ID of the permission set                                                           |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration |
+| <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
