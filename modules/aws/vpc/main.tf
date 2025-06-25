@@ -21,7 +21,7 @@ data "aws_region" "current" {}
 locals {
   # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
   enable_igw   = var.enable_internet_gateway ? ((length(var.public_subnets_list) != 0 || var.public_subnets_list != null) ? true : false) : false
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 ###########################
@@ -81,7 +81,7 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
 resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2messages"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
@@ -92,7 +92,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
 resource "aws_vpc_endpoint" "kms" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.kms"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.kms"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
@@ -103,7 +103,7 @@ resource "aws_vpc_endpoint" "kms" {
 resource "aws_vpc_endpoint" "ssm" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
@@ -114,7 +114,7 @@ resource "aws_vpc_endpoint" "ssm" {
 resource "aws_vpc_endpoint" "ssm-contacts" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-contacts"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-contacts"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
@@ -125,7 +125,7 @@ resource "aws_vpc_endpoint" "ssm-contacts" {
 resource "aws_vpc_endpoint" "ssm-incidents" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-incidents"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-incidents"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
@@ -136,7 +136,7 @@ resource "aws_vpc_endpoint" "ssm-incidents" {
 resource "aws_vpc_endpoint" "ssmmessages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssmmessages"
   security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
