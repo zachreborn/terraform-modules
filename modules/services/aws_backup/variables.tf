@@ -1,11 +1,4 @@
-###############################################################
-# AWS Backup Global Setting Variables
-###############################################################
-variable "cross_account_backup_enabled" {
-  description = "(Optional) Specifies whether cross-account backup is enabled. This is used in AWS organizations in order to centrally manage AWS Backups in either the organization management account or a delegated admin backups account. Defaults to false."
-  default     = false
-  type        = bool
-}
+
 
 ###############################################################
 # KMS Key Variables
@@ -107,7 +100,7 @@ variable "changeable_for_days" {
 
 ###############################################################
 # Plan Variables
-###############################################################
+###############################################################"
 variable "backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "prod_backups"
@@ -177,6 +170,12 @@ variable "backup_plan_completion_window" {
 ###############################################################
 # General Use Variables
 ###############################################################
+
+variable "enable_organization_backup" {
+  description = "(Optional) A boolean to enable or disable the AWS Backup Organization functionality. If set to 'true' this transitions from a single backup plan to organization plan policies. Defaults to false."
+  default     = false
+  type        = bool
+}
 
 variable "tags" {
   type        = map(any)

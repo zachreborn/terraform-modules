@@ -10,16 +10,6 @@ terraform {
 }
 
 ###############################################################
-# AWS Backup Settings
-###############################################################
-# Returns an error if this is not run on the AWS Organization management account.
-# resource "aws_backup_global_settings" "this" {
-#   global_settings = {
-#     "isCrossAccountBackupEnabled" = var.cross_account_backup_enabled
-#   }
-# }
-
-###############################################################
 # KMS Encryption Key
 ###############################################################
 
@@ -274,6 +264,20 @@ resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
 ###############################################################
 # Backup Plans
 ###############################################################
+
+
+#######################################
+# AWS Backup Organization Plan
+#######################################
+
+module "organization_backup_plan" {
+  source = "../../aws/organizations/delegated_resource_policy"
+
+  for_each = var.enable_organization_backup ? [true] : []
+
+  content = file("org_backup_plan.json")
+  tags    = var.tags
+}
 
 #######################################
 # Primary Backup
