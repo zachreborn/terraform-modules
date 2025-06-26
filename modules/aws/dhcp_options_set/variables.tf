@@ -1,5 +1,5 @@
 ######################################
-# EC2 Instance Variables
+# # VPC DHCP Options Variables
 ######################################
 
 variable "domain_name" {
