@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -41,7 +41,6 @@
   </p>
 </div>
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -59,11 +58,14 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
+
 This example creates a bucket with encryption enabled by default, using the 'aws/s3' KMS key managed by AWS. It also has the default of blocking all public access to the bucket and objects. There is no bucket policy attached to this bucket.
+
 ```
 module "bucket" {
   source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -77,7 +79,9 @@ module "bucket" {
 ```
 
 ### Lifecycle Rules Example
-This example creates a bucket with multiple lifecycle rules configured to transition objects to Standard-IA after 30 days, Glacier after 60 days, and expire objects after 90 days. 
+
+This example creates a bucket with multiple lifecycle rules configured to transition objects to Standard-IA after 30 days, Glacier after 60 days, and expire objects after 90 days.
+
 ```
 module "logging_bucket" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -114,7 +118,9 @@ module "logging_bucket" {
 ```
 
 ### Alternative Lifecycle Rules Example
+
 This example uses multiple rules, each with a single transition or expire configuration for more granular control.
+
 ```
 module "logging_bucket" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -157,7 +163,9 @@ module "logging_bucket" {
 ```
 
 ### Lifecycle Rules With All Available Options
+
 This example shows all of the available options. All transition configurations are lists and can have multiple transitions configured. Any combination of the options can be used to create the desired lifecycle rule.
+
 ```
 module "logging_bucket" {
   source          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -217,7 +225,9 @@ module "logging_bucket" {
 ```
 
 ### Intelligent Tiering Example
+
 This example makes use of a simple S3 bucket with intelligent tiering enabled. The intelligent tiering configuration will eventually end up with objects in the ARCHIVE_ACCESS glacier tier after 365 days. All objects in the bucket will utilize this intelligent tiering configuration.
+
 ```
 module "app_bucket" {
   source                          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -234,7 +244,9 @@ module "app_bucket" {
 ```
 
 ### Intelligent Tiering Filter Example
-This example makes use of a simple S3 bucket with intelligent tiering enabled. The intelligent tiering configuration will eventually end up with objects in the DEEP_ARCHIVE_ACCESS glacier tier after 120 days. Objects with the prefix 'test/' and tagged with 'project' = 'app' will utilize this intelligent tiering configuration. 
+
+This example makes use of a simple S3 bucket with intelligent tiering enabled. The intelligent tiering configuration will eventually end up with objects in the DEEP_ARCHIVE_ACCESS glacier tier after 120 days. Objects with the prefix 'test/' and tagged with 'project' = 'app' will utilize this intelligent tiering configuration.
+
 ```
 module "app_bucket" {
   source                          = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -257,22 +269,27 @@ module "app_bucket" {
 ```
 
 ### Using ACLs
+
 This example makes use of the canned ACLs for the S3 bucket logging service. ACLs should typically not be used, instead bucket policies allow for better control. The S3 log delivery ACL is one such time where you can use ACLs. Another time is when the owner of the bucket and the objects differ.
+
 ```
 module "logging_bucket" {
-  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
-  acl           = ""log-delivery-write""
-  bucket_prefix = "octo-prod-s3-logging-bucket-"
-  tags          = {
-    created_by  = "<YOUR_NAME>"
-    environment = "prod"
-    terraform   = "true"
+  source           = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  acl              = ""log-delivery-write""
+  bucket_prefix    = "octo-prod-s3-logging-bucket-"
+  object_ownership = "ObjectWriter"
+  tags             = {
+    created_by     = "<YOUR_NAME>"
+    environment    = "prod"
+    terraform      = "true"
   }
 }
 ```
 
 ### Static Website
+
 This example makes use of the ability to use a S3 bucket as a static website. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to point the domain to the S3 bucket.
+
 ```
 module "example_org_website_bucket" {
   source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -287,7 +304,9 @@ module "example_org_website_bucket" {
 ```
 
 ### Route53 Apex Domain Redirect
-This example makes use of the ability to use a S3 bucket as an apex domain redirect. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to redirect the domain to the S3 bucket. This example also shows how to use the 'redirect\_all\_requests\_to' option to redirect all requests to a specific hostname.
+
+This example makes use of the ability to use a S3 bucket as an apex domain redirect. This is done by creating a bucket with the same name as the domain and then creating a Route53 record to redirect the domain to the S3 bucket. This example also shows how to use the 'redirect_all_requests_to' option to redirect all requests to a specific hostname.
+
 ```
 module "example_org_redirect_bucket" {
   source                     = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
@@ -340,6 +359,7 @@ No modules.
 | [aws_s3_bucket_intelligent_tiering_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_intelligent_tiering_configuration) | resource |
 | [aws_s3_bucket_lifecycle_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
 | [aws_s3_bucket_logging.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_logging) | resource |
+| [aws_s3_bucket_ownership_controls.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
 | [aws_s3_bucket_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
 | [aws_s3_bucket_public_access_block.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
@@ -385,6 +405,7 @@ No modules.
 | <a name="input_logging_target_bucket"></a> [logging\_target\_bucket](#input\_logging\_target\_bucket) | (Optional) The name of the bucket that will receive the logs. Required if logging of the S3 bucket is set to true. | `string` | `null` | no |
 | <a name="input_logging_target_prefix"></a> [logging\_target\_prefix](#input\_logging\_target\_prefix) | (Optional) The prefix that is prepended to all log object keys. If not set, the logs are stored in the root of the bucket. | `string` | `"log/"` | no |
 | <a name="input_mfa_delete"></a> [mfa\_delete](#input\_mfa\_delete) | (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: Enabled or Disabled. | `string` | `"Disabled"` | no |
+| <a name="input_object_ownership"></a> [object\_ownership](#input\_object\_ownership) | (Optional) The Object Ownership setting for the bucket. When set to BucketOwnerEnforced, S3 bucket ACLs are not allowed to be utilized. Valid values: BucketOwnerPreferred, BucketOwnerEnforced, ObjectWriter. Defaults to BucketOwnerEnforced. | `string` | `"BucketOwnerEnforced"` | no |
 | <a name="input_redirect_all_requests_to"></a> [redirect\_all\_requests\_to](#input\_redirect\_all\_requests\_to) | (Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request. | `any` | `null` | no |
 | <a name="input_restrict_public_buckets"></a> [restrict\_public\_buckets](#input\_restrict\_public\_buckets) | (Optional) Whether Amazon S3 should restrict public bucket policies for this bucket. Defaults to false. Enabling this setting does not affect the previously stored bucket policy, except that public and cross-account access within the public bucket policy, including non-public delegation to specific accounts, is blocked. | `bool` | `true` | no |
 | <a name="input_routing_rules"></a> [routing\_rules](#input\_routing\_rules) | (Optional) A list of routing rules that can redirect requests to different directories or buckets. These rules are applied in the order that you specify them. For more information about routing rules, see Configuring advanced conditional redirects in the Amazon Simple Storage Service Developer Guide. | `any` | `null` | no |
@@ -405,15 +426,15 @@ No modules.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -422,19 +443,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

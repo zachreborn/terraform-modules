@@ -103,7 +103,9 @@ No modules.
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "Name": "ssm-service-role"<br/>}</pre> | no |
 
 ## Outputs
 
