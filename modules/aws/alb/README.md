@@ -48,3 +48,38 @@
   </p>
 </div>
 
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#providers">Providers</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#Resources">Resources</a></li>
+    <li><a href="#inputs">Inputs</a></li>
+    <li><a href="#outputs">Outputs</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
+<!-- USAGE EXAMPLES -->
+
+## Migration
+
+The `lb` module can now be utilized to create and maintain either an application load balancer or a network load balancer.
+
+Move the state of any modules utilizing `alb` to the `lb` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.
+
+Match up the resources and components from the `alb` module to the `lb` module
+
+- [alb module](https://github.com/zachreborn/terraform-modules/tree/v5.2.0/modules/aws/alb)
+- [lb module](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/lb)
+
+An example of an application load balancer utilizing the `lb` module can be found [here](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/lb/README.md).
+
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
