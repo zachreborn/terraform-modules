@@ -70,7 +70,6 @@ This example shows how to create a simple DHCP Options Set with custom DNS serve
 module "dhcp_options_set" {
   source = "github.com/zachreborn/terraform-modules//aws/dhcp_options"
 
-  name = "example-dhcp-options-set"
   domain_name = "example.com"
   domain_name_servers = ["10.0.0.100", "10.0.1.100"]
   ntp_servers = ["10.0.0.1"]
