@@ -69,12 +69,57 @@
 
 ## Migration
 
-The `dhcp_options_set` module can now be utilized to create a DHCP Options Set for a VPC. This allows for the DHCP optins to be managed separately from the VPC itself, providing more flexibility and control over the DHCP options. 
+The `dhcp_options_set` module can now be utilized to create a DHCP Options Set for a VPC. This allows for the DHCP optins to be managed separately from the VPC itself, providing more flexibility and control over the DHCP options.
 
-Move the state of any modules utilizing `ec2_domain_controllers` to the `ec2_instance` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this. 
+Move the state of any modules utilizing `ec2_domain_controllers` to the `ec2_instance` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.
 Then move the 'dhcp_options_set' to the `dhcp_options_set` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- LICENSE -->
+
+## License
+
+Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CONTACT -->
+
+## Contact
+
+Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
+
+Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
+[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
+[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
+[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
+[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
+[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
+[issues-url]: https://github.com/zachreborn/terraform-modules/issues
+[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
+[product-screenshot]: /images/screenshot.webp
+[Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
+[Terraform-url]: https://terraform.io
