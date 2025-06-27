@@ -27,12 +27,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Define the domain name for the DHCP Options Set | `string` | `null` | no |
-| <a name="input_domain_name_servers"></a> [domain\_name\_servers](#input\_domain\_name\_servers) | List of IP addresses for the DNS servers | `list(string)` | `[]` | no |
-| <a name="input_enable_dhcp_options"></a> [enable\_dhcp\_options](#input\_enable\_dhcp\_options) | (Optional) boolean to determine if DHCP options are enabled | `bool` | `true` | no |
-| <a name="input_ntp_servers"></a> [ntp\_servers](#input\_ntp\_servers) | List of IP addresses for the NTP servers | `list(string)` | `[]` | no |
+| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | (Optional) Define the domain name for the DHCP Options Set | `string` | `null` | no |
+| <a name="input_domain_name_servers"></a> [domain\_name\_servers](#input\_domain\_name\_servers) | (Optional) List of IP addresses for the DNS servers | `list(string)` | `[]` | no |
+| <a name="input_ntp_servers"></a> [ntp\_servers](#input\_ntp\_servers) | (Optional) List of IP addresses for the NTP servers | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "Name": "DHCP Options Set",<br/>  "created_by": "Terraform",<br/>  "description": "DHCP Option Set for the VPC",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID of the VPC to attach the DHCP Options Set to | `string` | `null` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) ID of the VPC to attach the DHCP Options Set to | `string` | n/a | yes |
 
 ## Outputs
 
