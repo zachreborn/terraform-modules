@@ -75,6 +75,7 @@ module "dhcp_options_set" {
   ntp_servers = ["10.0.0.1"]
   vpc_id = "vpc-12345678"
 }
+```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -83,18 +84,19 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| Name                                                                     | Version  |
+| ------------------------------------------------------------------------ | -------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| Name                                             | Version  |
+| ------------------------------------------------ | -------- |
+| <a name="provider_aws"></a> [aws](#provider_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -102,26 +104,27 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [aws_vpc_dhcp_options.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options) | resource |
+| Name                                                                                                                                              | Type     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| [aws_vpc_dhcp_options.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options)                         | resource |
 | [aws_vpc_dhcp_options_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options_association) | resource |
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | (Optional) Define the domain name for the DHCP Options Set | `string` | `null` | no |
-| <a name="input_domain_name_servers"></a> [domain\_name\_servers](#input\_domain\_name\_servers) | (Optional) List of IP addresses for the DNS servers | `list(string)` | `[]` | no |
-| <a name="input_ntp_servers"></a> [ntp\_servers](#input\_ntp\_servers) | (Optional) List of IP addresses for the NTP servers | `list(string)` | `[]` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "Name": "DHCP Options Set",<br/>  "created_by": "Terraform",<br/>  "description": "DHCP Option Set for the VPC",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) ID of the VPC to attach the DHCP Options Set to | `string` | n/a | yes |
+| Name                                                                                       | Description                                                | Type           | Default                                                                                                                                                                                     | Required |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------: |
+| <a name="input_domain_name"></a> [domain_name](#input_domain_name)                         | (Optional) Define the domain name for the DHCP Options Set | `string`       | `null`                                                                                                                                                                                      |    no    |
+| <a name="input_domain_name_servers"></a> [domain_name_servers](#input_domain_name_servers) | (Optional) List of IP addresses for the DNS servers        | `list(string)` | `[]`                                                                                                                                                                                        |    no    |
+| <a name="input_ntp_servers"></a> [ntp_servers](#input_ntp_servers)                         | (Optional) List of IP addresses for the NTP servers        | `list(string)` | `[]`                                                                                                                                                                                        |    no    |
+| <a name="input_tags"></a> [tags](#input_tags)                                              | (Optional) A mapping of tags to assign to the object.      | `map`          | <pre>{<br/> "Name": "DHCP Options Set",<br/> "created_by": "Terraform",<br/> "description": "DHCP Option Set for the VPC",<br/> "environment": "prod",<br/> "terraform": "true"<br/>}</pre> |    no    |
+| <a name="input_vpc_id"></a> [vpc_id](#input_vpc_id)                                        | (Required) ID of the VPC to attach the DHCP Options Set to | `string`       | n/a                                                                                                                                                                                         |   yes    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_dhcp_options_id"></a> [dhcp\_options\_id](#output\_dhcp\_options\_id) | n/a |
+| Name                                                                             | Description |
+| -------------------------------------------------------------------------------- | ----------- |
+| <a name="output_dhcp_options_id"></a> [dhcp_options_id](#output_dhcp_options_id) | n/a         |
+
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
@@ -169,4 +172,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 [product-screenshot]: /images/screenshot.webp
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io
+
+```
+
 ```
