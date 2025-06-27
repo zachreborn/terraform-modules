@@ -1,7 +1,6 @@
 ######################################
 # # VPC DHCP Options Variables
 ######################################
-
 variable "domain_name" {
   description = "(Optional) Define the domain name for the DHCP Options Set"
   type        = string
