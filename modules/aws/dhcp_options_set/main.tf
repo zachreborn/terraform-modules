@@ -1,7 +1,3 @@
-###########################
-# VPC DHCP Options
-###########################
-
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -11,6 +7,10 @@ terraform {
     }
   }
 }
+
+###########################
+# VPC DHCP Options
+###########################
 
 resource "aws_vpc_dhcp_options" "this" {
   domain_name         = var.domain_name
