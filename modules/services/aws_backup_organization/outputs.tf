@@ -98,9 +98,9 @@ output "backup_failure_alarm_arn" {
 output "backup_configuration" {
   description = "Summary of backup configuration"
   value = {
-    prod_region     = var.aws_prod_region
-    dr_region       = var.aws_dr_region
-    backup_plan     = var.backup_plan_name
+    prod_region = var.aws_prod_region
+    dr_region   = var.aws_dr_region
+    backup_plan = var.backup_plan_name
     schedules = {
       hourly  = var.hourly_backup_schedule
       daily   = var.daily_backup_schedule
@@ -131,6 +131,6 @@ output "vault_arn_template" {
     prod_hourly_template  = "arn:aws:backup:${var.aws_prod_region}:ACCOUNT_ID:backup-vault:${var.vault_prod_hourly_name}"
     prod_daily_template   = "arn:aws:backup:${var.aws_prod_region}:ACCOUNT_ID:backup-vault:${var.vault_prod_daily_name}"
     prod_monthly_template = "arn:aws:backup:${var.aws_prod_region}:ACCOUNT_ID:backup-vault:${var.vault_prod_monthly_name}"
-    dr_template          = "arn:aws:backup:${var.aws_dr_region}:ACCOUNT_ID:backup-vault:${var.vault_disaster_recovery_name}"
+    dr_template           = "arn:aws:backup:${var.aws_dr_region}:ACCOUNT_ID:backup-vault:${var.vault_disaster_recovery_name}"
   }
 }
