@@ -112,7 +112,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_organization_backup_plan"></a> [organization\_backup\_plan](#module\_organization\_backup\_plan) | ../../aws/organizations/delegated_resource_policy | n/a |
 
 ## Resources
 
@@ -150,11 +152,11 @@ No modules.
 | <a name="input_backup_plan_name"></a> [backup\_plan\_name](#input\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"prod_backups"` | no |
 | <a name="input_backup_plan_start_window"></a> [backup\_plan\_start\_window](#input\_backup\_plan\_start\_window) | (Optional) The amount of time in minutes before beginning a backup. | `number` | `60` | no |
 | <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) The number of days after which the vault lock configuration is no longer changeable. Setting this variable will utilize vault lock compliance mode. Omit the variable if you wish to create the vault lock in governance mode. Defaults to 3 days. | `number` | `3` | no |
-| <a name="input_cross_account_backup_enabled"></a> [cross\_account\_backup\_enabled](#input\_cross\_account\_backup\_enabled) | (Optional) Specifies whether cross-account backup is enabled. This is used in AWS organizations in order to centrally manage AWS Backups in either the organization management account or a delegated admin backups account. Defaults to false. | `bool` | `false` | no |
 | <a name="input_daily_backup_retention"></a> [daily\_backup\_retention](#input\_daily\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 30 days | `number` | `30` | no |
 | <a name="input_daily_backup_schedule"></a> [daily\_backup\_schedule](#input\_daily\_backup\_schedule) | (Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC. | `string` | `"cron(20 7 * * ? *)"` | no |
 | <a name="input_dr_backup_retention"></a> [dr\_backup\_retention](#input\_dr\_backup\_retention) | (Required) The dr backup plan retention in days. By default this is 7 days. | `number` | `7` | no |
 | <a name="input_ec2_backup_plan_name"></a> [ec2\_backup\_plan\_name](#input\_ec2\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"ec2_prod_backups"` | no |
+| <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) A boolean to enable or disable the AWS Backup Organization functionality. If set to 'true' this transitions from a single backup plan to organization plan policies. Defaults to false. | `bool` | `false` | no |
 | <a name="input_hourly_backup_retention"></a> [hourly\_backup\_retention](#input\_hourly\_backup\_retention) | (Required) The hourly backup plan retention in days. By default this is 3 days. | `number` | `3` | no |
 | <a name="input_hourly_backup_schedule"></a> [hourly\_backup\_schedule](#input\_hourly\_backup\_schedule) | (Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour. | `string` | `"cron(20 * * * ? *)"` | no |
 | <a name="input_key_bypass_policy_lockout_safety_check"></a> [key\_bypass\_policy\_lockout\_safety\_check](#input\_key\_bypass\_policy\_lockout\_safety\_check) | (Optional) Specifies whether to disable the policy lockout check performed when creating or updating the key's policy. Setting this value to true increases the risk that the CMK becomes unmanageable. For more information, refer to the scenario in the Default Key Policy section in the AWS Key Management Service Developer Guide. Defaults to false. | `bool` | `false` | no |

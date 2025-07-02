@@ -175,14 +175,18 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_organizations_resource_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_resource_policy) | resource |
+| [aws_organizations_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_content"></a> [content](#input\_content) | (Required) The content of the AWS Organization's delegated resource policy in JSON format. This policy defines the permissions and actions that are allowed or denied for the delegated administrator. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization's delegated resource policy. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_content"></a> [content](#input\_content) | (Required) The content of the AWS Organization's policy in JSON format. | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) A description of the AWS Organization's policy. | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Organization's policy. | `string` | n/a | yes |
+| <a name="input_skip_destroy"></a> [skip\_destroy](#input\_skip\_destroy) | (Optional) If true, the policy will not be destroyed when the resource is removed from the configuration. Defaults to false. | `bool` | `false` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization's policy. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_type"></a> [type](#input\_type) | (Required) The type of the AWS Organization's policy. Valid values are 'AISERVICES\_OPT\_OUT\_POLICY','BACKUP\_POLICY', 'RESOURCE\_CONTROL\_POLICY', 'SERVICE\_CONTROL\_POLICY', and 'TAG\_POLICY'. | `string` | n/a | yes |
 
 ## Outputs
 
