@@ -9,5 +9,8 @@
 # Variable values for development
 terraform.tfvars
 
+# CLAUDE
+CLAUDE.md
+
 # macOS
 .DS_Store
