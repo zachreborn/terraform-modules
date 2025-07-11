@@ -34,7 +34,7 @@ variable "inline_policy" {
 }
 
 variable "managed_policy_arns" {
-  description = "(Optional) The ARN of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed_policy_attachment."
+  description = "(Optional) List of ARNs of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed_policy_attachment."
   type        = list(string)
   default     = []
 }

@@ -56,40 +56,17 @@ variable "key_policy" {
 }
 
 ###############################################################
-# Vault Variables
-###############################################################
-
-variable "vault_prod_hourly_name" {
-  description = "value"
-  default     = "vault_prod_hourly"
-  type        = string
-}
-
-variable "vault_prod_daily_name" {
-  description = "value"
-  default     = "vault_prod_daily"
-  type        = string
-}
-
-variable "vault_prod_monthly_name" {
-  description = "value"
-  default     = "vault_prod_monthly"
-  type        = string
-}
-
-variable "vault_disaster_recovery_name" {
-  description = "value"
-  default     = "vault_disaster_recovery"
-  type        = string
-}
-
-###############################################################
 # Plan Variables
-###############################################################
-
+###############################################################"
 variable "backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "prod_backups"
+  type        = string
+}
+
+variable "content" {
+  description = "(Required) The content of the backup plan in JSON format. This is used for the AWS Backup Organization plan."
+  default     = file("org_backup_plan.json")
   type        = string
 }
 
@@ -105,16 +82,34 @@ variable "hourly_backup_retention" {
   type        = number
 }
 
+variable "hourly_backup_schedule" {
+  description = "(Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour."
+  default     = "cron(20 * * * ? *)"
+  type        = string
+}
+
 variable "daily_backup_retention" {
   description = "(Required) The daily backup plan retention in days. By default this is 30 days"
   default     = 30
   type        = number
 }
 
+variable "daily_backup_schedule" {
+  description = "(Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC."
+  default     = "cron(20 7 * * ? *)"
+  type        = string
+}
+
 variable "monthly_backup_retention" {
   description = "(Required) The daily backup plan retention in days. By default this is 365 days."
   default     = 365
   type        = number
+}
+
+variable "monthly_backup_schedule" {
+  description = "(Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC."
+  default     = "cron(20 9 1 * ? *)"
+  type        = string
 }
 
 variable "dr_backup_retention" {
@@ -139,6 +134,12 @@ variable "backup_plan_completion_window" {
 # General Use Variables
 ###############################################################
 
+variable "enable_organization_backup" {
+  description = "(Optional) A boolean to enable or disable the AWS Backup Organization functionality. If set to 'true' this transitions from a single backup plan to organization plan policies. Defaults to false."
+  default     = false
+  type        = bool
+}
+
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the object."
@@ -148,5 +149,6 @@ variable "tags" {
     environment = "prod"
     priority    = "critical"
     aws_backup  = "true"
+    service     = "backups"
   }
 }
