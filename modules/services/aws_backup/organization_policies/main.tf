@@ -54,14 +54,19 @@ resource "aws_iam_role_policy_attachment" "restores" {
 # AWS Backup Organization Plan
 #######################################
 
-module "organization_backup_plan" {
-  source = "../../../aws/organizations/delegated_resource_policy"
-
-  for_each = var.enable_organization_backup ? [true] : []
-
-  content = file("org_backup_plan.json")
+resource "aws_organizations_resource_policy" "this" {
+  content = var.content
   tags    = var.tags
 }
+
+#module "organization_backup_plan" {
+#  source = "../../../aws/organizations/delegated_resource_policy"
+#
+#  for_each = var.enable_organization_backup ? [true] : []
+#
+#  content = file("org_backup_plan.json")
+#  tags    = var.tags
+#}
 
 #######################################
 # Primary Backup

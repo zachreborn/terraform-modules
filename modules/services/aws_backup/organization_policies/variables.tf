@@ -64,6 +64,12 @@ variable "backup_plan_name" {
   type        = string
 }
 
+variable "content" {
+  description = "(Required) The content of the backup plan in JSON format. This is used for the AWS Backup Organization plan."
+  default     = file("org_backup_plan.json")
+  type        = string
+}
+
 variable "ec2_backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "ec2_prod_backups"
