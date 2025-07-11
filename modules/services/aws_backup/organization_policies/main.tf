@@ -55,7 +55,7 @@ resource "aws_iam_role_policy_attachment" "restores" {
 #######################################
 
 module "organization_backup_plan" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_resource_policy?ref=main"
+  source = "../../../aws/organizations/delegated_resource_policy"
 
   for_each = var.enable_organization_backup ? [true] : []
 
