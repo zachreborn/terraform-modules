@@ -1,0 +1,81 @@
+ jsonencode({
+    plans = {
+      "${var.backup_plan_name}" = {
+        regions = {
+          "@@assign" = [var.aws_prod_region, var.aws_dr_region]
+        }
+        rules = {
+          "hourly_backup_rule" = {
+            schedule_expression     = var.hourly_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = "vault_prod_hourly"
+            lifecycle = {
+              delete_after_days = var.hourly_backup_retention
+            }
+          }
+          "daily_backup_rule" = {
+            schedule_expression     = var.daily_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = "vault_prod_daily"
+            copy_actions = {
+              "disaster_recovery_copy" = {
+                destination_backup_vault_arn = "arn:aws:backup:${var.aws_dr_region}:$$account:backup-vault:vault_disaster_recovery"
+                lifecycle = {
+                  delete_after_days = var.dr_backup_retention
+                }
+              }
+            }
+            lifecycle = {
+              delete_after_days = var.daily_backup_retention
+            }
+          }
+          "monthly_backup_rule" = {
+            schedule_expression     = var.monthly_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = "vault_prod_monthly"
+            lifecycle = {
+              delete_after_days = var.monthly_backup_retention
+            }
+          }
+        }
+        selections = {
+          "tags" = {
+            "all_resources_with_backup_tag" = {
+              iam_role_arn = "arn:aws:iam::$$account:role/aws_backup_role"
+              resources    = ["*"]
+              not_resources = [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:s3:*"
+              ]
+              conditions = {
+                "string_equals" = {
+                  "aws:ResourceTag/backup" = ["true"]
+                }
+              }
+            }
+            "ec2_resources_with_backup_tag" = {
+              iam_role_arn = "arn:aws:iam::$$account:role/aws_backup_role"
+              resources    = ["arn:aws:ec2:*:*:instance/*"]
+              conditions = {
+                "string_equals" = {
+                  "aws:ResourceTag/backup" = ["true"]
+                }
+              }
+            }
+          }
+        }
+        advanced_backup_settings = {
+          "ec2" = {
+            resource_type = "EC2"
+            backup_options = {
+              "WindowsVSS" = "enabled"
+            }
+          }
+        }
+      }
+    }
+  })
+
