@@ -106,11 +106,12 @@ variable "resources" {
 variable "methods" {
   description = "A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings."
   type = map(object({
+    resource             = string                 # The resource key this method belongs to
     authorization_scopes = optional(list(string))
-    authorization        = required(string)
+    authorization        = string
     authorizer_id        = optional(string)
     api_key_required     = optional(bool)
-    http_method          = required(string)
+    http_method          = string
     operation_name       = optional(string)
     request_models       = optional(map(string))
     request_parameters   = optional(map(string))
@@ -124,6 +125,8 @@ variable "methods" {
 variable "method_responses" {
   description = "A map of method responses for the API. Each key is a combination of HTTP method and resource path, and the value is a map of response settings."
   type = map(object({
+    resource            = string                 # The resource key this method response belongs to
+    method              = string                 # The method key this response belongs to
     status_code         = string
     response_models     = optional(map(string))
     response_parameters = optional(map(string))
@@ -137,6 +140,7 @@ variable "integrations" {
     type                    = string
     uri                     = string
     resource                = string
+    method                  = string                 # The method key this integration belongs to
     credentials             = optional(string)
     http_method             = optional(string)
     integration_http_method = optional(string)
@@ -172,11 +176,7 @@ variable "vpc_links" {
 
 variable "tags" {
   description = "A map of tags to assign to the API."
-  type = map(object({
-    name        = required(string)
-    description = optional(string)
-    target_arns = optional(list(string))
-  }))
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 

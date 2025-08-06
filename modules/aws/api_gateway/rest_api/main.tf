@@ -44,7 +44,6 @@ resource "aws_api_gateway_rest_api" "this" {
 ############################################
 
 resource "aws_api_gateway_resource" "this" {
-  #BUG: Something up with terraform lsp seeing no variables named resources, but it is there. 
   for_each = var.resources != null ? var.resources : {}
   # Points to the api gateway.
   rest_api_id = aws_api_gateway_rest_api.this.id
@@ -60,7 +59,7 @@ resource "aws_api_gateway_resource" "this" {
 resource "aws_api_gateway_method" "this" {
   for_each = var.methods != null ? var.methods : {}
   # Points methods to the api gateway
-  resource_id = aws_api_gateway_resource.this.id
+  resource_id = aws_api_gateway_resource.this[each.value.resource].id
   rest_api_id = aws_api_gateway_rest_api.this.id
   # Method details
   api_key_required     = each.value.api_key_required
@@ -77,9 +76,9 @@ resource "aws_api_gateway_method" "this" {
 resource "aws_api_gateway_method_response" "this" {
   for_each = var.method_responses != null ? var.method_responses : {}
 
-  http_method         = aws_api_gateway_method.this.http_method
+  http_method         = aws_api_gateway_method.this[each.value.method].http_method
   rest_api_id         = aws_api_gateway_rest_api.this.id
-  resource_id         = aws_api_gateway_resource.this.id
+  resource_id         = aws_api_gateway_resource.this[each.value.resource].id
   response_models     = each.value.response_models
   response_parameters = each.value.response_parameters
   status_code         = each.value.status_code
@@ -94,11 +93,11 @@ resource "aws_api_gateway_integration" "this" {
   connection_id           = each.value.connection_id
   content_handling        = each.value.content_handling
   credentials             = each.value.credentials
-  http_method             = aws_api_gateway_method.this.http_method
+  http_method             = aws_api_gateway_method.this[each.value.method].http_method
   integration_http_method = each.value.integration_http_method
   passthrough_behavior    = each.value.passthrough_behavior
   rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.this.id
+  resource_id             = aws_api_gateway_resource.this[each.value.resource].id
   request_parameters      = each.value.request_parameters
   request_templates       = each.value.request_templates
   timeout_milliseconds    = each.value.timeout_milliseconds
@@ -113,7 +112,7 @@ resource "aws_api_gateway_integration" "this" {
 resource "aws_api_gateway_vpc_link" "this" {
   for_each = var.vpc_links != null ? var.vpc_links : {}
 
-  name        = each.value.name
+  name        = each.key
   description = each.value.description
   target_arns = each.value.target_arns
   tags        = var.tags
