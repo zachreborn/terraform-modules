@@ -153,6 +153,7 @@ variable "integrations" {
     cache_namespace         = optional(string)
     connection_type         = optional(string)
     connection_id           = optional(string)
+    vpc_link_key            = optional(string)       # The VPC Link key from vpc_links variable when using VPC_LINK
   }))
   default = {}
 }
@@ -168,6 +169,57 @@ variable "vpc_links" {
     target_arns = list(string)
   }))
   default = {}
+}
+
+###############################
+# Domain Name and mTLS Variables
+###############################
+
+variable "enable_mtls" {
+  description = "Enable mTLS configuration for the API Gateway"
+  type        = bool
+  default     = true
+}
+
+variable "domain_name" {
+  description = "Custom domain name for the API Gateway. Required for mTLS."
+  type        = string
+  default     = null
+}
+
+variable "certificate_arn" {
+  description = "ARN of the ACM certificate for the custom domain. Required for custom domain."
+  type        = string
+  default     = null
+}
+
+variable "mtls_config" {
+  description = "mTLS configuration for the custom domain."
+  type = object({
+    truststore_uri     = string # S3 URI to the truststore file
+    truststore_version = optional(string) # Version of the truststore
+  })
+  default = null
+}
+
+variable "security_policy" {
+  description = "Security policy for the custom domain. Valid values: TLS_1_0, TLS_1_2"
+  type        = string
+  default     = "TLS_1_2"
+  validation {
+    condition     = contains(["TLS_1_0", "TLS_1_2"], var.security_policy)
+    error_message = "Security policy must be either TLS_1_0 or TLS_1_2."
+  }
+}
+
+variable "endpoint_configuration_types" {
+  description = "List of endpoint types for the custom domain. Valid values: EDGE, REGIONAL, PRIVATE"
+  type        = list(string)
+  default     = ["REGIONAL"]
+  validation {
+    condition     = alltrue([for t in var.endpoint_configuration_types : contains(["EDGE", "REGIONAL", "PRIVATE"], t)])
+    error_message = "All endpoint configuration types must be one of: EDGE, REGIONAL, PRIVATE."
+  }
 }
 
 ###############################
