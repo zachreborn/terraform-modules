@@ -148,6 +148,21 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "mtls_truststore" 
   }
 }
 
+# Upload truststore.pem file to S3 bucket
+resource "aws_s3_object" "truststore_pem" {
+  count  = var.enable_mtls && var.domain_name != null ? 1 : 0
+  bucket = aws_s3_bucket.mtls_truststore[0].id
+  key    = "truststore/truststore.pem"
+  source = "${path.module}/../../../../truststore/truststore.pem"
+  etag   = filemd5("${path.module}/../../../../truststore/truststore.pem")
+
+  tags = var.tags
+
+  depends_on = [
+    aws_s3_bucket.mtls_truststore
+  ]
+}
+
 ############################################
 # ACM Certificate for Custom Domain
 ############################################
@@ -182,10 +197,10 @@ resource "aws_api_gateway_domain_name" "this" {
   }
 
   dynamic "mutual_tls_authentication" {
-    for_each = var.mtls_config != null ? [var.mtls_config] : []
+    for_each = var.enable_mtls && var.domain_name != null ? [1] : []
     content {
-      truststore_uri     = mutual_tls_authentication.value.truststore_uri
-      truststore_version = mutual_tls_authentication.value.truststore_version
+      truststore_uri     = var.mtls_config != null ? var.mtls_config.truststore_uri : "s3://${aws_s3_bucket.mtls_truststore[0].id}/truststore/truststore.pem"
+      truststore_version = var.mtls_config != null ? var.mtls_config.truststore_version : aws_s3_object.truststore_pem[0].version_id
     }
   }
 

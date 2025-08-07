@@ -64,6 +64,16 @@ output "s3_bucket_arn" {
   value       = var.enable_mtls && var.domain_name != null ? aws_s3_bucket.mtls_truststore[0].arn : null
 }
 
+output "truststore_s3_uri" {
+  description = "S3 URI of the uploaded truststore.pem file"
+  value       = var.enable_mtls && var.domain_name != null ? "s3://${aws_s3_bucket.mtls_truststore[0].id}/truststore/truststore.pem" : null
+}
+
+output "truststore_version_id" {
+  description = "Version ID of the uploaded truststore.pem file"
+  value       = var.enable_mtls && var.domain_name != null ? aws_s3_object.truststore_pem[0].version_id : null
+}
+
 # Certificate Outputs
 output "certificate_arn" {
   description = "ARN of the ACM certificate"
