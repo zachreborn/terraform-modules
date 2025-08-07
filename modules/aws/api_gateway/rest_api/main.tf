@@ -153,8 +153,8 @@ resource "aws_s3_object" "truststore_pem" {
   count  = var.enable_mtls && var.domain_name != null ? 1 : 0
   bucket = aws_s3_bucket.mtls_truststore[0].id
   key    = "truststore/truststore.pem"
-  source = "${path.module}/../../../../truststore/truststore.pem"
-  etag   = filemd5("${path.module}/../../../../truststore/truststore.pem")
+  source = "${path.root}/truststore/truststore.pem"
+  etag   = filemd5("${path.root}/truststore/truststore.pem")
 
   tags = var.tags
 
