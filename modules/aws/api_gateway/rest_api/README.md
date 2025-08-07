@@ -117,6 +117,7 @@ No modules.
 | [aws_s3_bucket.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_s3_object.truststore_pem](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -167,6 +168,8 @@ No modules.
 | <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | ID of the S3 bucket used for mTLS truststore |
 | <a name="output_stage_invoke_url"></a> [stage\_invoke\_url](#output\_stage\_invoke\_url) | Invoke URL for the API Gateway stage |
 | <a name="output_stage_name"></a> [stage\_name](#output\_stage\_name) | Name of the API Gateway stage |
+| <a name="output_truststore_s3_uri"></a> [truststore\_s3\_uri](#output\_truststore\_s3\_uri) | S3 URI of the uploaded truststore.pem file |
+| <a name="output_truststore_version_id"></a> [truststore\_version\_id](#output\_truststore\_version\_id) | Version ID of the uploaded truststore.pem file |
 | <a name="output_vpc_links"></a> [vpc\_links](#output\_vpc\_links) | VPC Links created by this module |
 <!-- END_TF_DOCS -->
 
