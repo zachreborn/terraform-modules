@@ -30,7 +30,7 @@ resource "aws_ecr_repository" "this" {
   tags                 = var.tags
 
   dynamic "encryption_configuration" {
-    for_each = var.enable_encryption == null ? [] : [1]
+    for_each = var.enable_encryption != null ? [1] : []
 
     content {
       encryption_type = var.encryption_type
@@ -39,7 +39,7 @@ resource "aws_ecr_repository" "this" {
   }
 
   dynamic "image_tag_mutability_exclusion_filter" {
-    for_each = var.image_tag_mutability_exclusion_filter
+    for_each = var.image_tag_mutability_exclusion_filter != null ? var.image_tag_mutability_exclusion_filter : []
 
     content {
       filter      = image_tag_mutability_exclusion_filter.value
