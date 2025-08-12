@@ -15,7 +15,6 @@ terraform {
 ###########################
 # KMS Encryption Key
 ###########################
-
 resource "aws_kms_key" "this" {
   customer_master_key_spec = var.customer_master_key_spec
   description              = var.description
