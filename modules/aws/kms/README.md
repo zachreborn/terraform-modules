@@ -114,7 +114,7 @@ No modules.
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your\_name\_prefix). | `string` | n/a | yes |
 | <a name="input_policy"></a> [policy](#input\_policy) | (Optional) A valid policy JSON document. | `string` | `null` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "created_by": "<YOUR NAME>",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
