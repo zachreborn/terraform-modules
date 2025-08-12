@@ -120,7 +120,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | Outputs |
 | <a name="output_key_id"></a> [key\_id](#output\_key\_id) | n/a |
 <!-- END_TF_DOCS -->
 
