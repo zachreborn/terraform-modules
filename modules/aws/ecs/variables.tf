@@ -53,12 +53,28 @@ variable "service_connect_default_namespace" {
   }
 }
 
+variable "capacity_providers" {
+  description = "The capacity providers to associate with the ECS cluster."
+  type        = set(string)
+  default     = ["FARGATE", "FARGATE-SPOT"]
+}
+
+variable "default_capacity_provider_strategy" {
+  description = "The default capacity provider strategy for the ECS cluster."
+  type = set(object({
+    base              = optional(number)
+    capacity_provider = string
+    weight            = optional(number)
+  }))
+  default = null
+}
+
 ###########################
 # General Variables
 ###########################
 
 variable "tags" {
-  description = "A map of tags to assign to the ECS cluster"
+  description = "A map of tags to assign to the ECS cluster."
   type        = map(string)
   default = {
     "terraform" = "true"
