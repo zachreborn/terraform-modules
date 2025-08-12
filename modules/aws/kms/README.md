@@ -105,19 +105,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 4.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -125,32 +124,31 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                        | Type     |
-| ----------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_kms_alias.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
-| [aws_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key)     | resource |
+| [aws_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 
 ## Inputs
 
-| Name                                                                                                      | Description                                                                                                                                                                                                                                                                                                                                                            | Type     | Default                                                                 | Required |
-| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------- | :------: |
-| <a name="input_customer_master_key_spec"></a> [customer_master_key_spec](#input_customer_master_key_spec) | (Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, or ECC_SECG_P256K1. For help with choosing a key spec, see the AWS KMS Developer Guide. | `string` | `"SYMMETRIC_DEFAULT"`                                                   |    no    |
-| <a name="input_deletion_window_in_days"></a> [deletion_window_in_days](#input_deletion_window_in_days)    | (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days.                                                                                                                                                                                                                                           | `number` | `30`                                                                    |    no    |
-| <a name="input_description"></a> [description](#input_description)                                        | (Optional) The description of the key as viewed in AWS console.                                                                                                                                                                                                                                                                                                        | `any`    | `null`                                                                  |    no    |
-| <a name="input_enable_key_rotation"></a> [enable_key_rotation](#input_enable_key_rotation)                | (Optional) Specifies whether key rotation is enabled.                                                                                                                                                                                                                                                                                                                  | `bool`   | `true`                                                                  |    no    |
-| <a name="input_is_enabled"></a> [is_enabled](#input_is_enabled)                                           | (Optional) Specifies whether the key is enabled.                                                                                                                                                                                                                                                                                                                       | `bool`   | `true`                                                                  |    no    |
-| <a name="input_key_usage"></a> [key_usage](#input_key_usage)                                              | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported.                                                                                                                                                                                                                             | `string` | `"ENCRYPT_DECRYPT"`                                                     |    no    |
-| <a name="input_name_prefix"></a> [name_prefix](#input_name_prefix)                                        | (Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your_name_prefix).                                                                                                                                                                                       | `string` | n/a                                                                     |   yes    |
-| <a name="input_policy"></a> [policy](#input_policy)                                                       | (Optional) A valid policy JSON document.                                                                                                                                                                                                                                                                                                                               | `string` | `null`                                                                  |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                             | (Optional) A mapping of tags to assign to the object.                                                                                                                                                                                                                                                                                                                  | `map`    | <pre>{<br/> "environment": "prod",<br/> "terraform": "true"<br/>}</pre> |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_customer_master_key_spec"></a> [customer\_master\_key\_spec](#input\_customer\_master\_key\_spec) | (Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC\_DEFAULT, RSA\_2048, RSA\_3072, RSA\_4096, ECC\_NIST\_P256, ECC\_NIST\_P384, ECC\_NIST\_P521, or ECC\_SECG\_P256K1. For help with choosing a key spec, see the AWS KMS Developer Guide. | `string` | `"SYMMETRIC_DEFAULT"` | no |
+| <a name="input_deletion_window_in_days"></a> [deletion\_window\_in\_days](#input\_deletion\_window\_in\_days) | (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. | `number` | `30` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the key as viewed in AWS console. | `any` | `null` | no |
+| <a name="input_enable_key_rotation"></a> [enable\_key\_rotation](#input\_enable\_key\_rotation) | (Optional) Specifies whether key rotation is enabled. | `bool` | `true` | no |
+| <a name="input_is_enabled"></a> [is\_enabled](#input\_is\_enabled) | (Optional) Specifies whether the key is enabled. | `bool` | `true` | no |
+| <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your\_name\_prefix). | `string` | n/a | yes |
+| <a name="input_policy"></a> [policy](#input\_policy) | (Optional) A valid policy JSON document. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-| Name                                                  | Description |
-| ----------------------------------------------------- | ----------- |
-| <a name="output_arn"></a> [arn](#output_arn)          | Outputs     |
-| <a name="output_key_id"></a> [key_id](#output_key_id) | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | Outputs |
+| <a name="output_key_id"></a> [key\_id](#output\_key\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
