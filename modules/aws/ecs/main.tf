@@ -70,23 +70,23 @@ resource "aws_ecs_cluster" "this" {
           }
         }
       }
+    }
+  }
 
-      dynamic "service_connect_defaults" {
-        for_each = var.service_connect_default_namespace ? [1] : []
+  dynamic "service_connect_defaults" {
+    for_each = var.service_connect_default_namespace ? [1] : []
 
-        content {
-          namespace = service_connect_default_namespace.value
-        }
-      }
+    content {
+      namespace = service_connect_default_namespace.value
+    }
+  }
 
-      dynamic "setting" {
-        for_each = var.container_insights ? [1] : []
+  dynamic "setting" {
+    for_each = var.container_insights ? [1] : []
 
-        content {
-          name  = "containerInsights"
-          value = setting.value
-        }
-      }
+    content {
+      name  = "containerInsights"
+      value = setting.value
     }
   }
 }
