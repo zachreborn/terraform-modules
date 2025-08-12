@@ -74,7 +74,7 @@ resource "aws_ecs_cluster" "this" {
   }
 
   dynamic "service_connect_defaults" {
-    for_each = var.service_connect_default_namespace ? [1] : []
+    for_each = var.service_connect_default_namespace == null ? [] : [1]
 
     content {
       namespace = service_connect_default_namespace.value
@@ -82,7 +82,7 @@ resource "aws_ecs_cluster" "this" {
   }
 
   dynamic "setting" {
-    for_each = var.container_insights ? [1] : []
+    for_each = var.container_insights == null ? [] : [1]
 
     content {
       name  = "containerInsights"
