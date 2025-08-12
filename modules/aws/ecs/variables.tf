@@ -38,8 +38,8 @@ variable "container_insights" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^(enabled|enhanced|disabled)$", var.container_insights))
-    error_message = "container_insights must be 'enabled', 'enhanced', or 'disabled'."
+    condition     = var.container_insights == null || can(regex("^(enabled|enhanced|disabled)$", var.container_insights))
+    error_message = "container_insights must be null, 'enabled', 'enhanced', or 'disabled'."
   }
 }
 
