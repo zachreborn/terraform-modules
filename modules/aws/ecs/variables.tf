@@ -36,7 +36,7 @@ variable "configuration" {
 variable "container_insights" {
   description = "Setting for CloudWatch container insights. Valid are 'enabled', 'enhanced', or 'disabled'"
   type        = string
-  default     = ""
+  default     = null
   validation {
     condition     = var.container_insights == null || can(regex("^(enabled|enhanced|disabled)$", var.container_insights))
     error_message = "container_insights must be null, 'enabled', 'enhanced', or 'disabled'."
