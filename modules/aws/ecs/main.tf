@@ -29,7 +29,7 @@ module "container_storage_key" {
   source = "../kms"
 
   description = "ECS Cluster Key"
-  name        = "alias/ecs-cluster-key-${var.cluster_name}"
+  name        = "ecs-cluster-key-${var.cluster_name}"
 }
 
 # ECS Cluster
