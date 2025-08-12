@@ -27,7 +27,7 @@ resource "aws_kms_key" "this" {
   tags                     = var.tags
 }
 
-resource "aws_kms_alias" "alias" {
+resource "aws_kms_alias" "this" {
   name_prefix   = "alias/${var.name_prefix}"
   target_key_id = aws_kms_key.this.key_id
 }
