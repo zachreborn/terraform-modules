@@ -59,15 +59,15 @@ resource "aws_ecs_cluster" "this" {
               s3_key_prefix                  = log_configuration.value.s3_key_prefix
             }
           }
+        }
+      }
 
-          dynamic "managed_storage_configuration" {
-            for_each = configuration.value.managed_storage_configuration
+      dynamic "managed_storage_configuration" {
+        for_each = configuration.value.managed_storage_configuration
 
-            content {
-              fargate_ephemeral_storage_kms_key_id = managed_storage_configuration.value.fargate_ephemeral_storage_kms_key_id
-              kms_key_id                           = managed_storage_configuration.value.kms_key_id
-            }
-          }
+        content {
+          fargate_ephemeral_storage_kms_key_id = managed_storage_configuration.value.fargate_ephemeral_storage_kms_key_id
+          kms_key_id                           = managed_storage_configuration.value.kms_key_id
         }
       }
     }
@@ -90,4 +90,3 @@ resource "aws_ecs_cluster" "this" {
     }
   }
 }
-
