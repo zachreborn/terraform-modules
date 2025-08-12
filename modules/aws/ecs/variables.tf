@@ -56,7 +56,7 @@ variable "service_connect_default_namespace" {
 variable "capacity_providers" {
   description = "The capacity providers to associate with the ECS cluster."
   type        = set(string)
-  default     = ["FARGATE", "FARGATE-SPOT"]
+  default     = ["FARGATE", "FARGATE_SPOT"]
 }
 
 variable "default_capacity_provider_strategy" {
