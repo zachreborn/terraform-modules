@@ -87,6 +87,12 @@ variable "put_rest_api_mode" {
   }
 }
 
+variable "stage_name" {
+  description = "(Required) Name of the stage"
+  type        = string
+  default     = ""
+}
+
 ############################################
 # API Gateway Resource Variables
 ############################################
