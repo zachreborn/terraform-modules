@@ -1,16 +1,16 @@
 output "waf_acl_id" {
   description = "The ID of the WAF WebACL"
-  value       = aws_wafv2_web_acl.waf_acl.id
+  value       = aws_wafv2_web_acl.this.id
 }
 
 output "waf_acl_arn" {
   description = "The ARN of the WAF WebACL"
-  value       = aws_wafv2_web_acl.waf_acl.arn
+  value       = aws_wafv2_web_acl.this.arn
 }
 
 output "waf_acl_name" {
   description = "The name of the WAF WebACL"
-  value       = aws_wafv2_web_acl.waf_acl.name
+  value       = aws_wafv2_web_acl.this.name
 }
 
 output "ip_sets" {
