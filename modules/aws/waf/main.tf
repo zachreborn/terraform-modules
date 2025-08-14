@@ -85,15 +85,34 @@ resource "aws_wafv2_web_acl" "this" {
       }
 
       statement {
-        managed_rule_group_statement {
-          name        = rule.value.statement.managed_rule_group_statement.name
-          vendor_name = rule.value.statement.managed_rule_group_statement.vendor_name
+        dynamic "managed_rule_group_statement" {
+          for_each = rule.value.statement.managed_rule_group_statement != null ? [rule.value.statement.managed_rule_group_statement] : []
+          content {
+            name        = managed_rule_group_statement.value.name
+            vendor_name = managed_rule_group_statement.value.vendor_name
 
-          dynamic "excluded_rule" {
-            for_each = rule.value.statement.managed_rule_group_statement.excluded_rules
-            content {
-              name = excluded_rule.value
+            dynamic "excluded_rule" {
+              for_each = managed_rule_group_statement.value.excluded_rules
+              content {
+                name = excluded_rule.value
+              }
             }
+          }
+        }
+
+        dynamic "not_statement" {
+          for_each = rule.value.statement.not_statement != null ? [rule.value.statement.not_statement] : []
+          content {
+            ip_set_reference_statement {
+              arn = not_statement.value.ip_set_reference_statement.arn
+            }
+          }
+        }
+
+        dynamic "ip_set_reference_statement" {
+          for_each = rule.value.statement.ip_set_reference_statement != null ? [rule.value.statement.ip_set_reference_statement] : []
+          content {
+            arn = ip_set_reference_statement.value.arn
           }
         }
       }
@@ -119,5 +138,5 @@ resource "aws_wafv2_web_acl_association" "association" {
   count = var.associate_with_resource != null ? 1 : 0
 
   resource_arn = var.associate_with_resource
-  web_acl_arn  = aws_wafv2_web_acl.waf_acl.arn
+  web_acl_arn  = aws_wafv2_web_acl.this.arn
 }

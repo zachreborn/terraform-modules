@@ -40,12 +40,20 @@ variable "rule" {
     priority = number
     action   = string
     statement = object({
-      managed_rule_group_statement = object({
+      managed_rule_group_statement = optional(object({
         name           = string
         vendor_name    = string
         priority       = number
         excluded_rules = list(string)
-      })
+      }))
+      not_statement = optional(object({
+        ip_set_reference_statement = object({
+          arn = string
+        })
+      }))
+      ip_set_reference_statement = optional(object({
+        arn = string
+      }))
     })
     visibility_config = object({
       cloudwatch_metrics_enabled = bool

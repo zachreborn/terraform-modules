@@ -16,7 +16,7 @@ output "waf_acl_name" {
 output "ip_sets" {
   description = "Map of created IP sets"
   value = {
-    for k, v in aws_wafv2_ip_set.ip_sets : k => {
+    for k, v in aws_wafv2_ip_set.this : k => {
       id   = v.id
       arn  = v.arn
       name = v.name
