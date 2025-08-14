@@ -27,7 +27,7 @@ data "aws_organizations_organization" "current" {}
 # IP Sets
 ############################
 
-resource "aws_wafv2_ip_set" "ip_sets" {
+resource "aws_wafv2_ip_set" "this" {
   for_each = var.ip_sets
 
   name               = each.value.name
