@@ -102,20 +102,36 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_vpn_connection_route.vpn_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_connection_route) | resource |
+| [aws_wafv2_ip_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_ip_set) | resource |
+| [aws_wafv2_web_acl.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
+| [aws_wafv2_web_acl_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_organizations_organization.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_vpn_connection_id"></a> [vpn\_connection\_id](#input\_vpn\_connection\_id) | VPN connection id | `string` | n/a | yes |
-| <a name="input_vpn_route_cidr_block"></a> [vpn\_route\_cidr\_block](#input\_vpn\_route\_cidr\_block) | CIDR block of the VPN subnets | `any` | n/a | yes |
+| <a name="input_associate_with_resource"></a> [associate\_with\_resource](#input\_associate\_with\_resource) | Resource ARN to associate the WAF with (API Gateway, ALB, etc.) | `string` | `null` | no |
+| <a name="input_default_action"></a> [default\_action](#input\_default\_action) | Default action for the WAF ACL | <pre>object({<br/>    allow = optional(bool)<br/>    block = optional(bool)<br/>  })</pre> | <pre>{<br/>  "allow": false,<br/>  "block": true<br/>}</pre> | no |
+| <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `"default"` | no |
+| <a name="input_ip_sets"></a> [ip\_sets](#input\_ip\_sets) | Map of IP sets to create | <pre>map(object({<br/>    name               = string<br/>    description        = optional(string, "IP set created by WAF module")<br/>    ip_address_version = optional(string, "IPV4")<br/>    addresses          = list(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `"default"` | no |
+| <a name="input_rule"></a> [rule](#input\_rule) | Map of rule configuration | <pre>map(object({<br/>    name     = string<br/>    priority = number<br/>    action   = string<br/>    statement = object({<br/>      managed_rule_group_statement = optional(object({<br/>        name           = string<br/>        vendor_name    = string<br/>        priority       = number<br/>        excluded_rules = list(string)<br/>      }))<br/>      not_statement = optional(object({<br/>        ip_set_reference_statement = object({<br/>          arn = string<br/>        })<br/>      }))<br/>      ip_set_reference_statement = optional(object({<br/>        arn = string<br/>      }))<br/>    })<br/>    visibility_config = object({<br/>      cloudwatch_metrics_enabled = bool<br/>      metric_name                = string<br/>      sampled_requests_enabled   = bool<br/>    })<br/>  }))</pre> | `{}` | no |
+| <a name="input_scope"></a> [scope](#input\_scope) | n/a | `string` | `"default"` | no |
+| <a name="input_visibility_config"></a> [visibility\_config](#input\_visibility\_config) | Visibility configuration for the WAF ACL | <pre>object({<br/>    cloudwatch_metrics_enabled = optional(bool, true)<br/>    metric_name                = optional(string)<br/>    sampled_requests_enabled   = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "cloudwatch_metrics_enabled": true,<br/>  "metric_name": null,<br/>  "sampled_requests_enabled": true<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_vpn_connection_route"></a> [vpn\_connection\_route](#output\_vpn\_connection\_route) | n/a |
+| <a name="output_associated_resource_arn"></a> [associated\_resource\_arn](#output\_associated\_resource\_arn) | The ARN of the associated resource (if any) |
+| <a name="output_association_id"></a> [association\_id](#output\_association\_id) | The ID of the WAF association (if created) |
+| <a name="output_ip_sets"></a> [ip\_sets](#output\_ip\_sets) | Map of created IP sets |
+| <a name="output_waf_acl_arn"></a> [waf\_acl\_arn](#output\_waf\_acl\_arn) | The ARN of the WAF WebACL |
+| <a name="output_waf_acl_id"></a> [waf\_acl\_id](#output\_waf\_acl\_id) | The ID of the WAF WebACL |
+| <a name="output_waf_acl_name"></a> [waf\_acl\_name](#output\_waf\_acl\_name) | The name of the WAF WebACL |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
