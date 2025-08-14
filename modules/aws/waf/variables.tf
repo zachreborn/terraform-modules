@@ -53,6 +53,7 @@ variable "rule" {
       sampled_requests_enabled   = bool
     })
   }))
+  default = {}
 }
 
 

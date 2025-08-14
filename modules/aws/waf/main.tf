@@ -45,7 +45,7 @@ resource "aws_wafv2_ip_set" "ip_sets" {
 # WAF ACL
 ############################
 
-resource "aws_wafv2_web_acl" "waf_acl" {
+resource "aws_wafv2_web_acl" "this" {
   name        = var.name
   scope       = var.scope # REGIONAL(default) or CLOUDFRONT
   description = var.description
@@ -117,7 +117,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 
 resource "aws_wafv2_web_acl_association" "association" {
   count = var.associate_with_resource != null ? 1 : 0
-  
+
   resource_arn = var.associate_with_resource
   web_acl_arn  = aws_wafv2_web_acl.waf_acl.arn
 }
