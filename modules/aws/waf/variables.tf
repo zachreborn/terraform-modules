@@ -61,17 +61,41 @@ variable "rule" {
 # Visibility Configuration
 ############################################
 
-variable "visibility_config.cloudwatch_metrics_enabled" {
-  type    = bool
-  default = true
+variable "visibility_config" {
+  description = "Visibility configuration for the WAF ACL"
+  type = object({
+    cloudwatch_metrics_enabled = optional(bool, true)
+    metric_name                = optional(string)
+    sampled_requests_enabled   = optional(bool, true)
+  })
+  default = {
+    cloudwatch_metrics_enabled = true
+    metric_name                = null
+    sampled_requests_enabled   = true
+  }
 }
 
-variable "visibility_config.metric_name" {
-  type    = string
-  default = var.name
+############################################
+# IP Sets Configuration
+############################################
+
+variable "ip_sets" {
+  description = "Map of IP sets to create"
+  type = map(object({
+    name               = string
+    description        = optional(string, "IP set created by WAF module")
+    ip_address_version = optional(string, "IPV4")
+    addresses          = list(string)
+  }))
+  default = {}
 }
 
-variable "visibility_config.sampled_requests_enabled" {
-  type    = bool
-  default = true
+############################################
+# Association Configuration
+############################################
+
+variable "associate_with_resource" {
+  description = "Resource ARN to associate the WAF with (API Gateway, ALB, etc.)"
+  type        = string
+  default     = null
 }
