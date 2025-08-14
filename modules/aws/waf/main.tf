@@ -91,10 +91,13 @@ resource "aws_wafv2_web_acl" "this" {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
 
-            dynamic "excluded_rule" {
+            dynamic "rule_action_override" {
               for_each = managed_rule_group_statement.value.excluded_rules
               content {
-                name = excluded_rule.value
+                name = rule_action_override.value
+                action_to_use {
+                  count {}
+                }
               }
             }
           }
@@ -103,8 +106,10 @@ resource "aws_wafv2_web_acl" "this" {
         dynamic "not_statement" {
           for_each = rule.value.statement.not_statement != null ? [rule.value.statement.not_statement] : []
           content {
-            ip_set_reference_statement {
-              arn = not_statement.value.ip_set_reference_statement.arn
+            statement {
+              ip_set_reference_statement {
+                arn = not_statement.value.ip_set_reference_statement.arn
+              }
             }
           }
         }
@@ -134,7 +139,7 @@ resource "aws_wafv2_web_acl" "this" {
 # WAF Association
 ############################
 
-resource "aws_wafv2_web_acl_association" "association" {
+resource "aws_wafv2_web_acl_association" "this" {
   count = var.associate_with_resource != null ? 1 : 0
 
   resource_arn = var.associate_with_resource

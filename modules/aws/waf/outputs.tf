@@ -26,7 +26,7 @@ output "ip_sets" {
 
 output "association_id" {
   description = "The ID of the WAF association (if created)"
-  value       = length(aws_wafv2_web_acl_association.association) > 0 ? aws_wafv2_web_acl_association.association[0].id : null
+  value       = length(aws_wafv2_web_acl_association.this) > 0 ? aws_wafv2_web_acl_association.this[0].id : null
 }
 
 output "associated_resource_arn" {
