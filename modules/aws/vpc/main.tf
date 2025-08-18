@@ -190,14 +190,14 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 resource "aws_vpc_endpoint_route_table_association" "private_s3" {
-  for_each        = var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints ? toset(aws_subnet.private_subnets[*].id) : {}
+  for_each        = (var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints) ? toset(aws_subnet.private_subnets[*].id) : []
   route_table_id  = each.value
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
   # route_table_id  = element(aws_route_table.private_route_table[*].id, count.index)
 }
 
 resource "aws_vpc_endpoint_route_table_association" "public_s3" {
-  for_each        = var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints ? toset(aws_subnet.public_subnets[*].id) : {}
+  for_each        = (var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints) ? toset(aws_subnet.public_subnets[*].id) : []
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
   route_table_id  = each.value
 }
