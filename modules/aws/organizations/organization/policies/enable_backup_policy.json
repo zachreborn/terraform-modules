@@ -1,0 +1,13 @@
+{
+  "Root": {
+    "Id": "r-a1b2",
+    "Arn": "arn:aws:organizations::123456789012:root/o-aa111bb222/r-a1b2",
+    "Name": "Root",
+    "PolicyTypes": [
+      {
+        "Type": "BACKUP_POLICY",
+        "Status": "ENABLED"
+      }
+    ]
+  }
+}
