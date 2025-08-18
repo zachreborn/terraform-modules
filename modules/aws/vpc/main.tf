@@ -36,6 +36,7 @@ resource "aws_vpc" "vpc" {
   tags                 = merge(tomap({ Name = var.name }), var.tags)
 }
 
+
 ###########################
 # VPC Endpoints
 ###########################
