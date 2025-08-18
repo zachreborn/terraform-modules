@@ -167,7 +167,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
-resource "aws_vpc_endpoint" "s3" {
+resource "aws_vpc_endpoint" "ecr_s3" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.s3"
