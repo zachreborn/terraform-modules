@@ -113,7 +113,7 @@ variable "hourly_backup_retention" {
 
 variable "daily_backup_cold_storage_after" {
   description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
-  default     = null
+  default     = 0
   type        = number
 }
 
