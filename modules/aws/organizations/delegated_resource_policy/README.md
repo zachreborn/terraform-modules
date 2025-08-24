@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">AWS Organization Module</h3>
+<h3 align="center">AWS Organization Delegated Resource Policy Module</h3>
   <p align="center">
-    This module generates and manages an AWS Organization.
+    This module generates and manages AWS organization delegated administrator resource policies. This delegates administrative functionality of a service to an account within an organization. This module takes a policies which include the resource delegation. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services_list.html) for more information.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,21 +62,88 @@
 
 ## Usage
 
-### Simple Example
+### AWS Backup Delegation Example
 
-This example creates an AWS Organization with the default settings.
+This example delegates administrative functionality of a service to an account.
 
 ```
 module "organization" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_resource_policy"
 
-    aws_service_access_principals = [
-        "aws-artifact-account-sync.amazonaws.com",
-        "backup.amazonaws.com",
-        "cloudtrail.amazonaws.com",
-        "sso.amazonaws.com",
-    ]
-    enabled_policy_types          = ["TAG_POLICY"]
+    content = {
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowOrganizationsRead",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "AWS-member-account-ID"
+      },
+      "Action": [
+        "organizations:Describe*",
+        "organizations:List*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowBackupPoliciesCreation",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "AWS-member-account-ID"
+      },
+      "Action": [
+        "organizations:CreatePolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "organizations:PolicyType": "BACKUP_POLICY"
+        }
+      }
+    },
+    {
+      "Sid": "AllowBackupPoliciesModification",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "AWS-member-account-ID"
+      },
+      "Action": [
+        "organizations:DescribePolicy",
+        "organizations:UpdatePolicy",
+        "organizations:DeletePolicy"
+      ],
+      "Resource": [
+        "arn:aws:organizations::AWS-management-account-ID:policy/*/backup_policy/*"               ],
+      "Condition": {
+        "StringEquals": {
+          "organizations:PolicyType": "BACKUP_POLICY"
+        }
+      }
+    },
+    {
+      "Sid": "AllowBackupPoliciesAttachmentAndDetachmentToAllAccountsAndOUs",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "AWS-member-account-ID"
+      },
+      "Action": [
+        "organizations:AttachPolicy",
+        "organizations:DetachPolicy"
+      ],
+      "Resource": [
+        "arn:aws:organizations::AWS-management-account-ID:root/*",
+        "arn:aws:organizations::AWS-management-account-ID:ou/*",
+        "arn:aws:organizations::AWS-management-account-ID:account/*",
+        "arn:aws:organizations::AWS-management-account-ID:policy/*/backup_policy/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "organizations:PolicyType": "BACKUP_POLICY"
+        }
+      }
+    }
+  ]
+}
 }
 ```
 
@@ -92,49 +159,37 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.78.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.78.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_centralized_backup"></a> [centralized\_backup](#module\_centralized\_backup) | ../policy | n/a |
-| <a name="module_centralized_root"></a> [centralized\_root](#module\_centralized\_root) | ../../iam/organizations_features | n/a |
+No modules.
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_organizations_organization.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organization) | resource |
+| [aws_organizations_resource_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_resource_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br/>  "account.amazonaws.com",<br/>  "aws-artifact-account-sync.amazonaws.com",<br/>  "backup.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "health.amazonaws.com",<br/>  "sso.amazonaws.com"<br/>]</pre> | no |
-| <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) If true, enables the organization backup policy. Defaults to false. | `bool` | `false` | no |
-| <a name="input_enabled_features"></a> [enabled\_features](#input\_enabled\_features) | A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions. | `list(string)` | <pre>[<br/>  "RootCredentialsManagement",<br/>  "RootSessions"<br/>]</pre> | no |
-| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | `null` | no |
-| <a name="input_feature_set"></a> [feature\_set](#input\_feature\_set) | (Optional) Specify 'ALL' (default) or 'CONSOLIDATED\_BILLING'. | `string` | `"ALL"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_content"></a> [content](#input\_content) | (Required) The content of the AWS Organization's delegated resource policy in JSON format. This policy defines the permissions and actions that are allowed or denied for the delegated administrator. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization's delegated resource policy. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_accounts"></a> [accounts](#output\_accounts) | List of organization accounts.All elements have these attributes: arn, email, id, name, status. |
-| <a name="output_arn"></a> [arn](#output\_arn) | ARN of the organization |
-| <a name="output_id"></a> [id](#output\_id) | ID of the organization |
-| <a name="output_master_account_arn"></a> [master\_account\_arn](#output\_master\_account\_arn) | ARN of the master account |
-| <a name="output_master_account_email"></a> [master\_account\_email](#output\_master\_account\_email) | Email address of the master account |
-| <a name="output_master_account_id"></a> [master\_account\_id](#output\_master\_account\_id) | ID of the master account |
-| <a name="output_roots"></a> [roots](#output\_roots) | List of organization roots.All elements have these attributes: arn, id, name, policy\_types. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the AWS Organization's delegated resource policy. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the AWS Organization's delegated resource policy. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
