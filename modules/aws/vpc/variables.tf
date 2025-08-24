@@ -1,6 +1,6 @@
 ###########################
 # VPC
-###########################
+##########################
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC"
   type        = string
@@ -50,7 +50,18 @@ variable "enable_ecr_vpc_endpoints" {
   type        = bool
   default     = false
 }
+variable "subnet_indices" {
+  description = "List of subnet indices to use (0-2)"
+  type        = list(number)
+  default     = [0]
 
+  validation {
+    condition = alltrue([
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= 2
+    ])
+    error_message = "Subnet indices must be between 0 and 2."
+  }
+}
 ###########################
 # Subnets
 ###########################

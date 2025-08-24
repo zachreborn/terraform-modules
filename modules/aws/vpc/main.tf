@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -86,7 +86,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -97,7 +97,7 @@ resource "aws_vpc_endpoint" "kms" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -108,7 +108,7 @@ resource "aws_vpc_endpoint" "ssm" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -119,7 +119,7 @@ resource "aws_vpc_endpoint" "ssm-contacts" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -130,7 +130,7 @@ resource "aws_vpc_endpoint" "ssm-incidents" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
@@ -141,7 +141,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
