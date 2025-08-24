@@ -99,9 +99,21 @@ variable "ec2_backup_plan_name" {
   type        = string
 }
 
+variable "hourly_backup_cold_storage_after" {
+  description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
+  default     = null
+  type        = number
+}
+
 variable "hourly_backup_retention" {
   description = "(Required) The hourly backup plan retention in days. By default this is 3 days."
   default     = 3
+  type        = number
+}
+
+variable "daily_backup_cold_storage_after" {
+  description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
+  default     = null
   type        = number
 }
 
@@ -111,9 +123,21 @@ variable "daily_backup_retention" {
   type        = number
 }
 
+variable "monthly_backup_cold_storage_after" {
+  description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
+  default     = 14
+  type        = number
+}
+
 variable "monthly_backup_retention" {
   description = "(Required) The daily backup plan retention in days. By default this is 365 days."
   default     = 365
+  type        = number
+}
+
+variable "dr_cold_storage_after" {
+  description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
+  default     = null
   type        = number
 }
 
@@ -133,6 +157,12 @@ variable "backup_plan_completion_window" {
   description = "(Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error. Default is set to 24 hours."
   default     = 1440
   type        = number
+}
+
+variable "opt_in_to_archive_for_supported_resources" {
+  description = "(Optional) Whether to opt in to archive for supported resources."
+  default     = false
+  type        = bool
 }
 
 ###############################################################
