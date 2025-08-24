@@ -406,4 +406,4 @@ resource "aws_backup_selection" "all_ec2" {
 ###############################################################
 # Backup Notifications
 ###############################################################
-# To be added
+# To be added soon
