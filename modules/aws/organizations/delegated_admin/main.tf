@@ -14,6 +14,6 @@ terraform {
 
 resource "aws_organizations_delegated_administrator" "this" {
   for_each          = var.delegated_admins
-  account_id        = each.key
-  service_principal = each.value
+  account_id        = each.value.account_id
+  service_principal = each.value.service_principal
 }
