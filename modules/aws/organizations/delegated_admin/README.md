@@ -111,7 +111,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Required) Map where the keys are AWS account IDs and the value is the service principal name to associate with the account. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. | `map(string)` | n/a | yes |
+| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Required) Map where the keys are AWS account IDs and the values are lists of service principal names to associate with the account. This allows multiple service principals per account. | `map(list(string))` | n/a | yes |
 
 ## Outputs
 
