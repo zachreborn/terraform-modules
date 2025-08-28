@@ -139,8 +139,8 @@ No modules.
 | <a name="input_policy_body"></a> [policy\_body](#input\_policy\_body) | Structure containing the stack policy body. Conflicts with 'policy\_url' parameter. | `string` | `null` | no |
 | <a name="input_policy_url"></a> [policy\_url](#input\_policy\_url) | URL of the stack policy. Conflicts with 'policy\_body' parameter. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the stack. | `map(string)` | `{}` | no |
-| <a name="input_template_file"></a> [template\_file](#input\_template\_file) | Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template\_url' parameter. | `string` | `null` | no |
-| <a name="input_template_url"></a> [template\_url](#input\_template\_url) | URL of the CloudFormation template. Conflicts with 'template\_file' parameter. | `string` | `null` | no |
+| <a name="input_template_body"></a> [template\_body](#input\_template\_body) | Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template\_url' parameter. | `string` | `null` | no |
+| <a name="input_template_url"></a> [template\_url](#input\_template\_url) | URL of the CloudFormation template. Conflicts with 'template\_body' parameter. | `string` | `null` | no |
 | <a name="input_timeout_in_minutes"></a> [timeout\_in\_minutes](#input\_timeout\_in\_minutes) | The amount of time in minutes that CloudFormation waits for a stack to be created or updated before timing out. | `number` | `60` | no |
 
 ## Outputs

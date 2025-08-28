@@ -147,8 +147,8 @@ No modules.
 | <a name="input_region_order"></a> [region\_order](#input\_region\_order) | The order of the regions in which to create or update stack set instances. | `list(string)` | `null` | no |
 | <a name="input_retain_stacks_on_account_removal"></a> [retain\_stacks\_on\_account\_removal](#input\_retain\_stacks\_on\_account\_removal) | Whether to retain stack instances in accounts that are removed from the stack set. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the stack. | `map(string)` | `{}` | no |
-| <a name="input_template_file"></a> [template\_file](#input\_template\_file) | Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template\_url' parameter. | `string` | `null` | no |
-| <a name="input_template_url"></a> [template\_url](#input\_template\_url) | URL of the CloudFormation template. Conflicts with 'template\_file' parameter. | `string` | `null` | no |
+| <a name="input_template_body"></a> [template\_body](#input\_template\_body) | Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template\_url' parameter. | `string` | `null` | no |
+| <a name="input_template_url"></a> [template\_url](#input\_template\_url) | URL of the CloudFormation template. Conflicts with 'template\_body' parameter. | `string` | `null` | no |
 
 ## Outputs
 
