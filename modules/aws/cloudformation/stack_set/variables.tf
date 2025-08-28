@@ -1,5 +1,5 @@
 ###########################
-# Resource Variables
+# Stack Set Variables
 ###########################
 variable "administration_role_arn" {
   description = "The ARN of the IAM role that CloudFormation assumes to perform stack operations. Must be set when using the SELF_MANAGED permission model"
@@ -132,6 +132,33 @@ variable "template_url" {
     condition     = var.template_url == null || can(regex("^(https://).+", var.template_url))
     error_message = "template_url must be null or a valid https URL."
   }
+}
+
+###########################
+# Stack Set Instance Variables
+###########################
+variable "accounts" {
+  description = "A list of AWS account IDs to deploy the stack set instances to."
+  type        = list(string)
+  default     = null
+}
+
+variable "account_filter_type" {
+  description = "Limit deployment targets to a specific type of account. Valid values are: DIFFERENCE, INTERSECTION, NONE, UNION."
+  type        = string
+  default     = null
+}
+
+variable "accounts_url" {
+  description = "S3 URL of a file which contains a list of accounts to deploy the stack set instances to."
+  type        = string
+  default     = null
+}
+
+variable "organizational_unit_ids" {
+  description = "A list of organization unit IDs to deploy the stack set instances to."
+  type        = list(string)
+  default     = null
 }
 
 ###########################

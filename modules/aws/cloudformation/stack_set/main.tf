@@ -61,3 +61,17 @@ resource "aws_cloudformation_stack_set" "this" {
     region_order                 = var.region_order
   }
 }
+
+# Stack Set Instances
+# These are used to deploy a Stack Set across an AWS Organization based on OU or other parameters.
+
+resource "aws_cloudformation_stack_set_instance" "org" {
+  call_as        = var.call_as
+  stack_set_name = aws_cloudformation_stack_set.this.name
+  deployment_targets {
+    accounts                = var.accounts
+    account_filter_type     = var.account_filter_type
+    accounts_url            = var.accounts_url
+    organizational_unit_ids = var.organizational_unit_ids
+  }
+}
