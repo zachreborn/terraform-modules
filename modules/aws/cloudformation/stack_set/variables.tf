@@ -73,10 +73,6 @@ variable "max_concurrent_percentage" {
   description = "The maximum percentage of accounts in which to create or update the stack set instance at the same time."
   type        = number
   default     = null
-  validation {
-    condition     = var.max_concurrent_percentage == null || try(var.max_concurrent_percentage >= 0 && var.max_concurrent_percentage <= 100)
-    error_message = "max_concurrent_percentage must be null or a number between 0 and 100."
-  }
 }
 
 variable "name" {
