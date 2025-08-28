@@ -62,7 +62,7 @@ variable "failure_tolerance_percentage" {
   type        = number
   default     = null
   validation {
-    condition     = var.failure_tolerance_percentage == null || (var.failure_tolerance_percentage >= 0 && var.failure_tolerance_percentage <= 100)
+    condition     = var.failure_tolerance_percentage == null || try(var.failure_tolerance_percentage >= 0 && var.failure_tolerance_percentage <= 100)
     error_message = "failure_tolerance_percentage must be null or a value between 0 and 100."
   }
 }
@@ -78,7 +78,7 @@ variable "max_concurrent_percentage" {
   type        = number
   default     = null
   validation {
-    condition     = var.max_concurrent_percentage == null || (var.max_concurrent_percentage >= 0 && var.max_concurrent_percentage <= 100)
+    condition     = var.max_concurrent_percentage == null || try(var.max_concurrent_percentage >= 0 && var.max_concurrent_percentage <= 100)
     error_message = "max_concurrent_percentage must be null or a number between 0 and 100."
   }
 }
