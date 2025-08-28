@@ -34,7 +34,7 @@ resource "aws_cloudformation_stack_set" "this" {
   parameters              = var.parameters
   permission_model        = var.permission_model
   tags                    = var.tags
-  template_body           = var.template_file
+  template_body           = var.template_body
   template_url            = var.template_url
 
   dynamic "auto_deployment" {

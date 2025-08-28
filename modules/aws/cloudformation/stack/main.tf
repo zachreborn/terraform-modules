@@ -34,7 +34,7 @@ resource "aws_cloudformation_stack" "this" {
   policy_body        = var.policy_body
   policy_url         = var.policy_url
   tags               = var.tags
-  template_body      = var.template_file
+  template_body      = var.template_body
   template_url       = var.template_url
   timeout_in_minutes = var.timeout_in_minutes
 }

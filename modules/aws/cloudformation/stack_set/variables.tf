@@ -126,14 +126,14 @@ variable "retain_stacks_on_account_removal" {
   default     = false
 }
 
-variable "template_file" {
+variable "template_body" {
   description = "Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template_url' parameter."
   type        = string
   default     = null
 }
 
 variable "template_url" {
-  description = "URL of the CloudFormation template. Conflicts with 'template_file' parameter."
+  description = "URL of the CloudFormation template. Conflicts with 'template_body' parameter."
   type        = string
   default     = null
   validation {
