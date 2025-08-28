@@ -61,10 +61,6 @@ variable "failure_tolerance_percentage" {
   description = "The percentage of failed accounts per region that CloudFormation tolerates before stopping the stack set operation in that region."
   type        = number
   default     = null
-  validation {
-    condition     = var.failure_tolerance_percentage == null || try(var.failure_tolerance_percentage >= 0 && var.failure_tolerance_percentage <= 100)
-    error_message = "failure_tolerance_percentage must be null or a value between 0 and 100."
-  }
 }
 
 variable "max_concurrent_count" {
