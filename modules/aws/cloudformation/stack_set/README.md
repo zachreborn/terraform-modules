@@ -142,7 +142,7 @@ No modules.
 | <a name="input_max_concurrent_percentage"></a> [max\_concurrent\_percentage](#input\_max\_concurrent\_percentage) | The maximum percentage of accounts in which to create or update the stack set instance at the same time. | `number` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the stack set. Must be unique in the region in which you are creating the stack set. | `string` | n/a | yes |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | A map of parameters to pass to the CloudFormation template. | `map(string)` | `null` | no |
-| <a name="input_permission_model"></a> [permission\_model](#input\_permission\_model) | The permissions model to use to create the stack set. Valid values are: SERVICE\_MANAGED, SELF\_MANAGED | `string` | `"SELF_MANAGED"` | no |
+| <a name="input_permission_model"></a> [permission\_model](#input\_permission\_model) | The permissions model to use to create the stack set. Valid values are: SERVICE\_MANAGED, SELF\_MANAGED | `string` | `"SERVICE_MANAGED"` | no |
 | <a name="input_region_concurrency_type"></a> [region\_concurrency\_type](#input\_region\_concurrency\_type) | The concurrency type of the stack set operation. Valid values are: SEQUENTIAL, PARALLEL | `string` | `"SEQUENTIAL"` | no |
 | <a name="input_region_order"></a> [region\_order](#input\_region\_order) | The order of the regions in which to create or update stack set instances. | `list(string)` | `null` | no |
 | <a name="input_retain_stacks_on_account_removal"></a> [retain\_stacks\_on\_account\_removal](#input\_retain\_stacks\_on\_account\_removal) | Whether to retain stack instances in accounts that are removed from the stack set. | `bool` | `false` | no |
