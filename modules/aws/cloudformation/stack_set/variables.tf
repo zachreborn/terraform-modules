@@ -89,7 +89,7 @@ variable "parameters" {
 variable "permission_model" {
   description = "The permissions model to use to create the stack set. Valid values are: SERVICE_MANAGED, SELF_MANAGED"
   type        = string
-  default     = "SELF_MANAGED"
+  default     = "SERVICE_MANAGED"
   validation {
     condition     = can(regex("^(SERVICE_MANAGED|SELF_MANAGED)$", var.permission_model))
     error_message = "permission_model must be one of: SERVICE_MANAGED, SELF_MANAGED."
