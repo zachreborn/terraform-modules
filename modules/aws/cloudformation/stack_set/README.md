@@ -124,11 +124,15 @@ No modules.
 | Name | Type |
 |------|------|
 | [aws_cloudformation_stack_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_set) | resource |
+| [aws_cloudformation_stack_set_instance.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_set_instance) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_account_filter_type"></a> [account\_filter\_type](#input\_account\_filter\_type) | Limit deployment targets to a specific type of account. Valid values are: DIFFERENCE, INTERSECTION, NONE, UNION. | `string` | `null` | no |
+| <a name="input_accounts"></a> [accounts](#input\_accounts) | A list of AWS account IDs to deploy the stack set instances to. | `list(string)` | `null` | no |
+| <a name="input_accounts_url"></a> [accounts\_url](#input\_accounts\_url) | S3 URL of a file which contains a list of accounts to deploy the stack set instances to. | `string` | `null` | no |
 | <a name="input_administration_role_arn"></a> [administration\_role\_arn](#input\_administration\_role\_arn) | The ARN of the IAM role that CloudFormation assumes to perform stack operations. Must be set when using the SELF\_MANAGED permission model | `string` | `null` | no |
 | <a name="input_call_as"></a> [call\_as](#input\_call\_as) | Specifies whether you are acting as an account administrator in the management account or as a delegated administrator in a member account. Valid values are: SELF, DELEGATED\_ADMIN | `string` | `"SELF"` | no |
 | <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | A list of capabilities that AWS CloudFormation can use. Valid values are: CAPABILITY\_IAM, CAPABILITY\_NAMED\_IAM, CAPABILITY\_AUTO\_EXPAND. | `list(string)` | `null` | no |
@@ -141,6 +145,7 @@ No modules.
 | <a name="input_max_concurrent_count"></a> [max\_concurrent\_count](#input\_max\_concurrent\_count) | The maximum number of accounts in which to create or update the stack set instance at the same time. | `number` | `1` | no |
 | <a name="input_max_concurrent_percentage"></a> [max\_concurrent\_percentage](#input\_max\_concurrent\_percentage) | The maximum percentage of accounts in which to create or update the stack set instance at the same time. | `number` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the stack set. Must be unique in the region in which you are creating the stack set. | `string` | n/a | yes |
+| <a name="input_organizational_unit_ids"></a> [organizational\_unit\_ids](#input\_organizational\_unit\_ids) | A list of organization unit IDs to deploy the stack set instances to. | `list(string)` | `null` | no |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | A map of parameters to pass to the CloudFormation template. | `map(string)` | `null` | no |
 | <a name="input_permission_model"></a> [permission\_model](#input\_permission\_model) | The permissions model to use to create the stack set. Valid values are: SERVICE\_MANAGED, SELF\_MANAGED | `string` | `"SERVICE_MANAGED"` | no |
 | <a name="input_region_concurrency_type"></a> [region\_concurrency\_type](#input\_region\_concurrency\_type) | The concurrency type of the stack set operation. Valid values are: SEQUENTIAL, PARALLEL | `string` | `"SEQUENTIAL"` | no |
