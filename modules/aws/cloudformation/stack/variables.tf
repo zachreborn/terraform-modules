@@ -7,7 +7,7 @@ variable "capabilities" {
   default     = null
   validation {
     condition     = var.capabilities == null || alltrue([for cap in var.capabilities : contains(["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"], cap)])
-    error_message = "capabilities must be null or a list containing only from these options: CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND."
+    error_message = "capabilities must be null or a list from these options: CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND."
   }
 }
 
