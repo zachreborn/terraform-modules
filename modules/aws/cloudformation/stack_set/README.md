@@ -156,6 +156,7 @@ No modules.
 |------|-------------|
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the stack set. |
 | <a name="output_id"></a> [id](#output\_id) | The unique ID of the stack set. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the stack set. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

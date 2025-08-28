@@ -148,6 +148,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | The unique ID of the stack. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the stack. |
 | <a name="output_outputs"></a> [outputs](#output\_outputs) | A map containing all of the outputs from the stack. |
 <!-- END_TF_DOCS -->
 
