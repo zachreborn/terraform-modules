@@ -65,7 +65,7 @@ resource "aws_cloudformation_stack_set" "this" {
 # Stack Set Instances
 # These are used to deploy a Stack Set across an AWS Organization based on OU or other parameters.
 
-resource "aws_cloudformation_stack_set_instance" "org" {
+resource "aws_cloudformation_stack_set_instance" "this" {
   call_as        = var.call_as
   stack_set_name = aws_cloudformation_stack_set.this.name
   deployment_targets {
