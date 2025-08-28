@@ -6,8 +6,8 @@ variable "capabilities" {
   type        = list(string)
   default     = null
   validation {
-    condition     = var.capabilities == null || can(regex("^(CAPABILITY_IAM|CAPABILITY_NAMED_IAM|CAPABILITY_AUTO_EXPAND)$", join(",", var.capabilities)))
-    error_message = "capabilities must be null or one of: CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND."
+    condition     = var.capabilities == null || alltrue([for cap in var.capabilities : contains(["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"], cap)])
+    error_message = "capabilities must be null or a list containing only from these options: CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND."
   }
 }
 
