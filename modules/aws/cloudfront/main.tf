@@ -58,9 +58,7 @@ resource "aws_cloudfront_distribution" "this" {
     cache_policy_id           = var.managed_cache_policy_name != null ? data.aws_cloudfront_cache_policy.this[0].id : var.default_cache_policy_id
     compress                  = var.default_cache_compress
     field_level_encryption_id = var.default_cache_field_level_encryption_id
-    # lambda_function_association block
-    # function_association block
-    origin_request_policy_id   = var.default_cache_origin_request_policy_id
+    origin_request_policy_id  = var.default_cache_origin_request_policy_id
     realtime_log_config_arn    = var.default_cache_realtime_log_config_arn
     response_headers_policy_id = var.default_cache_response_headers_policy_id
     smooth_streaming           = var.default_cache_smooth_streaming
@@ -68,6 +66,15 @@ resource "aws_cloudfront_distribution" "this" {
     trusted_key_groups         = var.default_cache_trusted_key_groups
     trusted_signers            = var.default_cache_trusted_signers
     viewer_protocol_policy     = var.default_cache_viewer_protocol_policy
+
+    dynamic "lambda_function_association" {
+      for_each = var.default_cache_lambda_function_associations != null ? var.default_cache_lambda_function_associations : {}
+      content {
+        event_type   = lambda_function_association.value.event_type
+        lambda_arn   = lambda_function_association.value.lambda_arn
+        include_body = lambda_function_association.value.include_body
+      }
+    }
   }
 
   dynamic "logging_config" {
@@ -87,9 +94,7 @@ resource "aws_cloudfront_distribution" "this" {
       cache_policy_id           = ordered_cache_behavior.value.cache_policy_id
       compress                  = ordered_cache_behavior.value.compress
       field_level_encryption_id = ordered_cache_behavior.value.field_level_encryption_id
-      # lambda_function_association block
-      # function_association block
-      origin_request_policy_id   = ordered_cache_behavior.value.origin_request_policy_id
+      origin_request_policy_id  = ordered_cache_behavior.value.origin_request_policy_id
       path_pattern               = ordered_cache_behavior.value.path_pattern
       realtime_log_config_arn    = ordered_cache_behavior.value.realtime_log_config_arn
       response_headers_policy_id = ordered_cache_behavior.value.response_headers_policy_id
@@ -98,6 +103,15 @@ resource "aws_cloudfront_distribution" "this" {
       trusted_key_groups         = ordered_cache_behavior.value.trusted_key_groups
       trusted_signers            = ordered_cache_behavior.value.trusted_signers
       viewer_protocol_policy     = ordered_cache_behavior.value.viewer_protocol_policy
+
+      dynamic "lambda_function_association" {
+        for_each = ordered_cache_behavior.value.lambda_function_associations != null ? ordered_cache_behavior.value.lambda_function_associations : {}
+        content {
+          event_type   = lambda_function_association.value.event_type
+          lambda_arn   = lambda_function_association.value.lambda_arn
+          include_body = lambda_function_association.value.include_body
+        }
+      }
     }
   }
 

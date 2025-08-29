@@ -97,6 +97,16 @@ variable "default_cache_field_level_encryption_id" {
   default     = null
 }
 
+variable "default_cache_lambda_function_associations" {
+  description = "(Optional) A set of Lambda function associations for the default cache behavior."
+  type = map(object({
+    event_type   = string # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
+    lambda_arn   = string # The ARN of the Lambda function.
+    include_body = optional(bool, false) # Whether the body of the request/response is available to the Lambda function.
+  }))
+  default = null
+}
+
 variable "default_cache_origin_request_policy_id" {
   description = "(Optional) The origin request policy id to attach to the default cache behavior."
   type        = string
@@ -222,6 +232,11 @@ variable "ordered_cache_behavior" {
     cache_policy_id            = string                 # The cache policy id to attach to the cache behavior.
     compress                   = optional(bool)         # Whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header.
     field_level_encryption_id  = optional(string)       # The field level encryption id to attach to the cache behavior.
+    lambda_function_associations = optional(map(object({
+      event_type   = string                              # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
+      lambda_arn   = string                              # The ARN of the Lambda function.
+      include_body = optional(bool, false)               # Whether the body of the request/response is available to the Lambda function.
+    })))                                                 # A set of Lambda function associations for the cache behavior.
     origin_request_policy_id   = string                 # The origin request policy id to attach to the cache behavior.
     path_pattern               = string                 # The pattern (for example, images/*.jpg) that specifies which requests to apply the behavior to.
     realtime_log_config_arn    = optional(string)       # The ARN of the real-time log configuration to use for the cache behavior.
