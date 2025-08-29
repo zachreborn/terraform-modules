@@ -123,10 +123,6 @@ variable "template_body" {
   type        = string
   default     = null
   validation {
-    condition     = var.template_body == null || var.template_url == null
-    error_message = "template_body and template_url are mutually exclusive - only one can be specified."
-  }
-  validation {
     condition     = var.template_body == null || (length(var.template_body) >= 1 && length(var.template_body) <= 51200)
     error_message = "template_body must be between 1 and 51,200 bytes in length."
   }
@@ -139,10 +135,6 @@ variable "template_url" {
   validation {
     condition     = var.template_url == null || can(regex("^(https://).+", var.template_url))
     error_message = "template_url must be null or a valid https URL."
-  }
-  validation {
-    condition     = var.template_url == null || var.template_body == null
-    error_message = "template_body and template_url are mutually exclusive - only one can be specified."
   }
 }
 

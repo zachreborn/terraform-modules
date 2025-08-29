@@ -15,10 +15,6 @@ variable "disable_rollback" {
   description = "Whether to disable rollback on stack creation failures. Conflicts with 'on_failure' parameter."
   type        = bool
   default     = false
-  validation {
-    condition     = !var.disable_rollback || var.on_failure == "ROLLBACK"
-    error_message = "disable_rollback cannot be true when on_failure is set to anything other than ROLLBACK."
-  }
 }
 
 variable "iam_role_arn" {
@@ -58,30 +54,18 @@ variable "policy_body" {
   description = "Structure containing the stack policy body. Conflicts with 'policy_url' parameter."
   type        = string
   default     = null
-  validation {
-    condition     = var.policy_body == null || var.policy_url == null
-    error_message = "policy_body and policy_url are mutually exclusive - only one can be specified."
-  }
 }
 
 variable "policy_url" {
   description = "URL of the stack policy. Conflicts with 'policy_body' parameter."
   type        = string
   default     = null
-  validation {
-    condition     = var.policy_url == null || var.policy_body == null
-    error_message = "policy_body and policy_url are mutually exclusive - only one can be specified."
-  }
 }
 
 variable "template_body" {
   description = "Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template_url' parameter."
   type        = string
   default     = null
-  validation {
-    condition     = var.template_body == null || var.template_url == null
-    error_message = "template_body and template_url are mutually exclusive - only one can be specified."
-  }
   validation {
     condition     = var.template_body == null || (length(var.template_body) >= 1 && length(var.template_body) <= 51200)
     error_message = "template_body must be between 1 and 51,200 bytes in length."
@@ -95,10 +79,6 @@ variable "template_url" {
   validation {
     condition     = var.template_url == null || can(regex("^(https://).+", var.template_url))
     error_message = "template_url must be null or a valid https URL."
-  }
-  validation {
-    condition     = var.template_url == null || var.template_body == null
-    error_message = "template_body and template_url are mutually exclusive - only one can be specified."
   }
 }
 
