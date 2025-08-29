@@ -19,23 +19,12 @@ terraform {
 ###########################
 # Locals
 ###########################
-locals {
-  # Validation checks for mutually exclusive parameters
-  template_conflict = var.template_body != null && var.template_url != null
-}
 
 
 ###########################
 # Module Configuration
 ###########################
 
-# Validation checks
-check "template_conflict" {
-  assert {
-    condition     = !local.template_conflict
-    error_message = "template_body and template_url are mutually exclusive - only one can be specified."
-  }
-}
 
 resource "aws_cloudformation_stack_set" "this" {
   administration_role_arn = var.administration_role_arn
@@ -47,8 +36,8 @@ resource "aws_cloudformation_stack_set" "this" {
   parameters              = var.parameters
   permission_model        = var.permission_model
   tags                    = var.tags
-  template_body           = var.template_body
-  template_url            = var.template_url
+  template_body           = var.template_url == null ? var.template_body : null
+  template_url            = var.template_body == null ? var.template_url : null
 
   dynamic "auto_deployment" {
     for_each = var.enable_auto_deployment ? [1] : []
