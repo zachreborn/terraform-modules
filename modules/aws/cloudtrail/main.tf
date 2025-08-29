@@ -20,7 +20,6 @@ data "aws_organizations_organization" "current" {}
 ############################
 
 
-
 ###########################
 # KMS Encryption Key
 ###########################
