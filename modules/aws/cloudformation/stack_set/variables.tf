@@ -147,6 +147,10 @@ variable "account_filter_type" {
   description = "Limit deployment targets to a specific type of account. Valid values are: DIFFERENCE, INTERSECTION, NONE, UNION."
   type        = string
   default     = null
+  validation {
+    condition     = var.account_filter_type == null || can(regex("^(DIFFERENCE|INTERSECTION|NONE|UNION)$", var.account_filter_type))
+    error_message = "account_filter_type must be null or one of: DIFFERENCE, INTERSECTION, NONE, UNION."
+  }
 }
 
 variable "accounts_url" {
