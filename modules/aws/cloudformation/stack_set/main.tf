@@ -60,6 +60,10 @@ resource "aws_cloudformation_stack_set" "this" {
     region_concurrency_type      = var.region_concurrency_type
     region_order                 = var.region_order
   }
+
+  lifecycle {
+    ignore_changes = [administration_role_arn]
+  }
 }
 
 # Stack Set Instances
