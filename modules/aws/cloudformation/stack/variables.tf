@@ -39,8 +39,8 @@ variable "on_failure" {
   type        = string
   default     = "ROLLBACK"
   validation {
-    condition     = can(regex("^(DO_NOTHING|ROLLBACK|DELETE)$", var.on_failure))
-    error_message = "on_failure must be one of: DO_NOTHING, ROLLBACK, or DELETE."
+    condition     = var.on_failure == null || can(regex("^(DO_NOTHING|ROLLBACK|DELETE)$", var.on_failure))
+    error_message = "on_failure must be null or one of: DO_NOTHING, ROLLBACK, or DELETE."
   }
 }
 
