@@ -100,8 +100,8 @@ variable "default_cache_field_level_encryption_id" {
 variable "default_cache_lambda_function_associations" {
   description = "(Optional) A set of Lambda function associations for the default cache behavior."
   type = map(object({
-    event_type   = string # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
-    lambda_arn   = string # The ARN of the Lambda function.
+    event_type   = string                # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
+    lambda_arn   = string                # The ARN of the Lambda function.
     include_body = optional(bool, false) # Whether the body of the request/response is available to the Lambda function.
   }))
   default = null
@@ -227,8 +227,8 @@ variable "managed_cache_policy_name" {
 variable "origin_access_controls" {
   description = "(Optional) Map of Origin Access Control configurations to create. The keys will be used as the OAC names."
   type = map(object({
-    description      = optional(string)       # Description for this origin access control.
-    origin_type      = optional(string, "s3") # The type of origin that this origin access control is for. Valid values are s3 and mediastore.
+    description      = optional(string)           # Description for this origin access control.
+    origin_type      = optional(string, "s3")     # The type of origin that this origin access control is for. Valid values are s3 and mediastore.
     signing_behavior = optional(string, "always") # Specifies which requests CloudFront signs. Valid values are always, never, and no-override.
     signing_protocol = optional(string, "sigv4")  # Determines how CloudFront signs (authenticates) requests. Valid values are sigv4.
   }))
@@ -238,16 +238,16 @@ variable "origin_access_controls" {
 variable "ordered_cache_behavior" {
   description = "(Optional) One or more ordered cache behavior elements (multiples allowed). The values are the same from the default_cache_behaviors with the exception of requiring path_pattern."
   type = map(object({
-    allowed_methods            = list(string)           # Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin.
-    cached_methods             = list(string)           # Controls whether CloudFront caches the response to requests using the specified HTTP methods.
-    cache_policy_id            = string                 # The cache policy id to attach to the cache behavior.
-    compress                   = optional(bool)         # Whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header.
-    field_level_encryption_id  = optional(string)       # The field level encryption id to attach to the cache behavior.
+    allowed_methods           = list(string)     # Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin.
+    cached_methods            = list(string)     # Controls whether CloudFront caches the response to requests using the specified HTTP methods.
+    cache_policy_id           = string           # The cache policy id to attach to the cache behavior.
+    compress                  = optional(bool)   # Whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header.
+    field_level_encryption_id = optional(string) # The field level encryption id to attach to the cache behavior.
     lambda_function_associations = optional(map(object({
-      event_type   = string                              # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
-      lambda_arn   = string                              # The ARN of the Lambda function.
-      include_body = optional(bool, false)               # Whether the body of the request/response is available to the Lambda function.
-    })))                                                 # A set of Lambda function associations for the cache behavior.
+      event_type   = string                             # The specific event to trigger this function. Valid values are viewer-request, origin-request, viewer-response, and origin-response.
+      lambda_arn   = string                             # The ARN of the Lambda function.
+      include_body = optional(bool, false)              # Whether the body of the request/response is available to the Lambda function.
+    })))                                                # A set of Lambda function associations for the cache behavior.
     origin_request_policy_id   = string                 # The origin request policy id to attach to the cache behavior.
     path_pattern               = string                 # The pattern (for example, images/*.jpg) that specifies which requests to apply the behavior to.
     realtime_log_config_arn    = optional(string)       # The ARN of the real-time log configuration to use for the cache behavior.

@@ -62,12 +62,12 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   default_cache_behavior {
-    allowed_methods           = var.default_cache_allowed_methods
-    cached_methods            = var.default_cache_cached_methods
-    cache_policy_id           = var.managed_cache_policy_name != null ? data.aws_cloudfront_cache_policy.this[0].id : var.default_cache_policy_id
-    compress                  = var.default_cache_compress
-    field_level_encryption_id = var.default_cache_field_level_encryption_id
-    origin_request_policy_id  = var.default_cache_origin_request_policy_id
+    allowed_methods            = var.default_cache_allowed_methods
+    cached_methods             = var.default_cache_cached_methods
+    cache_policy_id            = var.managed_cache_policy_name != null ? data.aws_cloudfront_cache_policy.this[0].id : var.default_cache_policy_id
+    compress                   = var.default_cache_compress
+    field_level_encryption_id  = var.default_cache_field_level_encryption_id
+    origin_request_policy_id   = var.default_cache_origin_request_policy_id
     realtime_log_config_arn    = var.default_cache_realtime_log_config_arn
     response_headers_policy_id = var.default_cache_response_headers_policy_id
     smooth_streaming           = var.default_cache_smooth_streaming
@@ -98,12 +98,12 @@ resource "aws_cloudfront_distribution" "this" {
   dynamic "ordered_cache_behavior" {
     for_each = var.ordered_cache_behavior != null ? var.ordered_cache_behavior : {}
     content {
-      allowed_methods           = ordered_cache_behavior.value.allowed_methods
-      cached_methods            = ordered_cache_behavior.value.cached_methods
-      cache_policy_id           = ordered_cache_behavior.value.cache_policy_id
-      compress                  = ordered_cache_behavior.value.compress
-      field_level_encryption_id = ordered_cache_behavior.value.field_level_encryption_id
-      origin_request_policy_id  = ordered_cache_behavior.value.origin_request_policy_id
+      allowed_methods            = ordered_cache_behavior.value.allowed_methods
+      cached_methods             = ordered_cache_behavior.value.cached_methods
+      cache_policy_id            = ordered_cache_behavior.value.cache_policy_id
+      compress                   = ordered_cache_behavior.value.compress
+      field_level_encryption_id  = ordered_cache_behavior.value.field_level_encryption_id
+      origin_request_policy_id   = ordered_cache_behavior.value.origin_request_policy_id
       path_pattern               = ordered_cache_behavior.value.path_pattern
       realtime_log_config_arn    = ordered_cache_behavior.value.realtime_log_config_arn
       response_headers_policy_id = ordered_cache_behavior.value.response_headers_policy_id
