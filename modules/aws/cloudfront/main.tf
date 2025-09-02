@@ -27,6 +27,15 @@ data "aws_cloudfront_cache_policy" "this" {
 # Module Configuration
 ###########################
 
+resource "aws_cloudfront_origin_access_control" "this" {
+  for_each                          = var.origin_access_controls != null ? var.origin_access_controls : {}
+  name                              = each.key
+  description                       = each.value.description
+  origin_access_control_origin_type = each.value.origin_type
+  signing_behavior                  = each.value.signing_behavior
+  signing_protocol                  = each.value.signing_protocol
+}
+
 resource "aws_cloudfront_distribution" "this" {
   aliases                         = var.aliases
   comment                         = var.comment

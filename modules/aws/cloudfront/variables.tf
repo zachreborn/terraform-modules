@@ -224,6 +224,17 @@ variable "managed_cache_policy_name" {
   default     = null
 }
 
+variable "origin_access_controls" {
+  description = "(Optional) Map of Origin Access Control configurations to create. The keys will be used as the OAC names."
+  type = map(object({
+    description      = optional(string)       # Description for this origin access control.
+    origin_type      = optional(string, "s3") # The type of origin that this origin access control is for. Valid values are s3 and mediastore.
+    signing_behavior = optional(string, "always") # Specifies which requests CloudFront signs. Valid values are always, never, and no-override.
+    signing_protocol = optional(string, "sigv4")  # Determines how CloudFront signs (authenticates) requests. Valid values are sigv4.
+  }))
+  default = null
+}
+
 variable "ordered_cache_behavior" {
   description = "(Optional) One or more ordered cache behavior elements (multiples allowed). The values are the same from the default_cache_behaviors with the exception of requiring path_pattern."
   type = map(object({
