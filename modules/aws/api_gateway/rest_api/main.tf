@@ -14,6 +14,14 @@ terraform {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+###########################
+# Validation
+###########################
+locals {
+  # Validate that bucket_name is provided when mTLS is enabled
+  validate_bucket_name = var.enable_mtls && var.domain_name != null && var.bucket_name == null ? tobool("bucket_name is required when enable_mtls is true and domain_name is provided") : true
+}
+
 #############################
 # API Gateway
 #############################
@@ -124,7 +132,7 @@ resource "aws_api_gateway_vpc_link" "this" {
 
 resource "aws_s3_bucket" "mtls_truststore" {
   count = var.enable_mtls && var.domain_name != null ? 1 : 0
-  #bucket_prefix = "mtls-truststore-"
+  
   bucket = var.bucket_name
 
   tags = var.tags

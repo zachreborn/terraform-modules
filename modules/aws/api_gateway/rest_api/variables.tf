@@ -90,7 +90,10 @@ variable "put_rest_api_mode" {
 variable "stage_name" {
   description = "(Required) Name of the stage"
   type        = string
-  default     = ""
+  validation {
+    condition     = length(var.stage_name) > 0
+    error_message = "stage_name must be a non-empty string."
+  }
 }
 
 ############################################
@@ -243,6 +246,17 @@ variable "tags" {
 ##############################
 
 variable "bucket_name" {
-  description = "Optional, Forces new resource) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length."
+  description = "Name of the S3 bucket for mTLS truststore. Required when enable_mtls is true and domain_name is provided. Must be lowercase and less than or equal to 63 characters in length."
   type        = string
+  default     = null
+  validation {
+    condition = var.bucket_name == null || (
+      length(var.bucket_name) > 0 && 
+      length(var.bucket_name) <= 63 && 
+      can(regex("^[a-z0-9.-]+$", var.bucket_name)) &&
+      !can(regex("^[.-]", var.bucket_name)) &&
+      !can(regex("[.-]$", var.bucket_name))
+    )
+    error_message = "bucket_name must be lowercase, 1-63 characters, contain only letters, numbers, dots, and hyphens, and not start or end with dots or hyphens."
+  }
 }
