@@ -128,7 +128,7 @@ No modules.
 | <a name="input_api_key_source"></a> [api\_key\_source](#input\_api\_key\_source) | The source of the API key for metering requests. Valid values are 'HEADER' and 'AUTHORIZER'. | `string` | `"HEADER"` | no |
 | <a name="input_binary_media_types"></a> [binary\_media\_types](#input\_binary\_media\_types) | A list of binary media types supported by the Rest API. | `list(string)` | `[]` | no |
 | <a name="input_body"></a> [body](#input\_body) | The body of the API definition in JSON format. | `string` | `null` | no |
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Optional, Forces new resource) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. | `string` | n/a | yes |
+| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket for mTLS truststore. Required when enable\_mtls is true and domain\_name is provided. Must be lowercase and less than or equal to 63 characters in length. | `string` | `null` | no |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | ARN of the ACM certificate for the custom domain. Required for custom domain. | `string` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | A description of the API. | `string` | `null` | no |
 | <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Specifies whether the execute API endpoint is disabled. Defaults to false. | `bool` | `false` | no |
@@ -148,7 +148,7 @@ No modules.
 | <a name="input_put_rest_api_mode"></a> [put\_rest\_api\_mode](#input\_put\_rest\_api\_mode) | The mode for the PUT Rest API operation. Valid values are 'merge' and 'overwrite'. | `string` | `"overwrite"` | no |
 | <a name="input_resources"></a> [resources](#input\_resources) | A map of resources to create under the API. Each key is the resource path and the value is a map of resource settings. | <pre>map(object({<br/>    path_part = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_security_policy"></a> [security\_policy](#input\_security\_policy) | Security policy for the custom domain. Valid values: TLS\_1\_0, TLS\_1\_2 | `string` | `"TLS_1_2"` | no |
-| <a name="input_stage_name"></a> [stage\_name](#input\_stage\_name) | (Required) Name of the stage | `string` | `""` | no |
+| <a name="input_stage_name"></a> [stage\_name](#input\_stage\_name) | (Required) Name of the stage | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the API. | `map(string)` | `{}` | no |
 | <a name="input_vpc_links"></a> [vpc\_links](#input\_vpc\_links) | A map of VPC links for the API. Each key is the name of the VPC link and the value is a map of VPC link settings. | <pre>map(object({<br/>    description = string<br/>    target_arns = list(string)<br/>  }))</pre> | `{}` | no |
 

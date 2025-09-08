@@ -251,8 +251,8 @@ variable "bucket_name" {
   default     = null
   validation {
     condition = var.bucket_name == null || (
-      length(var.bucket_name) > 0 && 
-      length(var.bucket_name) <= 63 && 
+      length(var.bucket_name) > 0 &&
+      length(var.bucket_name) <= 63 &&
       can(regex("^[a-z0-9.-]+$", var.bucket_name)) &&
       !can(regex("^[.-]", var.bucket_name)) &&
       !can(regex("[.-]$", var.bucket_name))
