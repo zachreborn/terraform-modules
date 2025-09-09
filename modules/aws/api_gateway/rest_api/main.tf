@@ -158,9 +158,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "mtls_truststore" 
   }
 }
 
-# Upload truststore.pem file to S3 bucket
+# Upload truststore.pem file to S3 bucket (only if file exists)
 resource "aws_s3_object" "truststore_pem" {
-  count  = var.enable_mtls && var.domain_name != null ? 1 : 0
+  count  = var.enable_mtls && var.domain_name != null && can(filemd5("${path.root}/truststore/truststore.pem")) ? 1 : 0
   bucket = aws_s3_bucket.mtls_truststore[0].id
   key    = "truststore/truststore.pem"
   source = "${path.root}/truststore/truststore.pem"
@@ -210,7 +210,7 @@ resource "aws_api_gateway_domain_name" "this" {
     for_each = var.enable_mtls && var.domain_name != null ? [1] : []
     content {
       truststore_uri     = var.mtls_config != null ? var.mtls_config.truststore_uri : "s3://${aws_s3_bucket.mtls_truststore[0].id}/truststore/truststore.pem"
-      truststore_version = var.mtls_config != null ? var.mtls_config.truststore_version : aws_s3_object.truststore_pem[0].version_id
+      truststore_version = var.mtls_config != null ? var.mtls_config.truststore_version : (length(aws_s3_object.truststore_pem) > 0 ? aws_s3_object.truststore_pem[0].version_id : null)
     }
   }
 
