@@ -18,8 +18,8 @@ data "aws_region" "current" {}
 # Validation
 ###########################
 locals {
-  # Validate that bucket_name is provided when mTLS is enabled
-  validate_bucket_name = var.enable_mtls && var.domain_name != null && var.bucket_name == null ? tobool("bucket_name is required when enable_mtls is true and domain_name is provided") : true
+  # Validate that mtls_config is provided when mTLS is enabled
+  validate_mtls_config = var.enable_mtls && var.domain_name != null && var.mtls_config == null ? tobool("mtls_config is required when enable_mtls is true and domain_name is provided") : true
 }
 
 #############################
@@ -126,52 +126,6 @@ resource "aws_api_gateway_vpc_link" "this" {
   tags        = var.tags
 }
 
-############################################
-# S3 Bucket for mTLS Truststore
-############################################
-
-resource "aws_s3_bucket" "mtls_truststore" {
-  count = var.enable_mtls && var.domain_name != null ? 1 : 0
-
-  bucket = var.bucket_name
-
-  tags = var.tags
-}
-
-resource "aws_s3_bucket_versioning" "mtls_truststore" {
-  count  = var.enable_mtls && var.domain_name != null ? 1 : 0
-  bucket = aws_s3_bucket.mtls_truststore[0].id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "mtls_truststore" {
-  count  = var.enable_mtls && var.domain_name != null ? 1 : 0
-  bucket = aws_s3_bucket.mtls_truststore[0].id
-
-  rule {
-    bucket_key_enabled = true
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# Upload truststore.pem file to S3 bucket (only if file exists)
-resource "aws_s3_object" "truststore_pem" {
-  count  = var.enable_mtls && var.domain_name != null && can(filemd5("${path.root}/truststore/truststore.pem")) ? 1 : 0
-  bucket = aws_s3_bucket.mtls_truststore[0].id
-  key    = "truststore/truststore.pem"
-  source = "${path.root}/truststore/truststore.pem"
-  etag   = filemd5("${path.root}/truststore/truststore.pem")
-
-  tags = var.tags
-
-  depends_on = [
-    aws_s3_bucket.mtls_truststore
-  ]
-}
 
 ############################################
 # ACM Certificate for Custom Domain
@@ -207,10 +161,10 @@ resource "aws_api_gateway_domain_name" "this" {
   }
 
   dynamic "mutual_tls_authentication" {
-    for_each = var.enable_mtls && var.domain_name != null ? [1] : []
+    for_each = var.enable_mtls && var.domain_name != null && var.mtls_config != null ? [1] : []
     content {
-      truststore_uri     = var.mtls_config != null ? var.mtls_config.truststore_uri : "s3://${aws_s3_bucket.mtls_truststore[0].id}/truststore/truststore.pem"
-      truststore_version = var.mtls_config != null ? var.mtls_config.truststore_version : (length(aws_s3_object.truststore_pem) > 0 ? aws_s3_object.truststore_pem[0].version_id : null)
+      truststore_uri     = var.mtls_config.truststore_uri
+      truststore_version = var.mtls_config.truststore_version
     }
   }
 

@@ -53,25 +53,15 @@ output "vpc_links" {
   value       = { for k, v in aws_api_gateway_vpc_link.this : k => v }
 }
 
-# S3 Bucket Outputs
-output "s3_bucket_id" {
-  description = "ID of the S3 bucket used for mTLS truststore"
-  value       = var.enable_mtls && var.domain_name != null ? aws_s3_bucket.mtls_truststore[0].id : null
-}
-
-output "s3_bucket_arn" {
-  description = "ARN of the S3 bucket used for mTLS truststore"
-  value       = var.enable_mtls && var.domain_name != null ? aws_s3_bucket.mtls_truststore[0].arn : null
-}
-
+# mTLS Configuration Outputs
 output "truststore_s3_uri" {
-  description = "S3 URI of the uploaded truststore.pem file"
-  value       = var.enable_mtls && var.domain_name != null ? "s3://${aws_s3_bucket.mtls_truststore[0].id}/truststore/truststore.pem" : null
+  description = "S3 URI of the truststore file used for mTLS (from configuration)"
+  value       = var.enable_mtls && var.domain_name != null && var.mtls_config != null ? var.mtls_config.truststore_uri : null
 }
 
 output "truststore_version_id" {
-  description = "Version ID of the uploaded truststore.pem file"
-  value       = var.enable_mtls && var.domain_name != null ? aws_s3_object.truststore_pem[0].version_id : null
+  description = "Version ID of the truststore file used for mTLS (from configuration)"
+  value       = var.enable_mtls && var.domain_name != null && var.mtls_config != null ? var.mtls_config.truststore_version : null
 }
 
 # Certificate Outputs

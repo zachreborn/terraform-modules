@@ -203,10 +203,10 @@ variable "certificate_arn" {
 }
 
 variable "mtls_config" {
-  description = "mTLS configuration for the custom domain."
+  description = "mTLS configuration for the custom domain. Required when enable_mtls is true."
   type = object({
-    truststore_uri     = string           # S3 URI to the truststore file
-    truststore_version = optional(string) # Version of the truststore
+    truststore_uri     = string           # S3 URI to the truststore file (e.g., s3://bucket-name/path/to/truststore.pem)
+    truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)
   })
   default = null
 }
@@ -241,22 +241,3 @@ variable "tags" {
   default     = {}
 }
 
-##############################
-# S3 Bucket Variables
-##############################
-
-variable "bucket_name" {
-  description = "Name of the S3 bucket for mTLS truststore. Required when enable_mtls is true and domain_name is provided. Must be lowercase and less than or equal to 63 characters in length."
-  type        = string
-  default     = null
-  validation {
-    condition = var.bucket_name == null || (
-      length(var.bucket_name) > 0 &&
-      length(var.bucket_name) <= 63 &&
-      can(regex("^[a-z0-9.-]+$", var.bucket_name)) &&
-      !can(regex("^[.-]", var.bucket_name)) &&
-      !can(regex("[.-]$", var.bucket_name))
-    )
-    error_message = "bucket_name must be lowercase, 1-63 characters, contain only letters, numbers, dots, and hyphens, and not start or end with dots or hyphens."
-  }
-}
