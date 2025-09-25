@@ -92,19 +92,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -112,33 +111,32 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                                   | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| Name | Type |
+|------|------|
 | [aws_directory_service_directory.microsoftad](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/directory_service_directory) | resource |
 
 ## Inputs
 
-| Name                                                               | Description                                                                                                             | Type           | Default           | Required |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | -------------- | ----------------- | :------: |
-| <a name="input_alias"></a> [alias](#input_alias)                   | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable_sso.            | `string`       | `"default_value"` |    no    |
-| <a name="input_description"></a> [description](#input_description) | (Optional) A textual description for the directory.                                                                     | `string`       | `"default_value"` |    no    |
-| <a name="input_edition"></a> [edition](#input_edition)             | (Optional) The MicrosoftAD edition (Standard or Enterprise). Defaults to Enterprise (applies to MicrosoftAD type only). | `string`       | `"Standard"`      |    no    |
-| <a name="input_enable_sso"></a> [enable_sso](#input_enable_sso)    | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false.                       | `string`       | `false`           |    no    |
-| <a name="input_name"></a> [name](#input_name)                      | (Required) The fully qualified name for the directory, such as corp.example.com                                         | `string`       | n/a               |   yes    |
-| <a name="input_password"></a> [password](#input_password)          | (Required) The password for the directory administrator or connector user.                                              | `string`       | n/a               |   yes    |
-| <a name="input_short_name"></a> [short_name](#input_short_name)    | (Optional) The short name of the directory, such as CORP.                                                               | `string`       | n/a               |   yes    |
-| <a name="input_size"></a> [size](#input_size)                      | (Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values).                 | `string`       | `"Small"`         |    no    |
-| <a name="input_subnet_ids"></a> [subnet_ids](#input_subnet_ids)    | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).                     | `list(string)` | `[]`              |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                      | (Optional) A mapping of tags to assign to the resource.                                                                 | `map(any)`     | `{}`              |    no    |
-| <a name="input_type"></a> [type](#input_type)                      | (Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD.       | `string`       | `"MicrosoftAD"`   |    no    |
-| <a name="input_vpc_id"></a> [vpc_id](#input_vpc_id)                | (Required) The identifier of the VPC that the directory is in.                                                          | `string`       | n/a               |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `"default_value"` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `"default_value"` | no |
+| <a name="input_edition"></a> [edition](#input\_edition) | (Optional) The MicrosoftAD edition (Standard or Enterprise). Defaults to Enterprise (applies to MicrosoftAD type only). | `string` | `"Standard"` | no |
+| <a name="input_enable_sso"></a> [enable\_sso](#input\_enable\_sso) | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false. | `string` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
+| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator or connector user. | `string` | n/a | yes |
+| <a name="input_short_name"></a> [short\_name](#input\_short\_name) | (Optional) The short name of the directory, such as CORP. | `string` | n/a | yes |
+| <a name="input_size"></a> [size](#input\_size) | (Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values). | `string` | `"Small"` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs). | `list(string)` | `[]` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `{}` | no |
+| <a name="input_type"></a> [type](#input\_type) | (Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD. | `string` | `"MicrosoftAD"` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) The identifier of the VPC that the directory is in. | `string` | n/a | yes |
 
 ## Outputs
 
-| Name                                      | Description |
-| ----------------------------------------- | ----------- |
-| <a name="output_id"></a> [id](#output_id) | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -125,19 +125,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -145,32 +144,31 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                                      | Type     |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_route53domains_registered_domain.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53domains_registered_domain) | resource |
 
 ## Inputs
 
-| Name                                                                                    | Description                                                       | Type                                                                                                                                                                                                                                                                                                                                                                                     | Default                                     | Required |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | :------: |
-| <a name="input_admin_contact"></a> [admin_contact](#input_admin_contact)                | The admin contact information for the domain.                     | <pre>object({<br/> address_line_1 = string<br/> address_line_2 = string<br/> city = string<br/> contact_type = string<br/> country_code = string<br/> email = string<br/> extra_params = map(any)<br/> fax = string<br/> first_name = string<br/> last_name = string<br/> organization_name = string<br/> phone_number = string<br/> state = string<br/> zip_code = string<br/> })</pre> | n/a                                         |   yes    |
-| <a name="input_admin_privacy"></a> [admin_privacy](#input_admin_privacy)                | Whether to enable admin privacy protection. Default is true.      | `bool`                                                                                                                                                                                                                                                                                                                                                                                   | `true`                                      |    no    |
-| <a name="input_domains"></a> [domains](#input_domains)                                  | A map of domains to register with Route53.                        | <pre>map(object({<br/> auto_renew = bool<br/> name_servers = list(string)<br/> transfer_lock = bool<br/> }))</pre>                                                                                                                                                                                                                                                                       | n/a                                         |   yes    |
-| <a name="input_registrant_contact"></a> [registrant_contact](#input_registrant_contact) | The registrant contact information for the domain.                | <pre>object({<br/> address_line_1 = string<br/> address_line_2 = string<br/> city = string<br/> contact_type = string<br/> country_code = string<br/> email = string<br/> extra_params = map(any)<br/> fax = string<br/> first_name = string<br/> last_name = string<br/> organization_name = string<br/> phone_number = string<br/> state = string<br/> zip_code = string<br/> })</pre> | n/a                                         |   yes    |
-| <a name="input_registrant_privacy"></a> [registrant_privacy](#input_registrant_privacy) | Whether to enable registrant privacy protection. Default is true. | `bool`                                                                                                                                                                                                                                                                                                                                                                                   | `true`                                      |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                                           | A mapping of tags to assign to the resource.                      | `map(string)`                                                                                                                                                                                                                                                                                                                                                                            | <pre>{<br/> "terraform": "true"<br/>}</pre> |    no    |
-| <a name="input_tech_contact"></a> [tech_contact](#input_tech_contact)                   | The tech contact information for the domain.                      | <pre>object({<br/> address_line_1 = string<br/> address_line_2 = string<br/> city = string<br/> contact_type = string<br/> country_code = string<br/> email = string<br/> extra_params = map(any)<br/> fax = string<br/> first_name = string<br/> last_name = string<br/> organization_name = string<br/> phone_number = string<br/> state = string<br/> zip_code = string<br/> })</pre> | n/a                                         |   yes    |
-| <a name="input_tech_privacy"></a> [tech_privacy](#input_tech_privacy)                   | Whether to enable tech privacy protection. Default is true.       | `bool`                                                                                                                                                                                                                                                                                                                                                                                   | `true`                                      |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_admin_contact"></a> [admin\_contact](#input\_admin\_contact) | The admin contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_admin_privacy"></a> [admin\_privacy](#input\_admin\_privacy) | Whether to enable admin privacy protection. Default is true. | `bool` | `true` | no |
+| <a name="input_domains"></a> [domains](#input\_domains) | A map of domains to register with Route53. | <pre>map(object({<br/>    auto_renew    = bool<br/>    name_servers  = list(string)<br/>    transfer_lock = bool<br/>  }))</pre> | n/a | yes |
+| <a name="input_registrant_contact"></a> [registrant\_contact](#input\_registrant\_contact) | The registrant contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_registrant_privacy"></a> [registrant\_privacy](#input\_registrant\_privacy) | Whether to enable registrant privacy protection. Default is true. | `bool` | `true` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tech_contact"></a> [tech\_contact](#input\_tech\_contact) | The tech contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tech_privacy"></a> [tech\_privacy](#input\_tech\_privacy) | Whether to enable tech privacy protection. Default is true. | `bool` | `true` | no |
 
 ## Outputs
 
-| Name                                                                                | Description                          |
-| ----------------------------------------------------------------------------------- | ------------------------------------ |
-| <a name="output_creation_dates"></a> [creation_dates](#output_creation_dates)       | The creation date of the domain.     |
-| <a name="output_expiration_dates"></a> [expiration_dates](#output_expiration_dates) | The expiration date of the domain.   |
-| <a name="output_updated_dates"></a> [updated_dates](#output_updated_dates)          | The last updated date of the domain. |
-| <a name="output_whois_servers"></a> [whois_servers](#output_whois_servers)          | The whois server of the domain.      |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_creation_dates"></a> [creation\_dates](#output\_creation\_dates) | The creation date of the domain. |
+| <a name="output_expiration_dates"></a> [expiration\_dates](#output\_expiration\_dates) | The expiration date of the domain. |
+| <a name="output_updated_dates"></a> [updated\_dates](#output\_updated\_dates) | The last updated date of the domain. |
+| <a name="output_whois_servers"></a> [whois\_servers](#output\_whois\_servers) | The whois server of the domain. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

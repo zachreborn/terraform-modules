@@ -78,19 +78,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -98,24 +97,23 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                    | Type     |
-| --------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_lambda_permission.allow_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 
 ## Inputs
 
-| Name                                                                     | Description                                                        | Type     | Default                   | Required |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------ | -------- | ------------------------- | :------: |
-| <a name="input_action"></a> [action](#input_action)                      | The AWS lambda action you want to allow                            | `string` | `"lambda:InvokeFunction"` |    no    |
-| <a name="input_function_name"></a> [function_name](#input_function_name) | Name of the lambda function                                        | `string` | n/a                       |   yes    |
-| <a name="input_principal"></a> [principal](#input_principal)             | The principal which is receiving this permission                   | `string` | `"events.amazonaws.com"`  |    no    |
-| <a name="input_source_arn"></a> [source_arn](#input_source_arn)          | arn of the resource to allow permission to run the lambda function | `string` | n/a                       |   yes    |
-| <a name="input_statement_id"></a> [statement_id](#input_statement_id)    | A unique statement identifier                                      | `any`    | n/a                       |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_action"></a> [action](#input\_action) | The AWS lambda action you want to allow | `string` | `"lambda:InvokeFunction"` | no |
+| <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the lambda function | `string` | n/a | yes |
+| <a name="input_principal"></a> [principal](#input\_principal) | The principal which is receiving this permission | `string` | `"events.amazonaws.com"` | no |
+| <a name="input_source_arn"></a> [source\_arn](#input\_source\_arn) | arn of the resource to allow permission to run the lambda function | `string` | n/a | yes |
+| <a name="input_statement_id"></a> [statement\_id](#input\_statement\_id) | A unique statement identifier | `any` | n/a | yes |
 
 ## Outputs
 
 No outputs.
-
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -86,19 +86,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -106,25 +105,24 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                            | Type     |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [aws_iam_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group)                                     | resource |
+| Name | Type |
+|------|------|
+| [aws_iam_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group) | resource |
 | [aws_iam_group_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group_policy_attachment) | resource |
 
 ## Inputs
 
-| Name                                                | Description                                                                                                                  | Type                                                            | Default | Required |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------- | :------: |
-| <a name="input_groups"></a> [groups](#input_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br/> policy_arns = set(string)<br/> }))</pre> | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) - A map of groups to create. The key is the name of the group, and the value is a map of the group configuration. | <pre>map(object({<br/>    policy_arns = set(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
-| Name                                            | Description                                       |
-| ----------------------------------------------- | ------------------------------------------------- |
-| <a name="output_arn"></a> [arn](#output_arn)    | A map of ARNs assigned by AWS for the IAM groups. |
-| <a name="output_id"></a> [id](#output_id)       | A map of IDs of the IAM groups.                   |
-| <a name="output_path"></a> [path](#output_path) | A map of the paths for each IAM group.            |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | A map of ARNs assigned by AWS for the IAM groups. |
+| <a name="output_id"></a> [id](#output\_id) | A map of IDs of the IAM groups. |
+| <a name="output_path"></a> [path](#output\_path) | A map of the paths for each IAM group. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

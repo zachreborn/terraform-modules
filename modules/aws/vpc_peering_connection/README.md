@@ -89,19 +89,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -109,29 +108,28 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                  | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_vpc_peering_connection.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection) | resource |
 
 ## Inputs
 
-| Name                                                                                                                           | Description                                                                                                                                                                           | Type       | Default | Required |
-| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | :------: |
-| <a name="input_allow_remote_vpc_dns_resolution"></a> [allow_remote_vpc_dns_resolution](#input_allow_remote_vpc_dns_resolution) | (Optional) Allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in the peer VPC. This is not supported for inter-region VPC peering. | `string`   | `""`    |    no    |
-| <a name="input_auto_accept"></a> [auto_accept](#input_auto_accept)                                                             | (Optional) Accept the peering (both VPCs need to be in the same AWS account).                                                                                                         | `string`   | `true`  |    no    |
-| <a name="input_peer_owner_id"></a> [peer_owner_id](#input_peer_owner_id)                                                       | (Optional) The AWS account ID of the owner of the peer VPC. Defaults to the account ID the AWS provider is currently connected to.                                                    | `string`   | `""`    |    no    |
-| <a name="input_peer_region"></a> [peer_region](#input_peer_region)                                                             | (Optional) The region of the accepter VPC of the [VPC Peering Connection]. auto_accept must be false, and use the aws_vpc_peering_connection_accepter to manage the accepter side.    | `string`   | `""`    |    no    |
-| <a name="input_peer_vpc_id"></a> [peer_vpc_id](#input_peer_vpc_id)                                                             | (Required) The ID of the VPC with which you are creating the VPC Peering Connection.                                                                                                  | `string`   | n/a     |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                                                  | (Optional) A mapping of tags to assign to the resource.                                                                                                                               | `map(any)` | n/a     |   yes    |
-| <a name="input_vpc_id"></a> [vpc_id](#input_vpc_id)                                                                            | (Required) The ID of the requester VPC.                                                                                                                                               | `string`   | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_allow_remote_vpc_dns_resolution"></a> [allow\_remote\_vpc\_dns\_resolution](#input\_allow\_remote\_vpc\_dns\_resolution) | (Optional) Allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in the peer VPC. This is not supported for inter-region VPC peering. | `string` | `""` | no |
+| <a name="input_auto_accept"></a> [auto\_accept](#input\_auto\_accept) | (Optional) Accept the peering (both VPCs need to be in the same AWS account). | `string` | `true` | no |
+| <a name="input_peer_owner_id"></a> [peer\_owner\_id](#input\_peer\_owner\_id) | (Optional) The AWS account ID of the owner of the peer VPC. Defaults to the account ID the AWS provider is currently connected to. | `string` | `""` | no |
+| <a name="input_peer_region"></a> [peer\_region](#input\_peer\_region) | (Optional) The region of the accepter VPC of the [VPC Peering Connection]. auto\_accept must be false, and use the aws\_vpc\_peering\_connection\_accepter to manage the accepter side. | `string` | `""` | no |
+| <a name="input_peer_vpc_id"></a> [peer\_vpc\_id](#input\_peer\_vpc\_id) | (Required) The ID of the VPC with which you are creating the VPC Peering Connection. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) The ID of the requester VPC. | `string` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                       | Description |
-| -------------------------------------------------------------------------- | ----------- |
-| <a name="output_accept_status"></a> [accept_status](#output_accept_status) | n/a         |
-| <a name="output_id"></a> [id](#output_id)                                  | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_accept_status"></a> [accept\_status](#output\_accept\_status) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

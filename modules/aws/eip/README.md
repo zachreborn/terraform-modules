@@ -90,19 +90,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -110,26 +109,25 @@ No modules.
 
 ## Resources
 
-| Name                                                                                           | Type     |
-| ---------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_eip.eip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
 
 ## Inputs
 
-| Name                                                                                                         | Description                                                                                                                                                                                                                    | Type       | Default | Required |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | :------: |
-| <a name="input_associate_with_private_ip"></a> [associate_with_private_ip](#input_associate_with_private_ip) | (Optional) A user specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address. | `string`   | `""`    |    no    |
-| <a name="input_instance"></a> [instance](#input_instance)                                                    | (Optional) EC2 instance ID.                                                                                                                                                                                                    | `string`   | `""`    |    no    |
-| <a name="input_network_interface"></a> [network_interface](#input_network_interface)                         | (Optional) Network interface ID to associate with.                                                                                                                                                                             | `string`   | `""`    |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                                | (Optional) A mapping of tags to assign to the resource.                                                                                                                                                                        | `map(any)` | `{}`    |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_associate_with_private_ip"></a> [associate\_with\_private\_ip](#input\_associate\_with\_private\_ip) | (Optional) A user specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address. | `string` | `""` | no |
+| <a name="input_instance"></a> [instance](#input\_instance) | (Optional) EC2 instance ID. | `string` | `""` | no |
+| <a name="input_network_interface"></a> [network\_interface](#input\_network\_interface) | (Optional) Network interface ID to associate with. | `string` | `""` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `{}` | no |
 
 ## Outputs
 
-| Name                                                           | Description                    |
-| -------------------------------------------------------------- | ------------------------------ |
-| <a name="output_id"></a> [id](#output_id)                      | Contains the EIP allocation ID |
-| <a name="output_public_ip"></a> [public_ip](#output_public_ip) | Contains the public IP address |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | Contains the EIP allocation ID |
+| <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | Contains the public IP address |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

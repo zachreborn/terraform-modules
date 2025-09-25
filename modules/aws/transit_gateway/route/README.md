@@ -104,19 +104,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -124,25 +123,24 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                        | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_ec2_transit_gateway_route.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_route) | resource |
 
 ## Inputs
 
-| Name                                                                                                                        | Description                                                                                                                               | Type          | Default | Required |
-| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- | :------: |
-| <a name="input_blackhole"></a> [blackhole](#input_blackhole)                                                                | (Optional) Indicates whether to drop traffic that matches this route (default to false).                                                  | `bool`        | `false` |    no    |
-| <a name="input_destination_cidr_blocks"></a> [destination_cidr_blocks](#input_destination_cidr_blocks)                      | (Required) List of IPv4 or IPv6 RFC1924 CIDR blocks used for destination matches. Routing decisions are based on the most specific match. | `set(string)` | n/a     |   yes    |
-| <a name="input_transit_gateway_attachment_id"></a> [transit_gateway_attachment_id](#input_transit_gateway_attachment_id)    | (Optional) Identifier of EC2 Transit Gateway Attachment (required if blackhole is set to false).                                          | `string`      | `null`  |    no    |
-| <a name="input_transit_gateway_route_table_id"></a> [transit_gateway_route_table_id](#input_transit_gateway_route_table_id) | (Required) Identifier of EC2 Transit Gateway Route Table.                                                                                 | `string`      | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_blackhole"></a> [blackhole](#input\_blackhole) | (Optional) Indicates whether to drop traffic that matches this route (default to false). | `bool` | `false` | no |
+| <a name="input_destination_cidr_blocks"></a> [destination\_cidr\_blocks](#input\_destination\_cidr\_blocks) | (Required) List of IPv4 or IPv6 RFC1924 CIDR blocks used for destination matches. Routing decisions are based on the most specific match. | `set(string)` | n/a | yes |
+| <a name="input_transit_gateway_attachment_id"></a> [transit\_gateway\_attachment\_id](#input\_transit\_gateway\_attachment\_id) | (Optional) Identifier of EC2 Transit Gateway Attachment (required if blackhole is set to false). | `string` | `null` | no |
+| <a name="input_transit_gateway_route_table_id"></a> [transit\_gateway\_route\_table\_id](#input\_transit\_gateway\_route\_table\_id) | (Required) Identifier of EC2 Transit Gateway Route Table. | `string` | n/a | yes |
 
 ## Outputs
 
-| Name                                                  | Description                       |
-| ----------------------------------------------------- | --------------------------------- |
-| <a name="output_routes"></a> [routes](#output_routes) | Map of routes and their next hops |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_routes"></a> [routes](#output\_routes) | Map of routes and their next hops |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

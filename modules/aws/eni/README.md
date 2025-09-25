@@ -77,19 +77,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -97,37 +96,36 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                       | Type     |
-| -------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_network_interface.eni](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 
 ## Inputs
 
-| Name                                                                                                   | Description                                                                                                                                                                                             | Type        | Default   | Required |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------- | :------: |
-| <a name="input_description"></a> [description](#input_description)                                     | (Required) A description for the network interface.                                                                                                                                                     | `string`    | n/a       |   yes    |
-| <a name="input_device_index"></a> [device_index](#input_device_index)                                  | (Required) Integer to define the devices index.                                                                                                                                                         | `number`    | n/a       |   yes    |
-| <a name="input_instance_id"></a> [instance_id](#input_instance_id)                                     | (Required) ID of the instance to attach to.                                                                                                                                                             | `string`    | n/a       |   yes    |
-| <a name="input_private_ip_list_enabled"></a> [private_ip_list_enabled](#input_private_ip_list_enabled) | (Optional) Whether private_ip_list is allowed and controls the IPs to assign to the ENI and private_ips and private_ips_count become read-only. Default false.                                          | `string`    | `"false"` |    no    |
-| <a name="input_private_ips"></a> [private_ips](#input_private_ips)                                     | (Optional) List of private IPs to assign to the ENI.                                                                                                                                                    | `list(any)` | `[]`      |    no    |
-| <a name="input_private_ips_count"></a> [private_ips_count](#input_private_ips_count)                   | (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default.           | `number`    | `1`       |    no    |
-| <a name="input_security_groups"></a> [security_groups](#input_security_groups)                         | (Required) List of security group IDs to assign to the ENI.                                                                                                                                             | `list(any)` | n/a       |   yes    |
-| <a name="input_source_dest_check"></a> [source_dest_check](#input_source_dest_check)                   | (Optional) Whether to enable source destination checking for the ENI. Default true.                                                                                                                     | `bool`      | `true`    |    no    |
-| <a name="input_subnet_id"></a> [subnet_id](#input_subnet_id)                                           | (Required) Subnet ID to create the ENI in.                                                                                                                                                              | `string`    | n/a       |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                          | (Optional) A map of tags to assign to the resource. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)`  | n/a       |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_description"></a> [description](#input\_description) | (Required) A description for the network interface. | `string` | n/a | yes |
+| <a name="input_device_index"></a> [device\_index](#input\_device\_index) | (Required) Integer to define the devices index. | `number` | n/a | yes |
+| <a name="input_instance_id"></a> [instance\_id](#input\_instance\_id) | (Required) ID of the instance to attach to. | `string` | n/a | yes |
+| <a name="input_private_ip_list_enabled"></a> [private\_ip\_list\_enabled](#input\_private\_ip\_list\_enabled) | (Optional) Whether private\_ip\_list is allowed and controls the IPs to assign to the ENI and private\_ips and private\_ips\_count become read-only. Default false. | `string` | `"false"` | no |
+| <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(any)` | `[]` | no |
+| <a name="input_private_ips_count"></a> [private\_ips\_count](#input\_private\_ips\_count) | (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private\_ips\_count, as a primary private IP will be assiged to an ENI by default. | `number` | `1` | no |
+| <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | (Required) List of security group IDs to assign to the ENI. | `list(any)` | n/a | yes |
+| <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | (Optional) Whether to enable source destination checking for the ENI. Default true. | `bool` | `true` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | (Required) Subnet ID to create the ENI in. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the resource. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                                   | Description |
-| -------------------------------------------------------------------------------------- | ----------- |
-| <a name="output_attachment"></a> [attachment](#output_attachment)                      | n/a         |
-| <a name="output_description"></a> [description](#output_description)                   | n/a         |
-| <a name="output_private_ips"></a> [private_ips](#output_private_ips)                   | n/a         |
-| <a name="output_security_groups"></a> [security_groups](#output_security_groups)       | n/a         |
-| <a name="output_source_dest_check"></a> [source_dest_check](#output_source_dest_check) | n/a         |
-| <a name="output_subnet_id"></a> [subnet_id](#output_subnet_id)                         | n/a         |
-| <a name="output_tags"></a> [tags](#output_tags)                                        | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_attachment"></a> [attachment](#output\_attachment) | n/a |
+| <a name="output_description"></a> [description](#output\_description) | n/a |
+| <a name="output_private_ips"></a> [private\_ips](#output\_private\_ips) | n/a |
+| <a name="output_security_groups"></a> [security\_groups](#output\_security\_groups) | n/a |
+| <a name="output_source_dest_check"></a> [source\_dest\_check](#output\_source\_dest\_check) | n/a |
+| <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | n/a |
+| <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -77,19 +77,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -97,25 +96,24 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                                | Type     |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_elastic_beanstalk_application.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elastic_beanstalk_application) | resource |
 
 ## Inputs
 
-| Name                                                                                             | Description                                                                                                                                           | Type     | Default | Required |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | :------: |
-| <a name="input_delete_source_from_s3"></a> [delete_source_from_s3](#input_delete_source_from_s3) | (Optional) Set to true to delete a version's source bundle from S3 when the application version is deleted.                                           | `string` | n/a     |   yes    |
-| <a name="input_description"></a> [description](#input_description)                               | (Optional) Short description of the application                                                                                                       | `string` | `""`    |    no    |
-| <a name="input_max_age_in_days"></a> [max_age_in_days](#input_max_age_in_days)                   | (Optional) The number of days to retain an application version.                                                                                       | `string` | n/a     |   yes    |
-| <a name="input_max_count"></a> [max_count](#input_max_count)                                     | (Optional) The maximum number of application versions to retain.                                                                                      | `string` | n/a     |   yes    |
-| <a name="input_name"></a> [name](#input_name)                                                    | (Required) The name of the application, must be unique within your account                                                                            | `string` | n/a     |   yes    |
-| <a name="input_service_role"></a> [service_role](#input_service_role)                            | (Required) The ARN of an IAM service role under which the application version is deleted. Elastic Beanstalk must have permission to assume this role. | `string` | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_delete_source_from_s3"></a> [delete\_source\_from\_s3](#input\_delete\_source\_from\_s3) | (Optional) Set to true to delete a version's source bundle from S3 when the application version is deleted. | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) Short description of the application | `string` | `""` | no |
+| <a name="input_max_age_in_days"></a> [max\_age\_in\_days](#input\_max\_age\_in\_days) | (Optional) The number of days to retain an application version. | `string` | n/a | yes |
+| <a name="input_max_count"></a> [max\_count](#input\_max\_count) | (Optional) The maximum number of application versions to retain. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the application, must be unique within your account | `string` | n/a | yes |
+| <a name="input_service_role"></a> [service\_role](#input\_service\_role) | (Required) The ARN of an IAM service role under which the application version is deleted. Elastic Beanstalk must have permission to assume this role. | `string` | n/a | yes |
 
 ## Outputs
 
 No outputs.
-
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

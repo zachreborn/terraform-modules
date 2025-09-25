@@ -84,19 +84,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -104,32 +103,31 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                          | Type     |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)                                     | resource |
+| Name | Type |
+|------|------|
+| [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 
 ## Inputs
 
-| Name                                                                                             | Description                                                                                                                                                                                                                                          | Type           | Default                                     | Required |
-| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------- | :------: |
-| <a name="input_assume_role_policy"></a> [assume_role_policy](#input_assume_role_policy)          | (Required) The policy that grants an entity permission to assume the role.                                                                                                                                                                           | `string`       | n/a                                         |   yes    |
-| <a name="input_description"></a> [description](#input_description)                               | (Optional) The description of the role.                                                                                                                                                                                                              | `string`       | `null`                                      |    no    |
-| <a name="input_force_detach_policies"></a> [force_detach_policies](#input_force_detach_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false.                                                                                                                                           | `bool`         | `false`                                     |    no    |
-| <a name="input_max_session_duration"></a> [max_session_duration](#input_max_session_duration)    | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string`       | `3600`                                      |    no    |
-| <a name="input_name_prefix"></a> [name_prefix](#input_name_prefix)                               | (Required) The prefix used to generate a unique role name.                                                                                                                                                                                           | `string`       | n/a                                         |   yes    |
-| <a name="input_path"></a> [path](#input_path)                                                    | (Optional) The path to the role.                                                                                                                                                                                                                     | `string`       | `"/"`                                       |    no    |
-| <a name="input_permissions_boundary"></a> [permissions_boundary](#input_permissions_boundary)    | (Optional) The ARN of the policy that is used to set the permissions boundary for the role.                                                                                                                                                          | `string`       | `null`                                      |    no    |
-| <a name="input_policy_arns"></a> [policy_arns](#input_policy_arns)                               | (Required) - A list of ARNs of the policies which you want attached to the role.                                                                                                                                                                     | `list(string)` | n/a                                         |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                    | (Optional) A map of tags to assign to the IAM role.                                                                                                                                                                                                  | `map(string)`  | <pre>{<br/> "terraform": "true"<br/>}</pre> |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_assume_role_policy"></a> [assume\_role\_policy](#input\_assume\_role\_policy) | (Required) The policy that grants an entity permission to assume the role. | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `null` | no |
+| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
+| <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique role name. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
+| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
+| <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the role. | `list(string)` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM role. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-| Name                                            | Description                                         |
-| ----------------------------------------------- | --------------------------------------------------- |
-| <a name="output_arn"></a> [arn](#output_arn)    | The Amazon Resource Name (ARN) specifying the role. |
-| <a name="output_name"></a> [name](#output_name) | The name of the role.                               |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The Amazon Resource Name (ARN) specifying the role. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the role. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

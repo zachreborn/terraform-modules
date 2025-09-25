@@ -80,19 +80,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 2.5.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 2.5.0 |
 
 ## Providers
 
-| Name                                                         | Version |
-| ------------------------------------------------------------ | ------- |
-| <a name="provider_vsphere"></a> [vsphere](#provider_vsphere) | n/a     |
+| Name | Version |
+|------|---------|
+| <a name="provider_vsphere"></a> [vsphere](#provider\_vsphere) | n/a |
 
 ## Modules
 
@@ -100,25 +99,24 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                  | Type     |
-| --------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [vsphere_datacenter.this](https://registry.terraform.io/providers/hashicorp/vsphere/latest/docs/resources/datacenter) | resource |
 
 ## Inputs
 
-| Name                                                | Description                                                                                                          | Type          | Default                                     | Required |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------- | :------: |
-| <a name="input_folder"></a> [folder](#input_folder) | The folder where the datacenter will be created. Forces a new resource if this is changed.                           | `string`      | n/a                                         |   yes    |
-| <a name="input_name"></a> [name](#input_name)       | The name of the datacenter. The name needs to be unique within the folder. Forces a new resource if this is changed. | `string`      | n/a                                         |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)       | A map of tags to assign to the datacenter.                                                                           | `map(string)` | <pre>{<br/> "terraform": "true"<br/>}</pre> |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_folder"></a> [folder](#input\_folder) | The folder where the datacenter will be created. Forces a new resource if this is changed. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | The name of the datacenter. The name needs to be unique within the folder. Forces a new resource if this is changed. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the datacenter. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-| Name                                            | Description                              |
-| ----------------------------------------------- | ---------------------------------------- |
-| <a name="output_id"></a> [id](#output_id)       | The ID of the datacenter.                |
-| <a name="output_moid"></a> [moid](#output_moid) | The Managed Object ID of the datacenter. |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | The ID of the datacenter. |
+| <a name="output_moid"></a> [moid](#output\_moid) | The Managed Object ID of the datacenter. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

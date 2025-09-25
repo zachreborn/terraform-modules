@@ -79,19 +79,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_tfe"></a> [tfe](#requirement_tfe)                   | >=0.42.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_tfe"></a> [tfe](#provider_tfe) | >=0.42.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
 
 ## Modules
 
@@ -99,23 +98,22 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                    | Type     |
-| ------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [tfe_project.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/project) | resource |
 
 ## Inputs
 
-| Name                                                                  | Description                                                                                           | Type     | Default | Required |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------- | ------- | :------: |
-| <a name="input_name"></a> [name](#input_name)                         | (Required) Name of the project.                                                                       | `string` | n/a     |   yes    |
-| <a name="input_organization"></a> [organization](#input_organization) | (Optional) Name of the organization. If omitted, organization must be defined in the provider config. | `string` | `null`  |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_name"></a> [name](#input\_name) | (Required) Name of the project. | `string` | n/a | yes |
+| <a name="input_organization"></a> [organization](#input\_organization) | (Optional) Name of the organization. If omitted, organization must be defined in the provider config. | `string` | `null` | no |
 
 ## Outputs
 
-| Name                                      | Description     |
-| ----------------------------------------- | --------------- |
-| <a name="output_id"></a> [id](#output_id) | The project ID. |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | The project ID. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

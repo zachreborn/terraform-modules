@@ -77,19 +77,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -97,26 +96,25 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                | Type     |
-| ------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_security_group.sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 
 ## Inputs
 
-| Name                                                               | Description                                 | Type     | Default                  | Required |
-| ------------------------------------------------------------------ | ------------------------------------------- | -------- | ------------------------ | :------: |
-| <a name="input_description"></a> [description](#input_description) | Description of the security group           | `string` | `"Terraform created SG"` |    no    |
-| <a name="input_name"></a> [name](#input_name)                      | Name of the security group                  | `any`    | n/a                      |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)                      | Tags to apply to the security group         | `map`    | `{}`                     |    no    |
-| <a name="input_vpc_id"></a> [vpc_id](#input_vpc_id)                | VPC with which to add the security group to | `any`    | n/a                      |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_description"></a> [description](#input\_description) | Description of the security group | `string` | `"Terraform created SG"` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the security group | `any` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the security group | `map` | `{}` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC with which to add the security group to | `any` | n/a | yes |
 
 ## Outputs
 
-| Name                                            | Description |
-| ----------------------------------------------- | ----------- |
-| <a name="output_id"></a> [id](#output_id)       | n/a         |
-| <a name="output_name"></a> [name](#output_name) | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_name"></a> [name](#output\_name) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

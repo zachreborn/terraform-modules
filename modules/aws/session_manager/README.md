@@ -75,19 +75,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -95,68 +94,67 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                             | Type        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| [aws_iam_instance_profile.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile)             | resource    |
-| [aws_iam_policy.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy)                                 | resource    |
-| [aws_iam_role.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)                                     | resource    |
-| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource    |
-| [aws_ssm_document.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document)                             | resource    |
-| [aws_iam_policy.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy)                              | data source |
+| Name | Type |
+|------|------|
+| [aws_iam_instance_profile.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
+| [aws_iam_policy.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_ssm_document.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document) | resource |
+| [aws_iam_policy.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 | [aws_iam_policy_document.assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
-| Name                                                                                                                     | Description                                                           | Type           | Default                        | Required |
-| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | -------------- | ------------------------------ | :------: |
-| <a name="input_ami"></a> [ami](#input_ami)                                                                               | The AMI to use for the instance.                                      | `string`       | `""`                           |    no    |
-| <a name="input_cloudwatch_encryption_enabled"></a> [cloudwatch_encryption_enabled](#input_cloudwatch_encryption_enabled) | Specify true to indicate that encryption for CloudWatch Logs enabled. | `bool`         | `true`                         |    no    |
-| <a name="input_cloudwatch_log_group_name"></a> [cloudwatch_log_group_name](#input_cloudwatch_log_group_name)             | The name of the log group.                                            | `string`       | `""`                           |    no    |
-| <a name="input_description"></a> [description](#input_description)                                                       | The description of the all resources.                                 | `string`       | `"Managed by Terraform"`       |    no    |
-| <a name="input_iam_path"></a> [iam_path](#input_iam_path)                                                                | Path in which to create the IAM Role and the IAM Policy.              | `string`       | `"/"`                          |    no    |
-| <a name="input_iam_policy"></a> [iam_policy](#input_iam_policy)                                                          | The policy document. This is a JSON formatted string.                 | `string`       | `""`                           |    no    |
-| <a name="input_name"></a> [name](#input_name)                                                                            | The name of the Session Manager.                                      | `string`       | `"ssm-session-manager"`        |    no    |
-| <a name="input_s3_bucket_name"></a> [s3_bucket_name](#input_s3_bucket_name)                                              | The name of the bucket.                                               | `string`       | `""`                           |    no    |
-| <a name="input_s3_encryption_enabled"></a> [s3_encryption_enabled](#input_s3_encryption_enabled)                         | Specify true to indicate that encryption for S3 Bucket enabled.       | `bool`         | `true`                         |    no    |
-| <a name="input_s3_key_prefix"></a> [s3_key_prefix](#input_s3_key_prefix)                                                 | The prefix for the specified S3 bucket.                               | `string`       | `""`                           |    no    |
-| <a name="input_ssm_document_name"></a> [ssm_document_name](#input_ssm_document_name)                                     | The name of the document.                                             | `string`       | `"SSM-SessionManagerRunShell"` |    no    |
-| <a name="input_tags"></a> [tags](#input_tags)                                                                            | A mapping of tags to assign to all resources.                         | `map(string)`  | `{}`                           |    no    |
-| <a name="input_user_data"></a> [user_data](#input_user_data)                                                             | The user data to provide when launching the instance.                 | `string`       | `""`                           |    no    |
-| <a name="input_vpc_security_group_ids"></a> [vpc_security_group_ids](#input_vpc_security_group_ids)                      | A list of security group IDs to associate with.                       | `list(string)` | `[]`                           |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_ami"></a> [ami](#input\_ami) | The AMI to use for the instance. | `string` | `""` | no |
+| <a name="input_cloudwatch_encryption_enabled"></a> [cloudwatch\_encryption\_enabled](#input\_cloudwatch\_encryption\_enabled) | Specify true to indicate that encryption for CloudWatch Logs enabled. | `bool` | `true` | no |
+| <a name="input_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#input\_cloudwatch\_log\_group\_name) | The name of the log group. | `string` | `""` | no |
+| <a name="input_description"></a> [description](#input\_description) | The description of the all resources. | `string` | `"Managed by Terraform"` | no |
+| <a name="input_iam_path"></a> [iam\_path](#input\_iam\_path) | Path in which to create the IAM Role and the IAM Policy. | `string` | `"/"` | no |
+| <a name="input_iam_policy"></a> [iam\_policy](#input\_iam\_policy) | The policy document. This is a JSON formatted string. | `string` | `""` | no |
+| <a name="input_name"></a> [name](#input\_name) | The name of the Session Manager. | `string` | `"ssm-session-manager"` | no |
+| <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | The name of the bucket. | `string` | `""` | no |
+| <a name="input_s3_encryption_enabled"></a> [s3\_encryption\_enabled](#input\_s3\_encryption\_enabled) | Specify true to indicate that encryption for S3 Bucket enabled. | `bool` | `true` | no |
+| <a name="input_s3_key_prefix"></a> [s3\_key\_prefix](#input\_s3\_key\_prefix) | The prefix for the specified S3 bucket. | `string` | `""` | no |
+| <a name="input_ssm_document_name"></a> [ssm\_document\_name](#input\_ssm\_document\_name) | The name of the document. | `string` | `"SSM-SessionManagerRunShell"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to all resources. | `map(string)` | `{}` | no |
+| <a name="input_user_data"></a> [user\_data](#input\_user\_data) | The user data to provide when launching the instance. | `string` | `""` | no |
+| <a name="input_vpc_security_group_ids"></a> [vpc\_security\_group\_ids](#input\_vpc\_security\_group\_ids) | A list of security group IDs to associate with. | `list(string)` | `[]` | no |
 
 ## Outputs
 
-| Name                                                                                                                                | Description                                                  |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| <a name="output_iam_instance_profile_arn"></a> [iam_instance_profile_arn](#output_iam_instance_profile_arn)                         | The ARN assigned by AWS to the instance profile.             |
-| <a name="output_iam_instance_profile_create_date"></a> [iam_instance_profile_create_date](#output_iam_instance_profile_create_date) | The creation timestamp of the instance profile.              |
-| <a name="output_iam_instance_profile_id"></a> [iam_instance_profile_id](#output_iam_instance_profile_id)                            | The instance profile's ID.                                   |
-| <a name="output_iam_instance_profile_name"></a> [iam_instance_profile_name](#output_iam_instance_profile_name)                      | The instance profile's name.                                 |
-| <a name="output_iam_instance_profile_path"></a> [iam_instance_profile_path](#output_iam_instance_profile_path)                      | The path of the instance profile in IAM.                     |
-| <a name="output_iam_instance_profile_role"></a> [iam_instance_profile_role](#output_iam_instance_profile_role)                      | The role assigned to the instance profile.                   |
-| <a name="output_iam_instance_profile_unique_id"></a> [iam_instance_profile_unique_id](#output_iam_instance_profile_unique_id)       | The unique ID assigned by AWS.                               |
-| <a name="output_iam_policy_arn"></a> [iam_policy_arn](#output_iam_policy_arn)                                                       | The ARN assigned by AWS to this IAM Policy.                  |
-| <a name="output_iam_policy_description"></a> [iam_policy_description](#output_iam_policy_description)                               | The description of the IAM Policy.                           |
-| <a name="output_iam_policy_document"></a> [iam_policy_document](#output_iam_policy_document)                                        | The policy document of the IAM Policy.                       |
-| <a name="output_iam_policy_id"></a> [iam_policy_id](#output_iam_policy_id)                                                          | The IAM Policy's ID.                                         |
-| <a name="output_iam_policy_name"></a> [iam_policy_name](#output_iam_policy_name)                                                    | The name of the IAM Policy.                                  |
-| <a name="output_iam_policy_path"></a> [iam_policy_path](#output_iam_policy_path)                                                    | The path of the IAM Policy.                                  |
-| <a name="output_iam_role_arn"></a> [iam_role_arn](#output_iam_role_arn)                                                             | The Amazon Resource Name (ARN) specifying the IAM Role.      |
-| <a name="output_iam_role_create_date"></a> [iam_role_create_date](#output_iam_role_create_date)                                     | The creation date of the IAM Role.                           |
-| <a name="output_iam_role_description"></a> [iam_role_description](#output_iam_role_description)                                     | The description of the IAM Role.                             |
-| <a name="output_iam_role_name"></a> [iam_role_name](#output_iam_role_name)                                                          | The name of the IAM Role.                                    |
-| <a name="output_iam_role_unique_id"></a> [iam_role_unique_id](#output_iam_role_unique_id)                                           | The stable and unique string identifying the IAM Role.       |
-| <a name="output_ssm_document_default_version"></a> [ssm_document_default_version](#output_ssm_document_default_version)             | The default version of the document.                         |
-| <a name="output_ssm_document_description"></a> [ssm_document_description](#output_ssm_document_description)                         | The description of the document.                             |
-| <a name="output_ssm_document_hash"></a> [ssm_document_hash](#output_ssm_document_hash)                                              | The sha1 or sha256 of the document content.                  |
-| <a name="output_ssm_document_hash_type"></a> [ssm_document_hash_type](#output_ssm_document_hash_type)                               | The hashing algorithm used when hashing the content.         |
-| <a name="output_ssm_document_latest_version"></a> [ssm_document_latest_version](#output_ssm_document_latest_version)                | The latest version of the document.                          |
-| <a name="output_ssm_document_owner"></a> [ssm_document_owner](#output_ssm_document_owner)                                           | The AWS user account of the person who created the document. |
-| <a name="output_ssm_document_parameter"></a> [ssm_document_parameter](#output_ssm_document_parameter)                               | The parameters that are available to this document.          |
-| <a name="output_ssm_document_platform_types"></a> [ssm_document_platform_types](#output_ssm_document_platform_types)                | A list of OS platforms compatible with this SSM document.    |
-| <a name="output_ssm_document_schema_version"></a> [ssm_document_schema_version](#output_ssm_document_schema_version)                | The schema version of the document.                          |
-| <a name="output_ssm_document_status"></a> [ssm_document_status](#output_ssm_document_status)                                        | The current status of the document.                          |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_iam_instance_profile_arn"></a> [iam\_instance\_profile\_arn](#output\_iam\_instance\_profile\_arn) | The ARN assigned by AWS to the instance profile. |
+| <a name="output_iam_instance_profile_create_date"></a> [iam\_instance\_profile\_create\_date](#output\_iam\_instance\_profile\_create\_date) | The creation timestamp of the instance profile. |
+| <a name="output_iam_instance_profile_id"></a> [iam\_instance\_profile\_id](#output\_iam\_instance\_profile\_id) | The instance profile's ID. |
+| <a name="output_iam_instance_profile_name"></a> [iam\_instance\_profile\_name](#output\_iam\_instance\_profile\_name) | The instance profile's name. |
+| <a name="output_iam_instance_profile_path"></a> [iam\_instance\_profile\_path](#output\_iam\_instance\_profile\_path) | The path of the instance profile in IAM. |
+| <a name="output_iam_instance_profile_role"></a> [iam\_instance\_profile\_role](#output\_iam\_instance\_profile\_role) | The role assigned to the instance profile. |
+| <a name="output_iam_instance_profile_unique_id"></a> [iam\_instance\_profile\_unique\_id](#output\_iam\_instance\_profile\_unique\_id) | The unique ID assigned by AWS. |
+| <a name="output_iam_policy_arn"></a> [iam\_policy\_arn](#output\_iam\_policy\_arn) | The ARN assigned by AWS to this IAM Policy. |
+| <a name="output_iam_policy_description"></a> [iam\_policy\_description](#output\_iam\_policy\_description) | The description of the IAM Policy. |
+| <a name="output_iam_policy_document"></a> [iam\_policy\_document](#output\_iam\_policy\_document) | The policy document of the IAM Policy. |
+| <a name="output_iam_policy_id"></a> [iam\_policy\_id](#output\_iam\_policy\_id) | The IAM Policy's ID. |
+| <a name="output_iam_policy_name"></a> [iam\_policy\_name](#output\_iam\_policy\_name) | The name of the IAM Policy. |
+| <a name="output_iam_policy_path"></a> [iam\_policy\_path](#output\_iam\_policy\_path) | The path of the IAM Policy. |
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The Amazon Resource Name (ARN) specifying the IAM Role. |
+| <a name="output_iam_role_create_date"></a> [iam\_role\_create\_date](#output\_iam\_role\_create\_date) | The creation date of the IAM Role. |
+| <a name="output_iam_role_description"></a> [iam\_role\_description](#output\_iam\_role\_description) | The description of the IAM Role. |
+| <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | The name of the IAM Role. |
+| <a name="output_iam_role_unique_id"></a> [iam\_role\_unique\_id](#output\_iam\_role\_unique\_id) | The stable and unique string identifying the IAM Role. |
+| <a name="output_ssm_document_default_version"></a> [ssm\_document\_default\_version](#output\_ssm\_document\_default\_version) | The default version of the document. |
+| <a name="output_ssm_document_description"></a> [ssm\_document\_description](#output\_ssm\_document\_description) | The description of the document. |
+| <a name="output_ssm_document_hash"></a> [ssm\_document\_hash](#output\_ssm\_document\_hash) | The sha1 or sha256 of the document content. |
+| <a name="output_ssm_document_hash_type"></a> [ssm\_document\_hash\_type](#output\_ssm\_document\_hash\_type) | The hashing algorithm used when hashing the content. |
+| <a name="output_ssm_document_latest_version"></a> [ssm\_document\_latest\_version](#output\_ssm\_document\_latest\_version) | The latest version of the document. |
+| <a name="output_ssm_document_owner"></a> [ssm\_document\_owner](#output\_ssm\_document\_owner) | The AWS user account of the person who created the document. |
+| <a name="output_ssm_document_parameter"></a> [ssm\_document\_parameter](#output\_ssm\_document\_parameter) | The parameters that are available to this document. |
+| <a name="output_ssm_document_platform_types"></a> [ssm\_document\_platform\_types](#output\_ssm\_document\_platform\_types) | A list of OS platforms compatible with this SSM document. |
+| <a name="output_ssm_document_schema_version"></a> [ssm\_document\_schema\_version](#output\_ssm\_document\_schema\_version) | The schema version of the document. |
+| <a name="output_ssm_document_status"></a> [ssm\_document\_status](#output\_ssm\_document\_status) | The current status of the document. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

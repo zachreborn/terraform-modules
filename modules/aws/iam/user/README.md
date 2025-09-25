@@ -77,19 +77,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -97,27 +96,26 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                      | Type     |
-| --------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_iam_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
 
 ## Inputs
 
-| Name                                                                                          | Description                                                                                                                                                                                                                                                                                           | Type     | Default | Required |
-| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | :------: |
-| <a name="input_force_destroy"></a> [force_destroy](#input_force_destroy)                      | (Optional, default false) When destroying this user, destroy even if it has non-Terraform-managed IAM access keys, login profile or MFA devices. Without force_destroy a user with non-Terraform-managed access keys and login profile will fail to be destroyed.                                     | `string` | `false` |    no    |
-| <a name="input_name"></a> [name](#input_name)                                                 | (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: =,.@-\_.. User names are not distinguished by case. For example, you cannot create users named both 'TESTUSER' and 'testuser'. | `string` | n/a     |   yes    |
-| <a name="input_path"></a> [path](#input_path)                                                 | (Optional, default '/') Path in which to create the user.                                                                                                                                                                                                                                             | `string` | `"/"`   |    no    |
-| <a name="input_permissions_boundary"></a> [permissions_boundary](#input_permissions_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the user.                                                                                                                                                                                                           | `string` | `null`  |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | (Optional, default false) When destroying this user, destroy even if it has non-Terraform-managed IAM access keys, login profile or MFA devices. Without force\_destroy a user with non-Terraform-managed access keys and login profile will fail to be destroyed. | `string` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: =,.@-\_.. User names are not distinguished by case. For example, you cannot create users named both 'TESTUSER' and 'testuser'. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional, default '/') Path in which to create the user. | `string` | `"/"` | no |
+| <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the user. | `string` | `null` | no |
 
 ## Outputs
 
-| Name                                                           | Description                            |
-| -------------------------------------------------------------- | -------------------------------------- |
-| <a name="output_arn"></a> [arn](#output_arn)                   | The ARN assigned by AWS for this user. |
-| <a name="output_id"></a> [id](#output_id)                      | The ID of the user.                    |
-| <a name="output_user_name"></a> [user_name](#output_user_name) | The user's name.                       |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN assigned by AWS for this user. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the user. |
+| <a name="output_user_name"></a> [user\_name](#output\_user\_name) | The user's name. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

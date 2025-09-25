@@ -79,19 +79,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -99,27 +98,26 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                          | Type     |
-| ------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_iam_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 
 ## Inputs
 
-| Name                                                               | Description                                                                                                                                                                                 | Type          | Default                                     | Required |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------- | :------: |
-| <a name="input_description"></a> [description](#input_description) | (Required) Description of the IAM policy. Changes to the description will force the creation of a new resource.                                                                             | `string`      | n/a                                         |   yes    |
-| <a name="input_name_prefix"></a> [name_prefix](#input_name_prefix) | (Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource. | `string`      | n/a                                         |   yes    |
-| <a name="input_path"></a> [path](#input_path)                      | (Optional) Path in which to create the policy. See IAM Identifiers for more information. Defaults to `/`.                                                                                   | `string`      | `"/"`                                       |    no    |
-| <a name="input_policy"></a> [policy](#input_policy)                | (Required) The policy document. This is a JSON formatted string. The heredoc syntax, file function, or the aws_iam_policy_document data source are all helpful here.                        | `string`      | n/a                                         |   yes    |
-| <a name="input_tags"></a> [tags](#input_tags)                      | (Optional) A map of tags to assign to the IAM policy.                                                                                                                                       | `map(string)` | <pre>{<br/> "terraform": "true"<br/>}</pre> |    no    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_description"></a> [description](#input\_description) | (Required) Description of the IAM policy. Changes to the description will force the creation of a new resource. | `string` | n/a | yes |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource. | `string` | n/a | yes |
+| <a name="input_path"></a> [path](#input\_path) | (Optional) Path in which to create the policy. See IAM Identifiers for more information. Defaults to `/`. | `string` | `"/"` | no |
+| <a name="input_policy"></a> [policy](#input\_policy) | (Required) The policy document. This is a JSON formatted string. The heredoc syntax, file function, or the aws\_iam\_policy\_document data source are all helpful here. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the IAM policy. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-| Name                                         | Description |
-| -------------------------------------------- | ----------- |
-| <a name="output_arn"></a> [arn](#output_arn) | n/a         |
-| <a name="output_id"></a> [id](#output_id)    | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

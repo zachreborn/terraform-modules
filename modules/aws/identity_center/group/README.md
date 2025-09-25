@@ -89,19 +89,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -109,23 +108,22 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                             | Type        |
-| -------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group)  | resource    |
+| Name | Type |
+|------|------|
+| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
 | [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
 
-| Name                                                | Description                              | Type                                                                                                                                                                                   | Default | Required |
-| --------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | :------: |
-| <a name="input_groups"></a> [groups](#input_groups) | (Required) The list of groups to create. | <pre>map(object({<br/> display_name = string # (Required) The friendly name to identify the group.<br/> description = string # (Optional) The description of the group.<br/> }))</pre> | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the group.<br/>    description  = string # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
-| Name                                                           | Description                                 |
-| -------------------------------------------------------------- | ------------------------------------------- |
-| <a name="output_group_ids"></a> [group_ids](#output_group_ids) | The IDs of the groups in the identity store |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

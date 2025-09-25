@@ -122,19 +122,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -142,25 +141,24 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                  | Type     |
-| --------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_route53_record.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 
 ## Inputs
 
-| Name                                                                           | Description                                                                                                                                                                                             | Type           | Default | Required |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | :------: |
-| <a name="input_health_check_id"></a> [health_check_id](#input_health_check_id) | (Optional) The health check the record should be associated with.                                                                                                                                       | `string`       | `null`  |    no    |
-| <a name="input_name"></a> [name](#input_name)                                  | (Required) The name of the record.                                                                                                                                                                      | `string`       | n/a     |   yes    |
-| <a name="input_records"></a> [records](#input_records)                         | (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add "" inside the Terraform configuration string. | `list(string)` | n/a     |   yes    |
-| <a name="input_ttl"></a> [ttl](#input_ttl)                                     | (Optional, Required for non-alias records) The TTL of the record in seconds.                                                                                                                            | `number`       | `300`   |    no    |
-| <a name="input_type"></a> [type](#input_type)                                  | (Required) The record type. Valid values are A, AAAA, CAA, CNAME, DS, MX, NAPTR, NS, PTR, SOA, SPF, SRV and TXT.                                                                                        | `string`       | n/a     |   yes    |
-| <a name="input_zone_id"></a> [zone_id](#input_zone_id)                         | (Required) The ID of the hosted zone to contain this record.                                                                                                                                            | `string`       | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_health_check_id"></a> [health\_check\_id](#input\_health\_check\_id) | (Optional) The health check the record should be associated with. | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the record. | `string` | n/a | yes |
+| <a name="input_records"></a> [records](#input\_records) | (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add "" inside the Terraform configuration string. | `list(string)` | n/a | yes |
+| <a name="input_ttl"></a> [ttl](#input\_ttl) | (Optional, Required for non-alias records) The TTL of the record in seconds. | `number` | `300` | no |
+| <a name="input_type"></a> [type](#input\_type) | (Required) The record type. Valid values are A, AAAA, CAA, CNAME, DS, MX, NAPTR, NS, PTR, SOA, SPF, SRV and TXT. | `string` | n/a | yes |
+| <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | (Required) The ID of the hosted zone to contain this record. | `string` | n/a | yes |
 
 ## Outputs
 
 No outputs.
-
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

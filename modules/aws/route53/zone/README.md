@@ -126,19 +126,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -146,24 +145,23 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                              | Type     |
-| ----------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_route53_zone.zone](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
 
 ## Inputs
 
-| Name                                             | Description                                                                                                                  | Type                                                                                                                                                                                                                                                                                                                                                                           | Default                                   | Required |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | :------: |
-| <a name="input_tags"></a> [tags](#input_tags)    | (Optional) A map of tags to assign to the zone.                                                                              | `map(any)`                                                                                                                                                                                                                                                                                                                                                                     | <pre>{<br/> "terraform": true<br/>}</pre> |    no    |
-| <a name="input_zones"></a> [zones](#input_zones) | (Required) A map of hosted zone objects. The key is the name of the hosted zone. Values are the zone configuration settings. | <pre>map(object({<br/> comment = optional(string) # (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.<br/> delegation_set_id = optional(string) # (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones.<br/> }))</pre> | n/a                                       |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the zone. | `map(any)` | <pre>{<br/>  "terraform": true<br/>}</pre> | no |
+| <a name="input_zones"></a> [zones](#input\_zones) | (Required) A map of hosted zone objects. The key is the name of the hosted zone. Values are the zone configuration settings. | <pre>map(object({<br/>    comment           = optional(string) # (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.<br/>    delegation_set_id = optional(string) # (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
-| Name                                                                    | Description                                    |
-| ----------------------------------------------------------------------- | ---------------------------------------------- |
-| <a name="output_name_servers"></a> [name_servers](#output_name_servers) | A map of zones and their list of name servers. |
-| <a name="output_zone_ids"></a> [zone_ids](#output_zone_ids)             | A map of zones and their zone IDs.             |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_name_servers"></a> [name\_servers](#output\_name\_servers) | A map of zones and their list of name servers. |
+| <a name="output_zone_ids"></a> [zone\_ids](#output\_zone\_ids) | A map of zones and their zone IDs. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

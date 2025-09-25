@@ -84,18 +84,17 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                   | Version  |
-| ------------------------------------------------------ | -------- |
-| <a name="requirement_tfe"></a> [tfe](#requirement_tfe) | >=0.42.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_tfe"></a> [tfe](#provider_tfe) | >=0.42.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
 
 ## Modules
 
@@ -103,27 +102,26 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                              | Type     |
-| ----------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [tfe_oauth_client.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/oauth_client) | resource |
 
 ## Inputs
 
-| Name                                                                  | Description                                                                                                                                                                                                                                                  | Type     | Default | Required |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- | :------: |
-| <a name="input_api_url"></a> [api_url](#input_api_url)                | (Required) The base URL of your VCS provider's API (e.g. https://api.github.com or https://ghe.example.com/api/v3).                                                                                                                                          | `string` | n/a     |   yes    |
-| <a name="input_http_url"></a> [http_url](#input_http_url)             | (Required) The homepage of your VCS provider (e.g. https://github.com or https://ghe.example.com).                                                                                                                                                           | `string` | n/a     |   yes    |
-| <a name="input_name"></a> [name](#input_name)                         | (Required) Display name for the OAuth Client. Defaults to the service_provider if not supplied.                                                                                                                                                              | `string` | n/a     |   yes    |
-| <a name="input_oauth_token"></a> [oauth_token](#input_oauth_token)    | (Required) The token string you were given by your VCS provider, e.g. ghp_xxxxxxxxxxxxxxx for a GitHub personal access token. For more information on how to generate this token string for your VCS provider, see the Create an OAuth Client documentation. | `string` | n/a     |   yes    |
-| <a name="input_organization"></a> [organization](#input_organization) | (Required) Name of the Terraform organization.                                                                                                                                                                                                               | `string` | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_api_url"></a> [api\_url](#input\_api\_url) | (Required) The base URL of your VCS provider's API (e.g. https://api.github.com or https://ghe.example.com/api/v3). | `string` | n/a | yes |
+| <a name="input_http_url"></a> [http\_url](#input\_http\_url) | (Required) The homepage of your VCS provider (e.g. https://github.com or https://ghe.example.com). | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Required) Display name for the OAuth Client. Defaults to the service\_provider if not supplied. | `string` | n/a | yes |
+| <a name="input_oauth_token"></a> [oauth\_token](#input\_oauth\_token) | (Required) The token string you were given by your VCS provider, e.g. ghp\_xxxxxxxxxxxxxxx for a GitHub personal access token. For more information on how to generate this token string for your VCS provider, see the Create an OAuth Client documentation. | `string` | n/a | yes |
+| <a name="input_organization"></a> [organization](#input\_organization) | (Required) Name of the Terraform organization. | `string` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                          | Description |
-| ----------------------------------------------------------------------------- | ----------- |
-| <a name="output_id"></a> [id](#output_id)                                     | n/a         |
-| <a name="output_oauth_token_id"></a> [oauth_token_id](#output_oauth_token_id) | n/a         |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_oauth_token_id"></a> [oauth\_token\_id](#output\_oauth\_token\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

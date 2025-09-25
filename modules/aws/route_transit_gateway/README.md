@@ -81,19 +81,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                                     | Version  |
-| ------------------------------------------------------------------------ | -------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-| Name                                             | Version  |
-| ------------------------------------------------ | -------- |
-| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -101,23 +100,22 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                 | Type     |
-| ---------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_route.route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 
 ## Inputs
 
-| Name                                                                                                               | Description                                      | Type        | Default | Required |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ----------- | ------- | :------: |
-| <a name="input_destination_cidr_block"></a> [destination_cidr_block](#input_destination_cidr_block)                | (Optional) The destination CIDR block.           | `string`    | n/a     |   yes    |
-| <a name="input_destination_ipv6_cidr_block"></a> [destination_ipv6_cidr_block](#input_destination_ipv6_cidr_block) | (Optional) The destination IPv6 CIDR block.      | `string`    | `null`  |    no    |
-| <a name="input_route_table_id"></a> [route_table_id](#input_route_table_id)                                        | (Required) The ID of the routing table.          | `list(any)` | n/a     |   yes    |
-| <a name="input_transit_gateway_id"></a> [transit_gateway_id](#input_transit_gateway_id)                            | (Required) Identifier of an EC2 Transit Gateway. | `string`    | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_destination_cidr_block"></a> [destination\_cidr\_block](#input\_destination\_cidr\_block) | (Optional) The destination CIDR block. | `string` | n/a | yes |
+| <a name="input_destination_ipv6_cidr_block"></a> [destination\_ipv6\_cidr\_block](#input\_destination\_ipv6\_cidr\_block) | (Optional) The destination IPv6 CIDR block. | `string` | `null` | no |
+| <a name="input_route_table_id"></a> [route\_table\_id](#input\_route\_table\_id) | (Required) The ID of the routing table. | `list(any)` | n/a | yes |
+| <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of an EC2 Transit Gateway. | `string` | n/a | yes |
 
 ## Outputs
 
 No outputs.
-
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
