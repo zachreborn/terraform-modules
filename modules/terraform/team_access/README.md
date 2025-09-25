@@ -2,8 +2,8 @@
 
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -13,6 +13,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -20,12 +21,11 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">Terraform Team Access Module</h3>
@@ -42,7 +42,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -61,10 +60,12 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
+
 ```
 module "example_team_access" {
     source       = "github.com/zachreborn/terraform-modules//modules/terraform/team_access"
@@ -76,10 +77,11 @@ module "example_team_access" {
 ```
 
 ### Complex for_each
+
 ```
 module "example_team_access" {
     source       = "github.com/zachreborn/terraform-modules//modules/terraform/team_access"
-    
+
     for_each     = var.permissions_mapping
     team_id      = each.value.id
     workspace_id = module.workspace.id
@@ -94,17 +96,18 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
+| Name                                                   | Version  |
+| ------------------------------------------------------ | -------- |
+| <a name="requirement_tfe"></a> [tfe](#requirement_tfe) | >=0.42.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
+| Name                                             | Version  |
+| ------------------------------------------------ | -------- |
+| <a name="provider_tfe"></a> [tfe](#provider_tfe) | >=0.42.0 |
 
 ## Modules
 
@@ -112,35 +115,36 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
+| Name                                                                                                            | Type     |
+| --------------------------------------------------------------------------------------------------------------- | -------- |
 | [tfe_team_access.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/team_access) | resource |
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_access"></a> [access](#input\_access) | (Required) Type of fixed access to grant. Valid values are admin, read, plan, or write. To use custom permissions, use a permissions block instead. This value must not be provided if permissions is provided. | `string` | n/a | yes |
-| <a name="input_team_id"></a> [team\_id](#input\_team\_id) | (Required) ID of the team to add to the workspace. | `string` | n/a | yes |
-| <a name="input_workspace_id"></a> [workspace\_id](#input\_workspace\_id) | (Required) ID of the workspace to which the team will be added. | `string` | n/a | yes |
+| Name                                                                  | Description                                                                                                                                                                                                     | Type     | Default | Required |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | :------: |
+| <a name="input_access"></a> [access](#input_access)                   | (Required) Type of fixed access to grant. Valid values are admin, read, plan, or write. To use custom permissions, use a permissions block instead. This value must not be provided if permissions is provided. | `string` | n/a     |   yes    |
+| <a name="input_team_id"></a> [team_id](#input_team_id)                | (Required) ID of the team to add to the workspace.                                                                                                                                                              | `string` | n/a     |   yes    |
+| <a name="input_workspace_id"></a> [workspace_id](#input_workspace_id) | (Required) ID of the workspace to which the team will be added.                                                                                                                                                 | `string` | n/a     |   yes    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| Name                                      | Description |
+| ----------------------------------------- | ----------- |
+| <a name="output_id"></a> [id](#output_id) | n/a         |
+
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -149,19 +153,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

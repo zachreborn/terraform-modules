@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,6 +11,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -18,12 +19,11 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">Route53 Zone</h3>
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,15 +58,18 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Usage
+
 This example configures two hosted zones with a comment and tags for each zone.
+
 ```
 module "route53_zone" {
   source  = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
-  
+
   zones = {
     "example.com" = {
       comment = "example.com"
@@ -76,7 +78,7 @@ module "route53_zone" {
       comment = "example.net"
     }
   }
-  
+
   tags    = {
     terraform   = "yes"
     created_by  = "Zachary Hill"
@@ -87,7 +89,9 @@ module "route53_zone" {
 ```
 
 ### Advanced Usage
+
 This example shows how to use the module with a variable and a map of objects. This allows for easier readability and maintainability of the code.
+
 ```
 module "route53_zones" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/route53/zone"
@@ -122,18 +126,19 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+| Name                                                                     | Version  |
+| ------------------------------------------------------------------------ | -------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 6.0.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| Name                                             | Version  |
+| ------------------------------------------------ | -------- |
+| <a name="provider_aws"></a> [aws](#provider_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -141,35 +146,36 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
+| Name                                                                                                              | Type     |
+| ----------------------------------------------------------------------------------------------------------------- | -------- |
 | [aws_route53_zone.zone](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the zone. | `map(any)` | <pre>{<br/>  "terraform": true<br/>}</pre> | no |
-| <a name="input_zones"></a> [zones](#input\_zones) | (Required) A map of hosted zone objects. The key is the name of the hosted zone. Values are the zone configuration settings. | <pre>map(object({<br/>    comment           = optional(string) # (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.<br/>    delegation_set_id = optional(string) # (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones.<br/>  }))</pre> | n/a | yes |
+| Name                                             | Description                                                                                                                  | Type                                                                                                                                                                                                                                                                                                                                                                           | Default                                   | Required |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | :------: |
+| <a name="input_tags"></a> [tags](#input_tags)    | (Optional) A map of tags to assign to the zone.                                                                              | `map(any)`                                                                                                                                                                                                                                                                                                                                                                     | <pre>{<br/> "terraform": true<br/>}</pre> |    no    |
+| <a name="input_zones"></a> [zones](#input_zones) | (Required) A map of hosted zone objects. The key is the name of the hosted zone. Values are the zone configuration settings. | <pre>map(object({<br/> comment = optional(string) # (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.<br/> delegation_set_id = optional(string) # (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with vpc as delegation sets can only be used for public zones.<br/> }))</pre> | n/a                                       |   yes    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_name_servers"></a> [name\_servers](#output\_name\_servers) | A map of zones and their list of name servers. |
-| <a name="output_zone_ids"></a> [zone\_ids](#output\_zone\_ids) | A map of zones and their zone IDs. |
+| Name                                                                    | Description                                    |
+| ----------------------------------------------------------------------- | ---------------------------------------------- |
+| <a name="output_name_servers"></a> [name_servers](#output_name_servers) | A map of zones and their list of name servers. |
+| <a name="output_zone_ids"></a> [zone_ids](#output_zone_ids)             | A map of zones and their zone IDs.             |
+
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -178,19 +184,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
