@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,6 +11,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -18,12 +19,11 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">Permission Set</h3>
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,15 +58,18 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Managed Policy Example
+
 This example will create a permission set, attach a managed policy to it, assign the permission set to a list of groups, and assigns the permission set to a list of AWS accounts. This is the recommended way to use this module as the built-in permission sets are managed policies.
+
 ```
 module "admins_permissions" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
-  
+
   name        = "AdministratorAccess"
   description = "Admin permissions using the Managed Policy - AdministratorAccess"
   groups = [
@@ -86,6 +88,7 @@ module "admins_permissions" {
 ```
 
 ### Customer Managed Policy Example
+
 This example will create a permission set, attach a customer managed policy to it, assign the permission set to a list of groups, and assigns the permission set to a list of AWS accounts. This requires deploying the customer managed policy first to all accounts you plan to assign the permission set to. This does NOT deploy the IAM policy to the target accounts, it only attaches the policy to the permission set. This is useful if you have a custom policy that you want to use across multiple accounts and are managing the IAM policy across each account.
 
 ```
@@ -108,6 +111,7 @@ module "customer_managed_permissions" {
 ```
 
 ### Inline Policy Example
+
 This example will create a permission set, attach an inline policy to it, assign the permission set to a list of groups, and assigns the permission set to a list of AWS accounts. This is useful if you want to create a custom policy that is only used for a single permission set. This is the simplest way to deploy custom policies to multiple accounts. It should be noted that this does not allow for versioning of the policy. If you need to version your policy, you should use the customer managed policy example and deploy the policy to each account using the `aws_iam_policy` resource or modules.
 
 ```
@@ -131,7 +135,6 @@ module "inline_permissions" {
   ]
 }
 ```
-
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -197,15 +200,15 @@ No modules.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -214,19 +217,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
