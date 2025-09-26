@@ -42,10 +42,9 @@ jobs:
 
       # Run Linter against code base
       - name: Run linter against all changed files
-        uses: super-linter/super-linter@v8
+        uses: super-linter/super-linter/slim@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_BRANCH: main
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_JSCPD: false
           VALIDATE_MARKDOWN: false
