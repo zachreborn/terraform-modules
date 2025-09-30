@@ -69,16 +69,10 @@ resource "aws_redshift_cluster" "this" {
   allow_version_upgrade = var.allow_version_upgrade
   apply_immediately     = var.apply_immediately
 
-  # Monitoring and logging
-  dynamic "logging_properties" {
-    for_each = local.enable_logging ? [1] : []
-    content {
-      bucket_name          = var.logging_bucket_name
-      s3_key_prefix        = var.logging_s3_key_prefix
-      log_destination_type = var.log_destination_type
-      log_exports          = var.log_exports
-    }
-  }
+  # Note: Logging and snapshot copy configuration are not supported in the aws_redshift_cluster resource
+  # These must be configured using the AWS console, CLI, or API after cluster creation
+  # Logging variables (logging_bucket_name, log_exports, etc.) are defined but not used in the cluster resource
+  # Snapshot copy variables (snapshot_copy_destination_region, etc.) are defined but not used in the cluster resource
 
   # Aqua configuration
   aqua_configuration_status = var.aqua_configuration_status
