@@ -330,16 +330,6 @@ variable "log_exports" {
 # Advanced Configuration Variables
 ###########################
 
-variable "aqua_configuration_status" {
-  description = "(Optional) The value represents how the cluster is configured to use AQUA. Valid values are enabled, disabled, and auto."
-  type        = string
-  default     = "auto"
-  validation {
-    condition     = contains(["enabled", "disabled", "auto"], var.aqua_configuration_status)
-    error_message = "The aqua_configuration_status must be one of: enabled, disabled, auto."
-  }
-}
-
 variable "maintenance_track_name" {
   description = "(Optional) The name of the maintenance track for the restored cluster."
   type        = string

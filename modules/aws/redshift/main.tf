@@ -29,41 +29,41 @@ resource "aws_redshift_cluster" "this" {
   node_type          = var.node_type
 
   # Database configuration
-  database_name          = var.database_name
-  master_username        = var.master_username
-  master_password        = var.master_password
-  manage_master_password = var.manage_master_password
+  database_name                     = var.database_name
+  master_username                   = var.master_username
+  master_password                   = var.master_password
+  manage_master_password            = var.manage_master_password
   master_password_secret_kms_key_id = var.master_password_secret_kms_key_id
 
   # Cluster configuration
-  cluster_type             = var.cluster_type
-  number_of_nodes          = var.cluster_type == "multi-node" ? var.number_of_nodes : null
-  cluster_version          = var.cluster_version
+  cluster_type                 = var.cluster_type
+  number_of_nodes              = var.cluster_type == "multi-node" ? var.number_of_nodes : null
+  cluster_version              = var.cluster_version
   cluster_parameter_group_name = var.cluster_parameter_group_name
   cluster_subnet_group_name    = var.cluster_subnet_group_name
 
   # Security
-  vpc_security_group_ids       = var.vpc_security_group_ids
-  iam_roles                    = var.iam_roles
-  kms_key_id                   = var.kms_key_id
-  encrypted                    = var.encrypted
-  enhanced_vpc_routing         = var.enhanced_vpc_routing
+  vpc_security_group_ids = var.vpc_security_group_ids
+  iam_roles              = var.iam_roles
+  kms_key_id             = var.kms_key_id
+  encrypted              = var.encrypted
+  enhanced_vpc_routing   = var.enhanced_vpc_routing
 
   # Networking
-  availability_zone              = var.availability_zone
+  availability_zone                    = var.availability_zone
   availability_zone_relocation_enabled = var.availability_zone_relocation_enabled
-  publicly_accessible            = var.publicly_accessible
-  elastic_ip                     = var.elastic_ip
-  port                           = var.port
+  publicly_accessible                  = var.publicly_accessible
+  elastic_ip                           = var.elastic_ip
+  port                                 = var.port
 
   # Maintenance and updates
-  preferred_maintenance_window = var.preferred_maintenance_window
+  preferred_maintenance_window        = var.preferred_maintenance_window
   automated_snapshot_retention_period = var.automated_snapshot_retention_period
   manual_snapshot_retention_period    = var.manual_snapshot_retention_period
-  final_snapshot_identifier   = var.final_snapshot_identifier
-  skip_final_snapshot         = var.skip_final_snapshot
-  snapshot_cluster_identifier = var.snapshot_cluster_identifier
-  snapshot_identifier         = var.snapshot_identifier
+  final_snapshot_identifier           = var.final_snapshot_identifier
+  skip_final_snapshot                 = var.skip_final_snapshot
+  snapshot_cluster_identifier         = var.snapshot_cluster_identifier
+  snapshot_identifier                 = var.snapshot_identifier
 
   # Backup and recovery
   allow_version_upgrade = var.allow_version_upgrade
@@ -174,3 +174,4 @@ resource "aws_redshift_usage_limit" "this" {
   period             = each.value.period
   tags               = var.tags
 }
+
