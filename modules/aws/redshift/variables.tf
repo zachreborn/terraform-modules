@@ -15,8 +15,8 @@ variable "node_type" {
   description = "(Required) The node type to be provisioned for the cluster. See https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#working-with-clusters-overview for valid node types."
   type        = string
   validation {
-    condition = can(regex("^(dc2\\.(large|8xlarge)|ds2\\.xlarge|ds2\\.8xlarge|dc1\\.large|dc1\\.8xlarge|ra3\\.(xlplus|4xlarge|16xlarge))$", var.node_type))
-    error_message = "The node_type must be a valid Redshift node type (e.g., ra3.xlplus, ra3.4xlarge, ra3.16xlarge, dc2.large, dc2.8xlarge)."
+    condition = can(regex("^(dc2\\.(large|8xlarge)|ds2\\.(xlarge|8xlarge)|dc1\\.(large|8xlarge)|ra3\\.(xlplus|large|4xlarge|16xlarge))$", var.node_type))
+    error_message = "The node_type must be a valid Redshift node type (e.g., ra3.xlplus, ra3.large, ra3.4xlarge, ra3.16xlarge, dc2.large, dc2.8xlarge, ds2.xlarge, ds2.8xlarge, dc1.large, dc1.8xlarge)."
   }
 }
 
@@ -45,14 +45,10 @@ variable "master_username" {
 }
 
 variable "master_password" {
-  description = "(Required unless manage_master_password is true) Password for the master DB user. Must contain at least one uppercase letter, one lowercase letter, and one number. Printable ASCII characters except /, @, or \"."
+  description = "(Required unless manage_master_password is true) Password for the master DB user. Must be between 8 and 64 characters. Must contain at least one uppercase letter, one lowercase letter, and one number. Printable ASCII characters except /, @, or \"."
   type        = string
   default     = null
   sensitive   = true
-  validation {
-    condition     = var.master_password == null || (length(var.master_password) >= 8 && length(var.master_password) <= 64)
-    error_message = "The master_password must be between 8 and 64 characters."
-  }
 }
 
 variable "manage_master_password" {
@@ -268,14 +264,11 @@ variable "snapshot_copy_destination_region" {
 }
 
 variable "snapshot_copy_retention_period" {
-  description = "(Optional) The number of days to retain newly copied snapshots in the destination region."
+  description = "(Optional) The number of days to retain newly copied snapshots in the destination region. Must be between 1 and 35 days."
   type        = number
   default     = null
-  validation {
-    condition     = var.snapshot_copy_retention_period == null || (var.snapshot_copy_retention_period >= 1 && var.snapshot_copy_retention_period <= 35)
-    error_message = "The snapshot_copy_retention_period must be between 1 and 35 days."
-  }
 }
+
 
 variable "snapshot_copy_grant_name" {
   description = "(Optional) The name of the snapshot copy grant to use when snapshots of an encrypted cluster are copied to the destination region."
