@@ -60,25 +60,22 @@ resource "aws_redshift_cluster" "this" {
   preferred_maintenance_window = var.preferred_maintenance_window
   automated_snapshot_retention_period = var.automated_snapshot_retention_period
   manual_snapshot_retention_period    = var.manual_snapshot_retention_period
-  final_snapshot_identifier    = var.final_snapshot_identifier
-  skip_final_snapshot          = var.skip_final_snapshot
-  snapshot_cluster_identifier  = var.snapshot_cluster_identifier
-  snapshot_identifier          = var.snapshot_identifier
-  snapshot_copy {
-    destination_region = var.snapshot_copy_destination_region
-    retention_period   = var.snapshot_copy_retention_period
-    grant_name         = var.snapshot_copy_grant_name
-  }
+  final_snapshot_identifier           = var.final_snapshot_identifier
+  skip_final_snapshot                 = var.skip_final_snapshot
+  snapshot_cluster_identifier         = var.snapshot_cluster_identifier
+  snapshot_identifier                 = var.snapshot_identifier
+  snapshot_copy_destination_region    = var.snapshot_copy_destination_region
+  snapshot_copy_retention_period      = var.snapshot_copy_retention_period
+  snapshot_copy_grant_name            = var.snapshot_copy_grant_name
 
   # Backup and recovery
   allow_version_upgrade = var.allow_version_upgrade
   apply_immediately     = var.apply_immediately
 
   # Monitoring and logging
-  dynamic "logging" {
+  dynamic "logging_properties" {
     for_each = local.enable_logging ? [1] : []
     content {
-      enable               = true
       bucket_name          = var.logging_bucket_name
       s3_key_prefix        = var.logging_s3_key_prefix
       log_destination_type = var.log_destination_type
