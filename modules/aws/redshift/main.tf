@@ -74,9 +74,6 @@ resource "aws_redshift_cluster" "this" {
   # Logging variables (logging_bucket_name, log_exports, etc.) are defined but not used in the cluster resource
   # Snapshot copy variables (snapshot_copy_destination_region, etc.) are defined but not used in the cluster resource
 
-  # Aqua configuration
-  aqua_configuration_status = var.aqua_configuration_status
-
   # Multi-AZ configuration
   multi_az = var.multi_az
 
