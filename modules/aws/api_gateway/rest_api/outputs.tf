@@ -1,5 +1,6 @@
+###########################
 # API Gateway Outputs
-
+###########################
 output "api_id" {
   description = "ID of the REST API"
   value       = aws_api_gateway_rest_api.this.id
@@ -20,26 +21,116 @@ output "root_resource_id" {
   value       = aws_api_gateway_rest_api.this.root_resource_id
 }
 
-# Domain Name Outputs
-output "domain_name" {
-  description = "Domain name of the API Gateway (if configured)"
-  value       = var.enable_mtls && var.domain_name != null ? aws_api_gateway_domain_name.this[0].domain_name : null
+output "created_date" {
+  description = "Creation date of the REST API"
+  value       = aws_api_gateway_rest_api.this.created_date
 }
 
-output "domain_name_target_domain_name" {
-  description = "Target domain name for the API Gateway custom domain"
-  value       = var.enable_mtls && var.domain_name != null ? aws_api_gateway_domain_name.this[0].regional_domain_name : null
+###########################
+# Resource Outputs
+###########################
+output "resources" {
+  description = "API Gateway resources created"
+  value       = { for k, v in aws_api_gateway_resource.this : k => v }
 }
 
-output "domain_name_hosted_zone_id" {
-  description = "Hosted zone ID for the API Gateway custom domain"
-  value       = var.enable_mtls && var.domain_name != null ? aws_api_gateway_domain_name.this[0].regional_zone_id : null
+###########################
+# Model Outputs
+###########################
+output "models" {
+  description = "API Gateway models created"
+  value       = { for k, v in aws_api_gateway_model.this : k => v }
 }
 
+###########################
+# Request Validator Outputs
+###########################
+output "request_validators" {
+  description = "API Gateway request validators created"
+  value       = { for k, v in aws_api_gateway_request_validator.this : k => v }
+}
+
+###########################
+# Authorizer Outputs
+###########################
+output "authorizers" {
+  description = "API Gateway authorizers created"
+  value       = { for k, v in aws_api_gateway_authorizer.this : k => v }
+}
+
+###########################
+# Method Outputs
+###########################
+output "methods" {
+  description = "API Gateway methods created"
+  value       = { for k, v in aws_api_gateway_method.this : k => v }
+}
+
+###########################
+# Method Response Outputs
+###########################
+output "method_responses" {
+  description = "API Gateway method responses created"
+  value       = { for k, v in aws_api_gateway_method_response.this : k => v }
+}
+
+###########################
+# Integration Outputs
+###########################
+output "integrations" {
+  description = "API Gateway integrations created"
+  value       = { for k, v in aws_api_gateway_integration.this : k => v }
+}
+
+###########################
+# Integration Response Outputs
+###########################
+output "integration_responses" {
+  description = "API Gateway integration responses created"
+  value       = { for k, v in aws_api_gateway_integration_response.this : k => v }
+}
+
+###########################
+# Gateway Response Outputs
+###########################
+output "gateway_responses" {
+  description = "API Gateway gateway responses created"
+  value       = { for k, v in aws_api_gateway_gateway_response.this : k => v }
+}
+
+###########################
+# VPC Link Outputs
+###########################
+output "vpc_links" {
+  description = "VPC Links created by this module"
+  value       = { for k, v in aws_api_gateway_vpc_link.this : k => v }
+}
+
+###########################
+# Deployment Outputs
+###########################
+output "deployment_id" {
+  description = "ID of the API Gateway deployment"
+  value       = aws_api_gateway_deployment.this.id
+}
+
+
+###########################
 # Stage Outputs
+###########################
 output "stage_name" {
   description = "Name of the API Gateway stage"
   value       = aws_api_gateway_stage.this.stage_name
+}
+
+output "stage_id" {
+  description = "ID of the API Gateway stage"
+  value       = aws_api_gateway_stage.this.id
+}
+
+output "stage_arn" {
+  description = "ARN of the API Gateway stage"
+  value       = aws_api_gateway_stage.this.arn
 }
 
 output "stage_invoke_url" {
@@ -47,36 +138,116 @@ output "stage_invoke_url" {
   value       = aws_api_gateway_stage.this.invoke_url
 }
 
-# VPC Links Outputs
-output "vpc_links" {
-  description = "VPC Links created by this module"
-  value       = { for k, v in aws_api_gateway_vpc_link.this : k => v }
+output "stage_execution_arn" {
+  description = "Execution ARN to be used in Lambda permissions"
+  value       = aws_api_gateway_stage.this.execution_arn
 }
 
-# mTLS Configuration Outputs
-output "truststore_s3_uri" {
-  description = "S3 URI of the truststore file used for mTLS (from configuration)"
-  value       = var.enable_mtls && var.domain_name != null && var.mtls_config != null ? var.mtls_config.truststore_uri : null
+###########################
+# Method Settings Outputs
+###########################
+output "method_settings" {
+  description = "API Gateway method settings created"
+  value       = { for k, v in aws_api_gateway_method_settings.this : k => v }
 }
 
-output "truststore_version_id" {
-  description = "Version ID of the truststore file used for mTLS (from configuration)"
-  value       = var.enable_mtls && var.domain_name != null && var.mtls_config != null ? var.mtls_config.truststore_version : null
+###########################
+# Domain Name Outputs
+###########################
+output "domain_name" {
+  description = "Domain name of the API Gateway (if configured)"
+  value       = var.domain_name != null ? aws_api_gateway_domain_name.this[0].domain_name : null
 }
 
-# Certificate Outputs
+output "domain_name_id" {
+  description = "Internal identifier of the domain name"
+  value       = var.domain_name != null ? aws_api_gateway_domain_name.this[0].id : null
+}
+
+output "domain_name_arn" {
+  description = "ARN of the domain name"
+  value       = var.domain_name != null ? aws_api_gateway_domain_name.this[0].arn : null
+}
+
+output "domain_name_target_domain_name" {
+  description = "Target domain name for the API Gateway custom domain (for DNS alias)"
+  value       = var.domain_name != null ? aws_api_gateway_domain_name.this[0].regional_domain_name : null
+}
+
+output "domain_name_hosted_zone_id" {
+  description = "Hosted zone ID for the API Gateway custom domain (for Route53 alias)"
+  value       = var.domain_name != null ? aws_api_gateway_domain_name.this[0].regional_zone_id : null
+}
+
 output "certificate_arn" {
-  description = "ARN of the ACM certificate"
-  value       = var.enable_mtls && var.domain_name != null ? aws_acm_certificate.domain[0].arn : null
+  description = "ARN of the ACM certificate used (from input variable)"
+  value       = var.domain_name != null ? var.certificate_arn : null
 }
 
-# Resources Outputs
-output "resources" {
-  description = "API Gateway resources created"
-  value       = { for k, v in aws_api_gateway_resource.this : k => v }
+###########################
+# Base Path Mapping Outputs
+###########################
+output "base_path_mapping_id" {
+  description = "ID of the base path mapping"
+  value       = var.domain_name != null ? aws_api_gateway_base_path_mapping.this[0].id : null
 }
 
-output "methods" {
-  description = "API Gateway methods created"
-  value       = { for k, v in aws_api_gateway_method.this : k => v }
+###########################
+# mTLS Configuration Outputs
+###########################
+output "mtls_enabled" {
+  description = "Whether mTLS is enabled"
+  value       = var.enable_mtls
+}
+
+output "truststore_uri" {
+  description = "S3 URI of the truststore file used for mTLS (from configuration)"
+  value       = var.enable_mtls && var.mtls_config != null ? var.mtls_config.truststore_uri : null
+}
+
+output "truststore_version" {
+  description = "Version of the truststore file used for mTLS (from configuration)"
+  value       = var.enable_mtls && var.mtls_config != null ? var.mtls_config.truststore_version : null
+}
+
+###########################
+# Usage Plan Outputs
+###########################
+output "usage_plans" {
+  description = "API Gateway usage plans created"
+  value       = { for k, v in aws_api_gateway_usage_plan.this : k => v }
+}
+
+###########################
+# API Key Outputs
+###########################
+output "api_keys" {
+  description = "API Gateway API keys created"
+  value = {
+    for k, v in aws_api_gateway_api_key.this : k => {
+      id                = v.id
+      arn               = v.arn
+      name              = v.name
+      description       = v.description
+      enabled           = v.enabled
+      created_date      = v.created_date
+      last_updated_date = v.last_updated_date
+      # Value is sensitive and excluded from output for security
+    }
+  }
+  sensitive = true
+}
+
+output "api_key_values" {
+  description = "API key values (sensitive) - only use when necessary"
+  value       = { for k, v in aws_api_gateway_api_key.this : k => v.value }
+  sensitive   = true
+}
+
+###########################
+# Usage Plan Key Association Outputs
+###########################
+output "usage_plan_keys" {
+  description = "API Gateway usage plan key associations created"
+  value       = { for k, v in aws_api_gateway_usage_plan_key.this : k => v }
 }
