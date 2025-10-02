@@ -12,14 +12,6 @@ terraform {
 }
 
 ###########################
-# Locals
-###########################
-
-locals {
-  enable_logging = var.logging_bucket_name != null
-}
-
-###########################
 # Redshift Cluster
 ###########################
 
