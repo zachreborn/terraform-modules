@@ -114,10 +114,6 @@ No modules.
 | [aws_api_gateway_rest_api.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
 | [aws_api_gateway_stage.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage) | resource |
 | [aws_api_gateway_vpc_link.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_vpc_link) | resource |
-| [aws_s3_bucket.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_server_side_encryption_configuration.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
-| [aws_s3_bucket_versioning.mtls_truststore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
-| [aws_s3_object.truststore_pem](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -128,7 +124,6 @@ No modules.
 | <a name="input_api_key_source"></a> [api\_key\_source](#input\_api\_key\_source) | The source of the API key for metering requests. Valid values are 'HEADER' and 'AUTHORIZER'. | `string` | `"HEADER"` | no |
 | <a name="input_binary_media_types"></a> [binary\_media\_types](#input\_binary\_media\_types) | A list of binary media types supported by the Rest API. | `list(string)` | `[]` | no |
 | <a name="input_body"></a> [body](#input\_body) | The body of the API definition in JSON format. | `string` | `null` | no |
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket for mTLS truststore. Required when enable\_mtls is true and domain\_name is provided. Must be lowercase and less than or equal to 63 characters in length. | `string` | `null` | no |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | ARN of the ACM certificate for the custom domain. Required for custom domain. | `string` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | A description of the API. | `string` | `null` | no |
 | <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Specifies whether the execute API endpoint is disabled. Defaults to false. | `bool` | `false` | no |
@@ -140,8 +135,8 @@ No modules.
 | <a name="input_integrations"></a> [integrations](#input\_integrations) | A map of integrations for the API. Each key is a combination of HTTP method and resource path, and the value is a map of integration settings. | <pre>map(object({<br/>    type                    = string<br/>    uri                     = string<br/>    resource                = string<br/>    method                  = string # The method key this integration belongs to<br/>    credentials             = optional(string)<br/>    http_method             = optional(string)<br/>    integration_http_method = optional(string)<br/>    request_parameters      = optional(map(string))<br/>    request_templates       = optional(map(string))<br/>    passthrough_behavior    = optional(string)<br/>    content_handling        = optional(string)<br/>    timeout_milliseconds    = optional(number)<br/>    cache_key_parameters    = optional(list(string))<br/>    cache_namespace         = optional(string)<br/>    connection_type         = optional(string)<br/>    connection_id           = optional(string)<br/>    vpc_link_key            = optional(string) # The VPC Link key from vpc_links variable when using VPC_LINK<br/>  }))</pre> | `{}` | no |
 | <a name="input_method_responses"></a> [method\_responses](#input\_method\_responses) | A map of method responses for the API. Each key is a combination of HTTP method and resource path, and the value is a map of response settings. | <pre>map(object({<br/>    resource            = string # The resource key this method response belongs to<br/>    method              = string # The method key this response belongs to<br/>    status_code         = string<br/>    response_models     = optional(map(string))<br/>    response_parameters = optional(map(string))<br/>  }))</pre> | `{}` | no |
 | <a name="input_methods"></a> [methods](#input\_methods) | A map of methods to create for the API. Each key is the HTTP method (e.g., 'GET', 'POST') and the value is a map of method settings. | <pre>map(object({<br/>    resource             = string # The resource key this method belongs to<br/>    authorization_scopes = optional(list(string))<br/>    authorization        = string<br/>    authorizer_id        = optional(string)<br/>    api_key_required     = optional(bool)<br/>    http_method          = string<br/>    operation_name       = optional(string)<br/>    request_models       = optional(map(string))<br/>    request_parameters   = optional(map(string))<br/>    request_validator_id = optional(string)<br/>    response_models      = optional(map(string))<br/>    response_parameters  = optional(map(string))<br/>  }))</pre> | `{}` | no |
-| <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | The minimum compression size in bytes. Must be either a string containing an integer between -1 and 10485760 or set to null. Defaults to null, which disables compression. | `number` | `null` | no |
-| <a name="input_mtls_config"></a> [mtls\_config](#input\_mtls\_config) | mTLS configuration for the custom domain. | <pre>object({<br/>    truststore_uri     = string           # S3 URI to the truststore file<br/>    truststore_version = optional(string) # Version of the truststore<br/>  })</pre> | `null` | no |
+| <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | The minimum compression size in bytes. Must be an integer between -1 and 10485760. Set to -1 to disable compression. Defaults to -1 (compression disabled). | `number` | `-1` | no |
+| <a name="input_mtls_config"></a> [mtls\_config](#input\_mtls\_config) | mTLS configuration for the custom domain. Required when enable\_mtls is true. | <pre>object({<br/>    truststore_uri     = string           # S3 URI to the truststore file (e.g., s3://bucket-name/path/to/truststore.pem)<br/>    truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)<br/>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the API. This is required. | `string` | n/a | yes |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | A map of API Gateway-specific parameters that can be used to configure the API. | `map(string)` | `{}` | no |
 | <a name="input_policy"></a> [policy](#input\_policy) | The resource policy for the API in JSON format. | `string` | `null` | no |
@@ -166,12 +161,10 @@ No modules.
 | <a name="output_methods"></a> [methods](#output\_methods) | API Gateway methods created |
 | <a name="output_resources"></a> [resources](#output\_resources) | API Gateway resources created |
 | <a name="output_root_resource_id"></a> [root\_resource\_id](#output\_root\_resource\_id) | Resource ID of the REST API root resource |
-| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | ARN of the S3 bucket used for mTLS truststore |
-| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | ID of the S3 bucket used for mTLS truststore |
 | <a name="output_stage_invoke_url"></a> [stage\_invoke\_url](#output\_stage\_invoke\_url) | Invoke URL for the API Gateway stage |
 | <a name="output_stage_name"></a> [stage\_name](#output\_stage\_name) | Name of the API Gateway stage |
-| <a name="output_truststore_s3_uri"></a> [truststore\_s3\_uri](#output\_truststore\_s3\_uri) | S3 URI of the uploaded truststore.pem file |
-| <a name="output_truststore_version_id"></a> [truststore\_version\_id](#output\_truststore\_version\_id) | Version ID of the uploaded truststore.pem file |
+| <a name="output_truststore_s3_uri"></a> [truststore\_s3\_uri](#output\_truststore\_s3\_uri) | S3 URI of the truststore file used for mTLS (from configuration) |
+| <a name="output_truststore_version_id"></a> [truststore\_version\_id](#output\_truststore\_version\_id) | Version ID of the truststore file used for mTLS (from configuration) |
 | <a name="output_vpc_links"></a> [vpc\_links](#output\_vpc\_links) | VPC Links created by this module |
 <!-- END_TF_DOCS -->
 
