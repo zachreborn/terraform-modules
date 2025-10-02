@@ -45,12 +45,12 @@ variable "endpoint_configuration" {
 }
 
 variable "minimum_compression_size" {
-  description = "The minimum compression size in bytes. Must be either a string containing an integer between -1 and 10485760 or set to null. Defaults to null, which disables compression."
+  description = "The minimum compression size in bytes. Must be an integer between -1 and 10485760. Set to -1 to disable compression. Defaults to -1 (compression disabled)."
   type        = number
-  default     = null
+  default     = -1
   validation {
-    condition     = var.minimum_compression_size == null || (var.minimum_compression_size >= -1 && var.minimum_compression_size <= 10485760)
-    error_message = "minimum_compression_size must be null or an integer between -1 and 10485760."
+    condition     = var.minimum_compression_size >= -1 && var.minimum_compression_size <= 10485760
+    error_message = "minimum_compression_size must be an integer between -1 and 10485760."
   }
 }
 
