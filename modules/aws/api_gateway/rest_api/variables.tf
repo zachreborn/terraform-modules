@@ -49,8 +49,8 @@ variable "minimum_compression_size" {
   type        = number
   default     = null
   validation {
-    condition     = var.minimum_compression_size == null || can(var.minimum_compression_size >= -1 && var.minimum_compression_size <= 10485760)
-    error_message = "minimum_compression_size must null or an integer be between -1 and 10485760."
+    condition     = var.minimum_compression_size == null || (var.minimum_compression_size >= -1 && var.minimum_compression_size <= 10485760)
+    error_message = "minimum_compression_size must be null or an integer between -1 and 10485760."
   }
 }
 
