@@ -182,7 +182,7 @@ resource "aws_lb_listener" "listener" {
         content {
           target_group {
             arn    = aws_lb_target_group.target_group["main"].arn
-            weight = 1
+            weight = 0
           }
         }
       }
