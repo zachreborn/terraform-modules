@@ -174,7 +174,18 @@ resource "aws_lb_listener" "listener" {
     content {
       # Common settings
       type             = default_action.value.type
-      target_group_arn = aws_lb_target_group.target_group["main"].arn
+      target_group_arn = default_action.value.type == "forward" ? aws_lb_target_group.target_group["main"].arn : null
+
+      # Forward configuration (for both ALB and NLB)
+      dynamic "forward" {
+        for_each = default_action.value.type == "forward" ? [1] : []
+        content {
+          target_group {
+            arn    = aws_lb_target_group.target_group["main"].arn
+            weight = 1
+          }
+        }
+      }
 
       # Application Load Balancer specific fixed response action
       dynamic "fixed_response" {
