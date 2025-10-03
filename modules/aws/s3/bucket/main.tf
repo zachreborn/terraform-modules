@@ -4,13 +4,13 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
 
 ###########################
-# Locals
+# Locals 
 ###########################
 
 locals {
@@ -59,6 +59,14 @@ resource "aws_s3_bucket" "this" {
   force_destroy       = var.bucket_force_destroy
   object_lock_enabled = var.bucket_object_lock_enabled
   tags                = var.tags
+}
+
+resource "aws_s3_bucket_ownership_controls" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    object_ownership = var.object_ownership
+  }
 }
 
 resource "aws_s3_bucket_acl" "this" {

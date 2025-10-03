@@ -110,6 +110,19 @@ variable "bucket_object_lock_enabled" {
 }
 
 ######################
+# S3 Ownership Control Variables
+######################
+variable "object_ownership" {
+  type        = string
+  description = "(Optional) The Object Ownership setting for the bucket. When set to BucketOwnerEnforced, S3 bucket ACLs are not allowed to be utilized. Valid values: BucketOwnerPreferred, BucketOwnerEnforced, ObjectWriter. Defaults to BucketOwnerEnforced."
+  default     = "BucketOwnerEnforced"
+  validation {
+    condition     = contains(["BucketOwnerPreferred", "BucketOwnerEnforced", "ObjectWriter"], var.object_ownership)
+    error_message = "The value must be one of BucketOwnerPreferred, BucketOwnerEnforced, or ObjectWriter."
+  }
+}
+
+######################
 # S3 ACL Variables
 ######################
 
