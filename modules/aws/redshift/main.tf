@@ -124,7 +124,7 @@ resource "aws_redshift_parameter_group" "this" {
 ###########################
 
 resource "aws_redshift_cluster_iam_roles" "this" {
-  count = var.manage_iam_roles && length(var.iam_roles) > 0 ? 1 : 0
+  count = var.enable_iam_roles && length(var.iam_roles) > 0 ? 1 : 0
 
   cluster_identifier   = aws_redshift_cluster.this.cluster_identifier
   iam_role_arns        = var.iam_roles

@@ -15,7 +15,7 @@ variable "node_type" {
   description = "(Required) The node type to be provisioned for the cluster. See https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#working-with-clusters-overview for valid node types."
   type        = string
   validation {
-    condition = can(regex("^(dc2\\.(large|8xlarge)|ds2\\.(xlarge|8xlarge)|dc1\\.(large|8xlarge)|ra3\\.(xlplus|large|4xlarge|16xlarge))$", var.node_type))
+    condition     = can(regex("^(dc2\\.(large|8xlarge)|ds2\\.(xlarge|8xlarge)|dc1\\.(large|8xlarge)|ra3\\.(xlplus|large|4xlarge|16xlarge))$", var.node_type))
     error_message = "The node_type must be a valid Redshift node type (e.g., ra3.xlplus, ra3.large, ra3.4xlarge, ra3.16xlarge, dc2.large, dc2.8xlarge, ds2.xlarge, ds2.8xlarge, dc1.large, dc1.8xlarge)."
   }
 }
@@ -131,7 +131,7 @@ variable "default_iam_role_arn" {
   default     = null
 }
 
-variable "manage_iam_roles" {
+variable "enable_iam_roles" {
   description = "(Optional) Whether to use the separate aws_redshift_cluster_iam_roles resource to manage IAM roles. If false, IAM roles are managed directly on the cluster resource."
   type        = bool
   default     = false
@@ -474,3 +474,4 @@ variable "tags" {
     environment = "prod"
   }
 }
+
