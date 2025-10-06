@@ -7,6 +7,11 @@ variable "description" {
   description = "(Required) Description of the IAM policy. Changes to the description will force the creation of a new resource."
 }
 
+variable "name" {
+  type        = string
+  description = "(Required) The name used to generate a unique name of the policy."
+}
+
 variable "name_prefix" {
   type        = string
   description = "(Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource."
