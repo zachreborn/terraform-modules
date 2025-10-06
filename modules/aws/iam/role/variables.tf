@@ -29,6 +29,11 @@ variable "max_session_duration" {
   }
 }
 
+variable "name" {
+  type        = string
+  description = "(Required) The name used to generate a unique role name."
+}
+
 variable "name_prefix" {
   type        = string
   description = "(Required) The prefix used to generate a unique role name."
