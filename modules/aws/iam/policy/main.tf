@@ -19,6 +19,7 @@ terraform {
 resource "aws_iam_policy" "this" {
   description = var.description
   name        = var.name_prefix == null ? var.name : null
+  name_prefix = var.name_prefix != null ? var.name_prefix : null
   path        = var.path
   policy      = var.policy
   tags        = var.tags

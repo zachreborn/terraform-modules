@@ -9,12 +9,14 @@ variable "description" {
 
 variable "name" {
   type        = string
-  description = "(Required) The name used to generate a unique name of the policy."
+  description = "(Optional) The name of the policy. If omitted, name_prefix must be set."
+  default     = null
 }
 
 variable "name_prefix" {
   type        = string
-  description = "(Required) The prefix used to generate a unique name of the policy. If omitted, Terraform will assign a random, unique name. Changes to the name will force the creation of a new resource."
+  description = "(Optional) The prefix used to generate a unique policy name. If omitted, name must be set."
+  default     = null
 }
 
 variable "path" {
