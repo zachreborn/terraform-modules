@@ -31,12 +31,14 @@ variable "max_session_duration" {
 
 variable "name" {
   type        = string
-  description = "(Required) The name used to generate a unique role name."
+  description = "(Optional) The name of the role. If omitted, name_prefix must be set."
+  default     = null
 }
 
 variable "name_prefix" {
   type        = string
-  description = "(Required) The prefix used to generate a unique role name."
+  description = "(Optional) The prefix used to generate a unique role name. If omitted, name must be set."
+  default     = null
 }
 
 variable "path" {
