@@ -21,9 +21,6 @@ data "aws_region" "current" {}
 # Locals
 ###########################
 locals {
-  # Validate that mtls_config is provided when mTLS is enabled
-  validate_mtls_config = var.enable_mtls && var.domain_name != null && var.mtls_config == null ? tobool("mtls_config is required when enable_mtls is true and domain_name is provided") : true
-
   # Deployment hash for triggering redeployments when configuration changes
   # This ensures the API Gateway is redeployed when any of these configurations change
   deployment_components = {
