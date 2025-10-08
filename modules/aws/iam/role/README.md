@@ -116,7 +116,8 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `null` | no |
 | <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
 | <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
-| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique role name. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Optional) The name of the role. If omitted, name\_prefix must be set. | `string` | `null` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Optional) The prefix used to generate a unique role name. If omitted, name must be set. | `string` | `null` | no |
 | <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
 | <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
 | <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the role. | `list(string)` | n/a | yes |
