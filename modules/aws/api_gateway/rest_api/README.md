@@ -62,20 +62,152 @@
 
 ## Usage
 
-### Basic HTTP API Gateway Example
+### Basic REST API with Lambda Integration
 
-This example creates a basic HTTP API Gateway.
-
-```
-module "example_api_gateway" {
+```hcl
+module "api" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/api_gateway/rest_api"
 
-  name          = "example-api"
-  protocol_type = "HTTP"
+  name       = "my-api"
+  stage_name = "prod"
+
+  resources = {
+    "items" = { path_part = "items" }
+  }
+
+  methods = {
+    "get_items" = {
+      resource      = "items"
+      http_method   = "GET"
+      authorization = "NONE"
+    }
+  }
+
+  integrations = {
+    "get_items_lambda" = {
+      resource                = "items"
+      method                  = "get_items"
+      type                    = "AWS_PROXY"
+      uri                     = aws_lambda_function.items.invoke_arn
+      integration_http_method = "POST"
+    }
+  }
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
+  }
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+### REST API with mTLS Custom Domain
+
+**Note**: ACM certificate and S3 bucket must be created separately to avoid circular dependencies.
+
+```hcl
+# Create ACM certificate first
+module "api_certificate" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/acm_certificate"
+  
+  domain_name       = "api.example.com"
+  validation_method = "DNS"
+}
+
+# Create S3 bucket for truststore
+module "truststore_bucket" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  
+  bucket_prefix     = "api-mtls-truststore-"
+  versioning_status = "Enabled"
+}
+
+# Upload truststore to S3
+resource "aws_s3_object" "truststore" {
+  bucket = module.truststore_bucket.s3_bucket_id
+  key    = "truststore.pem"
+  source = "path/to/truststore.pem"
+  etag   = filemd5("path/to/truststore.pem")
+}
+
+# Create API Gateway with mTLS
+module "api" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/api_gateway/rest_api"
+
+  name        = "secure-api"
+  stage_name  = "prod"
+  domain_name = "api.example.com"
+  
+  # mTLS Configuration
+  certificate_arn = module.api_certificate.arn
+  enable_mtls     = true
+  bucket_name     = module.truststore_bucket.s3_bucket_id
+  mtls_config = {
+    truststore_uri     = "s3://${module.truststore_bucket.s3_bucket_id}/truststore.pem"
+    truststore_version = null  # Uses latest version
+  }
+
+  # REST API configuration
+  resources = {
+    "test" = { path_part = "test" }
+  }
+
+  methods = {
+    "get_test" = {
+      resource      = "test"
+      http_method   = "GET"
+      authorization = "NONE"
+    }
+  }
+
+  integrations = {
+    "get_test_integration" = {
+      resource                = "test"
+      method                  = "get_test"
+      type                    = "HTTP_PROXY"
+      uri                     = "http://backend.internal:5000/test"
+      integration_http_method = "GET"
+      connection_type         = "VPC_LINK"
+      vpc_link_key            = "backend-vpc-link"
+    }
+  }
+
+  vpc_links = {
+    "backend-vpc-link" = {
+      description = "VPC Link to internal backend"
+      target_arns = [aws_lb.backend_nlb.arn]
+    }
+  }
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
+  }
+}
+```
+
+### Testing mTLS Connectivity
+
+Once deployed, test your mTLS-enabled API:
+
+**With client certificate (should succeed):**
+```bash
+curl --key my_client.key --cert my_client.pem \
+  --location -o /dev/null -s -w "%{http_code}" \
+  'https://api.example.com/test'
+```
+
+**Without client certificate (should fail):**
+```bash
+curl 'https://api.example.com/test' -v
+```
+
+**Verbose response with certificate:**
+```bash
+curl --key my_client.key --cert my_client.pem \
+  'https://api.example.com/test' --data '' -v
+```
+
+_For more comprehensive examples including request validation, authorizers, and usage plans, please refer to [WARP.md](./WARP.md)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
