@@ -26,7 +26,9 @@ locals {
   deployment_components = {
     resources             = var.resources
     methods               = var.methods
+    root_methods          = var.root_methods
     integrations          = var.integrations
+    root_integrations     = var.root_integrations
     integration_responses = var.integration_responses
     models                = var.models
     request_validators    = var.request_validators
@@ -142,6 +144,25 @@ resource "aws_api_gateway_method" "this" {
 }
 
 ############################################
+# API Gateway Root Resource Methods
+############################################
+resource "aws_api_gateway_method" "root" {
+  for_each = var.root_methods
+
+  rest_api_id          = aws_api_gateway_rest_api.this.id
+  resource_id          = aws_api_gateway_rest_api.this.root_resource_id
+  http_method          = each.value.http_method
+  authorization        = each.value.authorization
+  authorizer_id        = each.value.authorizer_id != null ? (can(aws_api_gateway_authorizer.this[each.value.authorizer_id]) ? aws_api_gateway_authorizer.this[each.value.authorizer_id].id : each.value.authorizer_id) : null
+  authorization_scopes = each.value.authorization_scopes
+  api_key_required     = each.value.api_key_required
+  operation_name       = each.value.operation_name
+  request_models       = each.value.request_models
+  request_parameters   = each.value.request_parameters
+  request_validator_id = each.value.request_validator_id != null ? (can(aws_api_gateway_request_validator.this[each.value.request_validator_id]) ? aws_api_gateway_request_validator.this[each.value.request_validator_id].id : each.value.request_validator_id) : null
+}
+
+############################################
 # API Gateway Method Responses
 ############################################
 resource "aws_api_gateway_method_response" "this" {
@@ -164,6 +185,30 @@ resource "aws_api_gateway_integration" "this" {
   rest_api_id             = aws_api_gateway_rest_api.this.id
   resource_id             = aws_api_gateway_resource.this[each.value.resource].id
   http_method             = aws_api_gateway_method.this[each.value.method].http_method
+  type                    = each.value.type
+  uri                     = each.value.uri
+  integration_http_method = each.value.type == "MOCK" ? null : each.value.integration_http_method
+  credentials             = each.value.credentials
+  connection_type         = each.value.connection_type
+  connection_id           = each.value.connection_type == "VPC_LINK" && each.value.vpc_link_key != null ? aws_api_gateway_vpc_link.this[each.value.vpc_link_key].id : each.value.connection_id
+  request_parameters      = each.value.request_parameters
+  request_templates       = each.value.request_templates
+  passthrough_behavior    = each.value.passthrough_behavior
+  content_handling        = each.value.content_handling
+  timeout_milliseconds    = each.value.timeout_milliseconds
+  cache_key_parameters    = each.value.cache_key_parameters
+  cache_namespace         = each.value.cache_namespace
+}
+
+############################################
+# API Gateway Root Resource Integrations
+############################################
+resource "aws_api_gateway_integration" "root" {
+  for_each = var.root_integrations
+
+  rest_api_id             = aws_api_gateway_rest_api.this.id
+  resource_id             = aws_api_gateway_rest_api.this.root_resource_id
+  http_method             = aws_api_gateway_method.root[each.value.method].http_method
   type                    = each.value.type
   uri                     = each.value.uri
   integration_http_method = each.value.type == "MOCK" ? null : each.value.integration_http_method
@@ -235,7 +280,9 @@ resource "aws_api_gateway_deployment" "this" {
 
   depends_on = [
     aws_api_gateway_method.this,
+    aws_api_gateway_method.root,
     aws_api_gateway_integration.this,
+    aws_api_gateway_integration.root,
     aws_api_gateway_integration_response.this,
     aws_api_gateway_method_response.this,
     aws_api_gateway_model.this,

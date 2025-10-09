@@ -169,6 +169,22 @@ variable "methods" {
   default = {}
 }
 
+variable "root_methods" {
+  description = "A map of methods to create on the root resource. Each key is a unique identifier for the method."
+  type = map(object({
+    http_method          = string
+    authorization        = string
+    authorizer_id        = optional(string) # Can be authorizer key or ARN
+    authorization_scopes = optional(list(string))
+    api_key_required     = optional(bool, false)
+    operation_name       = optional(string)
+    request_models       = optional(map(string))
+    request_parameters   = optional(map(string))
+    request_validator_id = optional(string) # Can be validator key or ID
+  }))
+  default = {}
+}
+
 ###########################
 # Method Response Variables
 ###########################
@@ -194,6 +210,28 @@ variable "integrations" {
     uri                     = string
     resource                = string # The resource key
     method                  = string # The method key
+    integration_http_method = optional(string)
+    credentials             = optional(string)
+    connection_type         = optional(string)
+    connection_id           = optional(string)
+    vpc_link_key            = optional(string) # The VPC Link key from vpc_links variable
+    request_parameters      = optional(map(string))
+    request_templates       = optional(map(string))
+    passthrough_behavior    = optional(string)
+    content_handling        = optional(string)
+    timeout_milliseconds    = optional(number, 29000)
+    cache_key_parameters    = optional(list(string))
+    cache_namespace         = optional(string)
+  }))
+  default = {}
+}
+
+variable "root_integrations" {
+  description = "A map of integrations for methods on the root resource."
+  type = map(object({
+    type                    = string
+    uri                     = optional(string)
+    method                  = string # The root_method key
     integration_http_method = optional(string)
     credentials             = optional(string)
     connection_type         = optional(string)

@@ -66,6 +66,11 @@ output "methods" {
   value       = { for k, v in aws_api_gateway_method.this : k => v }
 }
 
+output "root_methods" {
+  description = "API Gateway root resource methods created"
+  value       = { for k, v in aws_api_gateway_method.root : k => v }
+}
+
 ###########################
 # Method Response Outputs
 ###########################
@@ -80,6 +85,11 @@ output "method_responses" {
 output "integrations" {
   description = "API Gateway integrations created"
   value       = { for k, v in aws_api_gateway_integration.this : k => v }
+}
+
+output "root_integrations" {
+  description = "API Gateway root resource integrations created"
+  value       = { for k, v in aws_api_gateway_integration.root : k => v }
 }
 
 ###########################
