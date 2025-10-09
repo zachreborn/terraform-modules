@@ -233,10 +233,6 @@ resource "aws_api_gateway_deployment" "this" {
     redeployment = local.deployment_hash
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
   depends_on = [
     aws_api_gateway_method.this,
     aws_api_gateway_integration.this,
