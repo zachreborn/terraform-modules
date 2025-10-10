@@ -1,0 +1,50 @@
+---
+environment-1:
+  workspaces:
+    workspace-1:
+      name: "workspace-1"
+      description: "This is workspace 1 in environment 1"
+    workspace-2:
+      name: "workspace-2"
+      description: "This is workspace 2 in environment 1"
+environment-2:
+  default_provider_configuration:
+    - "default-provider-1"
+    - "default-provider-2"
+  default_workspace_agent_pool_id: "default-agent-pool-1"
+  federated_environments:
+    - "federated-env-1"
+    - "federated-env-2"
+  remote_backend: "s3"
+  remote_backend_overridable: false
+  storage_profile_id: "storage-profile-1"
+  tag_ids:
+    - "tag-1"
+    - "tag-2"
+  workspaces:
+    workspace-3:
+      agent_pool_id: "agent-pool-1"
+      auto_apply: true
+      auto_queue_runs: true
+      deletion_protection_enabled: false
+      description: "This is workspace 3 in environment 2"
+      execution_mode: "local"
+      force_last_run: false
+      hooks:
+        - "hook-1"
+        - "hook-2"
+      iac_platform: "terraform"
+      module_version_id: "module-version-1"
+      operations: true
+      provider_configuration:
+        - "provider-1"
+        - "provider-2"
+      remote_backend: "s3"
+      remote_backend_overridable: true
+      tag_ids:
+        - "tag-1"
+        - "tag-2"
+      var_files:
+        - "var-file-1"
+        - "var-file-2"
+      working_directory: "/path/to/working/directory"
