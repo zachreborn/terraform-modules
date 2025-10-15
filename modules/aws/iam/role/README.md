@@ -1,10 +1,9 @@
 ## Usage
-    
 
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -14,6 +13,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -21,12 +21,11 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">IAM Role Module</h3>
@@ -43,7 +42,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -62,14 +60,16 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 The following example demonstrates how to use the iam_role module and attach multiple policies to the role. These can be built in policies or policies as outputs from data sources or other modules.
+
 ```
 module "iam_role" {
     source             = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
-    
+
     assume_role_policy = module.iam_policy.arn
     description        = "Role used for a test"
     name_prefix        = "test_role"
@@ -89,13 +89,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -116,7 +116,8 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the role. | `string` | `null` | no |
 | <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
 | <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `string` | `3600` | no |
-| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) The prefix used to generate a unique role name. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Optional) The name of the role. If omitted, name\_prefix must be set. | `string` | `null` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Optional) The prefix used to generate a unique role name. If omitted, name must be set. | `string` | `null` | no |
 | <a name="input_path"></a> [path](#input\_path) | (Optional) The path to the role. | `string` | `"/"` | no |
 | <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
 | <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | (Required) - A list of ARNs of the policies which you want attached to the role. | `list(string)` | n/a | yes |
@@ -131,15 +132,15 @@ No modules.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -148,19 +149,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

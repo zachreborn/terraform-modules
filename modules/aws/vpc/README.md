@@ -23,7 +23,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">VPC Module</h3>
@@ -262,7 +262,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_route_table_association.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.workspaces](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
-| [aws_security_group.ssm_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_subnet.db_subnets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.dmz_subnets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.mgmt_subnets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
@@ -270,7 +270,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_subnet.public_subnets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.workspaces_subnets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
+| [aws_vpc_endpoint.cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 | [aws_vpc_endpoint.ec2messages](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.ecr_api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.ecr_dkr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 | [aws_vpc_endpoint.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 | [aws_vpc_endpoint.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 | [aws_vpc_endpoint.ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
@@ -295,12 +298,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_dmz_subnets_list"></a> [dmz\_subnets\_list](#input\_dmz\_subnets\_list) | A list of DMZ subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.101.0/24",<br/>  "10.11.102.0/24",<br/>  "10.11.103.0/24"<br/>]</pre> | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false. | `bool` | `true` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true. | `bool` | `true` | no |
+| <a name="input_enable_ecr_vpc_endpoints"></a> [enable\_ecr\_vpc\_endpoints](#input\_enable\_ecr\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable ECR (Elastic Container Registry) VPC endpoints. This enables ECR API, ECR DKR, Cloudwatch Logs, and S3 endpoints. | `bool` | `false` | no |
 | <a name="input_enable_firewall"></a> [enable\_firewall](#input\_enable\_firewall) | (Optional) A boolean flag to enable/disable the use of a firewall instance within the VPC. Defaults False. | `bool` | `false` | no |
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_internet_gateway"></a> [enable\_internet\_gateway](#input\_enable\_internet\_gateway) | (Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
-| <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False | `bool` | `false` | no |
-| <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. Defaults true. | `bool` | `false` | no |
+| <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. | `bool` | `false` | no |
+| <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. | `bool` | `false` | no |
 | <a name="input_flow_deliver_cross_account_role"></a> [flow\_deliver\_cross\_account\_role](#input\_flow\_deliver\_cross\_account\_role) | (Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account. | `string` | `null` | no |
 | <a name="input_flow_log_destination_type"></a> [flow\_log\_destination\_type](#input\_flow\_log\_destination\_type) | (Optional) The type of the logging destination. Valid values: cloud-watch-logs, s3. Default: cloud-watch-logs. | `string` | `"cloud-watch-logs"` | no |
 | <a name="input_flow_log_format"></a> [flow\_log\_format](#input\_flow\_log\_format) | (Optional) The fields to include in the flow log record, in the order in which they should appear. For more information, see Flow Log Records. Default: fields are in the order that they are described in the Flow Log Records section. | `string` | `null` | no |
