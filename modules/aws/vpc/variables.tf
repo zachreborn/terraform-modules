@@ -57,7 +57,8 @@ variable "subnet_indices" {
 
   validation {
     condition = alltrue([
-      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= 2
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= 2 && length(var.subnet_indices) <= length(var.private_subnets_list)
+
     ])
     error_message = "Subnet indices must be between 0 and 2."
   }
