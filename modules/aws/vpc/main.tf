@@ -41,7 +41,7 @@ resource "aws_vpc" "vpc" {
 # VPC Endpoints
 ###########################
 
-resource "aws_security_group" "vpc_endpoint" {
+resource "aws_security_group" "ssm_vpc_endpoint" {
   description = "VPC endpoint interface security group"
   name        = "vpc_endpoint_sg"
   tags        = merge({ Name = "vpc_endpoint_sg" }, var.tags)
