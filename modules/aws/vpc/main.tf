@@ -42,7 +42,7 @@ resource "aws_vpc" "vpc" {
 ###########################
 
 resource "aws_security_group" "ssm_vpc_endpoint" {
-  description = "VPC endpoint interface security group"
+  description = "SSM VPC service endpoint SG"
   name        = "ssm_vpc_endpoint_sg"
   tags        = merge({ Name = "ssm_vpc_endpoint_sg" }, var.tags)
   vpc_id      = aws_vpc.vpc.id
