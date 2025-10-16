@@ -83,7 +83,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2messages"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -94,7 +94,7 @@ resource "aws_vpc_endpoint" "kms" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.kms"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -105,7 +105,7 @@ resource "aws_vpc_endpoint" "ssm" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -116,7 +116,7 @@ resource "aws_vpc_endpoint" "ssm-contacts" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-contacts"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -127,7 +127,7 @@ resource "aws_vpc_endpoint" "ssm-incidents" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-incidents"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -138,7 +138,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ssmmessages"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = toset([for subnet_index in var.subnet_indices : aws_subnet.private_subnets[subnet_index].id])
@@ -150,7 +150,7 @@ resource "aws_vpc_endpoint" "ecr_api" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.api"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
@@ -161,7 +161,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.dkr"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
@@ -173,7 +173,7 @@ resource "aws_vpc_endpoint" "cloudwatch" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.logs"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.ssm_vpc_endpoint.id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
