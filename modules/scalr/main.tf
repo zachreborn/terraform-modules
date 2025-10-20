@@ -82,11 +82,11 @@ resource "scalr_provider_configuration" "aws" {
   }
 }
 
-resource "scalr_provider_configuration_default" "this" {
-  for_each                  = var.default_environment_ids != null ? toset(var.default_environment_ids) : {}
-  environment_id            = each.key
-  provider_configuration_id = scalr_provider_configuration.aws.id
-}
+# resource "scalr_provider_configuration_default" "this" {
+#   for_each                  = var.default_environment_ids != null ? toset(var.default_environment_ids) : {}
+#   environment_id            = each.key
+#   provider_configuration_id = scalr_provider_configuration.aws.id
+# }
 
 ###########################
 # Environment Configurations
@@ -95,15 +95,13 @@ resource "scalr_provider_configuration_default" "this" {
 resource "scalr_environment" "this" {
   for_each                        = local.yaml_config
   account_id                      = data.scalr_current_account.account.id
-  default_provider_configurations = each.value.default_provider_configurations
-  # default_workspace_agent_pool_id = each.value.default_workspace_agent_pool_id
-  # federated_environments          = each.value.federated_environments
-  mask_sensitive_output = each.value.mask_sensitive_output
-  name                  = each.key
-  remote_backend        = each.value.remote_backend
-  # remote_backend_overridable = each.value.remote_backend_overridable
-  # storage_profile_id         = each.value.storage_profile_id
-  tag_ids = each.value.tag_ids
+  default_provider_configurations = each.value.default_provider_configurations != null ? each.value.default_provider_configurations : var.default_provider_configurations
+  mask_sensitive_output           = each.value.mask_sensitive_output != null ? each.value.mask_sensitive_output : var.mask_sensitive_output
+  name                            = each.key
+  remote_backend                  = each.value.remote_backend != null ? each.value.remote_backend : var.remote_backend
+  remote_backend_overridable      = each.value.remote_backend_overridable != null ? each.value.remote_backend_overridable : var.remote_backend_overridable
+  storage_profile_id              = each.value.storage_profile_id != null ? each.value.storage_profile_id : var.storage_profile_id
+  tag_ids                         = each.value.tag_ids != null ? each.value.tag_ids : var.tag_ids
 }
 
 ###########################
