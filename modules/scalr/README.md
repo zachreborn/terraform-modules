@@ -102,7 +102,6 @@ No modules.
 | scalr_environment.this | resource |
 | scalr_provider_configuration.aws | resource |
 | scalr_provider_configuration.scalr | resource |
-| scalr_provider_configuration_default.this | resource |
 | scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
 
@@ -125,6 +124,7 @@ No modules.
 | <a name="input_aws_secret_key"></a> [aws\_secret\_key](#input\_aws\_secret\_key) | The AWS secret key. | `string` | `null` | no |
 | <a name="input_aws_trusted_entity_type"></a> [aws\_trusted\_entity\_type](#input\_aws\_trusted\_entity\_type) | The type of trusted entity for the role. Valid values are 'aws\_account' and 'aws\_service'. | `string` | `"aws_account"` | no |
 | <a name="input_default_environment_ids"></a> [default\_environment\_ids](#input\_default\_environment\_ids) | List of Environment IDs to set the default Provider Configurations in. | `list(string)` | `null` | no |
+| <a name="input_default_provider_configurations"></a> [default\_provider\_configurations](#input\_default\_provider\_configurations) | List of Provider Configuration IDs to set as the default in the Environment. | `list(string)` | `null` | no |
 | <a name="input_default_workspace_agent_pool_id"></a> [default\_workspace\_agent\_pool\_id](#input\_default\_workspace\_agent\_pool\_id) | The default Agent Pool ID to assign to new Workspaces in the Environment. | `string` | `null` | no |
 | <a name="input_deletion_protection_enabled"></a> [deletion\_protection\_enabled](#input\_deletion\_protection\_enabled) | Whether to enable deletion protection for the workspace. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
 | <a name="input_environments_config"></a> [environments\_config](#input\_environments\_config) | YAML formatted file defining environments and their workspaces. | `string` | n/a | yes |
@@ -132,9 +132,11 @@ No modules.
 | <a name="input_export_shell_variables"></a> [export\_shell\_variables](#input\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI. | `bool` | `false` | no |
 | <a name="input_force_latest_run"></a> [force\_latest\_run](#input\_force\_latest\_run) | Whether to force a new run to be created for the workspace. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_iac_platform"></a> [iac\_platform](#input\_iac\_platform) | The Infrastructure as Code platform for the workspace. Valid values are 'terraform' or 'opentofu'. | `string` | `"opentofu"` | no |
+| <a name="input_mask_sensitive_output"></a> [mask\_sensitive\_output](#input\_mask\_sensitive\_output) | Whether to mask sensitive output values in the Environment. | `bool` | `true` | no |
 | <a name="input_module_version_id"></a> [module\_version\_id](#input\_module\_version\_id) | The Module Version ID to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'modver-<RANDOM STRING>'. This cannot be set when using a vcs repository as the source for the workspace. | `string` | `null` | no |
 | <a name="input_operations"></a> [operations](#input\_operations) | Whether to enable remote execution for the workspace. When set to false, the workspace only stores its state. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
 | <a name="input_remote_backend"></a> [remote\_backend](#input\_remote\_backend) | Whether Scalr manages the remote backend configuration. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
+| <a name="input_remote_backend_overridable"></a> [remote\_backend\_overridable](#input\_remote\_backend\_overridable) | Whether Workspaces in the Environment can override the remote backend configuration. | `bool` | `false` | no |
 | <a name="input_remote_state_consumers"></a> [remote\_state\_consumers](#input\_remote\_state\_consumers) | List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `null` | no |
 | <a name="input_run_operation_timeout"></a> [run\_operation\_timeout](#input\_run\_operation\_timeout) | The maximum time, in minutes, that a run operation (plan or apply) can take before it is automatically canceled. Can be overridden per workspace in the YAML file. | `number` | `60` | no |
 | <a name="input_scalr_environments"></a> [scalr\_environments](#input\_scalr\_environments) | List of Scalr Environments which the provider will be shared to. | `list(string)` | `null` | no |
@@ -143,7 +145,8 @@ No modules.
 | <a name="input_scalr_provider_name"></a> [scalr\_provider\_name](#input\_scalr\_provider\_name) | Name of the Scalr Provider Configuration. | `string` | `"scalr"` | no |
 | <a name="input_scalr_token"></a> [scalr\_token](#input\_scalr\_token) | The Scalr API token. | `string` | n/a | yes |
 | <a name="input_ssh_key_id"></a> [ssh\_key\_id](#input\_ssh\_key\_id) | The SSH Key ID to use for the workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
-| <a name="input_tag_ids"></a> [tag\_ids](#input\_tag\_ids) | List of Tag IDs to assign to the workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `null` | no |
+| <a name="input_storage_profile_id"></a> [storage\_profile\_id](#input\_storage\_profile\_id) | The Storage Profile ID to use for the Environment. | `string` | `null` | no |
+| <a name="input_tag_ids"></a> [tag\_ids](#input\_tag\_ids) | List of Tag IDs to assign to the Environment. | `list(string)` | `null` | no |
 | <a name="input_terraform_version"></a> [terraform\_version](#input\_terraform\_version) | The opentofu or terraform version to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'X.Y.Z'. | `string` | `null` | no |
 | <a name="input_type"></a> [type](#input\_type) | The type of workspace. Valid values are 'production', 'staging', 'testing', 'development', and 'unmapped'. | `string` | `"production"` | no |
 | <a name="input_var_files"></a> [var\_files](#input\_var\_files) | A list of paths which hold the '.tfvars' files for the workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `[]` | no |
