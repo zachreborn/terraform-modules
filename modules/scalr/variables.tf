@@ -178,19 +178,19 @@ variable "environment_tag_ids" {
 ###########################
 # Workspace Variables
 ###########################
-variable "agent_pool_id" {
+variable "workspace_agent_pool_id" {
   description = "The Agent Pool ID to assign to the Workspace. Can be overridden per workspace in the YAML file."
   type        = string
   default     = null
 }
 
-variable "auto_apply" {
+variable "workspace_auto_apply" {
   description = "Whether to automatically apply runs when they are queued. Can be overridden per workspace in the YAML file."
   type        = bool
   default     = false
 }
 
-variable "auto_queue_runs" {
+variable "workspace_auto_queue_runs" {
   description = "Whether to automatically queue runs when a workspace's configuration changes. Can be overridden per workspace in the YAML file. Valid values are 'skip_first', 'always', 'never', and 'on_create_only'."
   type        = string
   default     = "always"
@@ -200,13 +200,13 @@ variable "auto_queue_runs" {
   }
 }
 
-variable "deletion_protection_enabled" {
+variable "workspace_deletion_protection_enabled" {
   description = "Whether to enable deletion protection for the workspace. Can be overridden per workspace in the YAML file."
   type        = bool
   default     = true
 }
 
-variable "execution_mode" {
+variable "workspace_execution_mode" {
   description = "The execution mode for the workspace. Can be overridden per workspace in the YAML file. Valid values are 'remote' and 'local'."
   type        = string
   default     = "remote"
@@ -216,13 +216,13 @@ variable "execution_mode" {
   }
 }
 
-variable "force_latest_run" {
+variable "workspace_force_latest_run" {
   description = "Whether to force a new run to be created for the workspace. Can be overridden per workspace in the YAML file."
   type        = bool
   default     = false
 }
 
-variable "iac_platform" {
+variable "workspace_iac_platform" {
   description = "The Infrastructure as Code platform for the workspace. Valid values are 'terraform' or 'opentofu'."
   type        = string
   default     = "opentofu"
@@ -232,55 +232,55 @@ variable "iac_platform" {
   }
 }
 
-variable "module_version_id" {
+variable "workspace_module_version_id" {
   description = "The Module Version ID to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'modver-<RANDOM STRING>'. This cannot be set when using a vcs repository as the source for the workspace."
   type        = string
   default     = null
 }
 
-variable "operations" {
+variable "workspace_operations" {
   description = "Whether to enable remote execution for the workspace. When set to false, the workspace only stores its state. Can be overridden per workspace in the YAML file."
   type        = bool
   default     = true
 }
 
-variable "remote_backend" {
+variable "workspace_remote_backend" {
   description = "Whether Scalr manages the remote backend configuration. Can be overridden per workspace in the YAML file."
   type        = bool
   default     = true
 }
 
-variable "remote_state_consumers" {
+variable "workspace_remote_state_consumers" {
   description = "List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file."
   type        = list(string)
   default     = null
 }
 
-variable "run_operation_timeout" {
+variable "workspace_run_operation_timeout" {
   description = "The maximum time, in minutes, that a run operation (plan or apply) can take before it is automatically canceled. Can be overridden per workspace in the YAML file."
   type        = number
   default     = 60
 }
 
-variable "ssh_key_id" {
+variable "workspace_ssh_key_id" {
   description = "The SSH Key ID to use for the workspace. Can be overridden per workspace in the YAML file."
   type        = string
   default     = null
 }
 
-variable "tag_ids" {
+variable "workspace_tag_ids" {
   description = "List of Tag IDs to assign to the workspace. Can be overridden per workspace in the YAML file."
   type        = list(string)
   default     = null
 }
 
-variable "terraform_version" {
+variable "workspace_terraform_version" {
   description = "The opentofu or terraform version to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'X.Y.Z'."
   type        = string
   default     = null
 }
 
-variable "type" {
+variable "workspace_type" {
   description = "The type of workspace. Valid values are 'production', 'staging', 'testing', 'development', and 'unmapped'."
   type        = string
   default     = "production"
@@ -290,13 +290,13 @@ variable "type" {
   }
 }
 
-variable "var_files" {
+variable "workspace_var_files" {
   description = "A list of paths which hold the '.tfvars' files for the workspace. Can be overridden per workspace in the YAML file."
   type        = list(string)
   default     = []
 }
 
-variable "working_directory" {
+variable "workspace_working_directory" {
   description = "The working directory as a relative path which opentofu or terraform will run for the workspace. Can be overridden per workspace in the YAML file."
   type        = string
   default     = null
@@ -315,4 +315,3 @@ variable "export_shell_variables" {
   type        = bool
   default     = false
 }
-

@@ -112,30 +112,43 @@ resource "scalr_environment" "this" {
 
 resource "scalr_workspace" "this" {
   for_each                    = local.workspaces
-  agent_pool_id               = each.value.agent_pool_id != null ? each.value.agent_pool_id : var.default_workspace_agent_pool_id
-  auto_apply                  = each.value.auto_apply != null ? each.value.auto_apply : var.auto_apply
-  auto_queue_runs             = each.value.auto_queue_runs != null ? each.value.auto_queue_runs : var.auto_queue_runs
-  deletion_protection_enabled = each.value.deletion_protection_enabled != null ? each.value.deletion_protection_enabled : var.deletion_protection_enabled
+  agent_pool_id               = each.value.agent_pool_id != null ? each.value.agent_pool_id : var.workspace_agent_pool_id
+  auto_apply                  = each.value.auto_apply != null ? each.value.auto_apply : var.workspace_auto_apply
+  auto_queue_runs             = each.value.auto_queue_runs != null ? each.value.auto_queue_runs : var.workspace_auto_queue_runs
+  deletion_protection_enabled = each.value.deletion_protection_enabled != null ? each.value.deletion_protection_enabled : var.workspace_deletion_protection_enabled
   environment_id              = each.value.environment_id
-  execution_mode              = each.value.execution_mode != null ? each.value.execution_mode : var.execution_mode
-  force_latest_run            = each.value.force_latest_run != null ? each.value.force_latest_run : var.force_latest_run
-  iac_platform                = each.value.iac_platform != null ? each.value.iac_platform : var.iac_platform
-  module_version_id           = each.value.module_version_id != null ? each.value.module_version_id : var.module_version_id
+  execution_mode              = each.value.execution_mode != null ? each.value.execution_mode : var.workspace_execution_mode
+  force_latest_run            = each.value.force_latest_run != null ? each.value.force_latest_run : var.workspace_force_latest_run
+  iac_platform                = each.value.iac_platform != null ? each.value.iac_platform : var.workspace_iac_platform
+  module_version_id           = each.value.module_version_id != null ? each.value.module_version_id : var.workspace_module_version_id
   name                        = each.value.name
-  operations                  = each.value.operations != null ? each.value.operations : var.operations
-  remote_state_consumers      = each.value.remote_state_consumers != null ? each.value.remote_state_consumers : var.remote_state_consumers
-  run_operation_timeout       = each.value.run_operation_timeout != null ? each.value.run_operation_timeout : var.run_operation_timeout
-  ssh_key_id                  = each.value.ssh_key_id != null ? each.value.ssh_key_id : var.ssh_key_id
-  tag_ids                     = each.value.tag_ids != null ? each.value.tag_ids : var.tag_ids
-  terraform_version           = each.value.terraform_version != null ? each.value.terraform_version : var.terraform_version
-  type                        = each.value.type != null ? each.value.type : var.type
-  var_files                   = each.value.var_files != null ? each.value.var_files : var.var_files
-  working_directory           = each.value.working_directory != null ? each.value.working_directory : var.working_directory
+  operations                  = each.value.operations != null ? each.value.operations : var.workspace_operations
+  remote_state_consumers      = each.value.remote_state_consumers != null ? each.value.remote_state_consumers : var.workspace_remote_state_consumers
+  run_operation_timeout       = each.value.run_operation_timeout != null ? each.value.run_operation_timeout : var.workspace_run_operation_timeout
+  ssh_key_id                  = each.value.ssh_key_id != null ? each.value.ssh_key_id : var.workspace_ssh_key_id
+  tag_ids                     = each.value.tag_ids != null ? each.value.tag_ids : var.workspace_tag_ids
+  terraform_version           = each.value.terraform_version != null ? each.value.terraform_version : var.workspace_terraform_version
+  type                        = each.value.type != null ? each.value.type : var.workspace_type
+  var_files                   = each.value.var_files != null ? each.value.var_files : var.workspace_var_files
+  working_directory           = each.value.working_directory != null ? each.value.working_directory : var.workspace_working_directory
 
   dynamic "provider_configuration" {
     for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
     content {
       id = provider_configuration.value
+    }
+  }
+
+  dynamic "vcs_repo" {
+    for_each = each.value.vcs_repo != null ? toset(each.value.vcs_repo) : []
+    content {
+      branch             = vcs_repo.value.branch
+      dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
+      ingress_submodules = vcs_repo.value.ingress_submodules
+      path               = vcs_repo.value.path
+      trigger_patterns   = vcs_repo.value.trigger_patterns
+      trigger_prefixes   = vcs_repo.value.trigger_prefixes
+      version_constraint = vcs_repo.value.version_constraint
     }
   }
 }
