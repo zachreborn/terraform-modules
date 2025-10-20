@@ -22,7 +22,7 @@ data "scalr_current_account" "account" {}
 locals {
   yaml_config    = yamldecode(var.environments_config)
   workspaces_map = { for environment, value in local.yaml_config : environment => value.workspaces }
-  workspaces = { for item in flatten([for environment, env_conf in yamldecode(file("example_config.yaml")) : [
+  workspaces = { for item in flatten([for environment, env_conf in local.yaml_config : [
     for workspace_name, workspace_value in env_conf.workspaces : {
       agent_pool_id               = workspace_value.agent_pool_id
       auto_apply                  = workspace_value.auto_apply
