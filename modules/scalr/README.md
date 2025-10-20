@@ -83,13 +83,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | ~> 2.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | ~> 2.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.0 |
 
 ## Modules
 
@@ -126,6 +126,8 @@ No modules.
 | <a name="input_default_environment_ids"></a> [default\_environment\_ids](#input\_default\_environment\_ids) | List of Environment IDs to set the default Provider Configurations in. | `list(string)` | `null` | no |
 | <a name="input_deletion_protection_enabled"></a> [deletion\_protection\_enabled](#input\_deletion\_protection\_enabled) | Whether to enable deletion protection for the workspace. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
 | <a name="input_environment_default_provider_configurations"></a> [environment\_default\_provider\_configurations](#input\_environment\_default\_provider\_configurations) | List of Provider Configuration IDs to set as the default in the Environment. | `list(string)` | `null` | no |
+| <a name="input_environment_default_workspace_agent_pool_id"></a> [environment\_default\_workspace\_agent\_pool\_id](#input\_environment\_default\_workspace\_agent\_pool\_id) | The default Agent Pool ID to assign to Workspaces in the Environment. | `string` | `null` | no |
+| <a name="input_environment_federated_environments"></a> [environment\_federated\_environments](#input\_environment\_federated\_environments) | List of Environment IDs to federate with this Environment. | `list(string)` | `null` | no |
 | <a name="input_environment_mask_sensitive_output"></a> [environment\_mask\_sensitive\_output](#input\_environment\_mask\_sensitive\_output) | Whether to mask sensitive output values in the Environment. | `bool` | `true` | no |
 | <a name="input_environment_remote_backend"></a> [environment\_remote\_backend](#input\_environment\_remote\_backend) | Whether Scalr manages the remote backend configuration for the Environment. | `bool` | `true` | no |
 | <a name="input_environment_remote_backend_overridable"></a> [environment\_remote\_backend\_overridable](#input\_environment\_remote\_backend\_overridable) | Whether Workspaces in the Environment can override the remote backend configuration. | `bool` | `false` | no |
