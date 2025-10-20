@@ -95,13 +95,13 @@ resource "scalr_provider_configuration" "aws" {
 resource "scalr_environment" "this" {
   for_each                        = local.yaml_config
   account_id                      = data.scalr_current_account.account.id
-  default_provider_configurations = each.value.default_provider_configurations != null ? each.value.default_provider_configurations : var.default_provider_configurations
-  mask_sensitive_output           = each.value.mask_sensitive_output != null ? each.value.mask_sensitive_output : var.mask_sensitive_output
+  default_provider_configurations = each.value.default_provider_configurations != null ? each.value.default_provider_configurations : var.environment_default_provider_configurations
+  mask_sensitive_output           = each.value.mask_sensitive_output != null ? each.value.mask_sensitive_output : var.environment_mask_sensitive_output
   name                            = each.key
-  remote_backend                  = each.value.remote_backend != null ? each.value.remote_backend : var.remote_backend
-  remote_backend_overridable      = each.value.remote_backend_overridable != null ? each.value.remote_backend_overridable : var.remote_backend_overridable
-  storage_profile_id              = each.value.storage_profile_id != null ? each.value.storage_profile_id : var.storage_profile_id
-  tag_ids                         = each.value.tag_ids != null ? each.value.tag_ids : var.tag_ids
+  remote_backend                  = each.value.remote_backend != null ? each.value.remote_backend : var.environment_remote_backend
+  remote_backend_overridable      = each.value.remote_backend_overridable != null ? each.value.remote_backend_overridable : var.environment_remote_backend_overridable
+  storage_profile_id              = each.value.storage_profile_id != null ? each.value.storage_profile_id : var.environment_storage_profile_id
+  tag_ids                         = each.value.tag_ids != null ? each.value.tag_ids : var.environment_tag_ids
 }
 
 ###########################

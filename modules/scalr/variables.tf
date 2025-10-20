@@ -126,41 +126,42 @@ variable "default_environment_ids" {
 ###########################
 # Environment Variables
 ###########################
-variable "default_provider_configurations" {
+variable "environment_default_provider_configurations" {
   description = "List of Provider Configuration IDs to set as the default in the Environment."
   type        = list(string)
   default     = null
 }
 
-variable "default_workspace_agent_pool_id" {
-  description = "The default Agent Pool ID to assign to new Workspaces in the Environment."
-  type        = string
-  default     = null
-}
-
-variable "mask_sensitive_output" {
+variable "environment_mask_sensitive_output" {
   description = "Whether to mask sensitive output values in the Environment."
   type        = bool
   default     = true
 }
 
-variable "remote_backend" {
+variable "environment_remote_backend" {
   description = "Whether Scalr manages the remote backend configuration for the Environment."
   type        = bool
   default     = true
 }
 
-variable "remote_backend_overridable" {
+variable "environment_remote_backend_overridable" {
   description = "Whether Workspaces in the Environment can override the remote backend configuration."
   type        = bool
   default     = false
 }
 
-variable "storage_profile_id" {
+variable "environment_storage_profile_id" {
   description = "The Storage Profile ID to use for the Environment."
   type        = string
   default     = null
 }
+
+variable "environment_tag_ids" {
+  description = "List of Tag IDs to assign to the Environment."
+  type        = list(string)
+  default     = null
+}
+
 
 ###########################
 # Workspace Variables
@@ -303,8 +304,3 @@ variable "export_shell_variables" {
   default     = false
 }
 
-variable "tag_ids" {
-  description = "List of Tag IDs to assign to the Environment."
-  type        = list(string)
-  default     = null
-}
