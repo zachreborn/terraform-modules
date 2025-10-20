@@ -144,6 +144,7 @@ resource "scalr_workspace" "this" {
     content {
       branch             = vcs_repo.value.branch
       dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
+      identifier         = vcs_repo.value.identifier
       ingress_submodules = vcs_repo.value.ingress_submodules
       path               = vcs_repo.value.path
       trigger_patterns   = vcs_repo.value.trigger_patterns
