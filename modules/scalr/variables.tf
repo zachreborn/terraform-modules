@@ -195,7 +195,7 @@ variable "workspace_auto_queue_runs" {
   type        = string
   default     = "always"
   validation {
-    condition     = contains(["skip_first", "always", "never", "on_create_only"], var.auto_queue_runs)
+    condition     = contains(["skip_first", "always", "never", "on_create_only"], var.workspace_auto_queue_runs)
     error_message = "The auto_queue_runs must be one of 'skip_first', 'always', 'never', or 'on_create_only'."
   }
 }
@@ -211,7 +211,7 @@ variable "workspace_execution_mode" {
   type        = string
   default     = "remote"
   validation {
-    condition     = contains(["remote", "local"], var.execution_mode)
+    condition     = contains(["remote", "local"], var.workspace_execution_mode)
     error_message = "The execution_mode must be one of 'remote' or 'local'."
   }
 }
@@ -227,7 +227,7 @@ variable "workspace_iac_platform" {
   type        = string
   default     = "opentofu"
   validation {
-    condition     = contains(["terraform", "opentofu"], var.iac_platform)
+    condition     = contains(["terraform", "opentofu"], var.workspace_iac_platform)
     error_message = "The iac_platform must be one of 'terraform' or 'opentofu'."
   }
 }
@@ -285,7 +285,7 @@ variable "workspace_type" {
   type        = string
   default     = "production"
   validation {
-    condition     = contains(["production", "staging", "testing", "development", "unmapped"], var.type)
+    condition     = contains(["production", "staging", "testing", "development", "unmapped"], var.workspace_type)
     error_message = "The type must be one of 'production', 'staging', 'testing', 'development', or 'unmapped'."
   }
 }
