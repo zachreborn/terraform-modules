@@ -86,7 +86,7 @@ resource "scalr_provider_configuration" "aws" {
 
 resource "scalr_provider_configuration_default" "this" {
   for_each                  = var.default_environment_ids != null ? toset(var.default_environment_ids) : {}
-  environment_id            = var.default_environment_ids
+  environment_id            = each.key
   provider_configuration_id = scalr_provider_configuration.aws.id
 }
 
