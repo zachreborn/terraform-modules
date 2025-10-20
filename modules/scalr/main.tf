@@ -31,14 +31,12 @@ locals {
       environment_id              = scalr_environment.this[environment].id
       environment_name            = environment
       execution_mode              = workspace_value.execution_mode
-      force_last_run              = workspace_value.force_last_run
-      hooks                       = workspace_value.hooks
+      force_latest_run            = workspace_value.force_latest_run
       iac_platform                = workspace_value.iac_platform
       module_version_id           = workspace_value.module_version_id
       name                        = workspace_value.name
       operations                  = workspace_value.operations
       provider_configuration      = workspace_value.provider_configuration
-      remote_backend              = workspace_value.remote_backend
       remote_state_consumers      = workspace_value.remote_state_consumers
       run_operation_timeout       = workspace_value.run_operation_timeout
       ssh_key_id                  = workspace_value.ssh_key_id
@@ -120,14 +118,11 @@ resource "scalr_workspace" "this" {
   deletion_protection_enabled = each.value.deletion_protection_enabled != null ? each.value.deletion_protection_enabled : var.deletion_protection_enabled
   environment_id              = each.value.environment_id
   execution_mode              = each.value.execution_mode != null ? each.value.execution_mode : var.execution_mode
-  force_last_run              = each.value.force_last_run != null ? each.value.force_last_run : var.force_last_run
-  hooks                       = each.value.hooks
+  force_latest_run            = each.value.force_latest_run != null ? each.value.force_latest_run : var.force_latest_run
   iac_platform                = each.value.iac_platform != null ? each.value.iac_platform : var.iac_platform
   module_version_id           = each.value.module_version_id != null ? each.value.module_version_id : var.module_version_id
   name                        = each.value.name
   operations                  = each.value.operations != null ? each.value.operations : var.operations
-  provider_configuration      = each.value.provider_configuration
-  remote_backend              = each.value.remote_backend != null ? each.value.remote_backend : var.remote_backend
   remote_state_consumers      = each.value.remote_state_consumers != null ? each.value.remote_state_consumers : var.remote_state_consumers
   run_operation_timeout       = each.value.run_operation_timeout != null ? each.value.run_operation_timeout : var.run_operation_timeout
   ssh_key_id                  = each.value.ssh_key_id != null ? each.value.ssh_key_id : var.ssh_key_id
@@ -136,4 +131,11 @@ resource "scalr_workspace" "this" {
   type                        = each.value.type != null ? each.value.type : var.type
   var_files                   = each.value.var_files != null ? each.value.var_files : var.var_files
   working_directory           = each.value.working_directory != null ? each.value.working_directory : var.working_directory
+
+  dynamic "provider_configuration" {
+    for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
+    content {
+      id = provider_configuration.value
+    }
+  }
 }
