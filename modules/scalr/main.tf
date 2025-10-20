@@ -98,14 +98,14 @@ resource "scalr_environment" "this" {
   for_each                        = local.yaml_config
   account_id                      = data.scalr_current_account.account.id
   default_provider_configurations = each.value.default_provider_configurations
-  default_workspace_agent_pool_id = each.value.default_workspace_agent_pool_id
-  federated_environments          = each.value.federated_environments
-  mask_sensitive_output           = each.value.mask_sensitive_output
-  name                            = each.key
-  remote_backend                  = each.value.remote_backend
-  remote_backend_overridable      = each.value.remote_backend_overridable
-  storage_profile_id              = each.value.storage_profile_id
-  tag_ids                         = each.value.tag_ids
+  # default_workspace_agent_pool_id = each.value.default_workspace_agent_pool_id
+  # federated_environments          = each.value.federated_environments
+  mask_sensitive_output = each.value.mask_sensitive_output
+  name                  = each.key
+  remote_backend        = each.value.remote_backend
+  # remote_backend_overridable = each.value.remote_backend_overridable
+  # storage_profile_id         = each.value.storage_profile_id
+  tag_ids = each.value.tag_ids
 }
 
 ###########################
