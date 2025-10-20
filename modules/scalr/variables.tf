@@ -132,6 +132,18 @@ variable "environment_default_provider_configurations" {
   default     = null
 }
 
+variable "environment_default_workspace_agent_pool_id" {
+  description = "The default Agent Pool ID to assign to Workspaces in the Environment."
+  type        = string
+  default     = null
+}
+
+variable "environment_federated_environments" {
+  description = "List of Environment IDs to federate with this Environment."
+  type        = list(string)
+  default     = null
+}
+
 variable "environment_mask_sensitive_output" {
   description = "Whether to mask sensitive output values in the Environment."
   type        = bool

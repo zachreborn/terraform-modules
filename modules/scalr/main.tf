@@ -6,7 +6,7 @@ terraform {
   required_providers {
     scalr = {
       source  = "registry.scalr.io/scalr/scalr"
-      version = "~> 2.0"
+      version = ">= 3.0"
     }
   }
 }
@@ -96,6 +96,8 @@ resource "scalr_environment" "this" {
   for_each                        = local.yaml_config
   account_id                      = data.scalr_current_account.account.id
   default_provider_configurations = each.value.default_provider_configurations != null ? each.value.default_provider_configurations : var.environment_default_provider_configurations
+  default_workspace_agent_pool_id = each.value.default_workspace_agent_pool_id != null ? each.value.default_workspace_agent_pool_id : var.environment_default_workspace_agent_pool_id
+  federated_environments          = each.value.federated_environments != null ? each.value.federated_environments : var.environment_federated_environments
   mask_sensitive_output           = each.value.mask_sensitive_output != null ? each.value.mask_sensitive_output : var.environment_mask_sensitive_output
   name                            = each.key
   remote_backend                  = each.value.remote_backend != null ? each.value.remote_backend : var.environment_remote_backend
