@@ -268,6 +268,11 @@ variable "enable_internet_gateway" {
   description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True."
   type        = bool
   default     = true
+
+  validation {
+    condition     = !var.enable_internet_gateway || length(var.public_subnets_list) > 0
+    error_message = "enable_internet_gateway cannot be true when public_subnets_list is empty. Either set enable_internet_gateway=false or provide public subnets."
+  }
 }
 
 variable "enable_flow_logs" {
