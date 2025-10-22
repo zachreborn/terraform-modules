@@ -95,15 +95,15 @@ resource "scalr_provider_configuration" "aws" {
 resource "scalr_environment" "this" {
   for_each                        = local.yaml_config
   account_id                      = data.scalr_current_account.account.id
-  default_provider_configurations = each.value.default_provider_configurations
-  default_workspace_agent_pool_id = each.value.default_workspace_agent_pool_id
-  federated_environments          = each.value.federated_environments
-  mask_sensitive_output           = each.value.mask_sensitive_output
+  default_provider_configurations = try(each.value.default_provider_configurations != null ? each.value.default_provider_configurations : var.environment_default_provider_configurations)
+  default_workspace_agent_pool_id = try(each.value.default_workspace_agent_pool_id != null ? each.value.default_workspace_agent_pool_id : var.environment_default_workspace_agent_pool_id)
+  federated_environments          = try(each.value.federated_environments != null ? each.value.federated_environments : var.environment_federated_environments)
+  mask_sensitive_output           = try(each.value.mask_sensitive_output != null ? each.value.mask_sensitive_output : var.environment_mask_sensitive_output)
   name                            = each.key
-  remote_backend                  = each.value.remote_backend
-  remote_backend_overridable      = each.value.remote_backend_overridable
-  storage_profile_id              = each.value.storage_profile_id
-  tag_ids                         = each.value.tag_ids
+  remote_backend                  = try(each.value.remote_backend != null ? each.value.remote_backend : var.environment_remote_backend)
+  remote_backend_overridable      = try(each.value.remote_backend_overridable != null ? each.value.remote_backend_overridable : var.environment_remote_backend_overridable)
+  storage_profile_id              = try(each.value.storage_profile_id != null ? each.value.storage_profile_id : var.environment_storage_profile_id)
+  tag_ids                         = try(each.value.tag_ids != null ? each.value.tag_ids : var.environment_tag_ids)
 }
 
 ###########################
@@ -112,25 +112,25 @@ resource "scalr_environment" "this" {
 
 resource "scalr_workspace" "this" {
   for_each                    = local.workspaces
-  agent_pool_id               = each.value.agent_pool_id
-  auto_apply                  = each.value.auto_apply
-  auto_queue_runs             = each.value.auto_queue_runs
-  deletion_protection_enabled = each.value.deletion_protection_enabled
+  agent_pool_id               = each.value.agent_pool_id != null ? each.value.agent_pool_id : var.workspace_agent_pool_id
+  auto_apply                  = each.value.auto_apply != null ? each.value.auto_apply : var.workspace_auto_apply
+  auto_queue_runs             = each.value.auto_queue_runs != null ? each.value.auto_queue_runs : var.workspace_auto_queue_runs
+  deletion_protection_enabled = each.value.deletion_protection_enabled != null ? each.value.deletion_protection_enabled : var.workspace_deletion_protection_enabled
   environment_id              = each.value.environment_id
-  execution_mode              = each.value.execution_mode
-  force_latest_run            = each.value.force_latest_run
-  iac_platform                = each.value.iac_platform
-  module_version_id           = each.value.module_version_id
+  execution_mode              = each.value.execution_mode != null ? each.value.execution_mode : var.workspace_execution_mode
+  force_latest_run            = each.value.force_latest_run != null ? each.value.force_latest_run : var.workspace_force_latest_run
+  iac_platform                = each.value.iac_platform != null ? each.value.iac_platform : var.workspace_iac_platform
+  module_version_id           = each.value.module_version_id != null ? each.value.module_version_id : var.workspace_module_version_id
   name                        = each.value.name
-  operations                  = each.value.operations
-  remote_state_consumers      = each.value.remote_state_consumers
-  run_operation_timeout       = each.value.run_operation_timeout
-  ssh_key_id                  = each.value.ssh_key_id
-  tag_ids                     = each.value.tag_ids
-  terraform_version           = each.value.terraform_version
-  type                        = each.value.type
-  var_files                   = each.value.var_files
-  working_directory           = each.value.working_directory
+  operations                  = each.value.operations != null ? each.value.operations : var.workspace_operations
+  remote_state_consumers      = each.value.remote_state_consumers != null ? each.value.remote_state_consumers : var.workspace_remote_state_consumers
+  run_operation_timeout       = each.value.run_operation_timeout != null ? each.value.run_operation_timeout : var.workspace_run_operation_timeout
+  ssh_key_id                  = each.value.ssh_key_id != null ? each.value.ssh_key_id : var.workspace_ssh_key_id
+  tag_ids                     = each.value.tag_ids != null ? each.value.tag_ids : var.workspace_tag_ids
+  terraform_version           = each.value.terraform_version != null ? each.value.terraform_version : var.workspace_terraform_version
+  type                        = each.value.type != null ? each.value.type : var.workspace_type
+  var_files                   = each.value.var_files != null ? each.value.var_files : var.workspace_var_files
+  working_directory           = each.value.working_directory != null ? each.value.working_directory : var.workspace_working_directory
 
   dynamic "provider_configuration" {
     for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
