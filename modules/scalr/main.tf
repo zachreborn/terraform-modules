@@ -22,31 +22,9 @@ data "scalr_current_account" "account" {}
 locals {
   yaml_config    = yamldecode(var.environments_config)
   workspaces_map = { for environment, value in local.yaml_config : environment => value.workspaces }
-  workspaces = { for item in flatten([for environment, env_conf in local.yaml_config : [
-    for workspace_name, workspace_value in env_conf.workspaces : {
-      agent_pool_id               = workspace_value.agent_pool_id
-      auto_apply                  = workspace_value.auto_apply
-      auto_queue_runs             = workspace_value.auto_queue_runs
-      deletion_protection_enabled = workspace_value.deletion_protection_enabled
-      environment_id              = scalr_environment.this[environment].id
-      environment_name            = environment
-      execution_mode              = workspace_value.execution_mode
-      force_latest_run            = workspace_value.force_latest_run
-      iac_platform                = workspace_value.iac_platform
-      module_version_id           = workspace_value.module_version_id
-      name                        = workspace_value.name
-      operations                  = workspace_value.operations
-      provider_configuration      = workspace_value.provider_configuration
-      remote_state_consumers      = workspace_value.remote_state_consumers
-      run_operation_timeout       = workspace_value.run_operation_timeout
-      ssh_key_id                  = workspace_value.ssh_key_id
-      tag_ids                     = workspace_value.tag_ids
-      terraform_version           = workspace_value.terraform_version
-      type                        = workspace_value.type
-      var_files                   = workspace_value.var_files
-      working_directory           = workspace_value.working_directory
-    }
-  ]]) : "${item.environment_name}.${item.workspace_name}" => item }
+  workspaces = merge([for environment, env_value in local.yaml_config : {
+    for workspace_name, workspace_value in env_value.workspaces : "${environment}.${workspace_name}" => workspace_value
+  }]...)
 }
 
 ###########################
