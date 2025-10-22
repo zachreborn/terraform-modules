@@ -121,7 +121,7 @@ resource "scalr_workspace" "this" {
   force_latest_run            = try(each.value.force_latest_run, var.workspace_force_latest_run)
   iac_platform                = try(each.value.iac_platform, var.workspace_iac_platform)
   module_version_id           = try(each.value.module_version_id, var.workspace_module_version_id)
-  name                        = try(each.value.name, var.workspace_name)
+  name                        = each.key
   operations                  = try(each.value.operations, var.workspace_operations)
   remote_state_consumers      = try(each.value.remote_state_consumers, var.workspace_remote_state_consumers)
   run_operation_timeout       = try(each.value.run_operation_timeout, var.workspace_run_operation_timeout)
