@@ -130,11 +130,6 @@ No modules.
 | <a name="input_environment_tag_ids"></a> [environment\_tag\_ids](#input\_environment\_tag\_ids) | List of Tag IDs to assign to the Environment. | `list(string)` | `null` | no |
 | <a name="input_environments_config"></a> [environments\_config](#input\_environments\_config) | YAML formatted file defining environments and their workspaces. | `string` | n/a | yes |
 | <a name="input_export_shell_variables"></a> [export\_shell\_variables](#input\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI. | `bool` | `false` | no |
-| <a name="input_scalr_environments"></a> [scalr\_environments](#input\_scalr\_environments) | List of Scalr Environments which the provider will be shared to. | `list(string)` | `null` | no |
-| <a name="input_scalr_hostname"></a> [scalr\_hostname](#input\_scalr\_hostname) | The Scalr hostname. | `string` | n/a | yes |
-| <a name="input_scalr_owners"></a> [scalr\_owners](#input\_scalr\_owners) | List of Scalr User IDs who will own the Provider Configuration. | `list(string)` | `[]` | no |
-| <a name="input_scalr_provider_name"></a> [scalr\_provider\_name](#input\_scalr\_provider\_name) | Name of the Scalr Provider Configuration. | `string` | `"scalr"` | no |
-| <a name="input_scalr_token"></a> [scalr\_token](#input\_scalr\_token) | The Scalr API token. | `string` | n/a | yes |
 | <a name="input_workspace_agent_pool_id"></a> [workspace\_agent\_pool\_id](#input\_workspace\_agent\_pool\_id) | The Agent Pool ID to assign to the Workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_workspace_auto_apply"></a> [workspace\_auto\_apply](#input\_workspace\_auto\_apply) | Whether to automatically apply runs when they are queued. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_workspace_auto_queue_runs"></a> [workspace\_auto\_queue\_runs](#input\_workspace\_auto\_queue\_runs) | Whether to automatically queue runs when a workspace's configuration changes. Can be overridden per workspace in the YAML file. Valid values are 'skip\_first', 'always', 'never', and 'on\_create\_only'. | `string` | `"always"` | no |
