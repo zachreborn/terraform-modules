@@ -238,12 +238,6 @@ variable "workspace_module_version_id" {
   default     = null
 }
 
-variable "workspace_operations" {
-  description = "Whether to enable remote execution for the workspace. When set to false, the workspace only stores its state. Can be overridden per workspace in the YAML file."
-  type        = bool
-  default     = true
-}
-
 variable "workspace_remote_backend" {
   description = "Whether Scalr manages the remote backend configuration. Can be overridden per workspace in the YAML file."
   type        = bool

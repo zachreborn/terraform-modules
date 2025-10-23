@@ -35,7 +35,6 @@ environment-2:
         - "hook-2"
       iac_platform: "terraform"
       module_version_id: "module-version-1"
-      operations: true
       provider_configuration:
         - "provider-1"
         - "provider-2"

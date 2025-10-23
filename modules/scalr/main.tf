@@ -103,7 +103,6 @@ resource "scalr_workspace" "this" {
   iac_platform                = try(each.value.iac_platform, var.workspace_iac_platform)
   module_version_id           = try(each.value.module_version_id, var.workspace_module_version_id)
   name                        = each.value.workspace
-  operations                  = try(each.value.operations, var.workspace_operations)
   remote_state_consumers      = try(each.value.remote_state_consumers, var.workspace_remote_state_consumers)
   run_operation_timeout       = try(each.value.run_operation_timeout, var.workspace_run_operation_timeout)
   ssh_key_id                  = try(each.value.ssh_key_id, var.workspace_ssh_key_id)
