@@ -114,14 +114,16 @@ resource "scalr_workspace" "this" {
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
   dynamic "provider_configuration" {
-    for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
+    # for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
+    for_each = try(each.value.provider_configuration, null)
     content {
       id = provider_configuration.value
     }
   }
 
   dynamic "vcs_repo" {
-    for_each = each.value.vcs_repo != null ? toset(each.value.vcs_repo) : []
+    # for_each = each.value.vcs_repo != null ? toset(each.value.vcs_repo) : []
+    for_each = try(each.value.vcs_repo, null)
     content {
       branch             = vcs_repo.value.branch
       dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
