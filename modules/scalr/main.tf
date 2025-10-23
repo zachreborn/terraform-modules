@@ -34,16 +34,16 @@ locals {
 # Provider Configurations
 ###########################
 
-resource "scalr_provider_configuration" "scalr" {
-  account_id   = data.scalr_current_account.account.id
-  environments = var.scalr_environments
-  name         = var.scalr_provider_name
-  owners       = var.scalr_owners
-  scalr {
-    hostname = var.scalr_hostname
-    token    = var.scalr_token
-  }
-}
+# resource "scalr_provider_configuration" "scalr" {
+#   account_id   = data.scalr_current_account.account.id
+#   environments = var.scalr_environments
+#   name         = var.scalr_provider_name
+#   owners       = var.scalr_owners
+#   scalr {
+#     hostname = var.scalr_hostname
+#     token    = var.scalr_token
+#   }
+# }
 
 resource "scalr_provider_configuration" "aws" {
   account_id             = data.scalr_current_account.account.id
