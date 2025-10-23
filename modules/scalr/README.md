@@ -101,7 +101,6 @@ No modules.
 |------|------|
 | scalr_environment.this | resource |
 | scalr_provider_configuration.aws | resource |
-| scalr_provider_configuration.scalr | resource |
 | scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
 
