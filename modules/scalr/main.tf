@@ -115,7 +115,7 @@ resource "scalr_workspace" "this" {
 
   dynamic "provider_configuration" {
     # for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
-    for_each = try(each.value.provider_configuration, null)
+    for_each = try(each.value.provider_configuration, [])
     content {
       id = provider_configuration.value
     }
@@ -123,7 +123,7 @@ resource "scalr_workspace" "this" {
 
   dynamic "vcs_repo" {
     # for_each = each.value.vcs_repo != null ? toset(each.value.vcs_repo) : []
-    for_each = try(each.value.vcs_repo, null)
+    for_each = try(each.value.vcs_repo, [])
     content {
       branch             = vcs_repo.value.branch
       dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
