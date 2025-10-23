@@ -96,7 +96,7 @@ resource "scalr_workspace" "this" {
   auto_apply                  = try(each.value.auto_apply, var.workspace_auto_apply)
   auto_queue_runs             = try(each.value.auto_queue_runs, var.workspace_auto_queue_runs)
   deletion_protection_enabled = try(each.value.deletion_protection_enabled, var.workspace_deletion_protection_enabled)
-  environment_id              = scalr_environment.this[each.value.environment_name].id
+  environment_id              = scalr_environment.this[each.value.environment].id
   execution_mode              = try(each.value.execution_mode, var.workspace_execution_mode)
   force_latest_run            = try(each.value.force_latest_run, var.workspace_force_latest_run)
   iac_platform                = try(each.value.iac_platform, var.workspace_iac_platform)
