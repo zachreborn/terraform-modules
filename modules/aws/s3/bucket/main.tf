@@ -209,14 +209,14 @@ resource "aws_s3_bucket_website_configuration" "this" {
   dynamic "error_document" {
     for_each = local.error_document == null ? [] : [local.error_document]
     content {
-      key = error_document.value.key
+      key = local.error_document
     }
   }
 
   dynamic "index_document" {
     for_each = local.index_document == null ? [] : [local.index_document]
     content {
-      suffix = index_document.value.suffix
+      suffix = local.index_document
     }
   }
 
