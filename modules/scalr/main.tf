@@ -20,7 +20,7 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  yaml_config = yamldecode(var.environments_config)
+  yaml_config = yamldecode(var.scalr_config)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment
@@ -47,7 +47,7 @@ locals {
 resource "scalr_provider_configuration" "aws" {
   account_id             = data.scalr_current_account.account.id
   environments           = var.aws_environments
-  export_shell_variables = var.export_shell_variables
+  export_shell_variables = var.aws_export_shell_variables
   name                   = var.aws_provider_name
   owners                 = var.aws_owners
   aws {
@@ -113,7 +113,6 @@ resource "scalr_workspace" "this" {
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
   dynamic "provider_configuration" {
-    # for_each = each.value.provider_configuration != null ? toset(each.value.provider_configuration) : []
     for_each = try(each.value.provider_configuration, [])
     content {
       id = provider_configuration.value
@@ -121,7 +120,6 @@ resource "scalr_workspace" "this" {
   }
 
   dynamic "vcs_repo" {
-    # for_each = each.value.vcs_repo != null ? toset(each.value.vcs_repo) : []
     for_each = try(each.value.vcs_repo, [])
     content {
       branch             = vcs_repo.value.branch

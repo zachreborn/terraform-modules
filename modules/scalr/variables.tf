@@ -73,6 +73,13 @@ variable "aws_environments" {
   default     = null
 }
 
+variable "aws_export_shell_variables" {
+  description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the aws provider configuration."
+  type        = bool
+  default     = false
+}
+
+
 variable "aws_external_id" {
   description = "The external ID to use when assuming the role. Required if aws_credentials_type is set to 'role_delegation' and the role requires an external ID."
   type        = string
@@ -299,13 +306,7 @@ variable "workspace_working_directory" {
 ###########################
 # General Variables
 ###########################
-variable "environments_config" {
-  description = "YAML formatted file defining environments and their workspaces."
+variable "scalr_config" {
+  description = "YAML formatted file defining Scalr environments and their workspaces."
   type        = string
-}
-
-variable "export_shell_variables" {
-  description = "Whether to export provider credentials as shell variables when using the Scalr CLI."
-  type        = bool
-  default     = false
 }
