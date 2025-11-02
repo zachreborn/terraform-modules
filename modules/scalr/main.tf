@@ -20,8 +20,7 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  yaml_config    = yamldecode(var.environments_config)
-  workspaces_map = { for environment, value in local.yaml_config : environment => value.workspaces }
+  yaml_config = yamldecode(var.environments_config)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment

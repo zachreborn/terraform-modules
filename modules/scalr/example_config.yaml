@@ -15,7 +15,7 @@ environment-2:
   federated_environments:
     - "federated-env-1"
     - "federated-env-2"
-  remote_backend: "s3"
+  remote_backend: true
   remote_backend_overridable: false
   storage_profile_id: "storage-profile-1"
   tag_ids:
@@ -25,7 +25,7 @@ environment-2:
     workspace-3:
       agent_pool_id: "agent-pool-1"
       auto_apply: true
-      auto_queue_runs: true
+      auto_queue_runs: "always"
       deletion_protection_enabled: false
       description: "This is workspace 3 in environment 2"
       execution_mode: "local"
@@ -38,7 +38,7 @@ environment-2:
       provider_configuration:
         - "provider-1"
         - "provider-2"
-      remote_backend: "s3"
+      remote_backend: true
       remote_backend_overridable: true
       tag_ids:
         - "tag-1"
