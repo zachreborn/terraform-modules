@@ -36,10 +36,11 @@ environment-2-all-options:
       provider_configuration:
         - "provider-1"
         - "provider-2"
+      remote_backend: true
       remote_state_consumers:
         - "consumer-1"
         - "consumer-2"
-      run_operation_timeout: "30" # in minutes
+      run_operation_timeout: 30 # in minutes
       ssh_key_id: "ssh-key-1"
       tag_ids:
         - "tag-1"
