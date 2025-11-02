@@ -29,7 +29,7 @@ environment-2:
       deletion_protection_enabled: false
       description: "This is workspace 3 in environment 2"
       execution_mode: "local"
-      force_last_run: false
+      force_latest_run: false
       hooks:
         - "hook-1"
         - "hook-2"
