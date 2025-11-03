@@ -46,6 +46,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
           VALIDATE_JSCPD: false
           VALIDATE_MARKDOWN: false
           VALIDATE_MARKDOWN_PRETTIER: false
