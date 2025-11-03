@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  checks: write
 jobs:
   test_terraform:
     name: Test Terraform
@@ -19,6 +22,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Terraform version
         id: version
@@ -39,6 +44,7 @@ jobs:
           # Full git history is needed to get a proper
           # list of changed files within `super-linter`
           fetch-depth: 0
+          persist-credentials: false
 
       # Run Linter against code base
       - name: Run linter against all changed files
