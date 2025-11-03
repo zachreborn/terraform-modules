@@ -2,10 +2,8 @@
 environment-1:
   workspaces:
     workspace-1:
-      name: "workspace-1"
       description: "This is workspace 1 in environment 1"
     workspace-2:
-      name: "workspace-2"
       description: "This is workspace 2 in environment 1"
 environment-2-all-options:
   default_provider_configurations:
