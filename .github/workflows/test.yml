@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
   checks: write
+  statuses: write
+
 jobs:
   test_terraform:
     name: Test Terraform
