@@ -4,5 +4,5 @@ aws_provider_1:
   environments:
     - "production"
     - "staging"
-  type: "oidc"
+  credentials_type: "oidc"
   role_arn: "arn:aws:iam::123456789012:role/ScalrOIDCRole"
