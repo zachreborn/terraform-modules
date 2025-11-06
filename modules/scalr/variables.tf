@@ -86,15 +86,15 @@ variable "aws_external_id" {
   default     = null
 }
 
-variable "aws_provider_name" {
-  description = "Name of the AWS Provider Configuration."
-  type        = string
-  default     = "aws"
-}
-
 variable "aws_owners" {
   description = "List of Scalr User IDs who will own the Provider Configuration."
   type        = list(string)
+  default     = null
+}
+
+variable "aws_provider_config" {
+  description = "YAML formatted file defining one or more AWS provider configurations."
+  type        = string
   default     = null
 }
 

@@ -1,0 +1,10 @@
+---
+aws_provider_1:
+  environments:
+    - "production"
+    - "staging"
+  export_shell_variables: false
+  owners:
+    - "user-1234567890abcdef0"
+  type: "oidc"
+  role_arn: "arn:aws:iam::123456789012:role/ScalrOIDCRole"

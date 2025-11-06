@@ -27,6 +27,7 @@ locals {
       workspace   = workspace
     })
   }]...)
+  aws_provider_config = yamldecode(var.aws_provider_config)
 }
 
 ###########################
@@ -45,20 +46,21 @@ locals {
 # }
 
 resource "scalr_provider_configuration" "aws" {
+  for_each               = local.aws_provider_config
   account_id             = data.scalr_current_account.account.id
-  environments           = var.aws_environments
-  export_shell_variables = var.aws_export_shell_variables
-  name                   = var.aws_provider_name
-  owners                 = var.aws_owners
+  environments           = try(each.value.environments, var.aws_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.aws_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.aws_owners)
   aws {
-    access_key          = var.aws_access_key
-    account_type        = var.aws_account_type
-    audience            = var.aws_audience
-    credentials_type    = var.aws_credentials_type
-    external_id         = var.aws_external_id
-    role_arn            = var.aws_role_arn
-    secret_key          = var.aws_secret_key
-    trusted_entity_type = var.aws_trusted_entity_type
+    access_key          = try(each.value.access_key, var.aws_access_key)
+    account_type        = try(each.value.account_type, var.aws_account_type)
+    audience            = try(each.value.audience, var.aws_audience)
+    credentials_type    = try(each.value.credentials_type, var.aws_credentials_type)
+    external_id         = try(each.value.external_id, var.aws_external_id)
+    role_arn            = try(each.value.role_arn, var.aws_role_arn)
+    secret_key          = try(each.value.secret_key, var.aws_secret_key)
+    trusted_entity_type = try(each.value.trusted_entity_type, var.aws_trusted_entity_type)
   }
 }
 
