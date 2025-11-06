@@ -79,7 +79,6 @@ variable "aws_export_shell_variables" {
   default     = false
 }
 
-
 variable "aws_external_id" {
   description = "The external ID to use when assuming the role. Required if aws_credentials_type is set to 'role_delegation' and the role requires an external ID."
   type        = string
@@ -180,7 +179,6 @@ variable "environment_tag_ids" {
   type        = list(string)
   default     = null
 }
-
 
 ###########################
 # Workspace Variables
