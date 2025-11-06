@@ -27,7 +27,7 @@ locals {
       workspace   = workspace
     })
   }]...)
-  aws_provider_config = yamldecode(var.aws_provider_config)
+  aws_provider_config = var.aws_provider_config != null ? yamldecode(var.aws_provider_config) : {}
 }
 
 ###########################
