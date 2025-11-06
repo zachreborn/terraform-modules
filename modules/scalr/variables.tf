@@ -88,15 +88,6 @@ variable "aws_trusted_entity_type" {
 }
 
 ###########################
-# Provider Default Variables
-###########################
-variable "default_environment_ids" {
-  description = "List of Environment IDs to set the default Provider Configurations in."
-  type        = list(string)
-  default     = null
-}
-
-###########################
 # Environment Variables
 ###########################
 variable "environment_default_provider_configurations" {
