@@ -1,5 +1,6 @@
 ---
 aws_provider_1:
+  audience: "your_audience_client_id"
   environments:
     - "production"
     - "staging"
