@@ -34,17 +34,6 @@ locals {
 # Provider Configurations
 ###########################
 
-# resource "scalr_provider_configuration" "scalr" {
-#   account_id   = data.scalr_current_account.account.id
-#   environments = var.scalr_environments
-#   name         = var.scalr_provider_name
-#   owners       = var.scalr_owners
-#   scalr {
-#     hostname = var.scalr_hostname
-#     token    = var.scalr_token
-#   }
-# }
-
 resource "scalr_provider_configuration" "aws" {
   for_each               = local.aws_provider_config
   account_id             = data.scalr_current_account.account.id
@@ -63,12 +52,6 @@ resource "scalr_provider_configuration" "aws" {
     trusted_entity_type = try(each.value.trusted_entity_type, var.aws_trusted_entity_type)
   }
 }
-
-# resource "scalr_provider_configuration_default" "this" {
-#   for_each                  = var.default_environment_ids != null ? toset(var.default_environment_ids) : {}
-#   environment_id            = each.key
-#   provider_configuration_id = scalr_provider_configuration.aws.id
-# }
 
 ###########################
 # Environment Configurations

@@ -1,37 +1,4 @@
 ###########################
-# Scalr Provider Variables
-###########################
-
-# variable "scalr_environments" {
-#   description = "List of Scalr Environments which the provider will be shared to."
-#   type        = list(string)
-#   default     = null
-# }
-
-# variable "scalr_hostname" {
-#   description = "The Scalr hostname."
-#   type        = string
-# }
-
-# variable "scalr_provider_name" {
-#   description = "Name of the Scalr Provider Configuration."
-#   type        = string
-#   default     = "scalr"
-# }
-
-# variable "scalr_owners" {
-#   description = "List of Scalr User IDs who will own the Provider Configuration."
-#   type        = list(string)
-#   default     = []
-# }
-
-# variable "scalr_token" {
-#   description = "The Scalr API token."
-#   type        = string
-#   sensitive   = true
-# }
-
-###########################
 # AWS Provider Variables
 ###########################
 variable "aws_access_key" {

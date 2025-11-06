@@ -1,8 +1,8 @@
 ---
 aws_provider_1:
   audience: "your_audience_client_id"
+  credentials_type: "oidc"
   environments:
     - "production"
     - "staging"
-  credentials_type: "oidc"
   role_arn: "arn:aws:iam::123456789012:role/ScalrOIDCRole"
