@@ -117,7 +117,7 @@ No modules.
 | <a name="input_aws_export_shell_variables"></a> [aws\_export\_shell\_variables](#input\_aws\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the aws provider configuration. | `bool` | `false` | no |
 | <a name="input_aws_external_id"></a> [aws\_external\_id](#input\_aws\_external\_id) | The external ID to use when assuming the role. Required if aws\_credentials\_type is set to 'role\_delegation' and the role requires an external ID. | `string` | `null` | no |
 | <a name="input_aws_owners"></a> [aws\_owners](#input\_aws\_owners) | List of Scalr User IDs who will own the Provider Configuration. | `list(string)` | `null` | no |
-| <a name="input_aws_provider_name"></a> [aws\_provider\_name](#input\_aws\_provider\_name) | Name of the AWS Provider Configuration. | `string` | `"aws"` | no |
+| <a name="input_aws_provider_config"></a> [aws\_provider\_config](#input\_aws\_provider\_config) | YAML formatted file defining one or more AWS provider configurations. | `string` | `null` | no |
 | <a name="input_aws_role_arn"></a> [aws\_role\_arn](#input\_aws\_role\_arn) | The ARN of the role to assume. Required if aws\_credentials\_type is set to 'oidc' or 'role\_delegation'. | `string` | `null` | no |
 | <a name="input_aws_secret_key"></a> [aws\_secret\_key](#input\_aws\_secret\_key) | The AWS secret key. | `string` | `null` | no |
 | <a name="input_aws_trusted_entity_type"></a> [aws\_trusted\_entity\_type](#input\_aws\_trusted\_entity\_type) | The type of trusted entity for the role. Valid values are 'aws\_account' and 'aws\_service'. | `string` | `"aws_account"` | no |
