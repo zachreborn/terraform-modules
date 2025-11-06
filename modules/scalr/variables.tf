@@ -82,7 +82,7 @@ variable "aws_trusted_entity_type" {
   type        = string
   default     = null
   validation {
-    condition     = contains([null, "aws_account", "aws_service"], var.aws_trusted_entity_type)
+    condition     = contains(["aws_account", "aws_service"], var.aws_trusted_entity_type) || var.aws_trusted_entity_type == null
     error_message = "The aws_trusted_entity_type must be one of null, 'aws_account', or 'aws_service'."
   }
 }
