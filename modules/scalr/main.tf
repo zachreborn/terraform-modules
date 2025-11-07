@@ -105,7 +105,7 @@ resource "scalr_workspace" "this" {
   }
 
   dynamic "vcs_repo" {
-    for_each = try(each.value.vcs_repo, [])
+    for_each = each.value.vcs_repo != null ? each.value.vcs_repo : {}
     content {
       branch             = vcs_repo.value.branch
       dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
