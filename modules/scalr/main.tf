@@ -104,17 +104,28 @@ resource "scalr_workspace" "this" {
     }
   }
 
-  dynamic "vcs_repo" {
-    for_each = each.value.vcs_repo != null ? each.value.vcs_repo : {}
-    content {
-      branch             = vcs_repo.branch
-      dry_runs_enabled   = vcs_repo.dry_runs_enabled
-      identifier         = vcs_repo.identifier
-      ingress_submodules = vcs_repo.ingress_submodules
-      path               = vcs_repo.path
-      trigger_patterns   = vcs_repo.trigger_patterns
-      trigger_prefixes   = vcs_repo.trigger_prefixes
-      version_constraint = vcs_repo.version_constraint
-    }
+  # dynamic "vcs_repo" {
+  #   for_each = each.value.vcs_repo != null ? each.value.vcs_repo : {}
+  #   content {
+  #     branch             = vcs_repo.branch
+  #     dry_runs_enabled   = vcs_repo.dry_runs_enabled
+  #     identifier         = vcs_repo.identifier
+  #     ingress_submodules = vcs_repo.ingress_submodules
+  #     path               = vcs_repo.path
+  #     trigger_patterns   = vcs_repo.trigger_patterns
+  #     trigger_prefixes   = vcs_repo.trigger_prefixes
+  #     version_constraint = vcs_repo.version_constraint
+  #   }
+  # }
+  vcs_repo {
+    branch             = each.value.vcs_repo.branch
+    dry_runs_enabled   = each.value.vcs_repo.dry_runs_enabled
+    identifier         = each.value.vcs_repo.identifier
+    ingress_submodules = each.value.vcs_repo.ingress_submodules
+    path               = each.value.vcs_repo.path
+    trigger_patterns   = each.value.vcs_repo.trigger_patterns
+    trigger_prefixes   = each.value.vcs_repo.trigger_prefixes
+    version_constraint = each.value.vcs_repo.version_constraint
   }
+
 }
