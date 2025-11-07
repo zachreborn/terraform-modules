@@ -107,14 +107,14 @@ resource "scalr_workspace" "this" {
   dynamic "vcs_repo" {
     for_each = each.value.vcs_repo != null ? each.value.vcs_repo : {}
     content {
-      branch             = vcs_repo.value.branch
-      dry_runs_enabled   = vcs_repo.value.dry_runs_enabled
-      identifier         = vcs_repo.value.identifier
-      ingress_submodules = vcs_repo.value.ingress_submodules
-      path               = vcs_repo.value.path
-      trigger_patterns   = vcs_repo.value.trigger_patterns
-      trigger_prefixes   = vcs_repo.value.trigger_prefixes
-      version_constraint = vcs_repo.value.version_constraint
+      branch             = vcs_repo.branch
+      dry_runs_enabled   = vcs_repo.dry_runs_enabled
+      identifier         = vcs_repo.identifier
+      ingress_submodules = vcs_repo.ingress_submodules
+      path               = vcs_repo.path
+      trigger_patterns   = vcs_repo.trigger_patterns
+      trigger_prefixes   = vcs_repo.trigger_prefixes
+      version_constraint = vcs_repo.version_constraint
     }
   }
 }
