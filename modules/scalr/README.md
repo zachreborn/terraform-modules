@@ -219,7 +219,7 @@ No modules.
 | <a name="input_vcs_provider_draft_pr_runs_enabled"></a> [vcs\_provider\_draft\_pr\_runs\_enabled](#input\_vcs\_provider\_draft\_pr\_runs\_enabled) | Whether draft PR runs are enabled for the VCS Provider. | `bool` | `false` | no |
 | <a name="input_vcs_provider_environments"></a> [vcs\_provider\_environments](#input\_vcs\_provider\_environments) | List of Scalr Environments which the VCS Provider will be shared to. | `list(string)` | <pre>[<br/>  "*"<br/>]</pre> | no |
 | <a name="input_vcs_provider_name"></a> [vcs\_provider\_name](#input\_vcs\_provider\_name) | The name of the VCS Provider. | `string` | n/a | yes |
-| <a name="input_vcs_provider_token"></a> [vcs\_provider\_token](#input\_vcs\_provider\_token) | The api key or personal access token for the VCS Provider. | `string` | n/a | yes |
+| <a name="input_vcs_provider_token"></a> [vcs\_provider\_token](#input\_vcs\_provider\_token) | The api key or personal access token for the VCS Provider. | `string` | `null` | no |
 | <a name="input_vcs_provider_url"></a> [vcs\_provider\_url](#input\_vcs\_provider\_url) | The URL of the VCS Provider. Required when using a self-hosted vcs provider. | `string` | `null` | no |
 | <a name="input_vcs_provider_username"></a> [vcs\_provider\_username](#input\_vcs\_provider\_username) | The username for the VCS Provider. Required for 'bitbucket\_enterprise'. | `string` | `null` | no |
 | <a name="input_vcs_provider_vcs_type"></a> [vcs\_provider\_vcs\_type](#input\_vcs\_provider\_vcs\_type) | The type of VCS Provider. Valid values are 'github', 'github\_enterprise', 'gitlab', 'gitlab\_enterprise', and 'bitbucket\_enterprise'. | `string` | `"github"` | no |
