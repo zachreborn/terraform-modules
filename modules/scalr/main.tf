@@ -114,9 +114,9 @@ resource "scalr_workspace" "this" {
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
   dynamic "provider_configuration" {
-    for_each = each.value.provider_configuration != null ? [1] : []
+    for_each = (each.value.provider_configuration != null && scalr_provider_configuration.aws[each.value.provider_configuration.name].id != null) ? [1] : []
     content {
-      id    = try(scalr_provider_configuration.aws[each.value.provider_configuration.name].id, null)
+      id    = scalr_provider_configuration.aws[each.value.provider_configuration.name].id
       alias = try(each.value.provider_configuration.alias, null)
     }
   }
