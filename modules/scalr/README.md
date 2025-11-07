@@ -186,7 +186,6 @@ No modules.
 |------|------|
 | scalr_environment.this | resource |
 | scalr_provider_configuration.aws | resource |
-| scalr_vcs_provider.this | resource |
 | scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
 
@@ -239,6 +238,7 @@ No modules.
 | <a name="input_workspace_terraform_version"></a> [workspace\_terraform\_version](#input\_workspace\_terraform\_version) | The opentofu or terraform version to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'X.Y.Z'. | `string` | `null` | no |
 | <a name="input_workspace_type"></a> [workspace\_type](#input\_workspace\_type) | The type of workspace. Valid values are 'production', 'staging', 'testing', 'development', and 'unmapped'. | `string` | `"production"` | no |
 | <a name="input_workspace_var_files"></a> [workspace\_var\_files](#input\_workspace\_var\_files) | A list of paths which hold the '.tfvars' files for the workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `[]` | no |
+| <a name="input_workspace_vcs_provider_id"></a> [workspace\_vcs\_provider\_id](#input\_workspace\_vcs\_provider\_id) | The VCS Provider ID to use for the workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_workspace_working_directory"></a> [workspace\_working\_directory](#input\_workspace\_working\_directory) | The working directory as a relative path which opentofu or terraform will run for the workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 
 ## Outputs
