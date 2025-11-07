@@ -1,4 +1,58 @@
 ###########################
+# VCS Provider Variables
+###########################
+variable "vcs_provider_agent_pool_id" {
+  description = "The Agent Pool ID to assign to the VCS Provider."
+  type        = string
+  default     = null
+}
+
+variable "vcs_provider_draft_pr_runs_enabled" {
+  description = "Whether draft PR runs are enabled for the VCS Provider."
+  type        = bool
+  default     = false
+}
+
+variable "vcs_provider_environments" {
+  description = "List of Scalr Environments which the VCS Provider will be shared to."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "vcs_provider_name" {
+  description = "The name of the VCS Provider."
+  type        = string
+}
+
+variable "vcs_provider_token" {
+  description = "The api key or personal access token for the VCS Provider."
+  type        = string
+  sensitive   = true
+}
+
+variable "vcs_provider_url" {
+  description = "The URL of the VCS Provider. Required when using a self-hosted vcs provider."
+  type        = string
+  default     = null
+}
+
+variable "vcs_provider_username" {
+  description = "The username for the VCS Provider. Required for 'bitbucket_enterprise'."
+  type        = string
+  default     = null
+}
+
+variable "vcs_provider_vcs_type" {
+  description = "The type of VCS Provider. Valid values are 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', and 'bitbucket_enterprise'."
+  type        = string
+  default     = "github"
+  validation {
+    condition     = contains(["github", "github_enterprise", "gitlab", "gitlab_enterprise", "bitbucket_enterprise"], var.vcs_provider_vcs_type)
+    error_message = "The vcs_type must be one of 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', or 'bitbucket_enterprise'."
+  }
+}
+
+###########################
 # AWS Provider Variables
 ###########################
 variable "aws_access_key" {

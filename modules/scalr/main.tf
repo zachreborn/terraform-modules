@@ -31,6 +31,21 @@ locals {
 }
 
 ###########################
+# VCS Provider Configurations
+###########################
+resource "scalr_vcs_provider" "this" {
+  account_id            = data.scalr_current_account.account.id
+  agent_pool_id         = var.vcs_provider_agent_pool_id
+  draft_pr_runs_enabled = var.vcs_provider_draft_pr_runs_enabled
+  environments          = var.vcs_provider_environments
+  name                  = var.vcs_provider_name
+  token                 = var.vcs_provider_token
+  url                   = var.vcs_provider_url
+  username              = var.vcs_provider_username
+  vcs_type              = var.vcs_provider_vcs_type
+}
+
+###########################
 # Provider Configurations
 ###########################
 
@@ -95,6 +110,7 @@ resource "scalr_workspace" "this" {
   terraform_version           = try(each.value.terraform_version, var.workspace_terraform_version)
   type                        = try(each.value.type, var.workspace_type)
   var_files                   = try(each.value.var_files, var.workspace_var_files)
+  vcs_provider_id             = try(each.value.vcs_provider_id, var.workspace_vcs_provider_id)
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
   dynamic "provider_configuration" {
