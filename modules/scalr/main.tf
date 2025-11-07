@@ -120,27 +120,27 @@ resource "scalr_workspace" "this" {
     }
   }
 
-  # dynamic "vcs_repo" {
-  #   for_each = each.value.vcs_repo != null ? each.value.vcs_repo : {}
-  #   content {
-  #     branch             = vcs_repo.branch
-  #     dry_runs_enabled   = vcs_repo.dry_runs_enabled
-  #     identifier         = vcs_repo.identifier
-  #     ingress_submodules = vcs_repo.ingress_submodules
-  #     path               = vcs_repo.path
-  #     trigger_patterns   = vcs_repo.trigger_patterns
-  #     trigger_prefixes   = vcs_repo.trigger_prefixes
-  #     version_constraint = vcs_repo.version_constraint
-  #   }
-  # }
-  vcs_repo {
-    branch             = try(each.value.vcs_repo.branch, null)
-    dry_runs_enabled   = try(each.value.vcs_repo.dry_runs_enabled, true)
-    identifier         = each.value.vcs_repo.identifier
-    ingress_submodules = try(each.value.vcs_repo.ingress_submodules, false)
-    path               = try(each.value.vcs_repo.path, null)
-    trigger_patterns   = try(each.value.vcs_repo.trigger_patterns, null)
-    trigger_prefixes   = try(each.value.vcs_repo.trigger_prefixes, null)
-    version_constraint = try(each.value.vcs_repo.version_constraint, null)
+  dynamic "vcs_repo" {
+    for_each = each.value.vcs_repo != null ? [1] : []
+    content {
+      branch             = try(each.value.vcs_repo.branch, null)
+      dry_runs_enabled   = try(each.value.vcs_repo.dry_runs_enabled, true)
+      identifier         = each.value.vcs_repo.identifier
+      ingress_submodules = try(each.value.vcs_repo.ingress_submodules, false)
+      path               = try(each.value.vcs_repo.path, null)
+      trigger_patterns   = try(each.value.vcs_repo.trigger_patterns, null)
+      trigger_prefixes   = try(each.value.vcs_repo.trigger_prefixes, null)
+      version_constraint = try(each.value.vcs_repo.version_constraint, null)
+    }
   }
+  # vcs_repo {
+  #   branch             = try(each.value.vcs_repo.branch, null)
+  #   dry_runs_enabled   = try(each.value.vcs_repo.dry_runs_enabled, true)
+  #   identifier         = each.value.vcs_repo.identifier
+  #   ingress_submodules = try(each.value.vcs_repo.ingress_submodules, false)
+  #   path               = try(each.value.vcs_repo.path, null)
+  #   trigger_patterns   = try(each.value.vcs_repo.trigger_patterns, null)
+  #   trigger_prefixes   = try(each.value.vcs_repo.trigger_prefixes, null)
+  #   version_constraint = try(each.value.vcs_repo.version_constraint, null)
+  # }
 }
