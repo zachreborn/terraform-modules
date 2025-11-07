@@ -186,6 +186,7 @@ No modules.
 |------|------|
 | scalr_environment.this | resource |
 | scalr_provider_configuration.aws | resource |
+| scalr_vcs_provider.this | resource |
 | scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
 
@@ -214,6 +215,14 @@ No modules.
 | <a name="input_environment_storage_profile_id"></a> [environment\_storage\_profile\_id](#input\_environment\_storage\_profile\_id) | The Storage Profile ID to use for the Environment. | `string` | `null` | no |
 | <a name="input_environment_tag_ids"></a> [environment\_tag\_ids](#input\_environment\_tag\_ids) | List of Tag IDs to assign to the Environment. | `list(string)` | `null` | no |
 | <a name="input_scalr_config"></a> [scalr\_config](#input\_scalr\_config) | YAML formatted file defining Scalr environments and their workspaces. | `string` | n/a | yes |
+| <a name="input_vcs_provider_agent_pool_id"></a> [vcs\_provider\_agent\_pool\_id](#input\_vcs\_provider\_agent\_pool\_id) | The Agent Pool ID to assign to the VCS Provider. | `string` | `null` | no |
+| <a name="input_vcs_provider_draft_pr_runs_enabled"></a> [vcs\_provider\_draft\_pr\_runs\_enabled](#input\_vcs\_provider\_draft\_pr\_runs\_enabled) | Whether draft PR runs are enabled for the VCS Provider. | `bool` | `false` | no |
+| <a name="input_vcs_provider_environments"></a> [vcs\_provider\_environments](#input\_vcs\_provider\_environments) | List of Scalr Environments which the VCS Provider will be shared to. | `list(string)` | <pre>[<br/>  "*"<br/>]</pre> | no |
+| <a name="input_vcs_provider_name"></a> [vcs\_provider\_name](#input\_vcs\_provider\_name) | The name of the VCS Provider. | `string` | n/a | yes |
+| <a name="input_vcs_provider_token"></a> [vcs\_provider\_token](#input\_vcs\_provider\_token) | The api key or personal access token for the VCS Provider. | `string` | n/a | yes |
+| <a name="input_vcs_provider_url"></a> [vcs\_provider\_url](#input\_vcs\_provider\_url) | The URL of the VCS Provider. Required when using a self-hosted vcs provider. | `string` | `null` | no |
+| <a name="input_vcs_provider_username"></a> [vcs\_provider\_username](#input\_vcs\_provider\_username) | The username for the VCS Provider. Required for 'bitbucket\_enterprise'. | `string` | `null` | no |
+| <a name="input_vcs_provider_vcs_type"></a> [vcs\_provider\_vcs\_type](#input\_vcs\_provider\_vcs\_type) | The type of VCS Provider. Valid values are 'github', 'github\_enterprise', 'gitlab', 'gitlab\_enterprise', and 'bitbucket\_enterprise'. | `string` | `"github"` | no |
 | <a name="input_workspace_agent_pool_id"></a> [workspace\_agent\_pool\_id](#input\_workspace\_agent\_pool\_id) | The Agent Pool ID to assign to the Workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_workspace_auto_apply"></a> [workspace\_auto\_apply](#input\_workspace\_auto\_apply) | Whether to automatically apply runs when they are queued. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_workspace_auto_queue_runs"></a> [workspace\_auto\_queue\_runs](#input\_workspace\_auto\_queue\_runs) | Whether to automatically queue runs when a workspace's configuration changes. Can be overridden per workspace in the YAML file. Valid values are 'skip\_first', 'always', 'never', and 'on\_create\_only'. | `string` | `"always"` | no |
