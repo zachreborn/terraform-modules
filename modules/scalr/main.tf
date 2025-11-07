@@ -116,7 +116,7 @@ resource "scalr_workspace" "this" {
   dynamic "provider_configuration" {
     for_each = each.value.provider_configuration != null ? [1] : []
     content {
-      id    = scalr_provider_configuration.aws[each.value.provider_configuration.name].id
+      id    = try(scalr_provider_configuration.aws[each.value.provider_configuration.name].id, null)
       alias = try(each.value.provider_configuration.alias, null)
     }
   }
