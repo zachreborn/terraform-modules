@@ -308,6 +308,12 @@ variable "workspace_var_files" {
   default     = []
 }
 
+variable "workspace_vcs_provider_id" {
+  description = "The VCS Provider ID to use for the workspace. Can be overridden per workspace in the YAML file."
+  type        = string
+  default     = null
+}
+
 variable "workspace_working_directory" {
   description = "The working directory as a relative path which opentofu or terraform will run for the workspace. Can be overridden per workspace in the YAML file."
   type        = string
