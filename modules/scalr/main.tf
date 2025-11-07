@@ -110,7 +110,7 @@ resource "scalr_workspace" "this" {
   terraform_version           = try(each.value.terraform_version, var.workspace_terraform_version)
   type                        = try(each.value.type, var.workspace_type)
   var_files                   = try(each.value.var_files, var.workspace_var_files)
-  vcs_provider_id             = try(each.value.vcs_provider_id, var.workspace_vcs_provider_id)
+  vcs_provider_id             = try(each.value.vcs_provider_id, var.vcs_provider_id)
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
   dynamic "provider_configuration" {
