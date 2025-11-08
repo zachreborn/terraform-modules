@@ -20,21 +20,22 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  yaml_config = yamldecode(var.scalr_config)
+  aws_provider_config = yamldecode(var.aws_provider_config)
+  vcs_provider_config = yamldecode(var.vcs_provider_config)
+  yaml_config         = yamldecode(var.scalr_config)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment
       workspace   = workspace
     })
   }]...)
-  aws_provider_config = var.aws_provider_config != null ? yamldecode(var.aws_provider_config) : {}
 }
 
 ###########################
 # VCS Provider Configurations
 ###########################
 resource "scalr_vcs_provider" "this" {
-  for_each              = local.yaml_config.vcs_providers != null ? local.yaml_config.vcs_providers : {}
+  for_each              = local.vcs_provider_config != null ? local.vcs_provider_config : {}
   account_id            = data.scalr_current_account.account.id
   agent_pool_id         = try(each.value.agent_pool_id, var.vcs_provider_agent_pool_id)
   draft_pr_runs_enabled = try(each.value.draft_pr_runs_enabled, var.vcs_provider_draft_pr_runs_enabled)

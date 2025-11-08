@@ -108,12 +108,6 @@ variable "aws_owners" {
   default     = null
 }
 
-variable "aws_provider_config" {
-  description = "YAML formatted file defining one or more AWS provider configurations."
-  type        = string
-  default     = null
-}
-
 variable "aws_role_arn" {
   description = "The ARN of the role to assume. Required if aws_credentials_type is set to 'oidc' or 'role_delegation'."
   type        = string
@@ -312,9 +306,21 @@ variable "workspace_working_directory" {
 ###########################
 # General Variables
 ###########################
+variable "aws_provider_config" {
+  description = "YAML formatted file defining one or more AWS provider configurations."
+  type        = string
+  default     = null
+}
+
 variable "scalr_config" {
   description = "YAML formatted file defining Scalr environments and their workspaces."
   type        = string
+}
+
+variable "vcs_provider_config" {
+  description = "YAML formatted file defining one or more VCS provider configurations."
+  type        = string
+  default     = null
 }
 
 variable "vcs_provider_id" {
