@@ -33,17 +33,18 @@ locals {
 ###########################
 # VCS Provider Configurations
 ###########################
-# resource "scalr_vcs_provider" "this" {
-#   account_id            = data.scalr_current_account.account.id
-#   agent_pool_id         = var.vcs_provider_agent_pool_id
-#   draft_pr_runs_enabled = var.vcs_provider_draft_pr_runs_enabled
-#   environments          = var.vcs_provider_environments
-#   name                  = var.vcs_provider_name
-#   token                 = var.vcs_provider_token
-#   url                   = var.vcs_provider_url
-#   username              = var.vcs_provider_username
-#   vcs_type              = var.vcs_provider_vcs_type
-# }
+resource "scalr_vcs_provider" "this" {
+  for_each              = local.yaml_config.vcs_providers != null ? local.yaml_config.vcs_providers : {}
+  account_id            = data.scalr_current_account.account.id
+  agent_pool_id         = try(each.value.agent_pool_id, var.vcs_provider_agent_pool_id)
+  draft_pr_runs_enabled = try(each.value.draft_pr_runs_enabled, var.vcs_provider_draft_pr_runs_enabled)
+  environments          = try(each.value.environments, var.vcs_provider_environments)
+  name                  = each.key
+  token                 = try(each.value.token, var.vcs_provider_token)
+  url                   = try(each.value.url, var.vcs_provider_url)
+  username              = try(each.value.username, var.vcs_provider_username)
+  vcs_type              = try(each.value.vcs_type, var.vcs_provider_vcs_type)
+}
 
 ###########################
 # Provider Configurations

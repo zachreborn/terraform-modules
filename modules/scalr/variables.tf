@@ -19,11 +19,6 @@ variable "vcs_provider_environments" {
   default     = ["*"]
 }
 
-variable "vcs_provider_name" {
-  description = "The name of the VCS Provider."
-  type        = string
-}
-
 variable "vcs_provider_token" {
   description = "The api key or personal access token for the VCS Provider."
   type        = string
