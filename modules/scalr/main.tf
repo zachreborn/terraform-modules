@@ -20,9 +20,9 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  aws_provider_config = yamldecode(var.aws_provider_config)
-  vcs_provider_config = yamldecode(var.vcs_provider_config)
-  yaml_config         = yamldecode(var.scalr_config)
+  aws_provider_config = try(yamldecode(var.aws_provider_config), null)
+  vcs_provider_config = try(yamldecode(var.vcs_provider_config), null)
+  yaml_config         = try(yamldecode(var.scalr_config), null)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment
