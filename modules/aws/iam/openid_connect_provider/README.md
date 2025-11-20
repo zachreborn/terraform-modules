@@ -67,7 +67,7 @@
 This example creates a single OIDC provider in AWS for Scalr.
 
 ```
-module scalr_oidc_provider {
+module "scalr_oidc_provider" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/iam/openid_connect_provider"
 
   name = "scalr-oidc-provider"
