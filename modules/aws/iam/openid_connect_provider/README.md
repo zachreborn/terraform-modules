@@ -116,7 +116,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The arn of the IAM OIDC provider. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
