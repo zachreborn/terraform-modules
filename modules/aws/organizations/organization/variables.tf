@@ -30,3 +30,16 @@ variable "feature_set" {
     error_message = "Value must be ALL or CONSOLIDATED_BILLING."
   }
 }
+
+variable "enabled_features" {
+  description = "A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions."
+  type        = list(string)
+  default = [
+    "RootCredentialsManagement",
+    "RootSessions"
+  ]
+}
+
+############################################################
+# General Variables
+############################################################

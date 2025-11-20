@@ -110,6 +110,19 @@ variable "bucket_object_lock_enabled" {
 }
 
 ######################
+# S3 Ownership Control Variables
+######################
+variable "object_ownership" {
+  type        = string
+  description = "(Optional) The Object Ownership setting for the bucket. When set to BucketOwnerEnforced, S3 bucket ACLs are not allowed to be utilized. Valid values: BucketOwnerPreferred, BucketOwnerEnforced, ObjectWriter. Defaults to BucketOwnerEnforced."
+  default     = "BucketOwnerEnforced"
+  validation {
+    condition     = contains(["BucketOwnerPreferred", "BucketOwnerEnforced", "ObjectWriter"], var.object_ownership)
+    error_message = "The value must be one of BucketOwnerPreferred, BucketOwnerEnforced, or ObjectWriter."
+  }
+}
+
+######################
 # S3 ACL Variables
 ######################
 
@@ -178,9 +191,42 @@ variable "intelligent_tiering_days" {
 ######################
 
 variable "lifecycle_rules" {
+  description = "(Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration."
   type        = any
-  description = "(Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration. Type should be list(map(string))."
-  default     = null
+  # Commenting out as this is causing a bug where expiration is always being set to 0 days. https://github.com/zachreborn/terraform-modules/issues/60
+  # type = list(object({
+  #   id     = string
+  #   status = string
+  #   abort_incomplete_multipart_upload = optional(object({
+  #     days_after_initiation = number
+  #   }))
+  #   expiration = optional(object({
+  #     date                         = optional(string)
+  #     days                         = optional(number)
+  #     expired_object_delete_marker = optional(bool)
+  #   }), {})
+  #   filter = optional(object({
+  #     object_size_greater_than = optional(number)
+  #     object_size_less_than    = optional(number)
+  #     prefix                   = optional(string)
+  #     tag                      = optional(map(string))
+  #   }))
+  #   noncurrent_version_expiration = optional(object({
+  #     newer_noncurrent_versions = optional(number)
+  #     noncurrent_days           = optional(number)
+  #   }))
+  #   noncurrent_version_transitions = optional(list(object({
+  #     newer_noncurrent_versions = optional(number)
+  #     noncurrent_days           = optional(number)
+  #     storage_class             = optional(string)
+  #   })), [])
+  #   transition = optional(list(object({
+  #     date          = optional(string)
+  #     days          = optional(number)
+  #     storage_class = optional(string)
+  #   })), [])
+  # }))
+  default = null
 }
 
 ######################
@@ -282,6 +328,39 @@ variable "sse_algorithm" {
 }
 
 ######################
+# S3 Website Variables
+######################
+
+variable "error_document" {
+  type        = string
+  description = "(Optional) An absolute path to the document to return in case of a 4XX error."
+  default     = "error.html"
+}
+
+variable "index_document" {
+  type        = string
+  description = "(Optional) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders."
+  default     = "index.html"
+}
+
+variable "redirect_all_requests_to" {
+  type        = any
+  description = "(Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request."
+  default     = null
+  # Example:
+  # redirect_all_requests_to = {
+  #   host_name = "www.example.com"
+  #   protocol  = "https"
+  # }
+}
+
+variable "routing_rules" {
+  type        = any
+  description = "(Optional) A list of routing rules that can redirect requests to different directories or buckets. These rules are applied in the order that you specify them. For more information about routing rules, see Configuring advanced conditional redirects in the Amazon Simple Storage Service Developer Guide."
+  default     = null
+}
+
+######################
 # S3 Versioning Variables
 ######################
 
@@ -331,7 +410,7 @@ variable "enable_intelligent_tiering" {
 
 variable "enable_public_access_block" {
   type        = bool
-  description = "(Optional) Enable public access block for S3 bucket. If true, this will create a public access block for the bucket. Defaults to true."
+  description = "(Optional) Enable public access block for S3 bucket. If true, this will block all public access to the bucket. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("true|false", var.enable_public_access_block))
@@ -349,11 +428,22 @@ variable "enable_s3_bucket_logging" {
   }
 }
 
+variable "enable_website" {
+  type        = bool
+  description = "(Optional) Enable static website hosting for S3 bucket. If true, this will create a website configuration for the bucket. Defaults to false."
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_website))
+    error_message = "The value must be true or false."
+  }
+}
+
 variable "expected_bucket_owner" {
   type        = string
   description = "(Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error."
   default     = null
 }
+
 
 variable "tags" {
   type        = map(any)

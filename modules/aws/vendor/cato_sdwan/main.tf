@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -77,8 +77,8 @@ resource "aws_security_group" "cato_lan_sg" {
 ############################################
 
 resource "aws_eip" "wan_external_ip" {
-  vpc   = true
-  count = var.number
+  count  = var.number
+  domain = "vpc"
 }
 
 resource "aws_eip_association" "wan_external_ip" {
@@ -199,7 +199,7 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
 
 resource "aws_cloudwatch_metric_alarm" "system" {
   actions_enabled     = true
-  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
+  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.region}:ec2:recover"]
   alarm_description   = "EC2 instance StatusCheckFailed_System alarm"
   alarm_name          = format("%s-system-alarm", element(aws_instance.ec2_instance[*].id, count.index))
   comparison_operator = "GreaterThanOrEqualToThreshold"

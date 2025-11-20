@@ -1,10 +1,9 @@
 ---
-name: Terraform Bug
+name: Bug
 about: Bug template for tracking issues, next steps, and solutions.
 title: ''
 labels: bug
-assignees: zachreborn, TheJalpa, jakeasarus
-
+assignees: zachreborn
 ---
 
 ### Describe the bug
@@ -29,5 +28,5 @@ Description of solution, leave blank if not yet found.
 ### Confirmation
 Confirmation that proposed solution is successful. 
 
-### Next Steps
-[] Step 1...
+### Current Workaround
+A clear and concise description of any alternative solutions or features you've considered.

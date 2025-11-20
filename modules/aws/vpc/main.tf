@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -14,8 +14,14 @@ terraform {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+###########################
+# Locals
+###########################
+
 locals {
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
+  enable_igw   = var.enable_internet_gateway ? ((length(var.public_subnets_list) != 0 || var.public_subnets_list != null) ? true : false) : false
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 ###########################
@@ -30,18 +36,19 @@ resource "aws_vpc" "vpc" {
   tags                 = merge(tomap({ Name = var.name }), var.tags)
 }
 
+
 ###########################
 # VPC Endpoints
 ###########################
 
-resource "aws_security_group" "security_group" {
-  description = "SSM VPC service endpoint SG."
-  name        = "ssm_vpc_endpoint_sg"
-  tags        = var.tags
+resource "aws_security_group" "vpc_endpoint" {
+  description = "VPC endpoint interface security group"
+  name        = "vpc_endpoint_sg"
+  tags        = merge({ Name = "vpc_endpoint_sg" }, var.tags)
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
-    description = "SSM Communication over HTTPS"
+    description = "VPC endpoint communication over HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -49,7 +56,7 @@ resource "aws_security_group" "security_group" {
   }
 
   ingress {
-    description = "SSM Communication over HTTPS"
+    description = "VPC endpoint communication over HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "udp"
@@ -61,77 +68,137 @@ resource "aws_security_group" "security_group" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    # Allow SSM outbound traffic to SSM endpoint
+    # Allow VPC endpoint outbound traffic to VPC endpoint
     #tfsec:ignore:aws-ec2-no-public-egress-sgr
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-
+# SSM VPC Endpoints
 resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2messages"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_vpc_endpoint" "kms" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.kms"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.kms"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_vpc_endpoint" "ssm" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_vpc_endpoint" "ssm-contacts" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-contacts"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-contacts"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_vpc_endpoint" "ssm-incidents" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssm-incidents"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssm-incidents"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_vpc_endpoint" "ssmmessages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
-  security_group_ids  = [aws_security_group.security_group.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ssmmessages"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_subnets[*].id[0]]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   tags                = merge(tomap({ Name = var.name }), var.tags)
+}
+
+# ECR VPC Endpoints
+resource "aws_vpc_endpoint" "ecr_api" {
+  count               = var.enable_ecr_vpc_endpoints ? 1 : 0
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.api"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.vpc.id
+  tags                = merge(tomap({ Name = var.name }), var.tags)
+}
+
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  count               = var.enable_ecr_vpc_endpoints ? 1 : 0
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.dkr"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.vpc.id
+  tags                = merge(tomap({ Name = var.name }), var.tags)
+}
+
+# Cloudwatch Logs Endpoint
+resource "aws_vpc_endpoint" "cloudwatch" {
+  count               = var.enable_ecr_vpc_endpoints ? 1 : 0
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.logs"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.vpc.id
+  tags                = merge(tomap({ Name = var.name }), var.tags)
+}
+
+# S3 Endpoint
+resource "aws_vpc_endpoint" "s3" {
+  count             = var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints ? 1 : 0
+  service_name      = local.service_name
+  tags              = merge(tomap({ Name = var.name }), var.tags)
+  vpc_endpoint_type = "Gateway"
+  vpc_id            = aws_vpc.vpc.id
+}
+
+resource "aws_vpc_endpoint_route_table_association" "private_s3" {
+  count           = (var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints) ? length(aws_route_table.private_route_table[*].id) : 0
+  route_table_id  = element(aws_route_table.private_route_table[*].id, count.index)
+  vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
+}
+
+resource "aws_vpc_endpoint_route_table_association" "public_s3" {
+  count           = (var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints) ? length(aws_route_table.public_route_table[*].id) : 0
+  route_table_id  = element(aws_route_table.public_route_table[*].id, count.index)
+  vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
 }
 
 ###########################
@@ -194,32 +261,36 @@ resource "aws_subnet" "workspaces_subnets" {
 ###########################
 
 resource "aws_internet_gateway" "igw" {
+  count  = local.enable_igw ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
   vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_route_table" "public_route_table" {
+  count            = length(var.public_subnets_list) != 0 ? 1 : 0
   propagating_vgws = var.public_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-public", var.name) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
+# !FIX: We should probably update this to just disable the igw if there are no public subnets present and default to disable since we are unlikely to use it in our infra.  
 resource "aws_route" "public_default_route" {
+  count                  = local.enable_igw ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.igw.id
-  route_table_id         = aws_route_table.public_route_table.id
+  gateway_id             = aws_internet_gateway.igw[0].id
+  route_table_id         = aws_route_table.public_route_table[0].id
 }
 
 resource "aws_eip" "nateip" {
-  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
-  vpc   = true
+  count  = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
+  domain = "vpc"
 }
 
 resource "aws_nat_gateway" "natgw" {
   depends_on = [aws_internet_gateway.igw]
 
+  count         = var.enable_nat_gateway ? (local.enable_igw ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0) : 0
   allocation_id = element(aws_eip.nateip[*].id, (var.single_nat_gateway ? 0 : count.index))
-  count         = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
   subnet_id     = element(aws_subnet.public_subnets[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
@@ -228,14 +299,14 @@ resource "aws_nat_gateway" "natgw" {
 ###########################
 
 resource "aws_route_table" "private_route_table" {
-  count            = length(var.azs)
+  count            = length(var.private_subnets_list)
   propagating_vgws = var.private_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-private-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "private_default_route_natgw" {
-  count                  = var.enable_nat_gateway ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
@@ -249,14 +320,14 @@ resource "aws_route" "private_default_route_fw" {
 }
 
 resource "aws_route_table" "db_route_table" {
-  count            = length(var.azs)
+  count            = length(var.db_subnets_list)
   propagating_vgws = var.db_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-db-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "db_default_route_natgw" {
-  count                  = var.enable_nat_gateway ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
@@ -270,14 +341,14 @@ resource "aws_route" "db_default_route_fw" {
 }
 
 resource "aws_route_table" "dmz_route_table" {
-  count            = length(var.azs)
+  count            = length(var.dmz_subnets_list)
   propagating_vgws = var.dmz_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-dmz-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "dmz_default_route_natgw" {
-  count                  = var.enable_nat_gateway ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
@@ -291,14 +362,14 @@ resource "aws_route" "dmz_default_route_fw" {
 }
 
 resource "aws_route_table" "mgmt_route_table" {
-  count            = length(var.azs)
+  count            = length(var.mgmt_subnets_list)
   propagating_vgws = var.mgmt_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-mgmt-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "mgmt_default_route_natgw" {
-  count                  = var.enable_nat_gateway ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
@@ -312,14 +383,14 @@ resource "aws_route" "mgmt_default_route_fw" {
 }
 
 resource "aws_route_table" "workspaces_route_table" {
-  count            = length(var.azs)
+  count            = length(var.workspaces_subnets_list)
   propagating_vgws = var.workspaces_propagating_vgws
   tags             = merge(var.tags, ({ "Name" = format("%s-rt-workspaces-%s", var.name, element(var.azs, count.index)) }))
   vpc_id           = aws_vpc.vpc.id
 }
 
 resource "aws_route" "workspaces_default_route_natgw" {
-  count                  = var.enable_nat_gateway ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
@@ -332,23 +403,7 @@ resource "aws_route" "workspaces_default_route_fw" {
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
 }
 
-resource "aws_vpc_endpoint" "s3" {
-  count        = var.enable_s3_endpoint ? 1 : 0
-  vpc_id       = aws_vpc.vpc.id
-  service_name = local.service_name
-}
 
-resource "aws_vpc_endpoint_route_table_association" "private_s3" {
-  count           = var.enable_s3_endpoint ? length(var.private_subnets_list) : 0
-  vpc_endpoint_id = aws_vpc_endpoint.s3[count.index]
-  route_table_id  = element(aws_route_table.private_route_table[*].id, count.index)
-}
-
-resource "aws_vpc_endpoint_route_table_association" "public_s3" {
-  count           = var.enable_s3_endpoint ? length(var.public_subnets_list) : 0
-  vpc_endpoint_id = aws_vpc_endpoint.s3[count.index]
-  route_table_id  = aws_route_table.public_route_table.id
-}
 
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnets_list)
@@ -358,7 +413,7 @@ resource "aws_route_table_association" "private" {
 
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnets_list)
-  route_table_id = aws_route_table.public_route_table.id
+  route_table_id = aws_route_table.public_route_table[0].id
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
 }
 
@@ -384,132 +439,22 @@ resource "aws_route_table_association" "workspaces" {
 # VPC Flow Logs
 ######################################################
 
-###########################
-# KMS Encryption Key
-###########################
+module "vpc_flow_logs" {
+  source = "../flow_logs"
 
-resource "aws_kms_key" "key" {
-  count                    = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  customer_master_key_spec = var.key_customer_master_key_spec
-  description              = var.key_description
-  deletion_window_in_days  = var.key_deletion_window_in_days
-  enable_key_rotation      = var.key_enable_key_rotation
-  key_usage                = var.key_usage
-  is_enabled               = var.key_is_enabled
-  tags                     = var.tags
-  policy = jsonencode({
-    "Version" = "2012-10-17",
-    "Statement" = [
-      {
-        "Sid"    = "Enable IAM User Permissions",
-        "Effect" = "Allow",
-        "Principal" = {
-          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action"   = "kms:*",
-        "Resource" = "*"
-      },
-      {
-        "Effect" = "Allow",
-        "Principal" = {
-          "Service" = "logs.${data.aws_region.current.name}.amazonaws.com"
-        },
-        "Action" = [
-          "kms:Encrypt*",
-          "kms:Decrypt*",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:Describe*"
-        ],
-        "Resource" = "*",
-        "Condition" = {
-          "ArnEquals" = {
-            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_kms_alias" "alias" {
-  count         = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  name_prefix   = var.key_name_prefix
-  target_key_id = aws_kms_key.key[0].key_id
-}
-
-###########################
-# CloudWatch Log Group
-###########################
-
-resource "aws_cloudwatch_log_group" "log_group" {
-  count             = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  kms_key_id        = aws_kms_key.key[0].arn
-  name_prefix       = var.cloudwatch_name_prefix
-  retention_in_days = var.cloudwatch_retention_in_days
-  tags              = var.tags
-}
-
-###########################
-# IAM Policy
-###########################
-resource "aws_iam_policy" "policy" {
-  count       = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  description = var.iam_policy_description
-  name_prefix = var.iam_policy_name_prefix
-  path        = var.iam_policy_path
-  tags        = var.tags
-  #tfsec:ignore:aws-iam-no-policy-wildcards
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      Resource = [
-        "${aws_cloudwatch_log_group.log_group[0].arn}:*"
-      ]
-    }]
-  })
-}
-
-###########################
-# IAM Role
-###########################
-
-resource "aws_iam_role" "role" {
-  count                 = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  assume_role_policy    = var.iam_role_assume_role_policy
-  description           = var.iam_role_description
-  force_detach_policies = var.iam_role_force_detach_policies
-  max_session_duration  = var.iam_role_max_session_duration
-  name_prefix           = var.iam_role_name_prefix
-  permissions_boundary  = var.iam_role_permissions_boundary
-}
-
-resource "aws_iam_role_policy_attachment" "role_attach" {
-  count      = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  role       = aws_iam_role.role[0].name
-  policy_arn = aws_iam_policy.policy[0].arn
-}
-
-
-###########################
-# VPC Flow Log
-###########################
-
-resource "aws_flow_log" "vpc_flow" {
-  count                    = (var.enable_vpc_flow_logs == true ? 1 : 0)
-  iam_role_arn             = aws_iam_role.role[0].arn
-  log_destination_type     = var.flow_log_destination_type
-  log_destination          = aws_cloudwatch_log_group.log_group[0].arn
-  max_aggregation_interval = var.flow_max_aggregation_interval
-  tags                     = var.tags
-  traffic_type             = var.flow_traffic_type
-  vpc_id                   = aws_vpc.vpc.id
+  count                           = var.enable_flow_logs ? 1 : 0
+  cloudwatch_name_prefix          = var.cloudwatch_name_prefix
+  cloudwatch_retention_in_days    = var.cloudwatch_retention_in_days
+  iam_policy_name_prefix          = var.iam_policy_name_prefix
+  iam_policy_path                 = var.iam_policy_path
+  iam_role_description            = var.iam_role_description
+  iam_role_name_prefix            = var.iam_role_name_prefix
+  key_name_prefix                 = var.key_name_prefix
+  flow_deliver_cross_account_role = var.flow_deliver_cross_account_role
+  flow_log_destination_type       = var.flow_log_destination_type
+  flow_log_format                 = var.flow_log_format
+  flow_max_aggregation_interval   = var.flow_max_aggregation_interval
+  flow_traffic_type               = var.flow_traffic_type
+  flow_vpc_ids                    = [aws_vpc.vpc.id]
+  tags                            = var.tags
 }

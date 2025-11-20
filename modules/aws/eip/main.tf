@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -17,5 +17,5 @@ resource "aws_eip" "eip" {
   instance                  = var.instance
   network_interface         = var.network_interface
   tags                      = var.tags
-  vpc                       = var.vpc
+  domain                    = "vpc"
 }

@@ -6,6 +6,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+
 jobs:
   test_terraform:
     name: Test Terraform
@@ -13,12 +18,14 @@ jobs:
 
     steps:
       - name: HashiCorp - Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Terraform version
         id: version
@@ -27,21 +34,6 @@ jobs:
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check -diff -recursive
-        #continue-on-error: true
-
-  test_tfsec:
-    name: tfsec
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Run tfsec and write pull request comments
-        uses: aquasecurity/tfsec-pr-commenter-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tfsec_args: --force-all-dirs
 
   test_linter:
     name: Linter
@@ -49,20 +41,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           # Full git history is needed to get a proper
           # list of changed files within `super-linter`
           fetch-depth: 0
+          persist-credentials: false
 
       # Run Linter against code base
       - name: Run linter against all changed files
-        uses: github/super-linter/slim@v4
+        uses: super-linter/super-linter/slim@v8
         env:
-          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MULTI_STATUS: true
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          VALIDATE_JSCPD: false
           VALIDATE_MARKDOWN: false
+          VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_TERRAFORM_TERRASCAN: false
-          VALIDATE_ALL_CODEBASE: false

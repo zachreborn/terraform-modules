@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -37,8 +37,8 @@ resource "aws_security_group" "fortigate_fw_sg" {
 }
 
 resource "aws_eip" "external_ip" {
-  vpc   = true
-  count = var.number
+  count  = var.number
+  domain = "vpc"
 
   lifecycle {
     prevent_destroy = true

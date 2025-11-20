@@ -32,40 +32,35 @@ variable "key_enable_key_rotation" {
   description = "(Optional) Specifies whether key rotation is enabled. Defaults to false."
   default     = true
   type        = bool
+  validation {
+    condition     = can(regex("true|false", var.key_enable_key_rotation))
+    error_message = "The value must be true or false."
+  }
 }
 
 variable "key_usage" {
   description = "(Optional) Specifies the intended use of the key. Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported."
   default     = "ENCRYPT_DECRYPT"
   type        = string
+  validation {
+    condition     = can(regex("ENCRYPT_DECRYPT", var.key_usage))
+    error_message = "The value must be ENCRYPT_DECRYPT."
+  }
 }
 
 variable "key_is_enabled" {
   description = "(Optional) Specifies whether the key is enabled. Defaults to true."
   default     = true
   type        = string
-}
-
-variable "key_name_prefix" {
-  description = "(Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
-  default     = "alias/cloudtrail_key_"
-  type        = string
+  validation {
+    condition     = can(regex("true|false", var.key_is_enabled))
+    error_message = "The value must be true or false."
+  }
 }
 
 ######################
 # S3 Variables
 ######################
-
-variable "bucket_prefix" {
-  description = "(Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket."
-  type        = string
-}
-
-variable "acl" {
-  description = "(Optional) The canned ACL to apply. Defaults to 'private'."
-  type        = string
-  default     = "private"
-}
 
 variable "bucket_lifecycle_rule_id" {
   type        = string
@@ -99,6 +94,16 @@ variable "bucket_key_enabled" {
   default     = true
   validation {
     condition     = can(regex("true|false", var.bucket_key_enabled))
+    error_message = "The value must be true or false."
+  }
+}
+
+variable "force_destroy" {
+  type        = bool
+  description = "(Optional) A boolean that indicates all objects should be deleted from the S3 bucket so that the bucket can be destroyed without error. These objects are not recoverable."
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.force_destroy))
     error_message = "The value must be true or false."
   }
 }
@@ -138,12 +143,6 @@ variable "target_prefix" {
 ###########################
 # CloudWatch Log Group Variables
 ###########################
-
-variable "cloudwatch_name_prefix" {
-  description = "(Optional, Forces new resource) Creates a unique name beginning with the specified prefix."
-  default     = "cloudtrail_"
-  type        = string
-}
 
 variable "cloudwatch_retention_in_days" {
   description = "(Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire."
@@ -216,6 +215,10 @@ variable "iam_role_max_session_duration" {
   type        = number
   description = "(Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours."
   default     = 3600
+  validation {
+    condition     = var.iam_role_max_session_duration >= 3600 && var.iam_role_max_session_duration <= 43200
+    error_message = "The value must be a non-zero positive integer between 1 and 12 hours, or 3600 and 43200 seconds."
+  }
 }
 
 variable "iam_role_name_prefix" {
@@ -238,12 +241,10 @@ variable "name" {
   description = "Name of the trail"
   type        = string
   default     = "cloudtrail"
-}
-
-variable "s3_key_prefix" {
-  type        = string
-  description = "S3 key prefix to be applied to all logs"
-  default     = "cloudtrail-logs"
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.name))
+    error_message = "The value must be alphanumeric with dashes. No underscores allowed due to S3 bucket naming requirements."
+  }
 }
 
 variable "include_global_service_events" {

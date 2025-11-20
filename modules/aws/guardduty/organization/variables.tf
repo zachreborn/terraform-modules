@@ -34,13 +34,13 @@ variable "admin_account_id" {
   }
 }
 
-variable "auto_enable" {
-  type        = bool
-  description = "(Optional) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region."
-  default     = true
+variable "auto_enable_organization_members" {
+  type        = string
+  description = "(Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are ALL, NEW, NONE. Defaults to ALL."
+  default     = "ALL"
   validation {
-    condition     = can(regex("^(true|false)$", var.auto_enable))
-    error_message = "The value of auto_enable must be either true or false."
+    condition     = can(regex("^(ALL|NEW|NONE)$", var.auto_enable_organization_members))
+    error_message = "The value of auto_enable_organization_members must be either ALL, NEW, or NONE."
   }
 }
 

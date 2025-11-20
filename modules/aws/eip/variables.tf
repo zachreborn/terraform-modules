@@ -21,9 +21,3 @@ variable "tags" {
   description = "(Optional) A mapping of tags to assign to the resource."
   default     = {}
 }
-
-variable "vpc" {
-  type        = string
-  description = "(Optional) Boolean if the EIP is in a VPC or not."
-  default     = true
-}

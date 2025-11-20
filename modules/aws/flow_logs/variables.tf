@@ -21,7 +21,7 @@ variable "key_deletion_window_in_days" {
 }
 
 variable "key_enable_key_rotation" {
-  description = "(Optional) Specifies whether key rotation is enabled. Defaults to false."
+  description = "(Optional) Specifies whether key rotation is enabled. Defaults to true."
   default     = true
   type        = bool
 }
@@ -66,7 +66,7 @@ variable "cloudwatch_retention_in_days" {
 
 variable "iam_policy_description" {
   description = "(Optional, Forces new resource) Description of the IAM policy."
-  default     = "Used with flow logs to send packet capture logs to a CloudWatch log group"
+  default     = "Used with flow logs to send packet capture logs to a CloudWatch log group."
   type        = string
 }
 
@@ -136,13 +136,30 @@ variable "iam_role_permissions_boundary" {
 }
 
 ###########################
-# VPC Flow Log
+# Flow Log
 ###########################
+variable "flow_deliver_cross_account_role" {
+  type        = string
+  description = "(Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account."
+  default     = null
+}
+
+variable "flow_eni_ids" {
+  type        = list(string)
+  description = "(Optional) List of Elastic Network Interface IDs to attach the flow logs to."
+  default     = null
+}
 
 variable "flow_log_destination_type" {
   type        = string
   description = "(Optional) The type of the logging destination. Valid values: cloud-watch-logs, s3. Default: cloud-watch-logs."
   default     = "cloud-watch-logs"
+}
+
+variable "flow_log_format" {
+  type        = string
+  description = "(Optional) The fields to include in the flow log record, in the order in which they should appear. For more information, see Flow Log Records. Default: fields are in the order that they are described in the Flow Log Records section."
+  default     = null
 }
 
 variable "flow_max_aggregation_interval" {
@@ -151,15 +168,34 @@ variable "flow_max_aggregation_interval" {
   default     = 60
 }
 
+variable "flow_subnet_ids" {
+  type        = list(string)
+  description = "(Optional) List of Subnet IDs to attach the flow logs to."
+  default     = null
+}
+
 variable "flow_traffic_type" {
   type        = string
   description = "(Optional) The type of traffic to capture. Valid values: ACCEPT,REJECT, ALL."
   default     = "ALL"
 }
 
-variable "flow_vpc_id" {
-  type        = string
-  description = "(Required) VPC ID to attach to"
+variable "flow_transit_gateway_ids" {
+  type        = list(string)
+  description = "(Optional) List of IDs of the transit gateways to attach the flow logs to."
+  default     = null
+}
+
+variable "flow_transit_gateway_attachment_ids" {
+  type        = list(string)
+  description = "(Optional) List of IDs of the transit gateway attachments to attach the flow logs to."
+  default     = null
+}
+
+variable "flow_vpc_ids" {
+  type        = list(string)
+  description = "(Optional) List of VPC IDs to attach the flow logs to."
+  default     = null
 }
 
 ###############################################################

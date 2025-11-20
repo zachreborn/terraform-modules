@@ -4,9 +4,27 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
+}
+
+###########################
+# Locals 
+###########################
+
+locals {
+  # Logic for public access blocking on S3 buckets.
+  # If enable_website is true, then all public_access_blocks are disabled. If enable_website is false, the public_access_blocks are enabled OR
+  # each individual block can be enabled.
+  block_public_acls       = var.enable_website ? false : (var.enable_public_access_block ? true : var.block_public_acls)
+  block_public_policy     = var.enable_website ? false : (var.enable_public_access_block ? true : var.block_public_policy)
+  ignore_public_acls      = var.enable_website ? false : (var.enable_public_access_block ? true : var.ignore_public_acls)
+  restrict_public_buckets = var.enable_website ? false : (var.enable_public_access_block ? true : var.restrict_public_buckets)
+
+  # Set error_document and index_document to null if redirect_all_requests_to is set.
+  error_document = var.redirect_all_requests_to != null ? null : var.error_document
+  index_document = var.redirect_all_requests_to != null ? null : var.index_document
 }
 
 ###########################
@@ -41,6 +59,14 @@ resource "aws_s3_bucket" "this" {
   force_destroy       = var.bucket_force_destroy
   object_lock_enabled = var.bucket_object_lock_enabled
   tags                = var.tags
+}
+
+resource "aws_s3_bucket_ownership_controls" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    object_ownership = var.object_ownership
+  }
 }
 
 resource "aws_s3_bucket_acl" "this" {
@@ -155,12 +181,11 @@ resource "aws_s3_bucket_policy" "this" {
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
-  count                   = var.enable_public_access_block ? 1 : 0
   bucket                  = aws_s3_bucket.this.id
-  block_public_acls       = var.block_public_acls
-  block_public_policy     = var.block_public_policy
-  ignore_public_acls      = var.ignore_public_acls
-  restrict_public_buckets = var.restrict_public_buckets
+  block_public_acls       = local.block_public_acls
+  block_public_policy     = local.block_public_policy
+  ignore_public_acls      = local.ignore_public_acls
+  restrict_public_buckets = local.restrict_public_buckets
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
@@ -172,6 +197,34 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
     apply_server_side_encryption_by_default {
       kms_master_key_id = var.enable_kms_key ? aws_kms_key.s3[0].arn : null
       sse_algorithm     = var.sse_algorithm
+    }
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "this" {
+  count         = var.enable_website ? 1 : 0
+  bucket        = aws_s3_bucket.this.id
+  routing_rules = var.routing_rules
+
+  dynamic "error_document" {
+    for_each = local.error_document == null ? [] : [local.error_document]
+    content {
+      key = error_document.value
+    }
+  }
+
+  dynamic "index_document" {
+    for_each = local.index_document == null ? [] : [local.index_document]
+    content {
+      suffix = index_document.value
+    }
+  }
+
+  dynamic "redirect_all_requests_to" {
+    for_each = var.redirect_all_requests_to == null ? [] : [var.redirect_all_requests_to]
+    content {
+      host_name = redirect_all_requests_to.value.host_name
+      protocol  = redirect_all_requests_to.value.protocol
     }
   }
 }
