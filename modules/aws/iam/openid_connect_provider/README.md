@@ -64,11 +64,15 @@
 
 ### Simple Example
 
-```
-module test {
-  source =
+This example creates a single OIDC provider in AWS for Scalr.
 
-  variable =
+```
+module scalr_oidc_provider {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_openid_connect_provider"
+
+  name = "scalr-oidc-provider"
+  url = "https://<your-scalr-domain>.scalr.io"
+  client_id_list = ["<your-scalr-client-id>"]
 }
 ```
 
@@ -79,18 +83,19 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| Name                                                                     | Version  |
+| ------------------------------------------------------------------------ | -------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| Name                                             | Version  |
+| ------------------------------------------------ | -------- |
+| <a name="provider_aws"></a> [aws](#provider_aws) | >= 4.0.0 |
 
 ## Modules
 
@@ -98,25 +103,26 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
+| Name                                                                                                                                            | Type     |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | [aws_iam_openid_connect_provider.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_client_id_list"></a> [client\_id\_list](#input\_client\_id\_list) | A list of client IDs (also known as audiences within OIDC). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. This is the value that's sent as the client\_id parameter on OAuth requests. | `list(string)` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | The name of the provider to create, such as Terraform Cloud. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | Key-value map of resource tags. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_thumbprint_list"></a> [thumbprint\_list](#input\_thumbprint\_list) | A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). | `list(string)` | `null` | no |
-| <a name="input_url"></a> [url](#input\_url) | The URL of the identity provider. Corresponds to the iss claim. | `string` | n/a | yes |
+| Name                                                                           | Description                                                                                                                                                                                                                                                         | Type           | Default                                     | Required |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------- | :------: |
+| <a name="input_client_id_list"></a> [client_id_list](#input_client_id_list)    | A list of client IDs (also known as audiences within OIDC). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. This is the value that's sent as the client_id parameter on OAuth requests. | `list(string)` | n/a                                         |   yes    |
+| <a name="input_name"></a> [name](#input_name)                                  | The name of the provider to create, such as Terraform Cloud.                                                                                                                                                                                                        | `string`       | n/a                                         |   yes    |
+| <a name="input_tags"></a> [tags](#input_tags)                                  | Key-value map of resource tags.                                                                                                                                                                                                                                     | `map(string)`  | <pre>{<br/> "terraform": "true"<br/>}</pre> |    no    |
+| <a name="input_thumbprint_list"></a> [thumbprint_list](#input_thumbprint_list) | A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).                                                                                                                                                   | `list(string)` | `null`                                      |    no    |
+| <a name="input_url"></a> [url](#input_url)                                     | The URL of the identity provider. Corresponds to the iss claim.                                                                                                                                                                                                     | `string`       | n/a                                         |   yes    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | The arn of the IAM OIDC provider. |
+| Name                                         | Description                       |
+| -------------------------------------------- | --------------------------------- |
+| <a name="output_arn"></a> [arn](#output_arn) | The arn of the IAM OIDC provider. |
+
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
