@@ -516,11 +516,6 @@ variable "mtls_config" {
     truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)
   })
   default = null
-
-  validation {
-    condition     = var.enable_mtls && var.domain_name != null ? var.mtls_config != null : true
-    error_message = "mtls_config is required when enable_mtls is true and domain_name is provided. Please provide truststore_uri and optionally truststore_version."
-  }
 }
 
 variable "bucket_name" {
