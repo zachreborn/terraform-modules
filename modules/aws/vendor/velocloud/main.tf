@@ -185,11 +185,12 @@ resource "aws_instance" "ec2_instance" {
   monitoring           = var.monitoring
   volume_tags          = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
   tags                 = merge(var.tags, ({ "Name" = format("%s%d", var.instance_name_prefix, count.index + 1) }))
-  user_data = var.user_data != null ? var.user_data : base64encode(templatefile("${path.module}/user_data.tftpl", {
+  user_data            = var.user_data == null ? null : var.user_data
+  user_data_base64 = var.user_data == null ? base64encode(templatefile("${path.module}/user_data.tftpl", {
     velocloud_activation_key     = element(var.velocloud_activation_keys, count.index)
     velocloud_ignore_cert_errors = var.velocloud_ignore_cert_errors
     velocloud_orchestrator       = var.velocloud_orchestrator
-  }))
+  })) : null
 
   metadata_options {
     http_endpoint = var.http_endpoint
