@@ -241,8 +241,10 @@ No modules.
 | [aws_api_gateway_deployment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
 | [aws_api_gateway_domain_name.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_domain_name) | resource |
 | [aws_api_gateway_gateway_response.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_gateway_response) | resource |
+| [aws_api_gateway_integration.root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
 | [aws_api_gateway_integration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
 | [aws_api_gateway_integration_response.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration_response) | resource |
+| [aws_api_gateway_method.root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
 | [aws_api_gateway_method.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
 | [aws_api_gateway_method_response.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_response) | resource |
 | [aws_api_gateway_method_settings.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_settings) | resource |
@@ -296,6 +298,8 @@ No modules.
 | <a name="input_put_rest_api_mode"></a> [put\_rest\_api\_mode](#input\_put\_rest\_api\_mode) | The mode for the PUT Rest API operation. Valid values are 'merge' and 'overwrite'. | `string` | `"overwrite"` | no |
 | <a name="input_request_validators"></a> [request\_validators](#input\_request\_validators) | A map of request validators for the API. | <pre>map(object({<br/>    validate_request_body       = bool<br/>    validate_request_parameters = bool<br/>    name                        = optional(string) # Defaults to map key if not provided<br/>  }))</pre> | `{}` | no |
 | <a name="input_resources"></a> [resources](#input\_resources) | A map of resources to create under the API. Each key is the resource path and the value is a map of resource settings. | <pre>map(object({<br/>    path_part = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_root_integrations"></a> [root\_integrations](#input\_root\_integrations) | A map of integrations for methods on the root resource. | <pre>map(object({<br/>    type                    = string<br/>    uri                     = optional(string)<br/>    method                  = string # The root_method key<br/>    integration_http_method = optional(string)<br/>    credentials             = optional(string)<br/>    connection_type         = optional(string)<br/>    connection_id           = optional(string)<br/>    vpc_link_key            = optional(string) # The VPC Link key from vpc_links variable<br/>    request_parameters      = optional(map(string))<br/>    request_templates       = optional(map(string))<br/>    passthrough_behavior    = optional(string)<br/>    content_handling        = optional(string)<br/>    timeout_milliseconds    = optional(number, 29000)<br/>    cache_key_parameters    = optional(list(string))<br/>    cache_namespace         = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_root_methods"></a> [root\_methods](#input\_root\_methods) | A map of methods to create on the root resource. Each key is a unique identifier for the method. | <pre>map(object({<br/>    http_method          = string<br/>    authorization        = string<br/>    authorizer_id        = optional(string) # Can be authorizer key or ARN<br/>    authorization_scopes = optional(list(string))<br/>    api_key_required     = optional(bool, false)<br/>    operation_name       = optional(string)<br/>    request_models       = optional(map(string))<br/>    request_parameters   = optional(map(string))<br/>    request_validator_id = optional(string) # Can be validator key or ID<br/>  }))</pre> | `{}` | no |
 | <a name="input_security_policy"></a> [security\_policy](#input\_security\_policy) | Security policy for the custom domain. Valid values: TLS\_1\_0, TLS\_1\_2 | `string` | `"TLS_1_2"` | no |
 | <a name="input_stage_description"></a> [stage\_description](#input\_stage\_description) | Description of the stage | `string` | `null` | no |
 | <a name="input_stage_name"></a> [stage\_name](#input\_stage\_name) | Name of the stage | `string` | n/a | yes |
@@ -336,6 +340,8 @@ No modules.
 | <a name="output_mtls_enabled"></a> [mtls\_enabled](#output\_mtls\_enabled) | Whether mTLS is enabled |
 | <a name="output_request_validators"></a> [request\_validators](#output\_request\_validators) | API Gateway request validators created |
 | <a name="output_resources"></a> [resources](#output\_resources) | API Gateway resources created |
+| <a name="output_root_integrations"></a> [root\_integrations](#output\_root\_integrations) | API Gateway root resource integrations created |
+| <a name="output_root_methods"></a> [root\_methods](#output\_root\_methods) | API Gateway root resource methods created |
 | <a name="output_root_resource_id"></a> [root\_resource\_id](#output\_root\_resource\_id) | Resource ID of the REST API root resource |
 | <a name="output_stage_arn"></a> [stage\_arn](#output\_stage\_arn) | ARN of the API Gateway stage |
 | <a name="output_stage_execution_arn"></a> [stage\_execution\_arn](#output\_stage\_execution\_arn) | Execution ARN to be used in Lambda permissions |
