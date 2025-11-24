@@ -87,6 +87,11 @@ variable "vault_disaster_recovery_name" {
 # Plan Variables
 ###############################################################
 
+variable "changeable_for_days" {
+  description = "(Required) the number of days for which a backup can be changed"
+  default     = 3
+}
+
 variable "backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "prod_backups"
