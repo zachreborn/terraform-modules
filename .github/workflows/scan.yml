@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Clone repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Checkov Scan
         uses: bridgecrewio/checkov-action@v12
