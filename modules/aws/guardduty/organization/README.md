@@ -113,6 +113,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 | <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 4.0.0 |
 | <a name="provider_aws.organization_security_account"></a> [aws.organization\_security\_account](#provider\_aws.organization\_security\_account) | >= 4.0.0 |
 
@@ -127,6 +128,13 @@ No modules.
 | [aws_guardduty_detector.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector) | resource |
 | [aws_guardduty_organization_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_admin_account) | resource |
 | [aws_guardduty_organization_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration) | resource |
+| [aws_guardduty_organization_configuration_feature.ebs_malware_protection](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.eks_audit_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.eks_runtime_monitoring](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.lambda_network_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.rds_login_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.runtime_monitoring](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.s3_data_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
 
 ## Inputs
 
@@ -135,8 +143,15 @@ No modules.
 | <a name="input_admin_account_id"></a> [admin\_account\_id](#input\_admin\_account\_id) | (Optional) The AWS account ID for the GuardDuty delegated administrator account. This must be an existing account in the organization. | `string` | `null` | no |
 | <a name="input_auto_enable_organization_members"></a> [auto\_enable\_organization\_members](#input\_auto\_enable\_organization\_members) | (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are ALL, NEW, NONE. Defaults to ALL. | `string` | `"ALL"` | no |
 | <a name="input_enable"></a> [enable](#input\_enable) | (Optional) Enable monitoring and feedback reporting. Setting to false is equivalent to 'suspending' GuardDuty. Defaults to true. | `bool` | `true` | no |
+| <a name="input_enable_ebs_malware_protection"></a> [enable\_ebs\_malware\_protection](#input\_enable\_ebs\_malware\_protection) | (Optional) Enable EBS Malware Protection for the organization. | `bool` | `false` | no |
+| <a name="input_enable_eks_audit_logs"></a> [enable\_eks\_audit\_logs](#input\_enable\_eks\_audit\_logs) | (Optional) Enable EKS Audit Logs for the organization. | `bool` | `false` | no |
+| <a name="input_enable_eks_runtime_monitoring"></a> [enable\_eks\_runtime\_monitoring](#input\_enable\_eks\_runtime\_monitoring) | (Optional) Enable EKS Runtime Monitoring for the organization. | `bool` | `false` | no |
+| <a name="input_enable_lambda_network_logs"></a> [enable\_lambda\_network\_logs](#input\_enable\_lambda\_network\_logs) | (Optional) Enable Lambda Network Logs for the organization. | `bool` | `false` | no |
+| <a name="input_enable_rds_login_events"></a> [enable\_rds\_login\_events](#input\_enable\_rds\_login\_events) | (Optional) Enable RDS Login Events for the organization. | `bool` | `false` | no |
+| <a name="input_enable_runtime_monitoring"></a> [enable\_runtime\_monitoring](#input\_enable\_runtime\_monitoring) | (Optional) Enable Runtime Monitoring for the organization. | `bool` | `false` | no |
+| <a name="input_enable_s3_data_events"></a> [enable\_s3\_data\_events](#input\_enable\_s3\_data\_events) | (Optional) Enable S3 Data Events for the organization. | `bool` | `false` | no |
 | <a name="input_finding_publishing_frequency"></a> [finding\_publishing\_frequency](#input\_finding\_publishing\_frequency) | (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to SIX\_HOURS. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: FIFTEEN\_MINUTES, ONE\_HOUR, SIX\_HOURS. See AWS Documentation for more information. | `string` | `"SIX_HOURS"` | no |
-| <a name="input_s3_logs_enable"></a> [s3\_logs\_enable](#input\_s3\_logs\_enable) | (Optional) When this setting is enabled, GuardDuty will automatically enable S3 data sources for new accounts in the organization. Defaults to true. | `bool` | `true` | no |
+| <a name="input_guardduty_detector_auto_enable"></a> [guardduty\_detector\_auto\_enable](#input\_guardduty\_detector\_auto\_enable) | (Optional) Specifies the auto-enablement configuration of the GuardDuty detector for the member accounts in the organization. Valid values are 'ALL', 'NEW', and 'NONE'. Defaults to ALL. | `string` | `"ALL"` | no |
 
 ## Outputs
 
