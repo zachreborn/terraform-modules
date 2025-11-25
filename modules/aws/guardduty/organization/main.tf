@@ -37,7 +37,7 @@ resource "aws_guardduty_organization_configuration" "this" {
 
 resource "aws_guardduty_organization_configuration_feature" "ebs_malware_protection" {
   count       = var.enable_ebs_malware_protection ? 1 : 0
-  auto_enable = var.guardduty_detector_auto_enable
+  auto_enable = var.auto_enable_organization_members
   detector_id = aws_guardduty_detector.this.id
   name        = "EBS_MALWARE_PROTECTION"
   provider    = aws.organization_security_account
@@ -64,7 +64,7 @@ resource "aws_guardduty_organization_configuration_feature" "lambda_network_logs
   auto_enable = var.auto_enable_organization_members
   detector_id = aws_guardduty_detector.this.id
   name        = "LAMBDA_NETWORK_LOGS"
-  provider                         = aws.organization_security_account
+  provider    = aws.organization_security_account
 }
 
 resource "aws_guardduty_organization_configuration_feature" "rds_login_events" {
