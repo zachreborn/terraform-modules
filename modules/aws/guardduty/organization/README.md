@@ -113,7 +113,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 | <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 4.0.0 |
 | <a name="provider_aws.organization_security_account"></a> [aws.organization\_security\_account](#provider\_aws.organization\_security\_account) | >= 4.0.0 |
 
@@ -151,7 +150,6 @@ No modules.
 | <a name="input_enable_runtime_monitoring"></a> [enable\_runtime\_monitoring](#input\_enable\_runtime\_monitoring) | (Optional) Enable Runtime Monitoring for the organization. | `bool` | `false` | no |
 | <a name="input_enable_s3_data_events"></a> [enable\_s3\_data\_events](#input\_enable\_s3\_data\_events) | (Optional) Enable S3 Data Events for the organization. | `bool` | `false` | no |
 | <a name="input_finding_publishing_frequency"></a> [finding\_publishing\_frequency](#input\_finding\_publishing\_frequency) | (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to SIX\_HOURS. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: FIFTEEN\_MINUTES, ONE\_HOUR, SIX\_HOURS. See AWS Documentation for more information. | `string` | `"SIX_HOURS"` | no |
-| <a name="input_guardduty_detector_auto_enable"></a> [guardduty\_detector\_auto\_enable](#input\_guardduty\_detector\_auto\_enable) | (Optional) Specifies the auto-enablement configuration of the GuardDuty detector for the member accounts in the organization. Valid values are 'ALL', 'NEW', and 'NONE'. Defaults to ALL. | `string` | `"ALL"` | no |
 
 ## Outputs
 

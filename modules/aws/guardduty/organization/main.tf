@@ -84,9 +84,9 @@ resource "aws_guardduty_organization_configuration_feature" "runtime_monitoring"
 }
 
 resource "aws_guardduty_organization_configuration_feature" "s3_data_events" {
-    count       = var.enable_s3_data_events ? 1 : 0
-    auto_enable = var.auto_enable_organization_members
-    detector_id = aws_guardduty_detector.this.id
-    name        = "S3_DATA_EVENTS"
-    provider    = aws.organization_security_account
+  count       = var.enable_s3_data_events ? 1 : 0
+  auto_enable = var.auto_enable_organization_members
+  detector_id = aws_guardduty_detector.this.id
+  name        = "S3_DATA_EVENTS"
+  provider    = aws.organization_security_account
 }
