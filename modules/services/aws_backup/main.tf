@@ -31,6 +31,7 @@ resource "aws_kms_alias" "alias" {
   provider      = aws.aws_prod_region
   name          = var.key_name
   target_key_id = aws_kms_key.key.key_id
+  depends_on    = [aws_kms_key.key]
 }
 
 # Disaster recovery region key
@@ -51,6 +52,7 @@ resource "aws_kms_alias" "dr_alias" {
   provider      = aws.aws_dr_region
   name          = var.key_name
   target_key_id = aws_kms_key.dr_key.key_id
+  depends_on    = [aws_kms_key.dr_key]
 }
 
 ###############################################################
