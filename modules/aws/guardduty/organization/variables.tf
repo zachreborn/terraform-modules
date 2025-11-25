@@ -47,7 +47,6 @@ variable "auto_enable_organization_members" {
 ###########################
 # General Variables
 ###########################
-
 variable "enable_ebs_malware_protection" {
   type        = bool
   description = "(Optional) Enable EBS Malware Protection for the organization."
