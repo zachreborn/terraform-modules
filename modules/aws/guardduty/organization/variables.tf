@@ -44,13 +44,13 @@ variable "auto_enable_organization_members" {
   }
 }
 
-variable "guardduty_detector_auto_enable" {
+variable "auto_enable_organization_members" {
   type        = string
   description = "(Optional) Specifies the auto-enablement configuration of the GuardDuty detector for the member accounts in the organization. Valid values are 'ALL', 'NEW', and 'NONE'. Defaults to ALL."
   default     = "ALL"
   validation {
-    condition     = can(regex("^(ALL|NEW|NONE)$", var.guardduty_detector_auto_enable))
-    error_message = "The value of guardduty_detector_auto_enable must be either ALL, NEW, or NONE."
+    condition     = can(regex("^(ALL|NEW|NONE)$", var.auto_enable_organization_members))
+    error_message = "The value of auto_enable_organization_members must be either ALL, NEW, or NONE."
   }
 }
 
