@@ -1,9 +1,3 @@
-variable "name" {
-  type        = string
-  description = "The name of the Session Manager."
-  default     = "ssm-session-manager"
-}
-
 variable "ssm_document_name" {
   default     = "SSM-SessionManagerRunShell"
   type        = string
@@ -58,10 +52,12 @@ variable "user_data" {
   description = "The user data to provide when launching the instance."
 }
 
-variable "iam_policy" {
-  default     = ""
-  type        = string
-  description = "The policy document. This is a JSON formatted string."
+variable "policy_arns" {
+  default     = [
+    "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+  ]
+  type        = list(string)
+  description = "A list of policy ARNs to attach to the IAM Role."
 }
 
 variable "iam_path" {
@@ -74,6 +70,15 @@ variable "description" {
   default     = "Managed by Terraform"
   type        = string
   description = "The description of the all resources."
+}
+
+#########################
+# General Variables
+#########################
+variable "name" {
+  type        = string
+  description = "The name of the Session Manager resources."
+  default     = "ssm"
 }
 
 variable "tags" {
