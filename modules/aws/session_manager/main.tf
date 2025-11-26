@@ -38,16 +38,6 @@ resource "aws_ssm_document" "default" {
   })
 }
 
-# Session Manager IAM Instance Profile
-#
-# https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-instance-profile.html
-# https://www.terraform.io/docs/providers/aws/r/iam_instance_profile.html
-resource "aws_iam_instance_profile" "default" {
-  name = "${var.name}-role"
-  role = aws_iam_role.default.name
-  path = var.iam_path
-}
-
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -69,4 +59,14 @@ module "ssm_iam_role" {
   path                  = var.iam_path
   policy_arns           = var.policy_arns
   tags                  = var.tags
+}
+
+# Session Manager IAM Instance Profile
+#
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-instance-profile.html
+# https://www.terraform.io/docs/providers/aws/r/iam_instance_profile.html
+resource "aws_iam_instance_profile" "default" {
+  name = "${var.name}-role"
+  role = module.ssm_iam_role.name
+  path = var.iam_path
 }
