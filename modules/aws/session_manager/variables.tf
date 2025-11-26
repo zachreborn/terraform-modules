@@ -54,7 +54,9 @@ variable "user_data" {
 
 variable "policy_arns" {
   default = [
-    "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+    "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+    "arn:aws:iam::aws:policy/AmazonSSMPatchAssociation",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ]
   type        = list(string)
   description = "A list of policy ARNs to attach to the IAM Role."
