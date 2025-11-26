@@ -53,7 +53,7 @@ variable "user_data" {
 }
 
 variable "policy_arns" {
-  default     = [
+  default = [
     "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
   ]
   type        = list(string)
