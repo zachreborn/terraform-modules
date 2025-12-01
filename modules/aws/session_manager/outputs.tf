@@ -109,31 +109,31 @@ output "iam_role_description" {
 }
 
 output "iam_policy_id" {
-  value       = aws_iam_policy.default.id
-  description = "The IAM Policy's ID."
+  value       = try(aws_iam_policy.custom[0].id, null)
+  description = "The custom IAM Policy's ID (null if using managed policy only)."
 }
 
 output "iam_policy_arn" {
-  value       = aws_iam_policy.default.arn
-  description = "The ARN assigned by AWS to this IAM Policy."
+  value       = try(aws_iam_policy.custom[0].arn, "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore")
+  description = "The ARN of the attached IAM Policy (managed or custom)."
 }
 
 output "iam_policy_description" {
-  value       = aws_iam_policy.default.description
+  value       = try(aws_iam_policy.custom[0].description, "AWS managed policy for SSM")
   description = "The description of the IAM Policy."
 }
 
 output "iam_policy_name" {
-  value       = aws_iam_policy.default.name
+  value       = try(aws_iam_policy.custom[0].name, "AmazonSSMManagedInstanceCore")
   description = "The name of the IAM Policy."
 }
 
 output "iam_policy_path" {
-  value       = aws_iam_policy.default.path
+  value       = try(aws_iam_policy.custom[0].path, "/")
   description = "The path of the IAM Policy."
 }
 
 output "iam_policy_document" {
-  value       = aws_iam_policy.default.policy
+  value       = try(aws_iam_policy.custom[0].policy, "See AWS managed policy: AmazonSSMManagedInstanceCore")
   description = "The policy document of the IAM Policy."
 }

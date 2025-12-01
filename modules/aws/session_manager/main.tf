@@ -69,25 +69,30 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
+# https://www.terraform.io/docs/providers/aws/r/iam_role_policy_attachment.html
+# Attach AWS managed policy for SSM
+resource "aws_iam_role_policy_attachment" "managed" {
+  role       = aws_iam_role.default.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # https://www.terraform.io/docs/providers/aws/r/iam_policy.html
-resource "aws_iam_policy" "default" {
+# Optional custom policy attachment
+resource "aws_iam_policy" "custom" {
+  count       = var.iam_policy != "" ? 1 : 0
   name        = local.iam_name
-  policy      = local.iam_policy
+  policy      = var.iam_policy
   path        = var.iam_path
   description = var.description
 }
 
 # https://www.terraform.io/docs/providers/aws/r/iam_role_policy_attachment.html
-resource "aws_iam_role_policy_attachment" "default" {
+resource "aws_iam_role_policy_attachment" "custom" {
+  count      = var.iam_policy != "" ? 1 : 0
   role       = aws_iam_role.default.name
-  policy_arn = aws_iam_policy.default.arn
+  policy_arn = aws_iam_policy.custom[0].arn
 }
 
 locals {
-  iam_name   = "${var.name}-session-manager"
-  iam_policy = var.iam_policy == "" ? data.aws_iam_policy.default.policy : var.iam_policy
-}
-
-data "aws_iam_policy" "default" {
-  arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+  iam_name = "${var.name}-session-manager"
 }
