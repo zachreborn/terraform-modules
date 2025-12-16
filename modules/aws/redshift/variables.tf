@@ -257,7 +257,7 @@ variable "snapshot_identifier" {
   default     = null
 }
 
-variable "" {
+variable "owner_account" {
   description = "(Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot."
   type        = string
   default     = null
