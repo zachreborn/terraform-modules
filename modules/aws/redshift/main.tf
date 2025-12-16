@@ -55,7 +55,10 @@ resource "aws_redshift_cluster" "this" {
   final_snapshot_identifier           = var.final_snapshot_identifier
   skip_final_snapshot                 = var.skip_final_snapshot
   snapshot_cluster_identifier         = var.snapshot_cluster_identifier
-  snapshot_identifier                 = var.snapshot_identifier
+
+  # Restores
+  snapshot_identifier = var.snapshot_identifier
+  owner_account       = var.owner_account
 
   # Backup and recovery
   allow_version_upgrade = var.allow_version_upgrade

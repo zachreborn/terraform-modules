@@ -257,6 +257,12 @@ variable "snapshot_identifier" {
   default     = null
 }
 
+variable "" {
+  description = "(Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot."
+  type        = string
+  default     = null
+}
+
 variable "snapshot_copy_destination_region" {
   description = "(Optional) The destination region that you want to copy snapshots to."
   type        = string
