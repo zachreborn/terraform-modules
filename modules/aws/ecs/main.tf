@@ -82,7 +82,7 @@ resource "aws_ecs_cluster" "this" {
   }
 
   dynamic "setting" {
-    for_each = var.container_insights == null ? [] : [1]
+    for_each = var.container_insights == null ? [] : [var.container_insights]
 
     content {
       name  = "containerInsights"
