@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.0.0"
+      version = ">= 6.25.0"
     }
   }
 }
@@ -85,10 +85,11 @@ resource "aws_kms_alias" "alias" {
 ###########################
 
 resource "aws_cloudwatch_log_group" "log_group" {
-  kms_key_id        = aws_kms_key.key.arn
-  name_prefix       = var.cloudwatch_name_prefix
-  retention_in_days = var.cloudwatch_retention_in_days
-  tags              = var.tags
+  deletion_protection_enabled = var.cloudwatch_deletion_protection_enabled
+  kms_key_id                  = aws_kms_key.key.arn
+  name_prefix                 = var.cloudwatch_name_prefix
+  retention_in_days           = var.cloudwatch_retention_in_days
+  tags                        = var.tags
 }
 
 ###########################
@@ -140,8 +141,8 @@ resource "aws_iam_role_policy_attachment" "role_attach" {
 # Flow Log
 ###########################
 resource "aws_flow_log" "this" {
-  count                         = length(local.flow_logs_source)
-  deliver_cross_account_role    = var.flow_deliver_cross_account_role
+  count                      = length(local.flow_logs_source)
+  deliver_cross_account_role = var.flow_deliver_cross_account_role
   eni_id                        = var.flow_eni_ids != null ? local.flow_logs_source[count.index] : null
   iam_role_arn                  = aws_iam_role.role.arn
   log_destination_type          = var.flow_log_destination_type
