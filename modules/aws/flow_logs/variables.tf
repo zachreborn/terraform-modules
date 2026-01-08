@@ -54,6 +54,12 @@ variable "cloudwatch_name_prefix" {
   type        = string
 }
 
+variable "cloudwatch_deletion_protection_enabled" {
+  description = "(Optional) If true, prevents the log group from being deleted. Defaults to false. Requires AWS provider >= 6.25.0."
+  default     = false
+  type        = bool
+}
+
 variable "cloudwatch_retention_in_days" {
   description = "(Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire."
   default     = 90
