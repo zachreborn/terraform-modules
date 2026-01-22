@@ -157,10 +157,10 @@ resource "aws_vpc_endpoint" "ecr_api" {
   tags                = merge(tomap({ Name = var.name }), var.tags)
 }
 
-resource "aws_vpc_endpoint" "ecr_dkr" {
-  count               = var.enable_ecr_vpc_endpoints ? 1 : 0
+resource "aws_vpc_endpoint" "datasync" {
+  count               = var.enable_datasync_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
-  service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.dkr"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.datasync"
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
@@ -169,6 +169,17 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 }
 
 # Cloudwatch Logs Endpoint
+resource "aws_vpc_endpoint" "cloudwatch" {
+  count               = var.enable_ecr_vpc_endpoints ? 1 : 0
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.logs"
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.vpc.id
+  tags                = merge(tomap({ Name = var.name }), var.tags)
+}
+
 resource "aws_vpc_endpoint" "cloudwatch" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true

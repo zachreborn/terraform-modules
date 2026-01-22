@@ -45,6 +45,13 @@ variable "enable_ssm_vpc_endpoints" {
   default     = false
 }
 
+variable "enable_datasync_vpc_endpoints" {
+  description = "(Optional) A boolean flag to enable/disable datasync VPC endpoints."
+  type        = bool
+  default     = false
+}
+
+
 variable "enable_ecr_vpc_endpoints" {
   description = "(Optional) A boolean flag to enable/disable ECR (Elastic Container Registry) VPC endpoints. This enables ECR API, ECR DKR, Cloudwatch Logs, and S3 endpoints."
   type        = bool
