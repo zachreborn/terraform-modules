@@ -209,7 +209,7 @@ resource "aws_vpc_endpoint" "datasync" {
   count               = var.enable_datasync_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.datasync"
-  security_group_ids  = [aws_security_group.datasync_vpc_endpoint.id[0]]
+  security_group_ids  = [aws_security_group.datasync_vpc_endpoint[0].id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
