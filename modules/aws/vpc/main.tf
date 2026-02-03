@@ -78,6 +78,54 @@ resource "aws_security_group" "vpc_endpoint" {
   }
 }
 
+# Datasync VPC Endpoint
+
+resource "aws_security_group" "datasync_vpc_endpoint" {
+  count       = var.enable_datasync_vpc_endpoints ? 1 : 0
+  description = "Datasync VPC endpoint interface security group"
+  name        = "datasync_vpc_endpoint_sg"
+  tags        = merge({ Name = "datasync_vpc_endpoint_sg" }, var.tags)
+  vpc_id      = aws_vpc.vpc.id
+
+  # Required for Activation and Communication.
+  ingress {
+    description = "Datasync VPC endpoint communication over HTTPS"
+    from_port   = 0
+    to_port     = 1064
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+  ingress {
+    description = "VPC endpoint communication over HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  ingress {
+    description = "VPC endpoint communication over HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "udp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "All traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    # Allow VPC endpoint outbound traffic to VPC endpoint
+    #tfsec:ignore:aws-ec2-no-public-egress-sgr
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # SSM VPC Endpoints
 resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
@@ -161,7 +209,7 @@ resource "aws_vpc_endpoint" "datasync" {
   count               = var.enable_datasync_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.datasync"
-  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  security_group_ids  = [aws_security_group.datasync_vpc_endpoint.id]
   subnet_ids          = toset(aws_subnet.private_subnets[*].id)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
