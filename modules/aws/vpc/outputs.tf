@@ -90,3 +90,13 @@ output "name" {
   description = "The name of the VPC"
   value       = aws_vpc.vpc.tags["Name"]
 }
+
+output "datasync_vpc_endpoint_id" {
+  description = "The ID of the DataSync VPC endpoint"
+  value       = var.enable_datasync_vpc_endpoints ? aws_vpc_endpoint.datasync[0].id : null
+}
+
+output "datasync_vpc_endpoint_dns_entries" {
+  description = "The DNS entries for the DataSync VPC endpoint"
+  value       = var.enable_datasync_vpc_endpoints ? aws_vpc_endpoint.datasync[0].dns_entry : null
+}
