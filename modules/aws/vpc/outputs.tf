@@ -100,3 +100,8 @@ output "datasync_vpc_endpoint_dns_entries" {
   description = "The DNS entries for the DataSync VPC endpoint"
   value       = var.enable_datasync_vpc_endpoints ? aws_vpc_endpoint.datasync[0].dns_entry : null
 }
+
+output "datasync_agent_subnet_arn" {
+  description = "Single subnet ARN for DataSync agent activation (required for PrivateLink)"
+  value       = var.enable_datasync_vpc_endpoints ? "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/${aws_subnet.private_subnets[0].id}" : null
+}
