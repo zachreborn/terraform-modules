@@ -1,7 +1,25 @@
+variable "groups" {
+  description = "(Required) The list of groups to create."
+  type = map(object({
+    display_name = string # (Required) The friendly name to identify the group.
+    description  = string # (Optional) The description of the group.
+  }))
+  # Example
+  # groups = {
+  #   "Administrators" = {
+  #     display_name = "Administrators"
+  #     description  = "The group for the administrators of the application."
+  #   },
+  #   "Users" = {
+  #     display_name = "Users"
+  #     description  = "The group for the users of the application."
+  #   }
+  # }
+}
+
 variable "users" {
   description = "(Required) The list of users to create."
   type = map(object({
-    display_name = string # (Required) The friendly name to identify the user.
     given_name   = string # (Required) The given name of the user.
     family_name  = string # (Required) The family name of the user.
     user_name    = string # (Required) The username of the user.
@@ -22,16 +40,18 @@ variable "users" {
     timezone           = optional(string) # (Optional) The user's time zone.
     title              = optional(string) # (Optional) The user's title.
     user_type          = optional(string) # (Optional) The type of the user.
+
+    groups = optional(list(string)) # (Optional) The list of groups the user belongs to.
   }))
   # Example
   # users = {
   #   "John Hill" = {
-  #     display_name     = "John Hill"
   #     given_name       = "John"
   #     family_name      = "Hill"
-  #     user_name        = "John Hill"
+  #     user_name        = "john.hill@example.com"
   #     email            = "john.hill@example.com"
   #     email_is_primary = "true"
+  #     groups           = ["Administrators"]
   #   }
   # }
 }

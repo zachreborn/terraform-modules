@@ -22,17 +22,25 @@ data "aws_ssoadmin_instances" "this" {}
 ###########################
 
 locals {
+  group_membership = flatten([
+    for user_display_name, group in var.users : [
+      for member in lookup(group, "groups", []) : {
+        group  = member
+        member = user_display_name
+      }
+    ]
+  ])
   identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
 }
 
 ###########################
-# Module Configuration
+# Users Configuration
 ###########################
 
 resource "aws_identitystore_user" "this" {
   for_each = var.users
 
-  display_name       = each.value.display_name
+  display_name       = each.key
   identity_store_id  = local.identity_store_id
   nickname           = each.value.nickname
   preferred_language = each.value.preferred_language
@@ -60,4 +68,22 @@ resource "aws_identitystore_user" "this" {
     value   = each.value.phone_number
     type    = each.value.phone_number_type
   }
+}
+
+###########################
+# Groups Configuration
+###########################
+
+resource "aws_identitystore_group" "this" {
+  for_each          = var.groups
+  description       = each.value.description
+  display_name      = each.value.display_name
+  identity_store_id = local.identity_store_id
+}
+
+resource "aws_identitystore_group_membership" "this" {
+  for_each          = local.group_membership
+  group_id          = aws_identitystore_group.this[each.value.group].group_id
+  identity_store_id = local.identity_store_id
+  member_id         = aws_identitystore_user.this[each.value.member].user_id
 }
