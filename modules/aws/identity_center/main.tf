@@ -22,15 +22,19 @@ data "aws_ssoadmin_instances" "this" {}
 ###########################
 
 locals {
-  group_membership = flatten([
-    for user_display_name, group in var.users : [
-      for member in lookup(group, "groups", []) : {
-        group  = member
-        member = user_display_name
-      }
-    ]
-  ])
   identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+
+  group_membership = {
+    for entry in flatten([
+      for user_key, user in var.users : [
+        for group in coalesce(user.groups, []) : {
+          key    = "${user_key}-${group}"
+          member = user_key
+          group  = group
+        }
+      ]
+    ]) : entry.key => entry
+  }
 }
 
 ###########################
