@@ -20,9 +20,9 @@ variable "groups" {
 variable "users" {
   description = "(Required) The list of users to create."
   type = map(object({
-    given_name   = string # (Required) The given name of the user.
-    family_name  = string # (Required) The family name of the user.
-    user_name    = string # (Required) The username of the user.
+    given_name  = string # (Required) The given name of the user.
+    family_name = string # (Required) The family name of the user.
+    user_name   = string # (Required) The username of the user.
 
     honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.
     honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.
