@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">Identity Center Group</h3>
+<h3 align="center">Identity Center User</h3>
   <p align="center">
-    This module creates a group in AWS Identity Center (formerly AWS SSO). These groups are then utilized to manage permissions to accounts or applications.
+    This module creates one or more users and groups in AWS Identity Center (formerly AWS SSO). These users are then attached to groups in order to provide access to AWS accounts or applications.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,11 +64,12 @@
 
 ### Simple Example
 
-This example creates groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
+This example creates users and groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically. This offers a way to get started with Identity Center.
 
 ```
-module "groups" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/group"
+module "users" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center"
+
   groups = {
     "admins" = {
       display_name = "admins"
@@ -77,6 +78,18 @@ module "groups" {
     "terraform" = {
       display_name = "terraform"
       description  = "Terraform users for CI/CD deployment"
+    }
+  }
+
+  users = {
+    "Zachary Hill" = {
+      given_name       = "Zachary"
+      family_name      = "Hill"
+      user_name        = "zhill@zacharyhill.co"
+      email            = "zhill@zacharyhill.co"
+      email_is_primary = true
+      email_type       = "work"
+      groups           = ["admins"]
     }
   }
 }
@@ -111,6 +124,8 @@ No modules.
 | Name | Type |
 |------|------|
 | [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
+| [aws_identitystore_group_membership.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group_membership) | resource |
+| [aws_identitystore_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
 | [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
 
 ## Inputs
@@ -118,12 +133,14 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the group.<br/>    description  = string # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | (Required) The list of users to create. | <pre>map(object({<br/>    given_name  = string # (Required) The given name of the user.<br/>    family_name = string # (Required) The family name of the user.<br/>    user_name   = string # (Required) The username of the user.<br/><br/>    honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.<br/>    honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.<br/>    middle_name      = optional(string) # (Optional) The middle name of the user.<br/>    nickname         = optional(string) # (Optional) The nickname of the user.<br/><br/>    email                   = optional(string) # (Optional) The email address of the user.<br/>    email_is_primary        = optional(bool)   # (Optional) Indicates whether the email address is the primary email address of the user.<br/>    email_type              = optional(string) # (Optional) The type of the email address of the user.<br/>    phone_number            = optional(string) # (Optional) The phone number of the user.<br/>    phone_number_is_primary = optional(bool)   # (Optional) Indicates whether the phone number is the primary phone number of the user.<br/>    phone_number_type       = optional(string) # (Optional) The type of the phone number of the user.<br/><br/>    preferred_language = optional(string) # (Optional) The user's preferred language.<br/>    timezone           = optional(string) # (Optional) The user's time zone.<br/>    title              = optional(string) # (Optional) The user's title.<br/>    user_type          = optional(string) # (Optional) The type of the user.<br/><br/>    groups = optional(list(string)) # (Optional) The list of groups the user belongs to.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
+| <a name="output_user_ids"></a> [user\_ids](#output\_user\_ids) | The IDs of the users in the identity store |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
