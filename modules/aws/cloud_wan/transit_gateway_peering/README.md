@@ -124,6 +124,46 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.34.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_networkmanager_transit_gateway_peering.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_transit_gateway_peering) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network. | `string` | n/a | yes |
+| <a name="input_peerings"></a> [peerings](#input\_peerings) | (Required) Map of transit gateway peerings to create. The key is the peering name. | <pre>map(object({<br/>    transit_gateway_arn = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_attachment_ids"></a> [attachment\_ids](#output\_attachment\_ids) | Map of transit gateway peering attachment IDs |
+| <a name="output_core_network_arns"></a> [core\_network\_arns](#output\_core\_network\_arns) | Map of core network ARNs |
+| <a name="output_edge_locations"></a> [edge\_locations](#output\_edge\_locations) | Map of edge locations for each peering |
+| <a name="output_peering_arns"></a> [peering\_arns](#output\_peering\_arns) | Map of peering ARNs |
+| <a name="output_peering_ids"></a> [peering\_ids](#output\_peering\_ids) | Map of peering IDs |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

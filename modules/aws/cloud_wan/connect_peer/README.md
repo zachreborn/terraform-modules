@@ -163,6 +163,47 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.34.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_networkmanager_connect_peer.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_peer) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_connect_attachment_id"></a> [connect\_attachment\_id](#input\_connect\_attachment\_id) | (Required) The ID of the connect attachment. | `string` | n/a | yes |
+| <a name="input_peers"></a> [peers](#input\_peers) | (Required) Map of BGP peers to create. The key is the peer name. | <pre>map(object({<br/>    peer_address         = string<br/>    bgp_asn              = number<br/>    core_network_address = optional(string)<br/>    inside_cidr_blocks   = optional(list(string))<br/>    subnet_arn           = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_configurations"></a> [configurations](#output\_configurations) | Map of connect peer configurations (BGP addresses) |
+| <a name="output_core_network_addresses"></a> [core\_network\_addresses](#output\_core\_network\_addresses) | Map of core network addresses assigned to each peer |
+| <a name="output_edge_locations"></a> [edge\_locations](#output\_edge\_locations) | Map of edge locations for each peer |
+| <a name="output_peer_arns"></a> [peer\_arns](#output\_peer\_arns) | Map of connect peer ARNs |
+| <a name="output_peer_ids"></a> [peer\_ids](#output\_peer\_ids) | Map of connect peer IDs |
+| <a name="output_peer_states"></a> [peer\_states](#output\_peer\_states) | Map of connect peer states |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
