@@ -122,6 +122,46 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.34.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_networkmanager_vpc_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_vpc_attachment) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network for the VPC attachment. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_vpc_attachments"></a> [vpc\_attachments](#input\_vpc\_attachments) | (Required) Map of VPC attachments to create. The key is the attachment name. | <pre>map(object({<br/>    vpc_arn                = string<br/>    subnet_arns            = list(string)<br/>    appliance_mode_support = optional(bool, false)<br/>    ipv6_support           = optional(bool, false)<br/>  }))</pre> | `{}` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_attachment_arns"></a> [attachment\_arns](#output\_attachment\_arns) | Map of VPC attachment ARNs |
+| <a name="output_attachment_ids"></a> [attachment\_ids](#output\_attachment\_ids) | Map of VPC attachment IDs |
+| <a name="output_attachment_states"></a> [attachment\_states](#output\_attachment\_states) | Map of VPC attachment states |
+| <a name="output_edge_locations"></a> [edge\_locations](#output\_edge\_locations) | Map of VPC attachment edge locations |
+| <a name="output_segment_names"></a> [segment\_names](#output\_segment\_names) | Map of VPC attachment segment names |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

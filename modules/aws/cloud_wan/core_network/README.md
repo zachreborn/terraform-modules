@@ -141,6 +141,53 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.34.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_networkmanager_core_network.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_core_network) | resource |
+| [aws_networkmanager_core_network_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_core_network_policy_attachment) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_base_policy_regions"></a> [base\_policy\_regions](#input\_base\_policy\_regions) | (Optional) List of regions for the base policy. Required if create\_base\_policy is true. | `list(string)` | `null` | no |
+| <a name="input_create_base_policy"></a> [create\_base\_policy](#input\_create\_base\_policy) | (Optional) Whether to create a base policy. If true, base\_policy\_regions must be provided. | `bool` | `false` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) Description of the core network. | `string` | `null` | no |
+| <a name="input_global_network_id"></a> [global\_network\_id](#input\_global\_network\_id) | (Required) The ID of the global network that the core network is associated with. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | (Required) Name of the core network. | `string` | n/a | yes |
+| <a name="input_policy_document"></a> [policy\_document](#input\_policy\_document) | (Optional) Policy document as a JSON string. Use the aws\_networkmanager\_core\_network\_policy\_document data source to generate this. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_arn"></a> [arn](#output\_arn) | Core Network ARN |
+| <a name="output_edges"></a> [edges](#output\_edges) | Map of core network edges by location |
+| <a name="output_id"></a> [id](#output\_id) | Core Network ID |
+| <a name="output_policy_document"></a> [policy\_document](#output\_policy\_document) | Current policy document attached to the core network |
+| <a name="output_segments"></a> [segments](#output\_segments) | Map of core network segments |
+| <a name="output_state"></a> [state](#output\_state) | Current state of the core network |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | Map of tags assigned to the resource, including those inherited from the provider |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

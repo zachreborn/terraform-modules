@@ -20,7 +20,7 @@ resource "aws_networkmanager_vpc_attachment" "this" {
   subnet_arns     = each.value.subnet_arns
   vpc_arn         = each.value.vpc_arn
   tags            = merge(tomap({ Name = each.key }), var.tags)
-  
+
   options {
     appliance_mode_support = each.value.appliance_mode_support
     ipv6_support           = each.value.ipv6_support
