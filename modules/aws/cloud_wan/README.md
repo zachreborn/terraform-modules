@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">AWS Cloud WAN Modules</h3>
   <p align="center">
-    module_description
+    A collection of sub-modules for building AWS Cloud WAN infrastructure with tunnel-less SD-WAN connectivity support
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -60,18 +60,136 @@
 </details>
 
 
-<!-- USAGE EXAMPLES -->
-## Usage
-### Simple Example
-```
-module test {
-  source = 
+<!-- OVERVIEW -->
+## Overview
 
-  variable = 
+This directory contains sub-modules for building AWS Cloud WAN infrastructure. Each sub-module focuses on a specific component of Cloud WAN, following the same modular pattern as the `transit_gateway` modules.
+
+## Sub-modules
+
+### [global_network](./global_network/)
+Creates the AWS Network Manager Global Network, which acts as the container for all Cloud WAN resources.
+
+### [core_network](./core_network/)
+Creates the Cloud WAN Core Network with optional policy attachment. The core network is the managed WAN backbone.
+
+### [vpc_attachment](./vpc_attachment/)
+Creates VPC attachments that serve as the transport layer for connect attachments.
+
+### [connect_attachment](./connect_attachment/)
+Creates connect attachments for SD-WAN integration. **Supports tunnel-less (NO_ENCAP) for high-performance SD-WAN connectivity without GRE overhead.**
+
+### [connect_peer](./connect_peer/)
+Creates BGP peers for SD-WAN appliances, supporting both tunnel-less and GRE configurations.
+
+### [transit_gateway_peering](./transit_gateway_peering/)
+Creates peering connections between Cloud WAN and existing Transit Gateways for migration or hybrid architectures.
+
+## Quick Start: Tunnel-less SD-WAN
+
+For eliminating GRE tunnels and enabling high-bandwidth SD-WAN connectivity:
+
+```hcl
+# 1. Create Global Network
+module "global_network" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/global_network"
+  name   = "my-sdwan-network"
+}
+
+# 2. Create Core Network with Policy
+module "core_network" {
+  source              = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/core_network"
+  name                = "my-core-network"
+  global_network_id   = module.global_network.id
+  create_base_policy  = true
+  base_policy_regions = ["us-east-1", "us-west-2"]
+}
+
+# 3. Create VPC Attachments (Transport)
+module "vpc_attachment" {
+  source          = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/vpc_attachment"
+  core_network_id = module.core_network.id
+  
+  vpc_attachments = {
+    "sdwan-vpc" = {
+      vpc_arn     = aws_vpc.sdwan.arn
+      subnet_arns = [aws_subnet.sdwan_az1.arn, aws_subnet.sdwan_az2.arn]
+    }
+  }
+  
+  tags = { segment = "sdwan" }
+}
+
+# 4. Create Tunnel-less Connect Attachment
+module "connect_attachment" {
+  source          = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/connect_attachment"
+  core_network_id = module.core_network.id
+  
+  connect_attachments = {
+    "sdwan-connect" = {
+      transport_attachment_id = module.vpc_attachment.attachment_ids["sdwan-vpc"]
+      edge_location           = "us-east-1"
+      protocol                = "NO_ENCAP"  # Tunnel-less!
+    }
+  }
+}
+
+# 5. Create BGP Peers
+module "connect_peer" {
+  source                = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/connect_peer"
+  connect_attachment_id = module.connect_attachment.attachment_ids["sdwan-connect"]
+  
+  peers = {
+    "sdwan-appliance-1" = {
+      peer_address = "10.0.1.10"
+      bgp_asn      = 65001
+      subnet_arn   = aws_subnet.sdwan_az1.arn
+    }
+  }
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+## Migration from Root Module
+
+If you were using the original `cloud_wan` module (in this directory), migrate to sub-modules:
+
+**Old (deprecated)**:
+```hcl
+module "cloud_wan" {
+  source                = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan"
+  name                  = "my-network"
+  transit_gateway_arns  = [aws_ec2_transit_gateway.main.arn]
+}
+```
+
+**New (recommended)**:
+```hcl
+module "global_network" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/global_network"
+  name   = "my-network"
+}
+
+module "core_network" {
+  source              = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/core_network"
+  name                = "my-core-network"
+  global_network_id   = module.global_network.id
+  create_base_policy  = true
+  base_policy_regions = ["us-east-1"]
+}
+
+module "tgw_peering" {
+  source          = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/transit_gateway_peering"
+  core_network_id = module.core_network.id
+  
+  peerings = {
+    "main-tgw" = {
+      transit_gateway_arn = aws_ec2_transit_gateway.main.arn
+    }
+  }
+}
+```
+
+_For more examples, see each sub-module's README_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
