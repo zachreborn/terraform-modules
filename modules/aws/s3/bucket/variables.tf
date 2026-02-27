@@ -263,10 +263,6 @@ variable "enforce_ssl" {
   type        = bool
   description = "(Optional) Enforce SSL/TLS for all requests to the bucket. When true, denies any request where aws:SecureTransport is false. If a custom bucket_policy is provided, the SSL enforcement statement will be merged with it. Defaults to true."
   default     = true
-  validation {
-    condition     = can(regex("true|false", var.enforce_ssl))
-    error_message = "The value must be true or false."
-  }
 }
 
 ######################
