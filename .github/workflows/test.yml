@@ -8,13 +8,13 @@ on:
 
 permissions:
   contents: read
-  checks: write
-  statuses: write
 
 jobs:
   test_terraform:
     name: Test Terraform
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: HashiCorp - Setup Terraform
@@ -38,6 +38,10 @@ jobs:
   test_linter:
     name: Linter
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      statuses: write
 
     steps:
       - name: Checkout
