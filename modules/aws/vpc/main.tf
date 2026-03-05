@@ -264,6 +264,13 @@ resource "aws_internet_gateway" "igw" {
   count  = local.enable_igw ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
   vpc_id = aws_vpc.vpc.id
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_internet_gateway || length(var.public_subnets_list) > 0
+      error_message = "enable_internet_gateway cannot be true when public_subnets_list is empty. Either set enable_internet_gateway=false or provide public subnets."
+    }
+  }
 }
 
 resource "aws_route_table" "public_route_table" {
