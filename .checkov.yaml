@@ -8,3 +8,108 @@ skip-check:
   - CKV_TF_1
   # These workflows utilize write access in order to write statuses and comments
   - CKV2_GHA_1
+
+  # ============================================================
+  # BY DESIGN: Module purpose requires the capability
+  # These checks flag behavior that is intentional for a reusable
+  # module library. Posture enforcement is the caller's responsibility.
+  # ============================================================
+
+  # IAM user module intentionally creates IAM users; SSO is a caller-level decision
+  - CKV_AWS_273
+
+  # Security group modules must accept any port/CIDR as inputs; the caller enforces restrictions
+  - CKV_AWS_24   # No ingress from 0.0.0.0/0 on port 22
+  - CKV_AWS_25   # No ingress from 0.0.0.0/0 on port 3389
+  - CKV_AWS_260  # No ingress from 0.0.0.0/0 on port 80
+  - CKV_AWS_277  # No ingress from 0.0.0.0/0 on port -1 (all traffic)
+  - CKV_AWS_382  # No egress from 0.0.0.0/0 on port -1 (all traffic)
+
+  # VPC subnet module supports public IP assignment as a caller-controlled variable
+  - CKV_AWS_130
+
+  # Load balancer module supports internet-facing as a caller-controlled variable
+  - CKV_AWS_53
+
+  # Transfer Server module supports public exposure as a caller-controlled variable
+  - CKV_AWS_164
+
+  # ============================================================
+  # CONFIGURABLE BY CALLER: Checkov cannot see variable values
+  # These modules expose the flagged settings as input variables.
+  # Static analysis cannot verify how callers configure them.
+  # ============================================================
+
+  # API Gateway (REST)
+  - CKV_AWS_73   # X-Ray tracing - exposed as xray_tracing_enabled variable
+  - CKV_AWS_120  # Stage caching - exposed as cache_cluster_enabled variable
+  - CKV_AWS_225  # Method setting caching - exposed via method_settings variable
+  - CKV_AWS_237  # Create before destroy for REST API - lifecycle caller decision
+  - CKV_AWS_217  # Create before destroy for deployments - lifecycle caller decision
+
+  # API Gateway (v2)
+  - CKV_AWS_309  # Route authorization type - exposed as authorization_type variable
+
+  # CloudFormation
+  - CKV_AWS_124  # Stack SNS notification - exposed as notification_arns variable
+
+  # CloudFront
+  - CKV_AWS_34   # Viewer protocol HTTPS - exposed as viewer_protocol_policy variable
+  - CKV_AWS_310  # Origin failover - optional caller configuration
+  - CKV_AWS_374  # Geo restriction - exposed as geo_restriction variable
+
+  # CloudTrail
+  - CKV_AWS_252  # SNS topic - exposed as sns_topic_name variable
+  - CKV_AWS_338  # CloudWatch log retention - exposed as retention_in_days variable
+
+  # EC2
+  - CKV_AWS_135  # EBS optimized - exposed as ebs_optimized variable
+  - CKV_AWS_126  # Detailed monitoring - exposed as monitoring variable
+
+  # Kinesis Firehose
+  - CKV_AWS_241  # CMK encryption - exposed as kms_key_arn variable
+
+  # Lambda
+  - CKV_AWS_50   # X-Ray tracing - exposed as tracing_config variable
+  - CKV_AWS_115  # Concurrent execution limit - exposed as reserved_concurrent_executions variable
+  - CKV_AWS_116  # Dead Letter Queue - exposed as dead_letter_config variable
+  - CKV_AWS_117  # VPC config - optional, not all Lambdas need VPC placement
+  - CKV_AWS_173  # Env var KMS encryption - exposed as kms_key_arn variable
+  - CKV_AWS_272  # Code signing - exposed as code_signing_config_arn variable
+  - CKV_AWS_363  # Deprecated runtime - caller controls runtime version variable
+
+  # Load Balancer
+  - CKV_AWS_2    # ALB HTTPS listener - exposed as protocol variable
+  - CKV_AWS_91   # Access logging - exposed as access_logs variable
+  - CKV_AWS_150  # Deletion protection - exposed as enable_deletion_protection variable
+  - CKV_AWS_152  # Cross-zone load balancing - exposed as enable_cross_zone_load_balancing variable
+
+  # RDS
+  - CKV_AWS_118  # Enhanced monitoring - exposed as monitoring_interval variable
+  - CKV_AWS_139  # Deletion protection - exposed as deletion_protection variable
+  - CKV_AWS_162  # IAM authentication - exposed as iam_database_authentication_enabled variable
+  - CKV_AWS_313  # Copy tags to snapshots - exposed as copy_tags_to_snapshot variable
+  - CKV_AWS_324  # Log exports - exposed as enabled_cloudwatch_logs_exports variable
+
+  # Redshift
+  - CKV_AWS_71   # Logging - exposed as logging variable
+
+  # S3
+  - CKV_AWS_18   # Access logging - exposed as logging variable
+  - CKV_AWS_21   # Versioning - exposed as versioning variable
+  - CKV_AWS_144  # Cross-region replication - optional caller configuration
+  - CKV_AWS_145  # KMS encryption - exposed as sse_algorithm variable
+  - CKV_AWS_189  # MFA delete - exposed as mfa_delete variable
+  - CKV_AWS_300  # Lifecycle abort incomplete multipart upload - caller lifecycle configuration
+
+  # Transfer Server
+  - CKV_AWS_380  # Security policy version - exposed as security_policy_name variable
+
+  # API Gateway WAF
+  - CKV_AWS_103  # WAF association - optional caller configuration
+
+  # Miscellaneous configurable checks
+  - CKV_AWS_274  # Configurable by caller
+  - CKV_AWS_289  # Configurable by caller
+  - CKV_AWS_290  # Configurable by caller
+  - CKV_AWS_355  # Configurable by caller

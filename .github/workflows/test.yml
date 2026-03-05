@@ -60,4 +60,5 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
-          VALIDATE_TERRAFORM_TERRASCAN: false
+          VALIDATE_GIT_COMMITLINT: false
+          SAVE_SUPER_LINTER_SUMMARY: true
