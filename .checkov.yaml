@@ -108,6 +108,10 @@ skip-check:
   # API Gateway WAF
   - CKV_AWS_103 # WAF association - optional caller configuration
 
+  # Elastic Beanstalk - checkov runtime crash on these checks
+  - CKV_AWS_312 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
+  - CKV_AWS_340 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
+
   # Miscellaneous configurable checks
   - CKV_AWS_274 # Configurable by caller
   - CKV_AWS_289 # Configurable by caller
