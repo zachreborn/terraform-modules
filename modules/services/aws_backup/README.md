@@ -28,7 +28,7 @@
 
 <h3 align="center">AWS Backups Module</h3>
   <p align="center">
-    This module sets AWS backup jobs and associated services.
+    This module sets AWS backup jobs and associated services. By default this module leverages AWS Organizations to centralize backups across all accounts in the organization. It also creates a disaster recovery backup vault and a production backup vault with daily, hourly, and monthly backups. This enforces air-gapped backups with a 7 day retention for disaster recovery and a 30 day retention for production backups. It also creates a KMS key to encrypt the backups and an IAM role to allow AWS Backup to access the resources.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -71,6 +71,7 @@ module "aws_prod_backups" {
         aws.aws_prod_region = aws.aws_prod_region
         aws.aws_dr_region   = aws.aws_dr_region
     }
+    cross_account_backup_enabled = true
 }
 ```
 
@@ -92,12 +93,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws.aws_dr_region"></a> [aws.aws\_dr\_region](#provider\_aws.aws\_dr\_region) | >= 4.0.0 |
-| <a name="provider_aws.aws_prod_region"></a> [aws.aws\_prod\_region](#provider\_aws.aws\_prod\_region) | >= 4.0.0 |
+| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 4.0.0 |
+| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 4.0.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_organization_backup_plan"></a> [organization\_backup\_plan](#module\_organization\_backup\_plan) | ../../aws/organizations/delegated_resource_policy | n/a |
 
 ## Resources
 
@@ -122,10 +125,10 @@ No modules.
 | [aws_iam_role.backup](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.backup](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.restores](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_kms_alias.alias](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_alias.dr_alias](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.prod_alias](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.dr_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
-| [aws_kms_key.key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.prod_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 
 ## Inputs
 
@@ -134,13 +137,17 @@ No modules.
 | <a name="input_backup_plan_completion_window"></a> [backup\_plan\_completion\_window](#input\_backup\_plan\_completion\_window) | (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error. Default is set to 24 hours. | `number` | `1440` | no |
 | <a name="input_backup_plan_name"></a> [backup\_plan\_name](#input\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"prod_backups"` | no |
 | <a name="input_backup_plan_start_window"></a> [backup\_plan\_start\_window](#input\_backup\_plan\_start\_window) | (Optional) The amount of time in minutes before beginning a backup. | `number` | `60` | no |
+| <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) The number of days after which the vault lock configuration is no longer changeable. Setting this variable will utilize vault lock compliance mode. Omit the variable if you wish to create the vault lock in governance mode. Defaults to 3 days. | `number` | `3` | no |
 | <a name="input_daily_backup_cold_storage_after"></a> [daily\_backup\_cold\_storage\_after](#input\_daily\_backup\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_daily_backup_retention"></a> [daily\_backup\_retention](#input\_daily\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 30 days | `number` | `30` | no |
+| <a name="input_daily_backup_schedule"></a> [daily\_backup\_schedule](#input\_daily\_backup\_schedule) | (Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC. | `string` | `"cron(20 7 * * ? *)"` | no |
 | <a name="input_dr_backup_retention"></a> [dr\_backup\_retention](#input\_dr\_backup\_retention) | (Required) The dr backup plan retention in days. By default this is 7 days. | `number` | `7` | no |
 | <a name="input_dr_cold_storage_after"></a> [dr\_cold\_storage\_after](#input\_dr\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_ec2_backup_plan_name"></a> [ec2\_backup\_plan\_name](#input\_ec2\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"ec2_prod_backups"` | no |
+| <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) A boolean to enable or disable the AWS Backup Organization functionality. If set to 'true' this transitions from a single backup plan to organization plan policies. Defaults to false. | `bool` | `false` | no |
 | <a name="input_hourly_backup_cold_storage_after"></a> [hourly\_backup\_cold\_storage\_after](#input\_hourly\_backup\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_hourly_backup_retention"></a> [hourly\_backup\_retention](#input\_hourly\_backup\_retention) | (Required) The hourly backup plan retention in days. By default this is 3 days. | `number` | `3` | no |
+| <a name="input_hourly_backup_schedule"></a> [hourly\_backup\_schedule](#input\_hourly\_backup\_schedule) | (Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour. | `string` | `"cron(20 * * * ? *)"` | no |
 | <a name="input_key_bypass_policy_lockout_safety_check"></a> [key\_bypass\_policy\_lockout\_safety\_check](#input\_key\_bypass\_policy\_lockout\_safety\_check) | (Optional) Specifies whether to disable the policy lockout check performed when creating or updating the key's policy. Setting this value to true increases the risk that the CMK becomes unmanageable. For more information, refer to the scenario in the Default Key Policy section in the AWS Key Management Service Developer Guide. Defaults to false. | `bool` | `false` | no |
 | <a name="input_key_customer_master_key_spec"></a> [key\_customer\_master\_key\_spec](#input\_key\_customer\_master\_key\_spec) | (Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC\_DEFAULT, RSA\_2048, RSA\_3072, RSA\_4096, ECC\_NIST\_P256, ECC\_NIST\_P384, ECC\_NIST\_P521, or ECC\_SECG\_P256K1. Defaults to SYMMETRIC\_DEFAULT. For help with choosing a key spec, see the AWS KMS Developer Guide. | `string` | `"SYMMETRIC_DEFAULT"` | no |
 | <a name="input_key_deletion_window_in_days"></a> [key\_deletion\_window\_in\_days](#input\_key\_deletion\_window\_in\_days) | (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days. | `number` | `30` | no |
