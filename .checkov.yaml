@@ -112,6 +112,9 @@ skip-check:
   - CKV_AWS_312 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
   - CKV_AWS_340 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
 
+  # SNS
+  - CKV_AWS_26 # SNS topic encryption - exposed as kms_master_key_id variable
+
   # Miscellaneous configurable checks
   - CKV_AWS_274 # Configurable by caller
   - CKV_AWS_289 # Configurable by caller
