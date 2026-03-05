@@ -280,7 +280,8 @@ resource "aws_route_table" "public_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
-# !FIX: We should probably update this to just disable the igw if there are no public subnets present and default to disable since we are unlikely to use it in our infra.  
+# Validation is enforced via aws_internet_gateway precondition to fail fast when
+# enable_internet_gateway=true and public_subnets_list is empty.
 resource "aws_route" "public_default_route" {
   count                  = local.enable_igw ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
