@@ -264,6 +264,13 @@ resource "aws_internet_gateway" "igw" {
   count  = local.enable_igw ? 1 : 0
   tags   = merge(var.tags, ({ "Name" = format("%s-igw", var.name) }))
   vpc_id = aws_vpc.vpc.id
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_internet_gateway || length(var.public_subnets_list) > 0
+      error_message = "enable_internet_gateway cannot be true when public_subnets_list is empty. Either set enable_internet_gateway=false or provide public subnets."
+    }
+  }
 }
 
 resource "aws_route_table" "public_route_table" {
@@ -273,7 +280,8 @@ resource "aws_route_table" "public_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
-# !FIX: We should probably update this to just disable the igw if there are no public subnets present and default to disable since we are unlikely to use it in our infra.  
+# Validation is enforced via aws_internet_gateway precondition to fail fast when
+# enable_internet_gateway=true and public_subnets_list is empty.
 resource "aws_route" "public_default_route" {
   count                  = local.enable_igw ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
