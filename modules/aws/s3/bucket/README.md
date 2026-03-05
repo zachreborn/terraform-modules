@@ -64,13 +64,72 @@
 
 ### Simple Example
 
-This example creates a bucket with encryption enabled by default, using the 'aws/s3' KMS key managed by AWS. It also has the default of blocking all public access to the bucket and objects. There is no bucket policy attached to this bucket.
+This example creates a bucket with encryption enabled by default, using the 'aws/s3' KMS key managed by AWS. It also has the default of blocking all public access to the bucket and objects. SSL/HTTPS enforcement is enabled by default. There is no bucket policy attached to this bucket.
 
 ```
 module "bucket" {
   source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   bucket_prefix = "octo-prod-"
   tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
+### SSL/HTTPS Enforcement Example
+
+This example demonstrates the SSL/HTTPS enforcement feature. By default, all buckets enforce SSL/TLS for requests (enforce_ssl = true). This example shows how to explicitly disable SSL enforcement if needed for specific use cases.
+
+```
+module "bucket_with_ssl" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-prod-secure-"
+  enforce_ssl   = true  # Default behavior - explicitly shown for clarity
+  tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+
+module "bucket_without_ssl" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-dev-legacy-"
+  enforce_ssl   = false  # Disable SSL enforcement for legacy applications
+  tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "dev"
+    terraform   = "true"
+  }
+}
+```
+
+### SSL Enforcement with Custom Bucket Policy
+
+This example shows how the enforce_ssl parameter works with custom bucket policies. When both are provided, the SSL enforcement statement is automatically merged with your custom policy.
+
+```
+module "bucket_with_custom_policy" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-prod-custom-"
+  enforce_ssl   = true
+  bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowSpecificIAMRole"
+        Effect    = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::123456789012:role/MyRole"
+        }
+        Action   = ["s3:GetObject"]
+        Resource = "arn:aws:s3:::octo-prod-custom-*/*"
+      }
+    ]
+  })
+  tags = {
     created_by  = "<YOUR_NAME>"
     environment = "prod"
     terraform   = "true"
