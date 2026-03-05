@@ -3,8 +3,8 @@
 # For more information about the configuration file, please visit https://www.checkov.io/2.0/docs/configuration/config_file/
 ---
 skip-check:
-# Skip check for https://docs.prismacloud.io/en/enterprise-edition/policy-reference/supply-chain-policies/terraform-policies/ensure-terraform-module-sources-use-git-url-with-commit-hash-revision
-# We want to utilize human readable tagging despite the minor security risk
-- CKV_TF_1
-# These workflows utilize write access in order to write statuses and comments
-- CKV2_GHA_1
+  # Skip check for https://docs.prismacloud.io/en/enterprise-edition/policy-reference/supply-chain-policies/terraform-policies/ensure-terraform-module-sources-use-git-url-with-commit-hash-revision
+  # We want to utilize human readable tagging despite the minor security risk
+  - CKV_TF_1
+  # These workflows utilize write access in order to write statuses and comments
+  - CKV2_GHA_1

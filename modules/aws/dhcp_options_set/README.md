@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,6 +11,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -18,17 +19,16 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">Identity Center Group</h3>
+<h3 align="center">DHCP Options Set Module</h3>
   <p align="center">
-    This module creates a group in AWS Identity Center (formerly AWS SSO). These groups are then utilized to manage permissions to accounts or applications.
+    This module creates a DHCP Options Set for usage with AWS VPCs. These DHCP Options Sets can be used to configure DNS servers, NTP servers, and more for your VPCs. Allowing control over how instances in your VPC obtain their network configuration. This is  particularly useful for setting custom DNS servers or NTP servers for your VPCs.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,24 +58,22 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
-This example creates groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
-```
-module "groups" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/group"
-  groups = {
-    "admins" = {
-      display_name = "admins"
-      description  = "Admins from my domains"
-    },
-    "terraform" = {
-      display_name = "terraform"
-      description  = "Terraform users for CI/CD deployment"
-    }
-  }
+
+This example shows how to create a simple DHCP Options Set with custom DNS servers and NTP servers.
+
+```hcl
+module "dhcp_options_set" {
+  source = "github.com/zachreborn/terraform-modules//aws/dhcp_options"
+
+  domain_name = "example.com"
+  domain_name_servers = ["10.0.0.100", "10.0.1.100"]
+  ntp_servers = ["10.0.0.1"]
+  vpc_id = "vpc-12345678"
 }
 ```
 
@@ -92,13 +89,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -108,32 +105,36 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
-| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
+| [aws_vpc_dhcp_options.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options) | resource |
+| [aws_vpc_dhcp_options_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options_association) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the group.<br/>    description  = string # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
+| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | (Optional) Define the domain name for the DHCP Options Set | `string` | `null` | no |
+| <a name="input_domain_name_servers"></a> [domain\_name\_servers](#input\_domain\_name\_servers) | (Optional) List of IP addresses for the DNS servers | `list(string)` | `[]` | no |
+| <a name="input_ntp_servers"></a> [ntp\_servers](#input\_ntp\_servers) | (Optional) List of IP addresses for the NTP servers | `list(string)` | `[]` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map` | <pre>{<br/>  "Name": "DHCP Options Set",<br/>  "created_by": "Terraform",<br/>  "description": "DHCP Option Set for the VPC",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) ID of the VPC to attach the DHCP Options Set to | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
+| <a name="output_dhcp_options_id"></a> [dhcp\_options\_id](#output\_dhcp\_options\_id) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -142,19 +143,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
@@ -170,3 +170,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 [product-screenshot]: /images/screenshot.webp
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io
+
+```
+
+```

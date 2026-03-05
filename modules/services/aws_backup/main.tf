@@ -296,7 +296,9 @@ resource "aws_backup_plan" "plan" {
     start_window             = var.backup_plan_start_window
     completion_window        = var.backup_plan_completion_window
     lifecycle {
-      delete_after = var.hourly_backup_retention
+      cold_storage_after                        = var.hourly_backup_cold_storage_after
+      delete_after                              = var.hourly_backup_retention
+      opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
     }
   }
 
@@ -310,11 +312,15 @@ resource "aws_backup_plan" "plan" {
     copy_action {
       destination_vault_arn = aws_backup_vault.vault_disaster_recovery.arn
       lifecycle {
-        delete_after = var.dr_backup_retention
+        cold_storage_after                        = var.dr_cold_storage_after
+        delete_after                              = var.dr_backup_retention
+        opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
       }
     }
     lifecycle {
-      delete_after = var.daily_backup_retention
+      cold_storage_after                        = var.daily_backup_cold_storage_after
+      delete_after                              = var.daily_backup_retention
+      opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
     }
   }
 
@@ -326,8 +332,9 @@ resource "aws_backup_plan" "plan" {
     start_window             = var.backup_plan_start_window
     completion_window        = var.backup_plan_completion_window
     lifecycle {
-      # cold_storage_after = "90"
-      delete_after = var.monthly_backup_retention
+      cold_storage_after                        = var.monthly_backup_cold_storage_after
+      delete_after                              = var.monthly_backup_retention
+      opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
     }
   }
 
@@ -376,11 +383,15 @@ resource "aws_backup_plan" "ec2_plan" {
     copy_action {
       destination_vault_arn = aws_backup_vault.vault_disaster_recovery.arn
       lifecycle {
-        delete_after = var.dr_backup_retention
+        cold_storage_after                        = var.dr_cold_storage_after
+        delete_after                              = var.dr_backup_retention
+        opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
       }
     }
     lifecycle {
-      delete_after = var.daily_backup_retention
+      cold_storage_after                        = var.daily_backup_cold_storage_after
+      delete_after                              = var.daily_backup_retention
+      opt_in_to_archive_for_supported_resources = var.opt_in_to_archive_for_supported_resources
     }
   }
 
@@ -409,4 +420,4 @@ resource "aws_backup_selection" "all_ec2" {
 ###############################################################
 # Backup Notifications
 ###############################################################
-# To be added
+# To be added soon

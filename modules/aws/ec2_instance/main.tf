@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -42,14 +42,14 @@ resource "aws_instance" "ec2" {
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
     encrypted             = var.encrypted
-    tags                  = merge(var.tags, ({ "Name" = format("%s%d", var.name, count.index + 1) }))
+    tags                  = merge(var.tags, ({ "Name" = format("%s%s", var.name, var.number > 1 ? count.index + 1 : "") }))
     volume_type           = var.root_volume_type
     volume_size           = var.root_volume_size
   }
 
   source_dest_check      = var.source_dest_check
   subnet_id              = var.subnet_id
-  tags                   = merge(var.tags, ({ "Name" = format("%s%d", var.name, count.index + 1) }))
+  tags                   = merge(var.tags, ({ "Name" = format("%s%s", var.name, var.number > 1 ? count.index + 1 : "") }))
   tenancy                = var.tenancy
   user_data              = var.user_data
   vpc_security_group_ids = var.vpc_security_group_ids
@@ -97,7 +97,7 @@ resource "aws_cloudwatch_metric_alarm" "instance" {
 
 resource "aws_cloudwatch_metric_alarm" "system" {
   actions_enabled     = true
-  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
+  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.region}:ec2:recover"]
   alarm_description   = "EC2 instance StatusCheckFailed_System alarm"
   alarm_name          = format("%s-system-alarm", aws_instance.ec2[count.index].id)
   comparison_operator = "GreaterThanOrEqualToThreshold"

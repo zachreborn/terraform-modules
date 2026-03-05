@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -209,14 +209,14 @@ resource "aws_s3_bucket_website_configuration" "this" {
   dynamic "error_document" {
     for_each = local.error_document == null ? [] : [local.error_document]
     content {
-      key = error_document.value.key
+      key = error_document.value
     }
   }
 
   dynamic "index_document" {
     for_each = local.index_document == null ? [] : [local.index_document]
     content {
-      suffix = index_document.value.suffix
+      suffix = index_document.value
     }
   }
 

@@ -23,7 +23,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">AWS Backups Module</h3>
@@ -63,20 +63,6 @@
 ## Usage
 
 ### Simple Example
-
-```
-module "aws_prod_backups" {
-    source           = "github.com/zachreborn/terraform-modules//modules/services/aws_backup"
-    providers        = {
-        aws.aws_prod_region = aws.aws_prod_region
-        aws.aws_dr_region   = aws.aws_dr_region
-    }
-}
-```
-
-### AWS Organization Example
-
-This example is for usage with an AWS Organization. It will create a backup vault in either the delegated administrator backups account OR the management account. It will also create a disaster recovery backup vault and a production backup vault with daily, hourly, and monthly backups. This enforces air-gapped backups with a 7 day retention for disaster recovery and a 30 day retention for production backups. It also creates a KMS key to encrypt the backups and an IAM role to allow AWS Backup to access the resources.
 
 ```
 module "aws_prod_backups" {
@@ -152,11 +138,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_backup_plan_name"></a> [backup\_plan\_name](#input\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"prod_backups"` | no |
 | <a name="input_backup_plan_start_window"></a> [backup\_plan\_start\_window](#input\_backup\_plan\_start\_window) | (Optional) The amount of time in minutes before beginning a backup. | `number` | `60` | no |
 | <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) The number of days after which the vault lock configuration is no longer changeable. Setting this variable will utilize vault lock compliance mode. Omit the variable if you wish to create the vault lock in governance mode. Defaults to 3 days. | `number` | `3` | no |
+| <a name="input_daily_backup_cold_storage_after"></a> [daily\_backup\_cold\_storage\_after](#input\_daily\_backup\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_daily_backup_retention"></a> [daily\_backup\_retention](#input\_daily\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 30 days | `number` | `30` | no |
 | <a name="input_daily_backup_schedule"></a> [daily\_backup\_schedule](#input\_daily\_backup\_schedule) | (Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC. | `string` | `"cron(20 7 * * ? *)"` | no |
 | <a name="input_dr_backup_retention"></a> [dr\_backup\_retention](#input\_dr\_backup\_retention) | (Required) The dr backup plan retention in days. By default this is 7 days. | `number` | `7` | no |
+| <a name="input_dr_cold_storage_after"></a> [dr\_cold\_storage\_after](#input\_dr\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_ec2_backup_plan_name"></a> [ec2\_backup\_plan\_name](#input\_ec2\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"ec2_prod_backups"` | no |
 | <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) A boolean to enable or disable the AWS Backup Organization functionality. If set to 'true' this transitions from a single backup plan to organization plan policies. Defaults to false. | `bool` | `false` | no |
+| <a name="input_hourly_backup_cold_storage_after"></a> [hourly\_backup\_cold\_storage\_after](#input\_hourly\_backup\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `0` | no |
 | <a name="input_hourly_backup_retention"></a> [hourly\_backup\_retention](#input\_hourly\_backup\_retention) | (Required) The hourly backup plan retention in days. By default this is 3 days. | `number` | `3` | no |
 | <a name="input_hourly_backup_schedule"></a> [hourly\_backup\_schedule](#input\_hourly\_backup\_schedule) | (Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour. | `string` | `"cron(20 * * * ? *)"` | no |
 | <a name="input_key_bypass_policy_lockout_safety_check"></a> [key\_bypass\_policy\_lockout\_safety\_check](#input\_key\_bypass\_policy\_lockout\_safety\_check) | (Optional) Specifies whether to disable the policy lockout check performed when creating or updating the key's policy. Setting this value to true increases the risk that the CMK becomes unmanageable. For more information, refer to the scenario in the Default Key Policy section in the AWS Key Management Service Developer Guide. Defaults to false. | `bool` | `false` | no |
@@ -168,9 +157,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_key_name"></a> [key\_name](#input\_key\_name) | (Optional) The display name of the alias. The name must start with the word 'alias' followed by a forward slash | `string` | `"alias/aws_backup_key"` | no |
 | <a name="input_key_policy"></a> [key\_policy](#input\_key\_policy) | (Optional) A valid policy JSON document. Although this is a key policy, not an IAM policy, an aws\_iam\_policy\_document, in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the AWS IAM Policy Document Guide. | `string` | `null` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
+| <a name="input_monthly_backup_cold_storage_after"></a> [monthly\_backup\_cold\_storage\_after](#input\_monthly\_backup\_cold\_storage\_after) | (Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days. | `number` | `14` | no |
 | <a name="input_monthly_backup_retention"></a> [monthly\_backup\_retention](#input\_monthly\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 365 days. | `number` | `365` | no |
-| <a name="input_monthly_backup_schedule"></a> [monthly\_backup\_schedule](#input\_monthly\_backup\_schedule) | (Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC. | `string` | `"cron(20 9 1 * ? *)"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br/>  "aws_backup": "true",<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "critical",<br/>  "service": "backups",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_opt_in_to_archive_for_supported_resources"></a> [opt\_in\_to\_archive\_for\_supported\_resources](#input\_opt\_in\_to\_archive\_for\_supported\_resources) | (Optional) Whether to opt in to archive for supported resources. | `bool` | `false` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br/>  "aws_backup": "true",<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "critical",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_vault_disaster_recovery_name"></a> [vault\_disaster\_recovery\_name](#input\_vault\_disaster\_recovery\_name) | value | `string` | `"vault_disaster_recovery"` | no |
 | <a name="input_vault_prod_daily_name"></a> [vault\_prod\_daily\_name](#input\_vault\_prod\_daily\_name) | value | `string` | `"vault_prod_daily"` | no |
 | <a name="input_vault_prod_hourly_name"></a> [vault\_prod\_hourly\_name](#input\_vault\_prod\_hourly\_name) | value | `string` | `"vault_prod_hourly"` | no |

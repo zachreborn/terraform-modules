@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -18,7 +18,6 @@ data "aws_organizations_organization" "current" {}
 ############################
 # Locals
 ############################
-
 
 
 ###########################
@@ -62,7 +61,7 @@ resource "aws_kms_key" "cloudtrail" {
             ]
           },
           "StringEquals" = {
-            "aws:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+            "aws:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
           }
         }
       },
@@ -81,7 +80,7 @@ resource "aws_kms_key" "cloudtrail" {
         "Sid"    = "Allow CloudWatch Logs to encrypt logs",
         "Effect" = "Allow",
         "Principal" = {
-          "Service" = "logs.${data.aws_region.current.name}.amazonaws.com"
+          "Service" = "logs.${data.aws_region.current.region}.amazonaws.com"
         },
         "Action" = [
           "kms:Encrypt*",
@@ -93,7 +92,7 @@ resource "aws_kms_key" "cloudtrail" {
         "Resource" = "*",
         "Condition" = {
           "ArnEquals" = {
-            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"
           }
         }
       },
@@ -295,7 +294,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
           }
         }
       },
@@ -311,7 +310,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
             "s3:x-amz-acl"  = "bucket-owner-full-control"
           }
         }
@@ -328,7 +327,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_organizations_organization.current.id}/*",
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
             "s3:x-amz-acl"  = "bucket-owner-full-control"
           }
         }

@@ -7,7 +7,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -18,7 +18,8 @@ terraform {
 
 resource "aws_iam_policy" "this" {
   description = var.description
-  name_prefix = var.name_prefix
+  name        = var.name_prefix == null ? var.name : null
+  name_prefix = var.name_prefix != null ? var.name_prefix : null
   path        = var.path
   policy      = var.policy
   tags        = var.tags

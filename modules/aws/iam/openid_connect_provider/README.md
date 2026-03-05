@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,13 +11,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">Identity Center User</h3>
+<h3 align="center">OIDC Provider</h3>
   <p align="center">
-    This module creates one or more users in AWS Identity Center (formerly AWS SSO). These users are then attached to groups in order to provide access to AWS accounts or applications.
+    This module creates the necessary resources to manage an AWS IAM OpenID Connect (OIDC) Provider. This allows you to configure trust relationships between your AWS account and an external OIDC identity provider, enabling secure authentication and authorization for your applications and services. OIDC is considered a modern and secure way to handle identity federation in cloud environments. Examples of OIDC providers include Google, Microsoft Azure AD, Terraform Cloud, Scalr, and Auth0.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,26 +58,21 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
-## Usage
-### Simple Example
-This example creates users managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically.
-```
-module "users" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/user"
 
-  users = {
-    "Zachary Hill" = {
-      display_name     = "Zachary Hill"
-      given_name       = "Zachary"
-      family_name      = "Hill"
-      user_name        = "zhill@zacharyhill.co"
-      email            = "zhill@zacharyhill.co"
-      email_is_primary = true
-      email_type       = "work"
-    }
-  }
+## Usage
+
+### Simple Example
+
+This example creates a single OIDC provider in AWS for Scalr.
+
+```
+module "scalr_oidc_provider" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/openid_connect_provider"
+
+  name = "scalr-oidc-provider"
+  url = "https://<your-scalr-domain>.scalr.io"
+  client_id_list = ["<your-scalr-client-id>"]
 }
 ```
 
@@ -110,32 +104,35 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_identitystore_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
-| [aws_ssoadmin_instances.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssoadmin_instances) | data source |
+| [aws_iam_openid_connect_provider.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_users"></a> [users](#input\_users) | (Required) The list of users to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the user.<br/>    given_name   = string # (Required) The given name of the user.<br/>    family_name  = string # (Required) The family name of the user.<br/>    user_name    = string # (Required) The username of the user.<br/><br/>    honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.<br/>    honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.<br/>    middle_name      = optional(string) # (Optional) The middle name of the user.<br/>    nickname         = optional(string) # (Optional) The nickname of the user.<br/><br/>    email                   = optional(string) # (Optional) The email address of the user.<br/>    email_is_primary        = optional(bool)   # (Optional) Indicates whether the email address is the primary email address of the user.<br/>    email_type              = optional(string) # (Optional) The type of the email address of the user.<br/>    phone_number            = optional(string) # (Optional) The phone number of the user.<br/>    phone_number_is_primary = optional(bool)   # (Optional) Indicates whether the phone number is the primary phone number of the user.<br/>    phone_number_type       = optional(string) # (Optional) The type of the phone number of the user.<br/><br/>    preferred_language = optional(string) # (Optional) The user's preferred language.<br/>    timezone           = optional(string) # (Optional) The user's time zone.<br/>    title              = optional(string) # (Optional) The user's title.<br/>    user_type          = optional(string) # (Optional) The type of the user.<br/>  }))</pre> | n/a | yes |
+| <a name="input_client_id_list"></a> [client\_id\_list](#input\_client\_id\_list) | A list of client IDs (also known as audiences within OIDC). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. This is the value that's sent as the client\_id parameter on OAuth requests. | `list(string)` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | The name of the provider to create, such as Terraform Cloud. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Key-value map of resource tags. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_thumbprint_list"></a> [thumbprint\_list](#input\_thumbprint\_list) | A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). | `list(string)` | `null` | no |
+| <a name="input_url"></a> [url](#input\_url) | The URL of the identity provider. Corresponds to the iss claim. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_user_ids"></a> [user\_ids](#output\_user\_ids) | The IDs of the users in the identity store |
+| <a name="output_arn"></a> [arn](#output\_arn) | The arn of the IAM OIDC provider. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -144,19 +141,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
