@@ -120,3 +120,37 @@ skip-check:
   - CKV_AWS_289 # Configurable by caller
   - CKV_AWS_290 # Configurable by caller
   - CKV_AWS_355 # Configurable by caller
+
+  # ============================================================
+  # CKV2 CHECKS: Same rationale - configurable by caller
+  # ============================================================
+
+  # API Gateway
+  - CKV2_AWS_4 # Stage logging level - exposed as default_route_settings variable
+  - CKV2_AWS_29 # WAF protection - optional caller configuration
+
+  # CloudFront
+  - CKV2_AWS_32 # Response headers policy - optional caller configuration
+  - CKV2_AWS_47 # WAFv2 WebACL with Log4j rule - optional caller configuration
+
+  # CloudTrail
+  - CKV2_AWS_10 # CloudWatch Logs integration - exposed as cloud_watch_logs_group_arn variable
+
+  # EC2 / VPC
+  - CKV2_AWS_5 # Security groups attached to resource - managed by caller
+  - CKV2_AWS_12 # Default VPC security group - managed by caller
+  - CKV2_AWS_19 # EIP attached to instance - managed by caller
+
+  # GuardDuty
+  - CKV2_AWS_3 # GuardDuty enabled per org/region - org-level control, not module
+
+  # RDS
+  - CKV2_AWS_8 # RDS cluster in AWS Backup plan - managed by caller
+  - CKV2_AWS_9 # EBS in AWS Backup plan - managed by caller
+
+  # Route53
+  - CKV2_AWS_38 # DNSSEC signing - exposed as dnssec variable
+  - CKV2_AWS_39 # DNS query logging - exposed as query_log_config variable
+
+  # S3
+  - CKV2_AWS_62 # S3 event notifications - optional caller configuration
