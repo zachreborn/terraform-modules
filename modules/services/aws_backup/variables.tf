@@ -100,7 +100,7 @@ variable "changeable_for_days" {
 
 ###############################################################
 # Plan Variables
-###############################################################"
+###############################################################
 variable "backup_plan_name" {
   description = "(Required) The display name of a backup plan."
   default     = "prod_backups"
@@ -129,7 +129,8 @@ variable "hourly_backup_schedule" {
   description = "(Required) The hourly backup plan schedule in cron format. By default this is set to run every hour at 20 minutes past the hour."
   default     = "cron(20 * * * ? *)"
   type        = string
-  
+}
+
 variable "daily_backup_cold_storage_after" {
   description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
   default     = 0
@@ -146,7 +147,8 @@ variable "daily_backup_schedule" {
   description = "(Required) The daily backup plan schedule in cron format. By default this is set to run every day at 7:20 AM UTC."
   default     = "cron(20 7 * * ? *)"
   type        = string
-  
+}
+
 variable "monthly_backup_cold_storage_after" {
   description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
   default     = 14
@@ -163,6 +165,7 @@ variable "monthly_backup_schedule" {
   description = "(Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC."
   default     = "cron(20 9 1 * ? *)"
   type        = string
+}
 
 variable "dr_cold_storage_after" {
   description = "(Optional) The number of days after creation that a recovery point is moved to cold storage. Backups transitioned to cold storage must remain in cold storage for at least 90 days."
