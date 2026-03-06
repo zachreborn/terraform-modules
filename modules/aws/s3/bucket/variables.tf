@@ -309,7 +309,7 @@ variable "restrict_public_buckets" {
 
 variable "bucket_key_enabled" {
   type        = bool
-  description = "(Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is re-used to encrypt the object. When an object is copied, the S3 bucket key is re-used to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is re-used to encrypt the object. Defaults to true."
+  description = "(Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is reused to encrypt the object. When an object is copied, the S3 bucket key is reused to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is reused to encrypt the object. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("true|false", var.bucket_key_enabled))
