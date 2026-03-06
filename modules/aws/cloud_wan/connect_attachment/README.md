@@ -178,7 +178,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_connect_attachments"></a> [connect\_attachments](#input\_connect\_attachments) | (Required) Map of connect attachments to create. The key is the attachment name. | <pre>map(object({<br/>    transport_attachment_id = string<br/>    edge_location           = string<br/>    protocol                = string<br/>    proposed_segment_change = optional(object({<br/>      attachment_policy_rule_number = optional(number)<br/>      segment_name                  = optional(string)<br/>      tags                          = optional(map(string))<br/>    }))<br/>    proposed_network_function_group_change = optional(object({<br/>      attachment_policy_rule_number = optional(number)<br/>      network_function_group_name   = optional(string)<br/>      tags                          = optional(map(string))<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_connect_attachments"></a> [connect\_attachments](#input\_connect\_attachments) | (Required) Map of connect attachments to create. The key is the attachment name. | <pre>map(object({<br/>    transport_attachment_id = string<br/>    edge_location           = string<br/>    protocol                = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network for the connect attachment. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
