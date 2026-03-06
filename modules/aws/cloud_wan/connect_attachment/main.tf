@@ -25,22 +25,4 @@ resource "aws_networkmanager_connect_attachment" "this" {
   }
 
   tags = merge(tomap({ Name = each.key }), var.tags)
-
-  dynamic "proposed_segment_change" {
-    for_each = each.value.proposed_segment_change != null ? [each.value.proposed_segment_change] : []
-    content {
-      attachment_policy_rule_number = proposed_segment_change.value.attachment_policy_rule_number
-      segment_name                  = proposed_segment_change.value.segment_name
-      tags                          = proposed_segment_change.value.tags
-    }
-  }
-
-  dynamic "proposed_network_function_group_change" {
-    for_each = each.value.proposed_network_function_group_change != null ? [each.value.proposed_network_function_group_change] : []
-    content {
-      attachment_policy_rule_number = proposed_network_function_group_change.value.attachment_policy_rule_number
-      network_function_group_name   = proposed_network_function_group_change.value.network_function_group_name
-      tags                          = proposed_network_function_group_change.value.tags
-    }
-  }
 }
