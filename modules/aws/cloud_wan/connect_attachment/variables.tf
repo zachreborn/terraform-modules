@@ -12,16 +12,6 @@ variable "connect_attachments" {
     transport_attachment_id = string
     edge_location           = string
     protocol                = string
-    proposed_segment_change = optional(object({
-      attachment_policy_rule_number = optional(number)
-      segment_name                  = optional(string)
-      tags                          = optional(map(string))
-    }))
-    proposed_network_function_group_change = optional(object({
-      attachment_policy_rule_number = optional(number)
-      network_function_group_name   = optional(string)
-      tags                          = optional(map(string))
-    }))
   }))
   default = {}
 
