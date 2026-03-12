@@ -20,9 +20,9 @@ variable "peers" {
   validation {
     condition = alltrue([
       for k, v in var.peers :
-      (v.bgp_asn >= 64512 && v.bgp_asn <= 65534) || (v.bgp_asn >= 4200000000 && v.bgp_asn <= 4294967294)
+      (v.bgp_asn >= 1 && v.bgp_asn <= 65534) || (v.bgp_asn >= 4200000000 && v.bgp_asn <= 4294967294)
     ])
-    error_message = "BGP ASN must be in the range 64512-65534 or 4200000000-4294967294."
+    error_message = "BGP ASN must be in the range 1-65534 or 4200000000-4294967294."
   }
 }
 
