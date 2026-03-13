@@ -151,7 +151,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network for the VPC attachment. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_vpc_attachments"></a> [vpc\_attachments](#input\_vpc\_attachments) | (Required) Map of VPC attachments to create. The key is the attachment name. | <pre>map(object({<br/>    vpc_arn                = string<br/>    subnet_arns            = list(string)<br/>    appliance_mode_support = optional(bool, false)<br/>    ipv6_support           = optional(bool, false)<br/>  }))</pre> | `{}` | no |
+| <a name="input_vpc_attachments"></a> [vpc\_attachments](#input\_vpc\_attachments) | (Required) Map of VPC attachments to create. The key is the attachment name. | <pre>map(object({<br/>    vpc_arn                = string<br/>    subnet_arns            = list(string)<br/>    appliance_mode_support = optional(bool, false)<br/>    ipv6_support           = optional(bool, false)<br/>    routing_policy_label   = optional(string)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
