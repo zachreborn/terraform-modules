@@ -1,17 +1,8 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -23,12 +14,12 @@
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">Route Module</h3>
+<h3 align="center">Cloud WAN Transit Gateway Peering</h3>
   <p align="center">
-    This module configures a route within a VPC.
+    This module creates AWS Cloud WAN Transit Gateway peering connections to integrate existing Transit Gateway infrastructure with Cloud WAN.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -59,20 +50,72 @@
 </details>
 
 <!-- USAGE EXAMPLES -->
-
 ## Usage
 
-#### Route to a EC2 instance
+### Single Transit Gateway Peering
 
-```
-module "sdwan_route_branches" {
-  source                 = "github.com/zachreborn/terraform-modules//modules/aws/route"
-  # Branches - Summary route for all branches
-  destination_cidr_block = "10.0.0.0/8"
-  network_interface_id   = module.aws_prod_meraki.primary_network_interface_id[0]
-  route_table_ids        = [module.vpc.db_route_table_ids, module.vpc.dmz_route_table_ids, module.vpc.mgmt_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids, module.vpc.workspaces_route_table_ids]
+```hcl
+module "tgw_peering" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/transit_gateway_peering"
+
+  core_network_id = module.core_network.id
+
+  peerings = {
+    "tgw-us-east-1" = {
+      transit_gateway_arn = aws_ec2_transit_gateway.main.arn
+    }
+  }
+
+  tags = {
+    environment = "production"
+  }
 }
 ```
+
+### Multiple Transit Gateway Peering Connections
+
+```hcl
+module "tgw_peerings" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/transit_gateway_peering"
+
+  core_network_id = module.core_network.id
+
+  peerings = {
+    "tgw-east" = {
+      transit_gateway_arn = aws_ec2_transit_gateway.east.arn
+    }
+    "tgw-west" = {
+      transit_gateway_arn = aws_ec2_transit_gateway.west.arn
+    }
+    "tgw-legacy" = {
+      transit_gateway_arn = data.aws_ec2_transit_gateway.legacy.arn
+    }
+  }
+
+  tags = {
+    environment = "production"
+    migration   = "cloud-wan"
+  }
+}
+```
+
+## Important Notes
+
+### Transit Gateway Peering Use Cases
+- **Migration**: Gradually migrate from Transit Gateway to Cloud WAN
+- **Hybrid Architecture**: Use both Transit Gateway and Cloud WAN together
+- **Cross-Account**: Peer Cloud WAN with Transit Gateway in different accounts
+
+### Requirements
+- Core network must have a policy attached before creating peering
+- Transit Gateway and Core Network must be in the same AWS Region
+- Transit Gateway must be in AVAILABLE state
+
+### Peering Process
+1. Create Transit Gateway peering (this module)
+2. Accept peering if in different account
+3. Update Transit Gateway route tables to route through peering
+4. Update Core Network policy to include Transit Gateway attachment
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -92,7 +135,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.34.0 |
 
 ## Modules
 
@@ -102,33 +145,28 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_route.route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_networkmanager_transit_gateway_peering.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_transit_gateway_peering) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_carrier_gateway_id"></a> [carrier\_gateway\_id](#input\_carrier\_gateway\_id) | (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone. | `string` | `null` | no |
-| <a name="input_core_network_arn"></a> [core\_network\_arn](#input\_core\_network\_arn) | (Optional) The Amazon Resource Name (ARN) of a core network. | `string` | `null` | no |
-| <a name="input_destination_cidr_block"></a> [destination\_cidr\_block](#input\_destination\_cidr\_block) | (Optional) The destination CIDR block. | `string` | n/a | yes |
-| <a name="input_destination_ipv6_cidr_block"></a> [destination\_ipv6\_cidr\_block](#input\_destination\_ipv6\_cidr\_block) | (Optional) The destination IPv6 CIDR block. | `string` | `null` | no |
-| <a name="input_egress_only_gateway_id"></a> [egress\_only\_gateway\_id](#input\_egress\_only\_gateway\_id) | (Optional) An ID of a VPC Egress Only Internet Gateway. | `string` | `null` | no |
-| <a name="input_gateway_id"></a> [gateway\_id](#input\_gateway\_id) | (Optional) An ID of a VPC internet gateway or a virtual private gateway. | `string` | `null` | no |
-| <a name="input_local_gateway_id"></a> [local\_gateway\_id](#input\_local\_gateway\_id) | (Optional) Identifier of a Outpost local gateway. | `string` | `null` | no |
-| <a name="input_nat_gateway_id"></a> [nat\_gateway\_id](#input\_nat\_gateway\_id) | (Optional) An ID of a VPC NAT gateway. | `string` | `null` | no |
-| <a name="input_network_interface_id"></a> [network\_interface\_id](#input\_network\_interface\_id) | (Optional) An ID of a network interface. | `string` | `null` | no |
-| <a name="input_route_table_ids"></a> [route\_table\_ids](#input\_route\_table\_ids) | (Required) The IDs of the routing tables to apply the route to. | `list(any)` | n/a | yes |
-| <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Optional) Identifier of an EC2 Transit Gateway. | `string` | `null` | no |
-| <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) Identifier of a VPC Endpoint. | `string` | `null` | no |
-| <a name="input_vpc_peering_connection_id"></a> [vpc\_peering\_connection\_id](#input\_vpc\_peering\_connection\_id) | (Optional) An ID of a VPC peering connection. | `string` | `null` | no |
+| <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network. | `string` | n/a | yes |
+| <a name="input_peerings"></a> [peerings](#input\_peerings) | (Required) Map of transit gateway peerings to create. The key is the peering name. | <pre>map(object({<br/>    transit_gateway_arn = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_attachment_ids"></a> [attachment\_ids](#output\_attachment\_ids) | Map of transit gateway peering attachment IDs |
+| <a name="output_core_network_arns"></a> [core\_network\_arns](#output\_core\_network\_arns) | Map of core network ARNs |
+| <a name="output_edge_locations"></a> [edge\_locations](#output\_edge\_locations) | Map of edge locations for each peering |
+| <a name="output_peering_arns"></a> [peering\_arns](#output\_peering\_arns) | Map of peering ARNs |
+| <a name="output_peering_ids"></a> [peering\_ids](#output\_peering\_ids) | Map of peering IDs |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
-
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
@@ -136,7 +174,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTACT -->
-
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -146,7 +183,6 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
-
 ## Acknowledgments
 
 - [Zachary Hill](https://zacharyhill.co)
@@ -155,8 +191,6 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
