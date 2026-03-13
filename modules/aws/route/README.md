@@ -108,6 +108,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_carrier_gateway_id"></a> [carrier\_gateway\_id](#input\_carrier\_gateway\_id) | (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone. | `string` | `null` | no |
+| <a name="input_core_network_arn"></a> [core\_network\_arn](#input\_core\_network\_arn) | (Optional) The Amazon Resource Name (ARN) of a core network. | `string` | `null` | no |
 | <a name="input_destination_cidr_block"></a> [destination\_cidr\_block](#input\_destination\_cidr\_block) | (Optional) The destination CIDR block. | `string` | n/a | yes |
 | <a name="input_destination_ipv6_cidr_block"></a> [destination\_ipv6\_cidr\_block](#input\_destination\_ipv6\_cidr\_block) | (Optional) The destination IPv6 CIDR block. | `string` | `null` | no |
 | <a name="input_egress_only_gateway_id"></a> [egress\_only\_gateway\_id](#input\_egress\_only\_gateway\_id) | (Optional) An ID of a VPC Egress Only Internet Gateway. | `string` | `null` | no |
