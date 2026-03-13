@@ -19,7 +19,8 @@ resource "aws_networkmanager_vpc_attachment" "this" {
   core_network_id = var.core_network_id
   subnet_arns     = each.value.subnet_arns
   vpc_arn         = each.value.vpc_arn
-  tags            = merge(tomap({ Name = each.key }), var.tags)
+  routing_policy_label = each.value.routing_policy_label
+  tags                 = merge(tomap({ Name = each.key }), var.tags)
 
   options {
     appliance_mode_support = each.value.appliance_mode_support

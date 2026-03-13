@@ -13,6 +13,7 @@ variable "vpc_attachments" {
     subnet_arns            = list(string)
     appliance_mode_support = optional(bool, false)
     ipv6_support           = optional(bool, false)
+    routing_policy_label   = optional(string)
   }))
   default = {}
 }
