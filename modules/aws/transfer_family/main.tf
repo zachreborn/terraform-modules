@@ -87,7 +87,7 @@ module "transfer_family_logging_iam_role_policy" {
   source = "../iam/policy"
 
   description = "Transfer Family logging IAM role policy for ${var.name}"
-  name_prefix = "${var.name}-transfer-family-logging-policy"
+  name_prefix = "${var.name}-logging-policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -130,7 +130,7 @@ module "transfer_family_logging_iam_role" {
     ]
   })
   description = "Transfer Family logging IAM role for ${var.name}"
-  name_prefix = "${var.name}-transfer-family-logging-role"
+  name_prefix = "${var.name}-logging-role"
   policy_arns = [module.transfer_family_logging_iam_role_policy.arn]
   tags        = var.tags
 }
