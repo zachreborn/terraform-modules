@@ -234,6 +234,7 @@ variable "users" {
     home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.
     policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information
     public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.
+    tags                = optional(map(string), {})   # Additional tags to apply to this user, merged with module-level tags.
     username            = string                      # The username of the user.
   }))
   default = {}

@@ -267,7 +267,7 @@ resource "aws_transfer_user" "this" {
   policy              = each.value.home_directory_type == "LOGICAL" ? null : (each.value.policy == null ? local.default_session_policy : each.value.policy)
   role                = module.transfer_family_iam_role.arn
   server_id           = aws_transfer_server.this.id
-  tags                = var.tags
+  tags                = merge(var.tags, each.value.tags)
   user_name           = each.value.username
 
   dynamic "home_directory_mappings" {
