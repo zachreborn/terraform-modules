@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 
 locals {
   # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
-  enable_igw = var.enable_internet_gateway && length(var.public_subnets_list) != 0
+  enable_igw   = var.enable_internet_gateway && length(var.public_subnets_list) != 0
   service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
