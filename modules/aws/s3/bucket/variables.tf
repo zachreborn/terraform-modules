@@ -259,6 +259,12 @@ variable "bucket_policy" {
   default     = null
 }
 
+variable "enforce_ssl" {
+  type        = bool
+  description = "(Optional) Enforce SSL/TLS for all requests to the bucket. When true, denies any request where aws:SecureTransport is false. If a custom bucket_policy is provided, the SSL enforcement statement will be merged with it. Defaults to true."
+  default     = true
+}
+
 ######################
 # S3 Public Block Variables
 ######################

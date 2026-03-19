@@ -64,13 +64,72 @@
 
 ### Simple Example
 
-This example creates a bucket with encryption enabled by default, using the 'aws/s3' KMS key managed by AWS. It also has the default of blocking all public access to the bucket and objects. There is no bucket policy attached to this bucket.
+This example creates a bucket with encryption enabled by default, using the 'aws/s3' KMS key managed by AWS. It also has the default of blocking all public access to the bucket and objects. SSL/HTTPS enforcement is enabled by default. There is no bucket policy attached to this bucket.
 
 ```
 module "bucket" {
   source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   bucket_prefix = "octo-prod-"
   tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
+### SSL/HTTPS Enforcement Example
+
+This example demonstrates the SSL/HTTPS enforcement feature. By default, all buckets enforce SSL/TLS for requests (enforce_ssl = true). This example shows how to explicitly disable SSL enforcement if needed for specific use cases.
+
+```
+module "bucket_with_ssl" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-prod-secure-"
+  enforce_ssl   = true  # Default behavior - explicitly shown for clarity
+  tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+
+module "bucket_without_ssl" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-dev-legacy-"
+  enforce_ssl   = false  # Disable SSL enforcement for legacy applications
+  tags          = {
+    created_by  = "<YOUR_NAME>"
+    environment = "dev"
+    terraform   = "true"
+  }
+}
+```
+
+### SSL Enforcement with Custom Bucket Policy
+
+This example shows how the enforce_ssl parameter works with custom bucket policies. When both are provided, the SSL enforcement statement is automatically merged with your custom policy.
+
+```
+module "bucket_with_custom_policy" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-prod-custom-"
+  enforce_ssl   = true
+  bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowSpecificIAMRole"
+        Effect    = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::123456789012:role/MyRole"
+        }
+        Action   = ["s3:GetObject"]
+        Resource = "arn:aws:s3:::octo-prod-custom-*/*"
+      }
+    ]
+  })
+  tags = {
     created_by  = "<YOUR_NAME>"
     environment = "prod"
     terraform   = "true"
@@ -365,6 +424,8 @@ No modules.
 | [aws_s3_bucket_server_side_encryption_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
 | [aws_s3_bucket_website_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
+| [aws_iam_policy_document.merged](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.ssl_only](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
@@ -384,6 +445,7 @@ No modules.
 | <a name="input_enable_public_access_block"></a> [enable\_public\_access\_block](#input\_enable\_public\_access\_block) | (Optional) Enable public access block for S3 bucket. If true, this will block all public access to the bucket. Defaults to true. | `bool` | `true` | no |
 | <a name="input_enable_s3_bucket_logging"></a> [enable\_s3\_bucket\_logging](#input\_enable\_s3\_bucket\_logging) | (Optional) Enable logging on the cloudtrail S3 bucket. If true, the 'target\_bucket' is required. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enable_website"></a> [enable\_website](#input\_enable\_website) | (Optional) Enable static website hosting for S3 bucket. If true, this will create a website configuration for the bucket. Defaults to false. | `bool` | `false` | no |
+| <a name="input_enforce_ssl"></a> [enforce\_ssl](#input\_enforce\_ssl) | (Optional) Enforce SSL/TLS for all requests to the bucket. When true, denies any request where aws:SecureTransport is false. If a custom bucket\_policy is provided, the SSL enforcement statement will be merged with it. Defaults to true. | `bool` | `true` | no |
 | <a name="input_error_document"></a> [error\_document](#input\_error\_document) | (Optional) An absolute path to the document to return in case of a 4XX error. | `string` | `"error.html"` | no |
 | <a name="input_expected_bucket_owner"></a> [expected\_bucket\_owner](#input\_expected\_bucket\_owner) | (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error. | `string` | `null` | no |
 | <a name="input_ignore_public_acls"></a> [ignore\_public\_acls](#input\_ignore\_public\_acls) | (Optional) Whether Amazon S3 should ignore public ACLs for this bucket. Defaults to false. Enabling this setting does not affect the persistence of any existing ACLs and doesn't prevent new public ACLs from being set. | `bool` | `true` | no |
