@@ -1,0 +1,60 @@
+# Trivy Ignore File
+# Suppresses misconfig findings that are intentional for a reusable module library.
+# Posture enforcement is the caller's responsibility, not the module's.
+# See: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
+
+# AVD-AWS-0123: MFA not enforced for IAM groups
+# IAM group modules expose this as a configurable policy; the caller attaches MFA policies
+AVD-AWS-0123
+
+# AVD-AWS-0001: API Gateway access logging not configured
+# Exposed as access_log_settings variable; caller provides the log destination ARN
+AVD-AWS-0001
+
+# AVD-AWS-0003: API Gateway stage-level logging not configured
+# Exposed as default_route_settings/logging variables; caller controls log level
+AVD-AWS-0003
+
+# AVD-AWS-0010: CloudFront distribution logging not enabled
+# Exposed as logging_config variable; caller provides the S3 log bucket
+AVD-AWS-0010
+
+# AVD-AWS-0012: CloudFront distribution allows unencrypted (HTTP) communications
+# Exposed as viewer_protocol_policy variable; caller enforces HTTPS-only if required
+AVD-AWS-0012
+
+# AVD-AWS-0027: SQS queue not encrypted with CMK
+# Exposed as kms_master_key_id variable; caller provides the KMS key
+AVD-AWS-0027
+
+# AVD-AWS-0053: Load balancer is exposed publicly
+# By design for internet-facing load balancers; caller sets internal variable
+AVD-AWS-0053
+
+# AVD-AWS-0062: IAM password policy allows max age greater than 90 days
+# Exposed as max_password_age variable; caller sets the policy
+AVD-AWS-0062
+
+# AVD-AWS-0066: SQS queue policy is too permissive
+# Exposed as policy variable; caller provides the least-privilege policy document
+AVD-AWS-0066
+
+# AVD-AWS-0089: S3 bucket has public access block disabled
+# Exposed as block_public_acls/block_public_policy variables; caller enforces access control
+AVD-AWS-0089
+
+# AVD-AWS-0090: S3 bucket does not have versioning enabled
+# Exposed as versioning variable; caller enables versioning where required
+AVD-AWS-0090
+
+# AVD-AWS-0095: SNS topic does not have encryption enabled
+# Exposed as kms_master_key_id variable; caller provides the KMS key
+AVD-AWS-0095
+
+# AVD-AWS-0132: S3 bucket does not encrypt data with a customer managed key
+# Exposed as kms_master_key_id/sse_algorithm variables; caller provides CMK when required
+AVD-AWS-0132
+
+# AVD-AWS-0343: RDS/DocumentDB cluster does not have deletion protection enabled
+# Exposed as deletion_protection variable; caller enables for production workloads
+AVD-AWS-0343

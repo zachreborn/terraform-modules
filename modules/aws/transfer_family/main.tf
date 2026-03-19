@@ -70,12 +70,70 @@ locals {
 ###########################
 
 ##############
+# Create CloudWatch log group
+##############
+
+resource "aws_cloudwatch_log_group" "transfer_family" {
+  name              = "/aws/transfer/${var.name}"
+  retention_in_days = var.cloudwatch_log_retention_days
+  tags              = merge(var.tags, { "Name" = "/aws/transfer/${var.name}" })
+}
+
+##############
 # Create logging IAM role
 ##############
 
-##############
-# Create CloudWatch log group
-##############
+module "transfer_family_logging_iam_role_policy" {
+  source = "../iam/policy"
+
+  description = "Transfer Family logging IAM role policy for ${var.name}"
+  name_prefix = "${var.name}-logging-policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "AllowCloudWatchLogging"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+  tags = var.tags
+}
+
+module "transfer_family_logging_iam_role" {
+  source = "../iam/role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "TransferLoggingAssumeRole"
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "transfer.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+  description = "Transfer Family logging IAM role for ${var.name}"
+  name_prefix = "${var.name}-logging-role"
+  policy_arns = [module.transfer_family_logging_iam_role_policy.arn]
+  tags        = var.tags
+}
 
 ##############
 # Create the AWS transfer family server
@@ -90,7 +148,7 @@ resource "aws_transfer_server" "this" {
   host_key                         = var.host_key
   identity_provider_type           = var.identity_provider_type
   invocation_role                  = var.invocation_role
-  logging_role                     = var.logging_role
+  logging_role                     = module.transfer_family_logging_iam_role.arn
   pre_authentication_login_banner  = var.pre_authentication_login_banner
   post_authentication_login_banner = var.post_authentication_login_banner
   protocols                        = var.protocols
@@ -209,7 +267,7 @@ resource "aws_transfer_user" "this" {
   policy              = each.value.home_directory_type == "LOGICAL" ? null : (each.value.policy == null ? local.default_session_policy : each.value.policy)
   role                = module.transfer_family_iam_role.arn
   server_id           = aws_transfer_server.this.id
-  tags                = var.tags
+  tags                = merge(var.tags, each.value.tags)
   user_name           = each.value.username
 
   dynamic "home_directory_mappings" {

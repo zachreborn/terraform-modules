@@ -2,6 +2,16 @@
 # Cloudwatch Log Group Variables
 ###########################
 
+variable "cloudwatch_log_retention_days" {
+  description = "(Optional) The number of days to retain Transfer Family log events in CloudWatch. Valid values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, 0 (never expire)."
+  type        = number
+  default     = 30
+  validation {
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_log_retention_days)
+    error_message = "The value of cloudwatch_log_retention_days must be a valid CloudWatch log retention period."
+  }
+}
+
 ###########################
 # Transfer Server Variables
 ###########################
@@ -68,12 +78,6 @@ variable "identity_provider_type" {
 
 variable "invocation_role" {
   description = "(Optional) The ARN of the IAM role that controls your authentication with an identity provider_type through API_GATEWAY."
-  type        = string
-  default     = null
-}
-
-variable "logging_role" {
-  description = "(Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group."
   type        = string
   default     = null
 }
@@ -230,6 +234,7 @@ variable "users" {
     home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.
     policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information
     public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.
+    tags                = optional(map(string), {})   # Additional tags to apply to this user, merged with module-level tags.
     username            = string                      # The username of the user.
   }))
   default = {}
