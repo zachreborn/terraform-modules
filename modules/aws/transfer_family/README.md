@@ -115,11 +115,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="module_bucket"></a> [bucket](#module\_bucket) | ../s3/bucket | n/a |
 | <a name="module_transfer_family_iam_role"></a> [transfer\_family\_iam\_role](#module\_transfer\_family\_iam\_role) | ../iam/role | n/a |
 | <a name="module_transfer_family_iam_role_policy"></a> [transfer\_family\_iam\_role\_policy](#module\_transfer\_family\_iam\_role\_policy) | ../iam/policy | n/a |
+| <a name="module_transfer_family_logging_iam_role"></a> [transfer\_family\_logging\_iam\_role](#module\_transfer\_family\_logging\_iam\_role) | ../iam/role | n/a |
+| <a name="module_transfer_family_logging_iam_role_policy"></a> [transfer\_family\_logging\_iam\_role\_policy](#module\_transfer\_family\_logging\_iam\_role\_policy) | ../iam/policy | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_log_group.transfer_family](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
 | [aws_transfer_ssh_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_ssh_key) | resource |
 | [aws_transfer_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_user) | resource |
@@ -133,6 +136,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_address_allocation_ids"></a> [address\_allocation\_ids](#input\_address\_allocation\_ids) | (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your server's endpoint. This can only be set when 'var.endpoint\_type' is set to 'VPC' | `list(string)` | `[]` | no |
 | <a name="input_as2_transports"></a> [as2\_transports](#input\_as2\_transports) | (Optional) The transport method for AS2 messages. Valid values are HTTP. | `list(string)` | `null` | no |
 | <a name="input_certificate"></a> [certificate](#input\_certificate) | (Optional) The ARN of the AWS Certificate Manager certificate to use with the server | `string` | `null` | no |
+| <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | (Optional) The number of days to retain Transfer Family log events in CloudWatch. Valid values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, 0 (never expire). | `number` | `30` | no |
 | <a name="input_directory_id"></a> [directory\_id](#input\_directory\_id) | (Optional) The ID of the AWS Directory Service directory that you want to associate with the server | `string` | `null` | no |
 | <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC\_ENDPOINT. Default value is PUBLIC. | `string` | `"PUBLIC"` | no |
 | <a name="input_function"></a> [function](#input\_function) | (Optional) The ARN of the AWS Lambda function that is invoked for user authentication | `string` | `null` | no |
@@ -140,7 +144,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_identity_provider_type"></a> [identity\_provider\_type](#input\_identity\_provider\_type) | (Optional) The mode of authentication enabled for this service. Valid values are SERVICE\_MANAGED or API\_GATEWAY | `string` | `"SERVICE_MANAGED"` | no |
 | <a name="input_invocation_role"></a> [invocation\_role](#input\_invocation\_role) | (Optional) The ARN of the IAM role that controls your authentication with an identity provider\_type through API\_GATEWAY. | `string` | `null` | no |
 | <a name="input_lifecycle_rules"></a> [lifecycle\_rules](#input\_lifecycle\_rules) | (Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration. | `any` | `null` | no |
-| <a name="input_logging_role"></a> [logging\_role](#input\_logging\_role) | (Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Transfer Family server used to name the resources created. | `string` | n/a | yes |
 | <a name="input_passive_ip"></a> [passive\_ip](#input\_passive\_ip) | (Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate. | `string` | `null` | no |
 | <a name="input_post_authentication_login_banner"></a> [post\_authentication\_login\_banner](#input\_post\_authentication\_login\_banner) | (Optional) The banner message which is displayed to users after they authenticate to the server. | `string` | `null` | no |
@@ -154,7 +157,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value mapping of resource tags | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_tls_session_resumption_mode"></a> [tls\_session\_resumption\_mode](#input\_tls\_session\_resumption\_mode) | (Optional) Specifies the mode of the TLS session resumption. Valid values are: DISABLED, ENABLED, and ENFORCED. | `string` | `null` | no |
 | <a name="input_url"></a> [url](#input\_url) | (Optional) The URL of the file transfer protocol endpoint that is used to authentication users through an API\_GATEWAY. | `string` | `null` | no |
-| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br/>    home_directory      = optional(string)            # The landing directory for a user. Cannot be set if home_directory_type is set to "LOGICAL".<br/>    home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.<br/>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br/>    public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.<br/>    username            = string                      # The username of the user.<br/>  }))</pre> | `{}` | no |
+| <a name="input_users"></a> [users](#input\_users) | (Optional) A map of user names and their configuration | <pre>map(object({<br/>    home_directory      = optional(string)            # The landing directory for a user. Cannot be set if home_directory_type is set to "LOGICAL".<br/>    home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.<br/>    policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information<br/>    public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.<br/>    tags                = optional(map(string), {})   # Additional tags to apply to this user, merged with module-level tags.<br/>    username            = string                      # The username of the user.<br/>  }))</pre> | `{}` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | (Optional) The ID of the VPC endpoint. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) The ID of the VPC that is used for the transfer server. This property can only be used when endpoint\_type is set to VPC. | `string` | `null` | no |
 
@@ -162,6 +165,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch log group for Transfer Family server logs |
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the CloudWatch log group for Transfer Family server logs |
+| <a name="output_logging_role_arn"></a> [logging\_role\_arn](#output\_logging\_role\_arn) | The ARN of the IAM role used by Transfer Family to write CloudWatch logs |
 | <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | The ARN of the S3 bucket |
 | <a name="output_server_arn"></a> [server\_arn](#output\_server\_arn) | The ARN of the transfer family server |
 | <a name="output_server_endpoint"></a> [server\_endpoint](#output\_server\_endpoint) | The endpoint of the transfer family server |
