@@ -58,3 +58,7 @@ AVD-AWS-0132
 # AVD-AWS-0343: RDS/DocumentDB cluster does not have deletion protection enabled
 # Exposed as deletion_protection variable; caller enables for production workloads
 AVD-AWS-0343
+
+# AVD-AWS-0017: CloudWatch log group is not encrypted at rest with a CMK
+# Exposed as kms_key_id variable on the aws_cloudwatch_log_group resource; caller provides the CMK
+AVD-AWS-0017
