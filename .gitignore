@@ -6,6 +6,9 @@
 # Module directory
 .terraform/
 
+# Lock Files
+.terraform.lock.hcl
+
 # Variable values for development
 terraform.tfvars
 
