@@ -1,3 +1,9 @@
+variable "core_network_arn" {
+  type        = string
+  description = "(Optional) The Amazon Resource Name (ARN) of a core network."
+  default     = null
+}
+
 variable "carrier_gateway_id" {
   type        = string
   description = "(Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone."
