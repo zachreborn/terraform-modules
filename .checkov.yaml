@@ -62,6 +62,9 @@ skip-check:
   - CKV_AWS_252 # SNS topic - exposed as sns_topic_name variable
   - CKV_AWS_338 # CloudWatch log retention - exposed as retention_in_days variable
 
+  # CloudWatch Logs
+  - CKV_AWS_158 # Log group KMS encryption - exposed as kms_key_id variable; caller provides the CMK
+
   # EC2
   - CKV_AWS_135 # EBS optimized - exposed as ebs_optimized variable
   - CKV_AWS_126 # Detailed monitoring - exposed as monitoring variable

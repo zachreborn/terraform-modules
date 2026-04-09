@@ -109,7 +109,7 @@ resource "aws_kms_key" "cloudtrail" {
         "Resource" = "*",
         "Condition" = {
           "StringEquals" = {
-            "kms:CallerAccount" = "${data.aws_caller_identity.current.account_id}"
+            "kms:CallerAccount" = data.aws_caller_identity.current.account_id
           },
           "StringLike" = {
             "kms:EncryptionContext:aws:cloudtrail:arn" = [
@@ -131,7 +131,7 @@ resource "aws_kms_key" "cloudtrail" {
         "Resource" = "*",
         "Condition" = {
           "StringEquals" = {
-            "kms:CallerAccount" = "${data.aws_caller_identity.current.account_id}"
+            "kms:CallerAccount" = data.aws_caller_identity.current.account_id
           },
           "StringLike" = {
             "kms:EncryptionContext:aws:cloudtrail:arn" = [
@@ -181,7 +181,7 @@ resource "aws_iam_policy" "cloudtrail" {
         "logs:DescribeLogStreams"
       ],
       Resource = [
-        "${aws_cloudwatch_log_group.cloudtrail.arn}",
+        aws_cloudwatch_log_group.cloudtrail.arn,
         "${aws_cloudwatch_log_group.cloudtrail.arn}:log-stream:*"
       ]
     }]
@@ -291,7 +291,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
           "Service" = "cloudtrail.amazonaws.com"
         },
         "Action"   = "s3:GetBucketAcl",
-        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
+        "Resource" = aws_s3_bucket.cloudtrail_s3_bucket.arn,
         "Condition" = {
           "StringEquals" = {
             "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
@@ -329,6 +329,21 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
           "StringEquals" = {
             "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
             "s3:x-amz-acl"  = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        "Sid"       = "DenyHTTP",
+        "Effect"    = "Deny",
+        "Principal" = "*",
+        "Action"    = "s3:*",
+        "Resource" = [
+          aws_s3_bucket.cloudtrail_s3_bucket.arn,
+          "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/*",
+        ],
+        "Condition" = {
+          "Bool" = {
+            "aws:SecureTransport" = "false"
           }
         }
       }

@@ -64,7 +64,7 @@
 
 ### Simple Example
 
-The following example creates a new SFTP server using the default settings. Settings include: S3 backend storage, public access, built in users, and SFTP transfer porotocol.
+The following example creates a new SFTP server using the default settings. Settings include: S3 backend storage, public access, built in users, and SFTP transfer protocol.
 
 ```
 module "vendor_sftp" {
