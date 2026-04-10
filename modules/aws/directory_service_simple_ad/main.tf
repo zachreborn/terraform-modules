@@ -11,8 +11,10 @@ terraform {
 resource "aws_directory_service_directory" "this" {
   alias       = var.alias
   description = var.description
+  enable_sso  = var.enable_sso
   name        = var.name
   password    = var.password
+  short_name  = var.short_name
   size        = var.size
   tags        = var.tags
   type        = var.type

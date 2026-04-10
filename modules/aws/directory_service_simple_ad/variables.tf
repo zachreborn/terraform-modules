@@ -21,10 +21,27 @@ variable "password" {
   sensitive   = true
 }
 
+variable "enable_sso" {
+  type        = bool
+  description = "(Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false."
+  default     = false
+}
+
+variable "short_name" {
+  type        = string
+  description = "(Optional) The short name of the directory, such as CORP."
+  default     = null
+}
+
 variable "size" {
   type        = string
-  description = "(Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values)."
+  description = "(Required) The size of the directory. Valid values: Small, Large."
   default     = "Small"
+
+  validation {
+    condition     = contains(["Small", "Large"], var.size)
+    error_message = "Size must be 'Small' or 'Large'."
+  }
 }
 
 variable "tags" {
@@ -35,8 +52,13 @@ variable "tags" {
 
 variable "type" {
   type        = string
-  description = "(Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD."
+  description = "(Optional) The directory type. For this module, SimpleAD is the supported type."
   default     = "SimpleAD"
+
+  validation {
+    condition     = contains(["SimpleAD", "ADConnector", "MicrosoftAD"], var.type)
+    error_message = "Type must be one of: SimpleAD, ADConnector, MicrosoftAD."
+  }
 }
 
 variable "subnet_ids" {
