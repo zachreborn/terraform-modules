@@ -1,13 +1,13 @@
 variable "alias" {
   type        = string
   description = "(Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable_sso."
-  default     = "default_value"
+  default     = null
 }
 
 variable "description" {
   type        = string
   description = "(Optional) A textual description for the directory."
-  default     = "default_value"
+  default     = null
 }
 
 variable "name" {
@@ -18,6 +18,7 @@ variable "name" {
 variable "password" {
   type        = string
   description = "(Required) The password for the directory administrator or connector user."
+  sensitive   = true
 }
 
 variable "size" {
@@ -36,17 +37,6 @@ variable "type" {
   type        = string
   description = "(Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD."
   default     = "SimpleAD"
-}
-
-variable "customer_dns_ips" {
-  type        = list(string)
-  description = "(Required) The DNS IP addresses of the domain to connect to."
-  default     = []
-}
-
-variable "customer_username" {
-  type        = string
-  description = "(Required) The username corresponding to the password provided."
 }
 
 variable "subnet_ids" {
