@@ -23,12 +23,12 @@ resource "aws_athena_workgroup" "this" {
   tags          = var.tags
 
   configuration {
-    bytes_scanned_cutoff_per_query        = var.bytes_scanned_cutoff_per_query
+    bytes_scanned_cutoff_per_query          = var.bytes_scanned_cutoff_per_query
     enable_minimum_encryption_configuration = var.enable_minimum_encryption_configuration
-    enforce_workgroup_configuration       = var.enforce_workgroup_configuration
-    execution_role                        = var.execution_role
-    publish_cloudwatch_metrics_enabled    = var.publish_cloudwatch_metrics_enabled
-    requester_pays_enabled                = var.requester_pays_enabled
+    enforce_workgroup_configuration         = var.enforce_workgroup_configuration
+    execution_role                          = var.execution_role
+    publish_cloudwatch_metrics_enabled      = var.publish_cloudwatch_metrics_enabled
+    requester_pays_enabled                  = var.requester_pays_enabled
 
     dynamic "engine_version" {
       for_each = var.selected_engine_version != null ? [1] : []
