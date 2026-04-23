@@ -165,18 +165,17 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [scalr_hook.this](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/hook) | resource |
-| [scalr_current_account.account](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/data-sources/current_account) | data source |
+| scalr_hook.this | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_hooks"></a> [hooks](#input\_hooks) | Map of hooks to register in the Scalr hooks registry. The map key is used as a unique identifier and as the hook name if 'name' is not specified within the hook definition. | `map(object({...}))` | `{}` | no |
-| <a name="input_interpreter"></a> [interpreter](#input\_interpreter) | The default interpreter used to execute hook scripts. Can be overridden per hook. Common values are 'bash' and 'python3'. | `string` | `"bash"` | no |
+| <a name="input_hooks"></a> [hooks](#input\_hooks) | Map of hooks to register in the Scalr hooks registry. The map key is used as a unique identifier and as the hook name if 'name' is not specified within the hook definition. | <pre>map(object({<br/>    description     = optional(string)<br/>    interpreter     = optional(string)<br/>    name            = optional(string)<br/>    scriptfile_path = string<br/>    vcs_provider_id = optional(string)<br/>    vcs_repo = optional(object({<br/>      identifier = string<br/>      branch     = optional(string)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_interpreter"></a> [interpreter](#input\_interpreter) | The default interpreter used to execute hook scripts. Can be overridden per hook in the hooks map. Common values are 'bash' and 'python3'. | `string` | `"bash"` | no |
 | <a name="input_vcs_provider_id"></a> [vcs\_provider\_id](#input\_vcs\_provider\_id) | The default VCS provider ID in the format 'vcs-<RANDOM STRING>'. Can be overridden per hook in the hooks map. | `string` | `null` | no |
-| <a name="input_vcs_repo_identifier"></a> [vcs\_repo\_identifier](#input\_vcs\_repo\_identifier) | The default VCS repository identifier in the format 'org/repo'. Used when vcs\_repo is not specified per hook. Can be overridden per hook in the hooks map. | `string` | `null` | no |
 | <a name="input_vcs_repo_branch"></a> [vcs\_repo\_branch](#input\_vcs\_repo\_branch) | The default VCS repository branch to pull hook scripts from. Can be overridden per hook in the hooks map. | `string` | `"main"` | no |
+| <a name="input_vcs_repo_identifier"></a> [vcs\_repo\_identifier](#input\_vcs\_repo\_identifier) | The default VCS repository identifier in the format 'org/repo'. Used when vcs\_repo is not specified per hook. Can be overridden per hook in the hooks map. | `string` | `null` | no |
 
 ## Outputs
 
