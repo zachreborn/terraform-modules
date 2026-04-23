@@ -18,7 +18,7 @@ variable "hooks" {
 }
 
 ###########################
-# General Variables
+# Default Variables
 ###########################
 variable "interpreter" {
   description = "The default interpreter used to execute hook scripts. Can be overridden per hook in the hooks map. Common values are 'bash' and 'python3'."

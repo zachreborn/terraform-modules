@@ -12,16 +12,15 @@ terraform {
 }
 
 ###########################
-# Data Sources
+# Locals
 ###########################
-data "scalr_current_account" "account" {}
 
 ###########################
 # Hook Registry Configurations
 ###########################
 resource "scalr_hook" "this" {
   for_each        = var.hooks
-  description     = try(each.value.description, null)
+  description     = each.value.description
   interpreter     = try(each.value.interpreter, var.interpreter)
   name            = try(each.value.name, each.key)
   scriptfile_path = each.value.scriptfile_path
