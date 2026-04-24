@@ -138,7 +138,7 @@ resource "scalr_workspace" "this" {
   }
 
   dynamic "hooks" {
-    for_each = each.value.hooks != null ? [1] : []
+    for_each = try(each.value.hooks != null ? [1] : [], [])
     content {
       post_apply = try(each.value.hooks.post_apply, null)
       post_plan  = try(each.value.hooks.post_plan, null)

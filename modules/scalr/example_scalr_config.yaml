@@ -30,6 +30,7 @@ environment-2-all-options:
       execution_mode: "remote" # possible values: "local", "remote"
       force_latest_run: false
       hooks:
+        pre_init: "./scripts/pre_init.sh"
         pre_plan: "./scripts/pre_plan.sh"
         post_plan: "./scripts/post_plan.sh"
         pre_apply: "./scripts/pre_apply.sh"
