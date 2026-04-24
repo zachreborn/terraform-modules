@@ -29,6 +29,12 @@ environment-2-all-options:
       description: "This is workspace 3 in environment 2"
       execution_mode: "remote" # possible values: "local", "remote"
       force_latest_run: false
+      hooks:
+        pre_init: "./scripts/pre_init.sh"
+        pre_plan: "./scripts/pre_plan.sh"
+        post_plan: "./scripts/post_plan.sh"
+        pre_apply: "./scripts/pre_apply.sh"
+        post_apply: "./scripts/post_apply.sh"
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
       provider_configuration:
