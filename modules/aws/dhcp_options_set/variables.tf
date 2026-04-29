@@ -42,7 +42,7 @@ variable "tags" {
   }
 }
 
-variable "vpc_id" {
-  description = "(Required) ID of the VPC to attach the DHCP Options Set to"
-  type        = string
+variable "vpc_ids" {
+  description = "(Required) Map of name => VPC ID to associate with this DHCP Options Set. Supports multiple VPCs sharing the same options set."
+  type        = map(string)
 }

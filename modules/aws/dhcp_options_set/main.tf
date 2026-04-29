@@ -22,6 +22,7 @@ resource "aws_vpc_dhcp_options" "this" {
 }
 
 resource "aws_vpc_dhcp_options_association" "this" {
+  for_each        = var.vpc_ids
   dhcp_options_id = aws_vpc_dhcp_options.this.id
-  vpc_id          = var.vpc_id
+  vpc_id          = each.value
 }
