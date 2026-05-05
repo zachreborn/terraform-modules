@@ -3,7 +3,7 @@
 ########################################
 
 variable "billing_contact" {
-  description = "The billing contact information for the domain."
+  description = "The billing contact information for the domain. Set to null to omit the billing_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -20,10 +20,12 @@ variable "billing_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "admin_contact" {
-  description = "The admin contact information for the domain."
+  description = "The admin contact information for the domain. Set to null to omit the admin_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -40,6 +42,8 @@ variable "admin_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "billing_privacy" {
@@ -77,7 +81,7 @@ variable "domains" {
 }
 
 variable "registrant_contact" {
-  description = "The registrant contact information for the domain."
+  description = "The registrant contact information for the domain. Set to null to omit the registrant_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -94,6 +98,8 @@ variable "registrant_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "registrant_privacy" {
@@ -109,7 +115,7 @@ variable "tags" {
 }
 
 variable "tech_contact" {
-  description = "The tech contact information for the domain."
+  description = "The tech contact information for the domain. Set to null to omit the tech_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -126,6 +132,8 @@ variable "tech_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "tech_privacy" {
