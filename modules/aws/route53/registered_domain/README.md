@@ -70,6 +70,7 @@ This example will manage a registered domain with Route53. The domain will be re
 module "registered_domains" {
   source             = "github.com/zachreborn/terraform-modules//modules/aws/route53/registered_domain"
   admin_contact      = var.my_contact_info
+  billing_contact    = var.my_contact_info
   registrant_contact = var.my_contact_info
   tech_contact       = var.my_contact_info
   domains = {
