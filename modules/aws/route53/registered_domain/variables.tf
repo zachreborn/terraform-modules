@@ -2,6 +2,26 @@
 # Route 53 Registered Domains Variables
 ########################################
 
+variable "billing_contact" {
+  description = "The billing contact information for the domain."
+  type = object({
+    address_line_1    = string
+    address_line_2    = string
+    city              = string
+    contact_type      = string
+    country_code      = string
+    email             = string
+    extra_params      = map(any)
+    fax               = string
+    first_name        = string
+    last_name         = string
+    organization_name = string
+    phone_number      = string
+    state             = string
+    zip_code          = string
+  })
+}
+
 variable "admin_contact" {
   description = "The admin contact information for the domain."
   type = object({
@@ -20,6 +40,12 @@ variable "admin_contact" {
     state             = string
     zip_code          = string
   })
+}
+
+variable "billing_privacy" {
+  description = "Whether to enable billing privacy protection. Default is true."
+  type        = bool
+  default     = true
 }
 
 variable "admin_privacy" {

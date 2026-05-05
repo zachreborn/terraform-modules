@@ -27,11 +27,29 @@ resource "aws_route53domains_registered_domain" "this" {
 
   admin_privacy      = var.admin_privacy
   auto_renew         = each.value.auto_renew
+  billing_privacy    = var.billing_privacy
   domain_name        = each.key
   registrant_privacy = var.registrant_privacy
   tags               = var.tags
   tech_privacy       = var.tech_privacy
   transfer_lock      = each.value.transfer_lock
+
+  billing_contact {
+    address_line_1    = var.billing_contact.address_line_1
+    address_line_2    = var.billing_contact.address_line_2
+    city              = var.billing_contact.city
+    contact_type      = upper(var.billing_contact.contact_type)
+    country_code      = upper(var.billing_contact.country_code)
+    email             = var.billing_contact.email
+    extra_params      = var.billing_contact.extra_params
+    fax               = var.billing_contact.fax
+    first_name        = var.billing_contact.first_name
+    last_name         = var.billing_contact.last_name
+    organization_name = var.billing_contact.organization_name
+    phone_number      = var.billing_contact.phone_number
+    state             = upper(var.billing_contact.state)
+    zip_code          = var.billing_contact.zip_code
+  }
 
   admin_contact {
     address_line_1    = var.admin_contact.address_line_1
