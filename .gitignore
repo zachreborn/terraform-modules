@@ -6,8 +6,14 @@
 # Module directory
 .terraform/
 
+# Lock Files
+.terraform.lock.hcl
+
 # Variable values for development
 terraform.tfvars
+
+# CLAUDE
+CLAUDE.md
 
 # macOS
 .DS_Store

@@ -1,6 +1,6 @@
 ###########################
 # VPC
-###########################
+##########################
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC"
   type        = string
@@ -33,12 +33,36 @@ variable "instance_tenancy" {
 # VPC Endpoints
 ###########################
 
-variable "enable_ssm_vpc_endpoints" {
-  description = "(Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. Defaults true."
+variable "enable_s3_endpoint" {
+  description = "(Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC."
   type        = bool
   default     = false
 }
 
+variable "enable_ssm_vpc_endpoints" {
+  description = "(Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints."
+  type        = bool
+  default     = false
+}
+
+variable "enable_ecr_vpc_endpoints" {
+  description = "(Optional) A boolean flag to enable/disable ECR (Elastic Container Registry) VPC endpoints. This enables ECR API, ECR DKR, Cloudwatch Logs, and S3 endpoints."
+  type        = bool
+  default     = false
+}
+variable "subnet_indices" {
+  description = "List of subnet indices to use (0-2)"
+  type        = list(number)
+  default     = [0]
+
+  validation {
+    condition = alltrue([
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= 2 && length(var.subnet_indices) <= length(var.private_subnets_list)
+
+    ])
+    error_message = "Subnet indices must be between 0 and 2."
+  }
+}
 ###########################
 # Subnets
 ###########################
@@ -256,12 +280,6 @@ variable "enable_internet_gateway" {
   description = "(Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True."
   type        = bool
   default     = true
-}
-
-variable "enable_s3_endpoint" {
-  description = "(Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. Defaults False"
-  type        = bool
-  default     = false
 }
 
 variable "enable_flow_logs" {

@@ -44,16 +44,47 @@ variable "auto_enable_organization_members" {
   }
 }
 
-variable "s3_logs_enable" {
-  type        = bool
-  description = "(Optional) When this setting is enabled, GuardDuty will automatically enable S3 data sources for new accounts in the organization. Defaults to true."
-  default     = true
-  validation {
-    condition     = can(regex("^(true|false)$", var.s3_logs_enable))
-    error_message = "The value of s3_logs_enable must be either true or false."
-  }
-}
-
 ###########################
 # General Variables
 ###########################
+variable "enable_ebs_malware_protection" {
+  type        = bool
+  description = "(Optional) Enable EBS Malware Protection for the organization."
+  default     = false
+}
+
+variable "enable_eks_audit_logs" {
+  type        = bool
+  description = "(Optional) Enable EKS Audit Logs for the organization."
+  default     = false
+}
+
+variable "enable_eks_runtime_monitoring" {
+  type        = bool
+  description = "(Optional) Enable EKS Runtime Monitoring for the organization."
+  default     = false
+}
+
+variable "enable_lambda_network_logs" {
+  type        = bool
+  description = "(Optional) Enable Lambda Network Logs for the organization."
+  default     = false
+}
+
+variable "enable_rds_login_events" {
+  type        = bool
+  description = "(Optional) Enable RDS Login Events for the organization."
+  default     = false
+}
+
+variable "enable_runtime_monitoring" {
+  type        = bool
+  description = "(Optional) Enable Runtime Monitoring for the organization."
+  default     = false
+}
+
+variable "enable_s3_data_events" {
+  type        = bool
+  description = "(Optional) Enable S3 Data Events for the organization."
+  default     = false
+}

@@ -43,3 +43,17 @@ variable "enabled_features" {
 ############################################################
 # General Variables
 ############################################################
+
+variable "enable_organization_backup" {
+  description = "(Optional) If true, enables the organization backup policy. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "tags" {
+  description = "(Optional) A map of tags to assign to the AWS Organization. Tags are key-value pairs that help organize and manage resources."
+  type        = map(string)
+  default = {
+    terraform = "true"
+  }
+}
