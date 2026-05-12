@@ -13,15 +13,13 @@ terraform {
 ############################
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-data "aws_organizations_organization" "current" {}
 
 ############################
 # Locals
 ############################
-
-
-
-
+locals {
+  visibility_metric_name = coalesce(var.visibility_config.metric_name, var.name)
+}
 
 ############################
 # IP Sets
@@ -36,9 +34,7 @@ resource "aws_wafv2_ip_set" "this" {
   ip_address_version = each.value.ip_address_version
   addresses          = each.value.addresses
 
-  tags = {
-    Name = each.value.name
-  }
+  tags = merge(tomap({ Name = each.value.name }), var.tags)
 }
 
 ############################
@@ -47,40 +43,58 @@ resource "aws_wafv2_ip_set" "this" {
 
 resource "aws_wafv2_web_acl" "this" {
   name        = var.name
-  scope       = var.scope # REGIONAL(default) or CLOUDFRONT
+  scope       = var.scope # REGIONAL or CLOUDFRONT
   description = var.description
 
   dynamic "default_action" {
-    for_each = var.default_action.allow == true ? ["allow"] : ["block"]
+    for_each = [var.default_action]
     content {
       dynamic "allow" {
-        for_each = var.default_action.allow == true ? ["allow"] : []
+        for_each = default_action.value == "allow" ? [1] : []
         content {}
       }
       dynamic "block" {
-        for_each = var.default_action.block == true ? ["block"] : []
+        for_each = default_action.value == "block" ? [1] : []
         content {}
       }
     }
   }
+
   dynamic "rule" {
-    for_each = var.rule != null ? var.rule : {}
+    for_each = var.rule
     content {
       name     = rule.value.name
       priority = rule.value.priority
 
-      action {
-        dynamic "allow" {
-          for_each = rule.value.action == "allow" ? ["allow"] : []
-          content {}
+      dynamic "action" {
+        for_each = rule.value.action != null ? [rule.value.action] : []
+        content {
+          dynamic "allow" {
+            for_each = action.value == "allow" ? [1] : []
+            content {}
+          }
+          dynamic "block" {
+            for_each = action.value == "block" ? [1] : []
+            content {}
+          }
+          dynamic "count" {
+            for_each = action.value == "count" ? [1] : []
+            content {}
+          }
         }
-        dynamic "block" {
-          for_each = rule.value.action == "block" ? ["block"] : []
-          content {}
-        }
-        dynamic "count" {
-          for_each = rule.value.action == "count" ? ["count"] : []
-          content {}
+      }
+
+      dynamic "override_action" {
+        for_each = rule.value.override_action != null ? [rule.value.override_action] : []
+        content {
+          dynamic "none" {
+            for_each = override_action.value == "none" ? [1] : []
+            content {}
+          }
+          dynamic "count" {
+            for_each = override_action.value == "count" ? [1] : []
+            content {}
+          }
         }
       }
 
@@ -92,7 +106,7 @@ resource "aws_wafv2_web_acl" "this" {
             vendor_name = managed_rule_group_statement.value.vendor_name
 
             dynamic "rule_action_override" {
-              for_each = managed_rule_group_statement.value.excluded_rules
+              for_each = managed_rule_group_statement.value.rule_action_overrides
               content {
                 name = rule_action_override.value
                 action_to_use {
@@ -121,6 +135,7 @@ resource "aws_wafv2_web_acl" "this" {
           }
         }
       }
+
       visibility_config {
         cloudwatch_metrics_enabled = rule.value.visibility_config.cloudwatch_metrics_enabled
         metric_name                = rule.value.visibility_config.metric_name
@@ -128,11 +143,14 @@ resource "aws_wafv2_web_acl" "this" {
       }
     }
   }
+
   visibility_config {
     cloudwatch_metrics_enabled = var.visibility_config.cloudwatch_metrics_enabled
-    metric_name                = var.visibility_config.metric_name != null ? var.visibility_config.metric_name : var.name
+    metric_name                = local.visibility_metric_name
     sampled_requests_enabled   = var.visibility_config.sampled_requests_enabled
   }
+
+  tags = merge(tomap({ Name = var.name }), var.tags)
 }
 
 ############################

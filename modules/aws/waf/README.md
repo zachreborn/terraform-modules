@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
   </a>
 
-<h3 align="center">VPN Route Module</h3>
+<h3 align="center">WAF Module</h3>
   <p align="center">
-    This module creates a route within a VPN.
+    This module creates and manages an AWS WAFv2 Web ACL, optional IP sets, and optional resource association.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -64,13 +64,80 @@
 ## Usage
 
 ### Simple Example
-This example routes 10.0.0.0/8 on the VPN tunnel. A separate route needs to be set up within the VPC subnet route table, or the VPN Gateway needs to be configured to propagate routes to the VPC subnet.
+This example creates a regional WAF WebACL with the AWS Managed Common Rule Set and blocks by default.
 ```
-module "vpn_route_10_0_0_0" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/vpn_route"
+module "waf" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/waf"
 
-  vpn_connection_id    = module.hq_vpn.vpn_connection_id
-  vpn_route_cidr_block = "10.0.0.0/8"
+  name        = "example-waf"
+  scope       = "REGIONAL"
+  description = "WAF for example ALB"
+
+  default_action = "block"
+
+  rule = {
+    aws_common_rules = {
+      name            = "aws-common-rules"
+      priority        = 10
+      override_action = "none"
+      statement = {
+        managed_rule_group_statement = {
+          name        = "AWSManagedRulesCommonRuleSet"
+          vendor_name = "AWS"
+        }
+      }
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "aws-common-rules"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
+  associate_with_resource = module.alb.arn
+
+  tags = {
+    Environment = "production"
+    Terraform   = "true"
+  }
+}
+```
+
+### IP Allowlist Example
+This example creates a WAF that only allows traffic from specific IP ranges.
+```
+module "waf" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/waf"
+
+  name           = "ip-allowlist-waf"
+  scope          = "REGIONAL"
+  default_action = "block"
+
+  ip_sets = {
+    allowlist = {
+      name               = "office-ips"
+      ip_address_version = "IPV4"
+      addresses          = ["203.0.113.0/24", "198.51.100.0/24"]
+    }
+  }
+
+  rule = {
+    allow_office_ips = {
+      name     = "allow-office-ips"
+      priority = 1
+      action   = "allow"
+      statement = {
+        ip_set_reference_statement = {
+          arn = module.waf.ip_sets["allowlist"].arn
+        }
+      }
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "allow-office-ips"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
 }
 ```
 
@@ -93,6 +160,12 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+
+## Notes
+
+- When using `managed_rule_group_statement`, set `override_action` (`"none"` or `"count"`) on the rule. Do **not** set `action`.
+- When using `ip_set_reference_statement` or `not_statement`, set `action` (`"allow"`, `"block"`, or `"count"`) on the rule. Do **not** set `override_action`.
+- `scope = "CLOUDFRONT"` requires the provider to be configured in `us-east-1`.
 
 ## Modules
 
