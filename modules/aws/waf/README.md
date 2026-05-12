@@ -161,12 +161,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
-## Notes
-
-- When using `managed_rule_group_statement`, set `override_action` (`"none"` or `"count"`) on the rule. Do **not** set `action`.
-- When using `ip_set_reference_statement` or `not_statement`, set `action` (`"allow"`, `"block"`, or `"count"`) on the rule. Do **not** set `override_action`.
-- `scope = "CLOUDFRONT"` requires the provider to be configured in `us-east-1`.
-
 ## Modules
 
 No modules.
@@ -179,21 +173,21 @@ No modules.
 | [aws_wafv2_web_acl.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
 | [aws_wafv2_web_acl_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_organizations_organization.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/organizations_organization) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_associate_with_resource"></a> [associate\_with\_resource](#input\_associate\_with\_resource) | Resource ARN to associate the WAF with (API Gateway, ALB, etc.) | `string` | `null` | no |
-| <a name="input_default_action"></a> [default\_action](#input\_default\_action) | Default action for the WAF ACL | <pre>object({<br/>    allow = optional(bool)<br/>    block = optional(bool)<br/>  })</pre> | <pre>{<br/>  "allow": false,<br/>  "block": true<br/>}</pre> | no |
-| <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `"default"` | no |
-| <a name="input_ip_sets"></a> [ip\_sets](#input\_ip\_sets) | Map of IP sets to create | <pre>map(object({<br/>    name               = string<br/>    description        = optional(string, "IP set created by WAF module")<br/>    ip_address_version = optional(string, "IPV4")<br/>    addresses          = list(string)<br/>  }))</pre> | `{}` | no |
-| <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `"default"` | no |
-| <a name="input_rule"></a> [rule](#input\_rule) | Map of rule configuration | <pre>map(object({<br/>    name     = string<br/>    priority = number<br/>    action   = string<br/>    statement = object({<br/>      managed_rule_group_statement = optional(object({<br/>        name           = string<br/>        vendor_name    = string<br/>        priority       = number<br/>        excluded_rules = list(string)<br/>      }))<br/>      not_statement = optional(object({<br/>        ip_set_reference_statement = object({<br/>          arn = string<br/>        })<br/>      }))<br/>      ip_set_reference_statement = optional(object({<br/>        arn = string<br/>      }))<br/>    })<br/>    visibility_config = object({<br/>      cloudwatch_metrics_enabled = bool<br/>      metric_name                = string<br/>      sampled_requests_enabled   = bool<br/>    })<br/>  }))</pre> | `{}` | no |
-| <a name="input_scope"></a> [scope](#input\_scope) | n/a | `string` | `"default"` | no |
-| <a name="input_visibility_config"></a> [visibility\_config](#input\_visibility\_config) | Visibility configuration for the WAF ACL | <pre>object({<br/>    cloudwatch_metrics_enabled = optional(bool, true)<br/>    metric_name                = optional(string)<br/>    sampled_requests_enabled   = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "cloudwatch_metrics_enabled": true,<br/>  "metric_name": null,<br/>  "sampled_requests_enabled": true<br/>}</pre> | no |
+| <a name="input_associate_with_resource"></a> [associate\_with\_resource](#input\_associate\_with\_resource) | The ARN of the resource to associate with the web ACL. Supported resources include ALB, API Gateway REST API, AppSync GraphQL API, or Cognito user pool. | `string` | `null` | no |
+| <a name="input_default_action"></a> [default\_action](#input\_default\_action) | The action to perform if none of the rules contained in the WebACL match. Valid values are 'allow' or 'block'. | `string` | `"block"` | no |
+| <a name="input_description"></a> [description](#input\_description) | A friendly description of the WebACL. | `string` | `"WAF WebACL managed by Terraform"` | no |
+| <a name="input_ip_sets"></a> [ip\_sets](#input\_ip\_sets) | Map of IP sets to create and manage alongside the WAF WebACL. | <pre>map(object({<br/>    name               = string<br/>    description        = optional(string, "IP set created by WAF module")<br/>    ip_address_version = optional(string, "IPV4")<br/>    addresses          = list(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_name"></a> [name](#input\_name) | A friendly name of the WebACL. Must be unique within the AWS region. | `string` | n/a | yes |
+| <a name="input_rule"></a> [rule](#input\_rule) | Map of rules to configure on the WAF WebACL. Use 'action' for IP set and regex rules; use 'override\_action' for managed rule group rules. | <pre>map(object({<br/>    name            = string<br/>    priority        = number<br/>    action          = optional(string) # "allow", "block", or "count" — used for non-managed-rule-group statements<br/>    override_action = optional(string) # "none" or "count" — used with managed_rule_group_statement<br/>    statement = object({<br/>      managed_rule_group_statement = optional(object({<br/>        name                  = string<br/>        vendor_name           = string<br/>        rule_action_overrides = optional(list(string), []) # rule names to override to count mode<br/>      }))<br/>      not_statement = optional(object({<br/>        ip_set_reference_statement = object({<br/>          arn = string<br/>        })<br/>      }))<br/>      ip_set_reference_statement = optional(object({<br/>        arn = string<br/>      }))<br/>    })<br/>    visibility_config = object({<br/>      cloudwatch_metrics_enabled = bool<br/>      metric_name                = string<br/>      sampled_requests_enabled   = bool<br/>    })<br/>  }))</pre> | `{}` | no |
+| <a name="input_scope"></a> [scope](#input\_scope) | Specifies whether this is for an AWS CloudFront distribution or a regional application. Valid values are CLOUDFRONT or REGIONAL. | `string` | `"REGIONAL"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to all resources. | `map(string)` | `{}` | no |
+| <a name="input_visibility_config"></a> [visibility\_config](#input\_visibility\_config) | Visibility configuration for the WAF ACL. metric\_name defaults to the WAF name if not specified. | <pre>object({<br/>    cloudwatch_metrics_enabled = optional(bool, true)<br/>    metric_name                = optional(string)<br/>    sampled_requests_enabled   = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "cloudwatch_metrics_enabled": true,<br/>  "metric_name": null,<br/>  "sampled_requests_enabled": true<br/>}</pre> | no |
 
 ## Outputs
 
