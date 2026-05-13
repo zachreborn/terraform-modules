@@ -136,4 +136,15 @@ resource "scalr_workspace" "this" {
       version_constraint = try(each.value.vcs_repo.version_constraint, null)
     }
   }
+
+  dynamic "hooks" {
+    for_each = try(each.value.hooks != null ? [1] : [], [])
+    content {
+      post_apply = try(each.value.hooks.post_apply, null)
+      post_plan  = try(each.value.hooks.post_plan, null)
+      pre_apply  = try(each.value.hooks.pre_apply, null)
+      pre_init   = try(each.value.hooks.pre_init, null)
+      pre_plan   = try(each.value.hooks.pre_plan, null)
+    }
+  }
 }

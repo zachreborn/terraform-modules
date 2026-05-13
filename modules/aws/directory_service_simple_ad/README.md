@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">Directory Services ADConnector Module</h3>
+<h3 align="center">Directory Services Simple AD Module</h3>
   <p align="center">
-    This module sets up the ADConnector within AWS Directory Services. This can later be used to domain join instances.
+    This module sets up a Simple AD directory within AWS Directory Services. Simple AD is a Microsoft Active Directory–compatible directory powered by Samba 4. It can be used to domain join EC2 instances and AWS WorkSpaces.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,25 +62,22 @@
 
 ## Usage
 
-```
-module "ad_connector" {
-    source              = "github.com/zachreborn/terraform-modules//modules/aws/directory_service_ad_connector"
+```hcl
+module "simple_ad" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/directory_service_simple_ad"
 
-    alias               = "ad.corp.com"
-    customer_dns_ips    = ["10.11.1.100", "10.11.2.100"]
-    customer_username   = "svc_aws_adconnector"
-    description         = "ad.corp.com adconnector"
-    name                = "ad.corp.com"
-    password            = var.ad_connector_password
-    size                = "Small"
-    subnet_ids          = [module.vpc.private_subnet.id]
-    type                = "ADConnector"
-    vpc_id              = module.vpc.id
-    tags                = {
-        created_by  = "Zachary Hill"
-        environment = "prod"
-        terraform   = "true"
-    }
+  name        = "corp.example.com"
+  description = "Simple AD directory for AWS WorkSpaces"
+  size        = "Small"
+  password    = var.simple_ad_password
+  subnet_ids  = [module.vpc.private_subnet_ids[0], module.vpc.private_subnet_ids[1]]
+  vpc_id      = module.vpc.vpc_id
+
+  tags = {
+    created_by  = "Zachary Hill"
+    environment = "prod"
+    terraform   = "true"
+  }
 }
 ```
 
@@ -112,29 +109,31 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_directory_service_directory.connector](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/directory_service_directory) | resource |
+| [aws_directory_service_directory.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/directory_service_directory) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `"default_value"` | no |
-| <a name="input_customer_dns_ips"></a> [customer\_dns\_ips](#input\_customer\_dns\_ips) | (Required) The DNS IP addresses of the domain to connect to. | `list(string)` | `[]` | no |
-| <a name="input_customer_username"></a> [customer\_username](#input\_customer\_username) | (Required) The username corresponding to the password provided. | `string` | n/a | yes |
-| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `"default_value"` | no |
+| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `null` | no |
+| <a name="input_enable_sso"></a> [enable\_sso](#input\_enable\_sso) | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
 | <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator or connector user. | `string` | n/a | yes |
-| <a name="input_size"></a> [size](#input\_size) | (Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values). | `string` | `"Small"` | no |
+| <a name="input_short_name"></a> [short\_name](#input\_short\_name) | (Optional) The short name of the directory, such as CORP. | `string` | `null` | no |
+| <a name="input_size"></a> [size](#input\_size) | (Required) The size of the directory. Valid values: Small, Large. | `string` | `"Small"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs). | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `{}` | no |
-| <a name="input_type"></a> [type](#input\_type) | (Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD. | `string` | `"SimpleAD"` | no |
+| <a name="input_type"></a> [type](#input\_type) | (Optional) The directory type. For this module, SimpleAD is the supported type. | `string` | `"SimpleAD"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) The identifier of the VPC that the directory is in. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_dns_ip_addresses"></a> [dns\_ip\_addresses](#output\_dns\_ip\_addresses) | A list of IP addresses of the DNS servers for the directory. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the directory. |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | The ID of the security group created by the directory. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
