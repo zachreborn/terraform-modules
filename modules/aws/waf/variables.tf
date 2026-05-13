@@ -65,6 +65,16 @@ variable "rule" {
         arn = string
       }))
     })
+    captcha_config = optional(object({
+      immunity_time_property = optional(object({
+        immunity_time = optional(number, 300)
+      }), { immunity_time = 300 })
+    }), { immunity_time_property = { immunity_time = 300 } })
+    challenge_config = optional(object({
+      immunity_time_property = optional(object({
+        immunity_time = optional(number, 300)
+      }), { immunity_time = 300 })
+    }), { immunity_time_property = { immunity_time = 300 } })
     visibility_config = object({
       cloudwatch_metrics_enabled = bool
       metric_name                = string

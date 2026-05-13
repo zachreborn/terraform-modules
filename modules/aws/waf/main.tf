@@ -136,6 +136,18 @@ resource "aws_wafv2_web_acl" "this" {
         }
       }
 
+      captcha_config {
+        immunity_time_property {
+          immunity_time = rule.value.captcha_config.immunity_time_property.immunity_time
+        }
+      }
+
+      challenge_config {
+        immunity_time_property {
+          immunity_time = rule.value.challenge_config.immunity_time_property.immunity_time
+        }
+      }
+
       visibility_config {
         cloudwatch_metrics_enabled = rule.value.visibility_config.cloudwatch_metrics_enabled
         metric_name                = rule.value.visibility_config.metric_name
