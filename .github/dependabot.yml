@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
     reviewers:
       - "zachreborn"
       - "Jakeasaurus"
