@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Checkov Scan
-        uses: bridgecrewio/checkov-action@v12
+        uses: bridgecrewio/checkov-action@v12.3101.0
         with:
           # This will add both a CLI output to the console and create a results.sarif file
           output_format: cli,sarif
