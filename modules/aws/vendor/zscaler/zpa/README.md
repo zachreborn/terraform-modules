@@ -100,6 +100,66 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_metric_alarm.instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.system](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_instance.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
+| [aws_security_group.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_ami.amazon_linux_2023](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to use for the ZPA App Connector instances. If not specified, the latest Amazon Linux 2023 x86\_64 AMI will be selected automatically. | `string` | `null` | no |
+| <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to true. | `bool` | `true` | no |
+| <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the instance metadata service is available. Valid values: enabled, disabled. Defaults to enabled. | `string` | `"enabled"` | no |
+| <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to required. | `string` | `"required"` | no |
+| <a name="input_iam_instance_profile"></a> [iam\_instance\_profile](#input\_iam\_instance\_profile) | (Optional) IAM instance profile name to attach to the ZPA App Connector instances for SSM access. | `string` | `null` | no |
+| <a name="input_instance_name_prefix"></a> [instance\_name\_prefix](#input\_instance\_name\_prefix) | (Optional) Prefix used to generate the Name tag for each connector instance. A zero-padded two-digit index is appended (e.g., 'ZPAVP' → 'ZPAVP01', 'ZPAVP02', 'ZPAVP03'). | `string` | `"ZPAVP"` | no |
+| <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | (Optional) EC2 instance type for ZPA App Connector instances. Zscaler recommends m7i-flex.large or larger for production workloads. | `string` | `"m7i-flex.large"` | no |
+| <a name="input_key_name"></a> [key\_name](#input\_key\_name) | (Optional) EC2 Key Pair name to associate with the instances for emergency console access. SSM access is preferred. | `string` | `null` | no |
+| <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | (Optional) Enable detailed CloudWatch monitoring on the instances. Defaults to true. | `bool` | `true` | no |
+| <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of static private IP addresses to assign to each connector, one per subnet. Must be provided in the same order as subnet\_ids. If null, AWS assigns IPs automatically. | `list(string)` | `null` | no |
+| <a name="input_provisioning_key"></a> [provisioning\_key](#input\_provisioning\_key) | (Required) ZPA App Connector provisioning key from the ZPA admin portal. This key registers the connectors to a specific App Connector Group. Mark as sensitive in the calling workspace. Connectors will NOT carry production traffic until Application Segments are assigned to the group in the ZPA admin portal. | `string` | n/a | yes |
+| <a name="input_root_delete_on_termination"></a> [root\_delete\_on\_termination](#input\_root\_delete\_on\_termination) | (Optional) Whether to delete the root EBS volume when the instance is terminated. Defaults to true. | `bool` | `true` | no |
+| <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Root EBS volume size in GiB. Zscaler recommends a minimum of 40 GiB for the connector OS and logs. | `number` | `40` | no |
+| <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Root EBS volume type. Valid values: standard, gp2, gp3, io1, io2, sc1, st1. Defaults to gp3. | `string` | `"gp3"` | no |
+| <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | (Optional) Name for the ZPA App Connector security group. | `string` | `"zpa_connector_sg"` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) List of private subnet IDs in which to launch one connector per subnet. The number of subnets determines the number of connector instances created. | `list(string)` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to all resources created by this module. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "role": "zpa_connector",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required, Forces new resource) VPC ID in which to create the ZPA App Connector instances and security group. | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_arns"></a> [arns](#output\_arns) | List of ARNs for the ZPA App Connector EC2 instances. |
+| <a name="output_instance_ids"></a> [instance\_ids](#output\_instance\_ids) | List of EC2 instance IDs for the ZPA App Connector instances. |
+| <a name="output_private_ips"></a> [private\_ips](#output\_private\_ips) | List of private IP addresses assigned to the ZPA App Connector instances. |
+| <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | ARN of the ZPA App Connector security group. |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | ID of the ZPA App Connector security group. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
