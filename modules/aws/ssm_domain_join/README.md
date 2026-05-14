@@ -45,6 +45,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#architecture">Architecture</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -128,6 +129,26 @@ module "ad_join_scheduled" {
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ARCHITECTURE -->
+
+## Architecture
+
+The diagram below shows the resources this module creates and how they interact with each other and with an example EC2 instance at runtime.
+
+![Architecture Diagram](./architecture.svg)
+
+| Step | What happens |
+|------|-------------|
+| 1 | SSM State Manager targets instances that carry the `ad_join` tag. |
+| 2 | The association delivers the `aws_ssm_document` to the SSM Agent and triggers execution. |
+| 3 | The inline IAM policy (`aws_iam_role_policy`) is attached to the instance's IAM role. |
+| 4 | The IAM role grants the SSM Agent permission to call `GetSecretValue`. |
+| 5 | The SSM Agent calls `GetSecretValue` to retrieve the domain-join credentials. |
+| 6 | Secrets Manager returns the credentials to the agent. |
+| 7 | The agent runs `Add-Computer` to join the instance to Active Directory. |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
