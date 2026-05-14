@@ -184,7 +184,7 @@ variable "schedule_expression" {
 
 variable "schedule_offset" {
   type        = number
-  description = "(Optional) Number of days to wait after the scheduled day to run the association. Valid values are 1 through 6. Only applicable when schedule_expression is a cron expression."
+  description = "(Optional) Number of days to wait after the scheduled day to run the association. Valid values are 1 through 6. If null, no offset is applied. Only applicable when schedule_expression is a cron expression."
   default     = null
   validation {
     condition     = var.schedule_offset == null ? true : (var.schedule_offset >= 1 && var.schedule_offset <= 6)
