@@ -2,9 +2,9 @@
 # SSM Domain Join Variables
 ########################################
 
-###########################
+########################################
 # Domain Join Variables
-###########################
+########################################
 variable "dns_servers" {
   type        = list(string)
   description = "(Required) DC IPs the joined instance should use for DNS resolution."
@@ -32,9 +32,9 @@ variable "secret_arn" {
   }
 }
 
-###########################
+########################################
 # SSM Document Variables
-###########################
+########################################
 variable "name" {
   type        = string
   description = "(Optional) Name of the SSM document and base name for the IAM inline policy."
@@ -79,9 +79,9 @@ variable "version_name" {
   }
 }
 
-###########################
+########################################
 # SSM Association Variables
-###########################
+########################################
 variable "apply_only_at_cron_interval" {
   type        = bool
   description = "(Optional) When true, the association runs only at the cron interval specified by schedule_expression and not on instance start."
@@ -154,7 +154,7 @@ variable "output_location_s3_bucket_name" {
 
 variable "output_location_s3_key_prefix" {
   type        = string
-  description = "(Optional) S3 key prefix for SSM association output. Only used when output_location_s3_bucket_name is set."
+  description = "(Optional) S3 key prefix for SSM association output. If null, no key prefix is applied."
   default     = null
   validation {
     condition     = var.output_location_s3_key_prefix == null ? true : length(var.output_location_s3_key_prefix) > 0
@@ -164,7 +164,7 @@ variable "output_location_s3_key_prefix" {
 
 variable "output_location_s3_region" {
   type        = string
-  description = "(Optional) AWS region of the S3 bucket for SSM association output. Only used when output_location_s3_bucket_name is set."
+  description = "(Optional) AWS region of the S3 bucket for SSM association output. If null, the region of the association is used."
   default     = null
   validation {
     condition     = var.output_location_s3_region == null ? true : can(regex("^[a-z]{2}-[a-z]+-[0-9]$", var.output_location_s3_region))
@@ -224,9 +224,9 @@ variable "wait_for_success_timeout_seconds" {
   }
 }
 
-###########################
+########################################
 # IAM Variables
-###########################
+########################################
 variable "instance_role_name" {
   type        = string
   description = "(Required) Name of the EC2 IAM role to grant secretsmanager:GetSecretValue on secret_arn."
@@ -246,9 +246,9 @@ variable "name_prefix" {
   }
 }
 
-###########################
+########################################
 # Common Variables
-###########################
+########################################
 variable "tags" {
   type        = map(string)
   description = "(Optional) Map of tags to assign to the resources."
