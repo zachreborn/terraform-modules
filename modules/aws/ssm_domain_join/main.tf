@@ -1,7 +1,6 @@
-# Terraform module which automates Active Directory domain join for EC2 instances via SSM.
-#
-# https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-state-assoc.html
-
+###########################
+# Provider Configuration
+###########################
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -12,12 +11,18 @@ terraform {
   }
 }
 
-resource "aws_ssm_document" "default" {
-  name            = var.name
-  document_type   = "Command"
-  document_format = "JSON"
-  tags            = merge({ "Name" = var.name }, var.tags)
+###########################
+# Data Sources
+###########################
 
+###########################
+# Locals
+###########################
+
+###########################
+# SSM Domain Join Document
+###########################
+resource "aws_ssm_document" "this" {
   content = jsonencode({
     schemaVersion = "2.2"
     description   = "Idempotent AD domain join via Secrets Manager credentials"
@@ -51,27 +56,68 @@ resource "aws_ssm_document" "default" {
       }
     ]
   })
+  document_format = "JSON"
+  document_type   = "Command"
+  name            = var.name
+  tags            = merge(tomap({ Name = var.name }), var.tags)
+  target_type     = var.target_type
+  version_name    = var.version_name
+
+  dynamic "permissions" {
+    for_each = var.permissions != null ? [var.permissions] : []
+    content {
+      account_ids = permissions.value.account_ids
+      type        = permissions.value.type
+    }
+  }
 }
 
-resource "aws_ssm_association" "default" {
-  name = aws_ssm_document.default.name
-
-  targets {
-    key    = "tag:${var.target_tag_key}"
-    values = [var.target_tag_value]
-  }
-
+###########################
+# SSM Association
+###########################
+resource "aws_ssm_association" "this" {
+  apply_only_at_cron_interval      = var.apply_only_at_cron_interval
+  association_name                 = var.association_name
+  compliance_severity              = var.compliance_severity
+  document_version                 = var.document_version
+  max_concurrency                  = var.max_concurrency
+  max_errors                       = var.max_errors
+  name                             = aws_ssm_document.this.name
   parameters = {
     DomainName = var.domain_name
     DnsServers = join(",", var.dns_servers)
     SecretArn  = var.secret_arn
   }
+  schedule_expression              = var.schedule_expression
+  schedule_offset                  = var.schedule_offset
+  sync_compliance                  = var.sync_compliance
+  tags                             = var.tags
+  wait_for_success_timeout_seconds = var.wait_for_success_timeout_seconds
+
+  dynamic "output_location" {
+    for_each = var.output_location_s3_bucket_name != null ? [1] : []
+    content {
+      s3_bucket_name = var.output_location_s3_bucket_name
+      s3_key_prefix  = var.output_location_s3_key_prefix
+      s3_region      = var.output_location_s3_region
+    }
+  }
+
+  dynamic "targets" {
+    for_each = var.targets
+    content {
+      key    = targets.value.key
+      values = targets.value.values
+    }
+  }
 }
 
+###########################
+# IAM
+###########################
 resource "aws_iam_role_policy" "secret_read" {
-  name = "${var.name}-secret-read"
-  role = var.instance_role_name
-
+  name        = var.name_prefix == null ? "${var.name}-secret-read" : null
+  name_prefix = var.name_prefix != null ? "${var.name_prefix}-secret-read" : null
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -82,4 +128,5 @@ resource "aws_iam_role_policy" "secret_read" {
       }
     ]
   })
+  role = var.instance_role_name
 }
