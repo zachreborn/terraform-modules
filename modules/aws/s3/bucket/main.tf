@@ -220,11 +220,7 @@ resource "aws_s3_bucket_policy" "this" {
   bucket = aws_s3_bucket.this.id
 
   policy = (
-    var.enforce_ssl && var.bucket_policy != null
-    ? data.aws_iam_policy_document.merged[0].json
-    : var.bucket_policy != null
-    ? var.bucket_policy
-    : data.aws_iam_policy_document.ssl_only[0].json
+    var.enforce_ssl && var.bucket_policy != null ? data.aws_iam_policy_document.merged[0].json : var.bucket_policy != null ? var.bucket_policy : data.aws_iam_policy_document.ssl_only[0].json
   )
 }
 
