@@ -33,15 +33,17 @@ jobs:
        !contains(github.event.issue.labels.*.name, 'skip-oz'))
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      # Credentials are intentionally persisted so the Oz agent can push the
+      # spec branch back to origin. zizmor's artipacked warning is acknowledged.
+      - name: Checkout # zizmor: ignore[artipacked]
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           # Needed so the agent can create a new branch and push.
           fetch-depth: 0
 
       - name: Guard - require WARP_API_KEY
         env:
-          WARP_API_KEY: ${{ secrets.WARP_API_KEY }}
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
         run: |
           if [ -z "${WARP_API_KEY}" ]; then
             echo "::error::WARP_API_KEY secret is not configured for this repository."
@@ -69,11 +71,11 @@ jobs:
             --remove-label ready-for-spec || true
 
       - name: Run Oz spec-generation agent
-        uses: warpdotdev/oz-agent-action@main
+        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          warp_api_key: ${{ secrets.WARP_API_KEY }}
+          warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
           prompt: |
             You are generating a technical specification for an issue in

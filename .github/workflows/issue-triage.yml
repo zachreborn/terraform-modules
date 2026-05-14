@@ -31,13 +31,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Guard - require WARP_API_KEY
         env:
-          WARP_API_KEY: ${{ secrets.WARP_API_KEY }}
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
         run: |
           if [ -z "${WARP_API_KEY}" ]; then
             echo "::error::WARP_API_KEY secret is not configured for this repository."
@@ -45,11 +45,11 @@ jobs:
           fi
 
       - name: Run Oz triage agent
-        uses: warpdotdev/oz-agent-action@main
+        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          warp_api_key: ${{ secrets.WARP_API_KEY }}
+          warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
           prompt: |
             You are triaging a GitHub issue in zachreborn/terraform-modules,

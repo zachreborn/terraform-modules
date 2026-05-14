@@ -31,16 +31,19 @@ jobs:
 
     steps:
       - name: HashiCorp - Setup Terraform
-        uses: hashicorp/setup-terraform@v4
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4
 
-      - name: Checkout
-        uses: actions/checkout@v6
+      # Credentials are intentionally persisted so the Oz agent can push the
+      # implementation branch back to origin. zizmor's artipacked warning is
+      # acknowledged.
+      - name: Checkout # zizmor: ignore[artipacked]
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: Guard - require WARP_API_KEY
         env:
-          WARP_API_KEY: ${{ secrets.WARP_API_KEY }}
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
         run: |
           if [ -z "${WARP_API_KEY}" ]; then
             echo "::error::WARP_API_KEY secret is not configured for this repository."
@@ -82,11 +85,11 @@ jobs:
             --add-label implementation-in-progress
 
       - name: Run Oz implementation agent
-        uses: warpdotdev/oz-agent-action@main
+        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          warp_api_key: ${{ secrets.WARP_API_KEY }}
+          warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
           prompt: |
             You are implementing an approved spec in zachreborn/terraform-modules.
