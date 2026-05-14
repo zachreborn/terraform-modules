@@ -105,6 +105,37 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `test.yml` | PR or push → main | Checks `terraform fmt` compliance + super-linter |
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release.yml` | Push of `v*.*.*` tag | Creates a GitHub release with auto-generated release notes |
+| `issue-triage.yml` | Issue opened/edited/labeled | Oz agent validates issue against minimum standards, comments + labels |
+| `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
+| `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
+| `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
+
+## Automated issue/spec/impl pipeline
+
+This repo runs an Oz-powered pipeline that turns issues into reviewed specs and approved specs into implementation PRs. The full design lives in `.github/specs/issue-206-oz-issue-to-impl-workflow.md`.
+
+**Stages and the label that drives each transition**:
+
+1. Issue opened → triage agent runs.
+   - Missing required info → label `needs-info` + comment listing what's missing.
+   - Complete → label `ready-for-spec` + classification comment.
+2. `ready-for-spec` → spec-generation agent runs; opens a PR under `.github/specs/issue-<N>-<slug>.md`; issue moves to `spec-in-progress` then `spec-ready-for-review`.
+3. Spec PR merged → `spec-approved.yml` flips the issue to `spec-approved`.
+4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress` and closes on PR merge.
+
+**Minimum standards** enforced by triage:
+
+- **Bug**: affected module path, Terraform/provider versions, repro steps, expected vs actual, one of {error, stack trace, plan/apply output}, acceptance criteria.
+- **Feature**: target module path, motivation, proposed inputs/outputs (high level), breaking-change assessment, acceptance criteria.
+
+**Overrides**:
+
+- Apply the `skip-oz` label to any issue to disable all Oz workflows for it.
+- Use `workflow_dispatch` on `spec-generation.yml` or `implementation.yml` to re-run a stage manually with an `issue_number` input.
+
+**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info` and `skip-oz`. Workflows fail fast with a clear error if `WARP_API_KEY` is missing, so they are safe to merge before configuration is done.
+
+**Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
 ## Security Posture Philosophy
 

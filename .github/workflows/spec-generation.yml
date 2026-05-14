@@ -1,0 +1,150 @@
+---
+name: Spec Generation (Oz)
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to generate a spec for"
+        required: true
+        type: string
+
+# One spec generation at a time per issue.
+concurrency:
+  group: oz-spec-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  generate-spec:
+    name: Generate spec with Oz
+    runs-on: ubuntu-latest
+
+    # For labeled events, only trigger on the ready-for-spec label and skip
+    # if skip-oz is set. workflow_dispatch always runs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'ready-for-spec' &&
+       !contains(github.event.issue.labels.*.name, 'skip-oz'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Needed so the agent can create a new branch and push.
+          fetch-depth: 0
+
+      - name: Guard - require WARP_API_KEY
+        env:
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }}
+        run: |
+          if [ -z "${WARP_API_KEY}" ]; then
+            echo "::error::WARP_API_KEY secret is not configured for this repository."
+            exit 1
+          fi
+
+      - name: Resolve issue number
+        id: ctx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+        run: |
+          echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Mark issue spec-in-progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --add-label spec-in-progress
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label ready-for-spec || true
+
+      - name: Run Oz spec-generation agent
+        uses: warpdotdev/oz-agent-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          warp_api_key: ${{ secrets.WARP_API_KEY }}
+          profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          prompt: |
+            You are generating a technical specification for an issue in
+            zachreborn/terraform-modules. The repository is a Terraform
+            modules library. Conventions are documented in `AGENTS.md`.
+
+            ## Target issue
+            Issue number: #${{ steps.ctx.outputs.issue_number }}
+            Repository: ${{ github.repository }}
+
+            Fetch the issue body and comments with:
+              gh issue view ${{ steps.ctx.outputs.issue_number }} \
+                --repo ${{ github.repository }} \
+                --json title,body,labels,comments
+
+            ## Required reading (consult before writing)
+            - `AGENTS.md` (root) — repo conventions, four-file module layout,
+              tagging pattern, lifecycle ignores, tfsec suppression style.
+            - `.github/specs/_template.md` — canonical spec layout.
+            - `modules/module_template/` — starting point for new modules.
+
+            ## Output
+            Create a new branch named:
+              spec/issue-${{ steps.ctx.outputs.issue_number }}-<short-kebab-slug>
+
+            Write the spec to:
+              .github/specs/issue-${{ steps.ctx.outputs.issue_number }}-<slug>.md
+
+            The spec MUST be based on `_template.md` and MUST contain:
+              - Background
+              - Non-goals
+              - Affected module path(s)
+              - Proposed `variables.tf` / `outputs.tf` / `main.tf` shape
+                (SIGNATURES ONLY — variable names, types, descriptions,
+                resource block names. NO full implementation.)
+              - Breaking-change assessment
+              - Checkov / tfsec suppression considerations (state "none"
+                if no new suppressions are needed)
+              - terraform-docs impact (will the auto-generated README change?)
+              - Acceptance criteria
+
+            ## Commit and PR
+            - Commit message: `spec: <issue title>` with body
+              `Refs #${{ steps.ctx.outputs.issue_number }}`
+              and the Co-Authored-By line for Oz.
+            - Push the branch.
+            - Open a PR titled `spec: <issue title>`.
+            - PR body MUST include `Refs #${{ steps.ctx.outputs.issue_number }}`
+              (not `Fixes`) so the issue stays open through implementation.
+            - Apply `spec-ready-for-review` to the originating issue:
+                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                  --repo ${{ github.repository }} \
+                  --add-label spec-ready-for-review
+                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                  --repo ${{ github.repository }} \
+                  --remove-label spec-in-progress || true
+            - Post a comment on the issue with the spec PR URL.
+
+            Do NOT modify any Terraform files. Do NOT modify existing modules.
+            The only files you should create or modify live under
+            `.github/specs/`.
+
+      - name: On failure - drop spec-in-progress
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label spec-in-progress || true
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --body "Spec generation failed. See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -1,0 +1,149 @@
+---
+name: Implementation (Oz)
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to implement"
+        required: true
+        type: string
+
+concurrency:
+  group: oz-impl-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  implement:
+    name: Implement spec with Oz
+    runs-on: ubuntu-latest
+
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'spec-approved' &&
+       !contains(github.event.issue.labels.*.name, 'skip-oz'))
+
+    steps:
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Guard - require WARP_API_KEY
+        env:
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }}
+        run: |
+          if [ -z "${WARP_API_KEY}" ]; then
+            echo "::error::WARP_API_KEY secret is not configured for this repository."
+            exit 1
+          fi
+
+      - name: Resolve issue number
+        id: ctx
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+        run: |
+          echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Locate spec file
+        id: spec
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          set -e
+          shopt -s nullglob
+          matches=( .github/specs/issue-"${ISSUE_NUMBER}"-*.md )
+          if [ ${#matches[@]} -eq 0 ]; then
+            echo "::error::No spec file found at .github/specs/issue-${ISSUE_NUMBER}-*.md"
+            exit 1
+          fi
+          if [ ${#matches[@]} -gt 1 ]; then
+            echo "::warning::Multiple spec files found; using ${matches[0]}"
+          fi
+          echo "path=${matches[0]}" >> "${GITHUB_OUTPUT}"
+
+      - name: Mark issue implementation-in-progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --add-label implementation-in-progress
+
+      - name: Run Oz implementation agent
+        uses: warpdotdev/oz-agent-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          warp_api_key: ${{ secrets.WARP_API_KEY }}
+          profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          prompt: |
+            You are implementing an approved spec in zachreborn/terraform-modules.
+
+            ## Target issue and spec
+            Issue: #${{ steps.ctx.outputs.issue_number }}
+            Spec file (already in `main`): ${{ steps.spec.outputs.path }}
+
+            Read the spec file in full before making any changes. Treat it
+            as the source of truth for what to build.
+
+            ## Required reading
+            - `AGENTS.md` — repo conventions (four-file module layout,
+              `terraform >= 1.0.0`, `aws >= 6.0.0`, section header style,
+              `tags = merge(tomap({ Name = var.name }), var.tags)` pattern,
+              `count = var.enable_x ? 1 : 0` conditional pattern, lifecycle
+              ignores, tfsec suppression style).
+            - `modules/module_template/` — starting point for new modules.
+            - `.github/pull_request_template.md` — required PR body shape.
+
+            ## Implementation rules
+            - Stay within the scope defined by the spec. Do not modify
+              unrelated modules.
+            - Run `terraform fmt -recursive` before committing.
+            - Do not run `terraform-docs` locally — CI (`build.yml`) will
+              auto-inject the README block.
+            - Run `terraform -chdir=<module_path> init -backend=false` and
+              `terraform -chdir=<module_path> validate` for any module you
+              create or modify, and ensure both succeed.
+            - If you add a Checkov suppression, document the rationale in a
+              comment per the convention in `AGENTS.md`.
+
+            ## Commit and PR
+            - Branch name: `feat/issue-${{ steps.ctx.outputs.issue_number }}-<slug>`
+              for features, `fix/issue-${{ steps.ctx.outputs.issue_number }}-<slug>`
+              for bugs.
+            - Commit messages follow conventional-commit style and include
+              a Co-Authored-By line for Oz.
+            - Open a PR titled per the spec's title. The PR body MUST fill
+              in the existing `.github/pull_request_template.md` sections
+              (Description, Issue or Ticket with `Fixes #${{ steps.ctx.outputs.issue_number }}`,
+              Type of change, Breaking Changes, TODOs).
+            - Post a comment on the originating issue with the PR URL.
+
+            Implementation PRs go through the same CI as any other PR
+            (`build.yml`, `test.yml`, `scan.yml`). Do not attempt to
+            bypass any check.
+
+      - name: On failure - drop implementation-in-progress
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label implementation-in-progress || true
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --body "Implementation run failed. See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
