@@ -1,0 +1,40 @@
+#!/bin/bash
+# Zscaler ZPA App Connector Bootstrap Script
+#
+# This script installs the ZPA App Connector package and registers the instance
+# with Zscaler cloud using the provided provisioning key.
+#
+# IMPORTANT: Registration with ZPA does NOT put this connector into production.
+# Traffic is only routed through this connector after an admin explicitly assigns
+# Application Segments to the App Connector Group in the ZPA admin portal.
+
+set -euo pipefail
+
+# Create the Zscaler YUM repository
+cat > /etc/yum.repos.d/zscaler.repo << 'REPO'
+[zscaler]
+name=Zscaler Private Access Repository
+baseurl=https://yum.private.zscaler.com/yum/el8
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.private.zscaler.com/yum/el8/gpg
+REPO
+
+# Update system packages before installation
+yum update -y --skip-broken
+
+# Install the ZPA App Connector package
+yum install -y zpa-connector
+
+# Stop the service before writing the provisioning key
+systemctl stop zpa-connector
+
+# Write the provisioning key with restrictive permissions
+mkdir -p /opt/zscaler/var
+chmod 700 /opt/zscaler/var
+echo "${provisioning_key}" > /opt/zscaler/var/provision_key
+chmod 600 /opt/zscaler/var/provision_key
+
+# Enable and start the ZPA App Connector service
+systemctl enable zpa-connector
+systemctl start zpa-connector
