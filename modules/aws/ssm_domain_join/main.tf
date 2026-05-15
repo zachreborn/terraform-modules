@@ -86,7 +86,6 @@ resource "aws_ssm_association" "this" {
     SecretArn  = var.secret_arn
   }
   schedule_expression              = var.schedule_expression
-  schedule_offset                  = var.schedule_offset
   sync_compliance                  = var.sync_compliance
   tags                             = var.tags
   wait_for_success_timeout_seconds = var.wait_for_success_timeout_seconds
