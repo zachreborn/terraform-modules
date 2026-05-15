@@ -24,10 +24,15 @@ jobs:
     name: Implement spec with Oz
     runs-on: ubuntu-latest
 
+    # For labeled events, only trigger on the spec-approved label, skip if
+    # skip-oz is set, and require a trusted issue author. workflow_dispatch
+    # is subject to the same checks at runtime via the eligibility step below.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'spec-approved' &&
-       !contains(github.event.issue.labels.*.name, 'skip-oz'))
+       !contains(github.event.issue.labels.*.name, 'skip-oz') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.issue.author_association))
 
     steps:
       - name: HashiCorp - Setup Terraform
@@ -65,23 +70,33 @@ jobs:
           fi
           echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
 
-      - name: Honor skip-oz on manual dispatch
-        # The job-level `if` only enforces skip-oz for the `labeled` trigger
-        # because `github.event.issue` is unavailable for workflow_dispatch.
-        # Re-check the target issue's labels here so manual dispatch respects
-        # the documented skip-oz override.
+      - name: Verify issue eligibility on manual dispatch
+        # The job-level `if` only enforces skip-oz and author_association for
+        # the `labeled` trigger because `github.event.issue` is unavailable
+        # for workflow_dispatch. Re-check both on the target issue here so
+        # manual dispatch respects the documented skip-oz override and the
+        # same trust gate that protects the labeled path.
         if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
         run: |
-          labels=$(gh issue view "${ISSUE_NUMBER}" \
+          issue=$(gh issue view "${ISSUE_NUMBER}" \
             --repo "${{ github.repository }}" \
-            --json labels --jq '.labels[].name')
+            --json labels,authorAssociation)
+          labels=$(printf '%s' "${issue}" | jq -r '.labels[].name')
+          assoc=$(printf '%s' "${issue}" | jq -r '.authorAssociation')
           if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
             echo "::notice::Issue #${ISSUE_NUMBER} has the skip-oz label; aborting per AGENTS.md."
             exit 1
           fi
+          case "${assoc}" in
+            OWNER|MEMBER|COLLABORATOR) ;;
+            *)
+              echo "::error::Issue #${ISSUE_NUMBER} author_association=${assoc} is not in {OWNER,MEMBER,COLLABORATOR}; refusing to run the Oz agent on untrusted issue content."
+              exit 1
+              ;;
+          esac
 
       - name: Locate spec file
         id: spec

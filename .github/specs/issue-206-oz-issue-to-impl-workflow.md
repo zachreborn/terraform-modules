@@ -34,45 +34,51 @@ This spec describes workflow automation rather than a Terraform module, so
 the §4 Terraform-shape sections are not applicable. The architecture is:
 
 ### Pipeline state machine
-Labels on the originating issue drive state:
+Labels on the originating issue drive state. Trusted authors
+(`author_association` in `{OWNER, MEMBER, COLLABORATOR}`) enter the
+pipeline automatically on issue open; issues from less-trusted authors do
+not auto-advance through Oz-agent stages.
 
-    (new issue)
-        │  (Issue Triage)
-        ▼
-    needs-info ──► (author edits) ──► ready-for-spec
-                                          │  (Spec Generation)
-                                          ▼
-                                    spec-in-progress
-                                          │  (spec PR opened)
-                                          ▼
-                                  spec-ready-for-review
-                                          │  (codeowner merge → Spec Approved)
-                                          ▼
-                                      spec-approved
-                                          │  (Implementation)
-                                          ▼
-                              implementation-in-progress
-                                          │  (impl PR merged)
-                                          ▼
-                                        closed
+```mermaid
+stateDiagram-v2
+    [*] --> needs_info: triage finds missing info
+    [*] --> ready_for_spec: triage passes minimum standards
+    needs_info --> ready_for_spec: author edits, re-triage passes
+    ready_for_spec --> spec_in_progress: Spec Generation runs
+    spec_in_progress --> spec_ready_for_review: spec PR opened
+    spec_in_progress --> ready_for_spec: failure (label restored)
+    spec_ready_for_review --> spec_approved: codeowner merges spec PR
+    spec_approved --> implementation_in_progress: Implementation runs
+    implementation_in_progress --> [*]: implementation PR merged
+```
 
 ### Workflows
+All Oz-agent steps pin `warpdotdev/oz-agent-action` to a specific commit
+SHA (`ce1621a` at time of authoring, with the `# main` comment indicating
+the SHA tracks `main`) per the supply-chain policy enforced by zizmor.
+
 - **`issue-triage.yml`** — Trigger: `issues: [opened, edited, labeled]` with
-  guards to avoid loops and respect `skip-oz`. Runs `warpdotdev/oz-agent-action@main`
-  with a prompt that embeds the minimum-standards checklist and instructs the
-  agent to comment + (re)label via `gh`.
+  guards to avoid loops, respect `skip-oz`, and require
+  `author_association ∈ {OWNER, MEMBER, COLLABORATOR}`. Runs the pinned Oz
+  action with a prompt that embeds the minimum-standards checklist and
+  instructs the agent to comment + (re)label via `gh`.
 - **`spec-generation.yml`** — Trigger: `issues: [labeled]` filtered to
   `ready-for-spec`, plus `workflow_dispatch`. Flips the issue to
   `spec-in-progress`, runs Oz to author a spec under `.github/specs/`, open a
-  branch + PR, and apply `spec-ready-for-review`.
+  branch + PR, and apply `spec-ready-for-review`. Trust gate and `skip-oz`
+  are enforced for both label and dispatch triggers (dispatch checks the
+  target issue at runtime via `gh issue view`).
 - **`spec-approved.yml`** — Trigger: `pull_request: [closed]` on
   `.github/specs/**`. Uses `actions/github-script@v7` (no agent) to parse the
   filename and/or `**Issue:** #<N>` header, then apply `spec-approved` to the
-  originating issue and remove transitional labels.
+  originating issue and remove transitional labels. This workflow does NOT
+  consume `WARP_API_KEY` and will act on merged spec PRs regardless of
+  Oz-secret configuration.
 - **`implementation.yml`** — Trigger: `issues: [labeled]` filtered to
   `spec-approved`, plus `workflow_dispatch`. Reads the spec from `main`,
   runs Oz to implement strictly per spec, opens an implementation PR with
-  `Fixes #<N>` so the issue closes on merge.
+  `Fixes #<N>` so the issue closes on merge. Same trust gate as
+  spec-generation.
 
 ### Repo configuration (manual, one-time)
 - Secret: `WARP_API_KEY`
@@ -86,8 +92,12 @@ Labels on the originating issue drive state:
 - Existing workflows (`build.yml`, `test.yml`, `scan.yml`, `release.yml`)
   are not modified.
 - Existing issue templates continue to work; the new pipeline is additive.
-- Until `WARP_API_KEY` is configured, the Oz workflows fail fast in their
-  `Guard - require WARP_API_KEY` step and do not change any issue or PR state.
+- Until `WARP_API_KEY` is configured, the three Oz-agent workflows
+  (`issue-triage.yml`, `spec-generation.yml`, `implementation.yml`) fail
+  fast in their `Guard - require WARP_API_KEY` step and do not change any
+  issue or PR state. `spec-approved.yml` does NOT use `WARP_API_KEY` (it is
+  a plain `actions/github-script` job) and will act on any merged spec PR
+  as soon as it lands.
 
 ## 6. Checkov / tfsec considerations
 - New suppressions: **none** — no Terraform changes in this PR.
