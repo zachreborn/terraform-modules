@@ -32,8 +32,8 @@ resource "aws_ssm_document" "this" {
         description = "FQDN of the domain to join"
       }
       DnsServers = {
-        type        = "StringList"
-        description = "Domain controller IPs to set as DNS servers"
+        type        = "String"
+        description = "Comma-separated domain controller IPs to set as DNS servers"
       }
       SecretArn = {
         type        = "String"
