@@ -1,0 +1,114 @@
+---
+name: Spec Approved
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - ".github/specs/**"
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  flip-labels:
+    name: Flip issue labels on merged spec
+    runs-on: ubuntu-latest
+    # Only act on actually-merged PRs (not just closed).
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Resolve originating issue and flip labels
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            // Find the spec file(s) added/modified/renamed by this PR.
+            // Deletions are intentionally excluded: a PR that only removes a
+            // spec file should not flip its issue to spec-approved.
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: prNumber, per_page: 100 },
+            );
+            const ADDED_STATES = new Set(["added", "modified", "renamed"]);
+            const specFiles = files
+              .filter(f => ADDED_STATES.has(f.status))
+              .filter(f => f.filename.startsWith(".github/specs/"))
+              .filter(f => f.filename.endsWith(".md"))
+              .filter(f => !f.filename.endsWith("/README.md"))
+              .filter(f => !f.filename.endsWith("/_template.md"));
+
+            if (specFiles.length === 0) {
+              core.info("No spec files in this PR; nothing to do.");
+              return;
+            }
+
+            // Derive issue numbers. Preference order:
+            //   1. Filename pattern issue-<N>-*.md
+            //   2. **Issue:** #<N> header inside the file
+            const issueNumbers = new Set();
+            for (const file of specFiles) {
+              const match = file.filename.match(/issue-(\d+)-/);
+              if (match) {
+                issueNumbers.add(Number(match[1]));
+                continue;
+              }
+              // Fallback: read the file from the PR's merge commit.
+              const { data: blob } = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: file.filename,
+                ref: context.payload.pull_request.merge_commit_sha,
+              });
+              const content = Buffer.from(blob.content, "base64").toString("utf8");
+              const headerMatch = content.match(/\*\*Issue:\*\*\s*#(\d+)/);
+              if (headerMatch) {
+                issueNumbers.add(Number(headerMatch[1]));
+              }
+            }
+
+            if (issueNumbers.size === 0) {
+              core.warning("Could not determine an originating issue number from the spec PR.");
+              return;
+            }
+
+            for (const issueNumber of issueNumbers) {
+              // Add spec-approved.
+              try {
+                await github.rest.issues.addLabels({
+                  owner, repo, issue_number: issueNumber,
+                  labels: ["spec-approved"],
+                });
+              } catch (e) {
+                core.warning(`Failed to add spec-approved to #${issueNumber}: ${e.message}`);
+              }
+              // Remove transitional labels (ignore 404s).
+              for (const label of ["spec-ready-for-review", "spec-in-progress", "ready-for-spec"]) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner, repo, issue_number: issueNumber, name: label,
+                  });
+                } catch (e) {
+                  if (e.status !== 404) {
+                    core.warning(`Failed to remove ${label} from #${issueNumber}: ${e.message}`);
+                  }
+                }
+              }
+              // Comment on the issue with a link to the merged spec PR.
+              // The `spec-approved` label was just applied by this workflow,
+              // which will fire the `issues:labeled` trigger for the
+              // Implementation (Oz) workflow automatically. If it does not
+              // start, codeowners can re-run it manually via workflow_dispatch.
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: `Spec approved and merged in #${prNumber}. The Implementation (Oz) workflow will start automatically; re-run it manually via workflow_dispatch with this issue number if needed.`,
+              });
+            }

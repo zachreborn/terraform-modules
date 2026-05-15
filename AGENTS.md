@@ -105,6 +105,52 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `test.yml` | PR or push → main | Checks `terraform fmt` compliance + super-linter |
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release.yml` | Push of `v*.*.*` tag | Creates a GitHub release with auto-generated release notes |
+| `issue-triage.yml` | Issue opened/edited/labeled | Oz agent validates issue against minimum standards, comments + labels |
+| `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
+| `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
+| `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
+
+## Automated issue/spec/impl pipeline
+
+This repo runs an Oz-powered pipeline that turns issues into reviewed specs and approved specs into implementation PRs. The full design lives in `.github/specs/issue-206-oz-issue-to-impl-workflow.md`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> needs_info: triage finds missing info
+    [*] --> ready_for_spec: triage passes minimum standards
+    needs_info --> ready_for_spec: author edits, re-triage passes
+    ready_for_spec --> spec_in_progress: Spec Generation runs
+    spec_in_progress --> spec_ready_for_review: spec PR opened
+    spec_in_progress --> ready_for_spec: failure (label restored)
+    spec_ready_for_review --> spec_approved: codeowner merges spec PR
+    spec_approved --> implementation_in_progress: Implementation runs
+    implementation_in_progress --> [*]: implementation PR merged
+```
+
+**Stages and the label that drives each transition**:
+
+1. Issue opened → triage agent runs (only for trusted authors; see below).
+   - Missing required info → label `needs-info` + comment listing what's missing.
+   - Complete → label `ready-for-spec` + classification comment.
+2. `ready-for-spec` → spec-generation agent runs; opens a PR under `.github/specs/issue-<N>-<slug>.md`; issue moves to `spec-in-progress` then `spec-ready-for-review`.
+3. Spec PR merged → `spec-approved.yml` flips the issue to `spec-approved`.
+4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress` and closes on PR merge.
+
+**Trust gate**: the three Oz-agent workflows (`issue-triage.yml`, `spec-generation.yml`, `implementation.yml`) only run when the originating issue's `author_association` is one of `OWNER`, `MEMBER`, or `COLLABORATOR`. Issues from `CONTRIBUTOR`/`FIRST_TIME_CONTRIBUTOR`/`NONE` will not be auto-triaged and will not advance through the pipeline until a maintainer takes manual action. This is intentional: it keeps untrusted issue bodies out of the secret-backed agent prompts.
+
+**Minimum standards** enforced by triage:
+
+- **Bug**: affected module path, Terraform/provider versions, repro steps, expected vs actual, one of {error, stack trace, plan/apply output}, acceptance criteria.
+- **Feature**: target module path, motivation, proposed inputs/outputs (high level), breaking-change assessment, acceptance criteria.
+
+**Overrides**:
+
+- Apply the `skip-oz` label to any issue to disable all Oz workflows for it (label-triggered runs *and* `workflow_dispatch`).
+- Use `workflow_dispatch` on `spec-generation.yml` or `implementation.yml` to re-run a stage manually with an `issue_number` input. Manual dispatch still re-checks `skip-oz` and the trust gate at runtime.
+
+**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info` and `skip-oz`. The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. Note: `spec-approved.yml` does *not* use `WARP_API_KEY` (it is a plain `actions/github-script` job) and will act on merged spec PRs as soon as it lands, regardless of secret configuration.
+
+**Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
 ## Security Posture Philosophy
 
