@@ -115,6 +115,7 @@ No modules.
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | A map of tags assigned to the security group, including provider default tags |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
