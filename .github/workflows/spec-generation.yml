@@ -187,8 +187,11 @@ jobs:
       - name: Mark spec PR ready-for-review
         # The Oz agent action tends to open PRs as drafts when invoked from
         # automation, which suppresses GitHub's CODEOWNERS auto-request.
-        # Locate the newly-opened spec PR by branch prefix and flip it to
-        # ready-for-review so reviewers get pinged.
+        # Find the freshly-created draft spec PR (branch prefix
+        # `spec/issue-N-`, isDraft=true, most-recently-created) and flip it
+        # to ready-for-review. Filtering on `isDraft == true` ensures we
+        # never re-flip a stale ready PR; sorting by `createdAt` ensures
+        # we target the current run's PR even if PR numbers raced.
         if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -197,10 +200,10 @@ jobs:
           pr_number=$(gh pr list \
             --repo "${{ github.repository }}" \
             --state open \
-            --json number,headRefName,isDraft \
-            --jq "[.[] | select(.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\")) | .number] | max // empty")
+            --json number,headRefName,isDraft,createdAt \
+            --jq "[.[] | select(.isDraft == true and (.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\")))] | sort_by(.createdAt) | last | .number // empty")
           if [ -z "${pr_number}" ]; then
-            echo "::warning::No open spec PR matching 'spec/issue-${ISSUE_NUMBER}-*' found; skipping pr ready."
+            echo "::notice::No open *draft* spec PR matching 'spec/issue-${ISSUE_NUMBER}-*' found; nothing to flip."
             exit 0
           fi
           echo "::notice::Marking spec PR #${pr_number} ready-for-review."
