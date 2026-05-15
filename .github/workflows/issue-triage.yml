@@ -12,6 +12,11 @@ concurrency:
 permissions:
   contents: read
   issues: write
+  # Needed to dispatch the spec-generation workflow as the next stage when
+  # the agent applies `ready-for-spec`. Label events from GITHUB_TOKEN do
+  # not cascade to other workflows, but workflow_dispatch events from
+  # GITHUB_TOKEN do, which is how this chain is restored.
+  actions: write
 
 jobs:
   triage:
@@ -128,3 +133,30 @@ jobs:
             Do not edit any files. Do not push commits. Do not open PRs.
             Do not invoke `terraform`. Your only side effects are issue
             comments and label changes via `gh`.
+
+      - name: Chain to Spec Generation if ready-for-spec was applied
+        # Labels applied with GITHUB_TOKEN do not trigger downstream
+        # workflows (intentional GitHub safeguard against loops), so the
+        # ready-for-spec label that the triage agent just added would not
+        # by itself fire `spec-generation.yml`. Explicitly dispatch the
+        # next stage here. workflow_dispatch events from GITHUB_TOKEN are
+        # allowed to start new runs.
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          labels=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" \
+            --jq '.labels[].name')
+          if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} has skip-oz; not chaining."
+            exit 0
+          fi
+          if ! printf '%s\n' "${labels}" | grep -Fxq 'ready-for-spec'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} did not end up ready-for-spec; not chaining."
+            exit 0
+          fi
+          echo "::notice::Dispatching Spec Generation (Oz) for #${ISSUE_NUMBER}"
+          gh workflow run spec-generation.yml \
+            --repo "${{ github.repository }}" \
+            --field issue_number="${ISSUE_NUMBER}"

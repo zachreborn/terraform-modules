@@ -81,11 +81,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
         run: |
-          issue=$(gh issue view "${ISSUE_NUMBER}" \
-            --repo "${{ github.repository }}" \
-            --json labels,authorAssociation)
+          # gh issue view does not expose authorAssociation; use the REST
+          # API directly so we can read .author_association (snake_case).
+          issue=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}")
           labels=$(printf '%s' "${issue}" | jq -r '.labels[].name')
-          assoc=$(printf '%s' "${issue}" | jq -r '.authorAssociation')
+          assoc=$(printf '%s' "${issue}" | jq -r '.author_association')
           if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
             echo "::notice::Issue #${ISSUE_NUMBER} has the skip-oz label; aborting per AGENTS.md."
             exit 1
