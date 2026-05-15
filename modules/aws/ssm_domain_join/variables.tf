@@ -182,16 +182,6 @@ variable "schedule_expression" {
   }
 }
 
-variable "schedule_offset" {
-  type        = number
-  description = "(Optional) Number of days to wait after the scheduled day to run the association. Valid values are 1 through 6. If null, no offset is applied. Only applicable when schedule_expression is a cron expression."
-  default     = null
-  validation {
-    condition     = var.schedule_offset == null ? true : (var.schedule_offset >= 1 && var.schedule_offset <= 6)
-    error_message = "schedule_offset must be null or a number between 1 and 6."
-  }
-}
-
 variable "sync_compliance" {
   type        = string
   description = "(Optional) Compliance reporting mode for the association. Valid values are AUTO and MANUAL."
