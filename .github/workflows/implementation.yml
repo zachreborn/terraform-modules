@@ -55,14 +55,33 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
         run: |
-          # Reject anything that is not a bare positive integer to prevent
-          # GITHUB_OUTPUT injection (e.g. newlines, '=') when the value comes
-          # from a free-form workflow_dispatch input.
-          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[0-9]+$'; then
-            echo "::error::issue_number must be a positive integer; got: ${ISSUE_NUMBER}"
+          # Reject anything that is not a bare positive integer (>= 1) to
+          # prevent GITHUB_OUTPUT injection (e.g. newlines, '=') when the
+          # value comes from a free-form workflow_dispatch input. GitHub
+          # issue numbers start at 1, so disallow 0 explicitly.
+          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[1-9][0-9]*$'; then
+            echo "::error::issue_number must be a positive integer (>= 1); got: ${ISSUE_NUMBER}"
             exit 1
           fi
           echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Honor skip-oz on manual dispatch
+        # The job-level `if` only enforces skip-oz for the `labeled` trigger
+        # because `github.event.issue` is unavailable for workflow_dispatch.
+        # Re-check the target issue's labels here so manual dispatch respects
+        # the documented skip-oz override.
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          labels=$(gh issue view "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --json labels --jq '.labels[].name')
+          if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} has the skip-oz label; aborting per AGENTS.md."
+            exit 1
+          fi
 
       - name: Locate spec file
         id: spec

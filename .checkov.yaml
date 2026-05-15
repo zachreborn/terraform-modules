@@ -10,9 +10,10 @@ skip-check:
   - CKV2_GHA_1
   # The Oz spec/impl workflows expose an issue_number workflow_dispatch input
   # so codeowners can manually re-run a stage for a specific issue. The first
-  # step in each of those workflows validates the value against `^[0-9]+$`
-  # and fails fast otherwise, so it cannot inject content into $GITHUB_OUTPUT
-  # or influence build output. It is only used to look up an existing issue.
+  # step in each of those workflows validates the value against
+  # `^[1-9][0-9]*$` (a positive integer >= 1) and fails fast otherwise, so it
+  # cannot inject content into $GITHUB_OUTPUT or influence build output. It is
+  # only used to look up an existing issue.
   - CKV_GHA_7
 
   # ============================================================
