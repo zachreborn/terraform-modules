@@ -10,6 +10,10 @@ permissions:
   contents: read
   issues: write
   pull-requests: read
+  # Needed to dispatch implementation.yml after applying spec-approved.
+  # Label events from GITHUB_TOKEN do not cascade; workflow_dispatch events
+  # do, so we trigger the next stage explicitly.
+  actions: write
 
 jobs:
   flip-labels:
@@ -102,13 +106,25 @@ jobs:
                   }
                 }
               }
+              // Explicitly dispatch implementation.yml. Labels applied via
+              // GITHUB_TOKEN do not trigger downstream workflows, but
+              // workflow_dispatch events from GITHUB_TOKEN do, so we
+              // trigger the next stage here.
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner, repo,
+                  workflow_id: "implementation.yml",
+                  ref: "main",
+                  inputs: { issue_number: String(issueNumber) },
+                });
+                core.notice(`Dispatched Implementation (Oz) for #${issueNumber}`);
+              } catch (e) {
+                core.warning(`Failed to dispatch Implementation (Oz) for #${issueNumber}: ${e.message}`);
+              }
+
               // Comment on the issue with a link to the merged spec PR.
-              // The `spec-approved` label was just applied by this workflow,
-              // which will fire the `issues:labeled` trigger for the
-              // Implementation (Oz) workflow automatically. If it does not
-              // start, codeowners can re-run it manually via workflow_dispatch.
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issueNumber,
-                body: `Spec approved and merged in #${prNumber}. The Implementation (Oz) workflow will start automatically; re-run it manually via workflow_dispatch with this issue number if needed.`,
+                body: `Spec approved and merged in #${prNumber}. Implementation (Oz) has been dispatched and will run shortly; re-run it manually via workflow_dispatch with this issue number if needed.`,
               });
             }
