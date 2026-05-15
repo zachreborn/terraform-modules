@@ -1,0 +1,162 @@
+---
+name: Issue Triage (Oz)
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+# Cancel in-progress triage on the same issue if a new event arrives.
+concurrency:
+  group: oz-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+  # Needed to dispatch the spec-generation workflow as the next stage when
+  # the agent applies `ready-for-spec`. Label events from GITHUB_TOKEN do
+  # not cascade to other workflows, but workflow_dispatch events from
+  # GITHUB_TOKEN do, which is how this chain is restored.
+  actions: write
+
+jobs:
+  triage:
+    name: Triage issue with Oz
+    runs-on: ubuntu-latest
+
+    # Skip when:
+    #   - The issue has already advanced past triage, or
+    #   - The human explicitly opted out via skip-oz, or
+    #   - The author is untrusted (gates secrets/agent against prompt injection
+    #     from arbitrary issue text), or
+    #   - The triggering event is a label that this workflow itself just
+    #     applied (`labeled` event whose sender is github-actions[bot]).
+    # For `labeled` events we additionally narrow to the `needs-info` label so
+    # human edits to other labels do not re-run triage.
+    if: >-
+      !contains(github.event.issue.labels.*.name, 'skip-oz') &&
+      !contains(github.event.issue.labels.*.name, 'ready-for-spec') &&
+      !contains(github.event.issue.labels.*.name, 'spec-in-progress') &&
+      !contains(github.event.issue.labels.*.name, 'spec-ready-for-review') &&
+      !contains(github.event.issue.labels.*.name, 'spec-approved') &&
+      !contains(github.event.issue.labels.*.name, 'implementation-in-progress') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.issue.author_association) &&
+      (github.event.action != 'labeled' ||
+       (github.event.label.name == 'needs-info' &&
+        github.event.sender.login != 'github-actions[bot]'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Guard - require WARP_API_KEY
+        env:
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
+        run: |
+          if [ -z "${WARP_API_KEY}" ]; then
+            echo "::error::WARP_API_KEY secret is not configured for this repository."
+            exit 1
+          fi
+
+      - name: Run Oz triage agent
+        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          prompt: |
+            You are triaging a GitHub issue in zachreborn/terraform-modules,
+            a Terraform module library. Validate the issue against the
+            minimum standards below and update its state via the `gh` CLI.
+
+            ## Issue
+            Number: #${{ github.event.issue.number }}
+            URL: ${{ github.event.issue.html_url }}
+            Title: ${{ github.event.issue.title }}
+            Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}
+
+            Body:
+            ---
+            ${{ github.event.issue.body }}
+            ---
+
+            ## Classification
+            Classify as `bug` or `feature` based on the existing labels and
+            body content. If both/neither, ask in a comment and apply
+            `needs-info`.
+
+            ## Minimum standards
+            BUG must include:
+              1. Affected module path (e.g. `modules/aws/ec2_instance`).
+              2. Terraform version and relevant provider versions.
+              3. Reproduction steps.
+              4. Expected vs. actual behavior.
+              5. One of: error message, stack trace, or plan/apply output.
+              6. Acceptance criteria for "fixed."
+
+            FEATURE must include:
+              1. Target module path (existing or proposed under
+                 `modules/<provider>/<name>/`).
+              2. Motivation / problem being solved.
+              3. High-level proposed inputs and outputs.
+              4. Breaking-change assessment (yes/no + scope).
+              5. Acceptance criteria for "done."
+
+            ## Actions you must take
+            Use the `gh` CLI (already authenticated via GH_TOKEN).
+
+            If ANY required item is missing:
+              - Post a single comment listing each missing item by name and
+                briefly explaining what is needed.
+              - Run:
+                gh issue edit ${{ github.event.issue.number }} \
+                  --repo ${{ github.repository }} \
+                  --add-label needs-info
+
+            If ALL required items are present:
+              - Post a single short comment with:
+                  * Classification (bug/feature)
+                  * Affected module path(s)
+                  * Breaking-change risk (none/low/medium/high) with one
+                    sentence of rationale
+              - Run:
+                gh issue edit ${{ github.event.issue.number }} \
+                  --repo ${{ github.repository }} \
+                  --remove-label needs-info || true
+                gh issue edit ${{ github.event.issue.number }} \
+                  --repo ${{ github.repository }} \
+                  --add-label ready-for-spec
+
+            Do not edit any files. Do not push commits. Do not open PRs.
+            Do not invoke `terraform`. Your only side effects are issue
+            comments and label changes via `gh`.
+
+      - name: Chain to Spec Generation if ready-for-spec was applied
+        # Labels applied with GITHUB_TOKEN do not trigger downstream
+        # workflows (intentional GitHub safeguard against loops), so the
+        # ready-for-spec label that the triage agent just added would not
+        # by itself fire `spec-generation.yml`. Explicitly dispatch the
+        # next stage here. workflow_dispatch events from GITHUB_TOKEN are
+        # allowed to start new runs.
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          labels=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" \
+            --jq '.labels[].name')
+          if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} has skip-oz; not chaining."
+            exit 0
+          fi
+          if ! printf '%s\n' "${labels}" | grep -Fxq 'ready-for-spec'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} did not end up ready-for-spec; not chaining."
+            exit 0
+          fi
+          echo "::notice::Dispatching Spec Generation (Oz) for #${ISSUE_NUMBER}"
+          gh workflow run spec-generation.yml \
+            --repo "${{ github.repository }}" \
+            --field issue_number="${ISSUE_NUMBER}"

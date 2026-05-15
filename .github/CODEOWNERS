@@ -1,1 +1,15 @@
-* @zachreborn
+# Global owners — required reviewers for all files
+* @zachreborn @Jakeasaurus
+
+# Module provider directories
+/modules/aws/         @zachreborn @Jakeasaurus
+/modules/azuread/     @zachreborn @Jakeasaurus
+/modules/cloudflare/  @zachreborn @Jakeasaurus
+/modules/vsphere/     @zachreborn @Jakeasaurus
+/modules/scalr/       @zachreborn @Jakeasaurus
+/modules/terraform/   @zachreborn @Jakeasaurus
+/modules/services/    @zachreborn @Jakeasaurus
+
+# CI/CD and repo configuration
+/.github/             @zachreborn @Jakeasaurus
+/.github/specs/       @zachreborn @Jakeasaurus
