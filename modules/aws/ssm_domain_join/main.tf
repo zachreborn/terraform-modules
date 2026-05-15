@@ -63,26 +63,23 @@ resource "aws_ssm_document" "this" {
   target_type     = var.target_type
   version_name    = var.version_name
 
-  dynamic "permissions" {
-    for_each = var.permissions != null ? [var.permissions] : []
-    content {
-      account_ids = permissions.value.account_ids
-      type        = permissions.value.type
-    }
-  }
+  permissions = var.permissions != null ? {
+    account_ids = var.permissions.account_ids
+    type        = var.permissions.type
+  } : null
 }
 
 ###########################
 # SSM Association
 ###########################
 resource "aws_ssm_association" "this" {
-  apply_only_at_cron_interval      = var.apply_only_at_cron_interval
-  association_name                 = var.association_name
-  compliance_severity              = var.compliance_severity
-  document_version                 = var.document_version
-  max_concurrency                  = var.max_concurrency
-  max_errors                       = var.max_errors
-  name                             = aws_ssm_document.this.name
+  apply_only_at_cron_interval = var.apply_only_at_cron_interval
+  association_name            = var.association_name
+  compliance_severity         = var.compliance_severity
+  document_version            = var.document_version
+  max_concurrency             = var.max_concurrency
+  max_errors                  = var.max_errors
+  name                        = aws_ssm_document.this.name
   parameters = {
     DomainName = var.domain_name
     DnsServers = join(",", var.dns_servers)
