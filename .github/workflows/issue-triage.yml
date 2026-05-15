@@ -18,8 +18,15 @@ jobs:
     name: Triage issue with Oz
     runs-on: ubuntu-latest
 
-    # Skip if the issue is already past triage, the human opted out, or this
-    # event is the workflow itself adding a label (avoid infinite loops).
+    # Skip when:
+    #   - The issue has already advanced past triage, or
+    #   - The human explicitly opted out via skip-oz, or
+    #   - The author is untrusted (gates secrets/agent against prompt injection
+    #     from arbitrary issue text), or
+    #   - The triggering event is a label that this workflow itself just
+    #     applied (`labeled` event whose sender is github-actions[bot]).
+    # For `labeled` events we additionally narrow to the `needs-info` label so
+    # human edits to other labels do not re-run triage.
     if: >-
       !contains(github.event.issue.labels.*.name, 'skip-oz') &&
       !contains(github.event.issue.labels.*.name, 'ready-for-spec') &&
@@ -27,7 +34,11 @@ jobs:
       !contains(github.event.issue.labels.*.name, 'spec-ready-for-review') &&
       !contains(github.event.issue.labels.*.name, 'spec-approved') &&
       !contains(github.event.issue.labels.*.name, 'implementation-in-progress') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'needs-info')
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.issue.author_association) &&
+      (github.event.action != 'labeled' ||
+       (github.event.label.name == 'needs-info' &&
+        github.event.sender.login != 'github-actions[bot]'))
 
     steps:
       - name: Checkout

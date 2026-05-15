@@ -50,12 +50,19 @@ jobs:
             exit 1
           fi
 
-      - name: Resolve issue number
+      - name: Resolve and validate issue number
         id: ctx
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
         run: |
+          # Reject anything that is not a bare positive integer to prevent
+          # GITHUB_OUTPUT injection (e.g. newlines, '=') when the value comes
+          # from a free-form workflow_dispatch input.
+          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[0-9]+$'; then
+            echo "::error::issue_number must be a positive integer; got: ${ISSUE_NUMBER}"
+            exit 1
+          fi
           echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
 
       - name: Mark issue spec-in-progress
@@ -63,12 +70,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
         run: |
+          # Keep ready-for-spec attached for now; the success step below
+          # removes it only after the agent has opened a spec PR. This way
+          # a failure mid-run does not leave the issue stuck with no
+          # actionable label.
           gh issue edit "${ISSUE_NUMBER}" \
             --repo "${{ github.repository }}" \
             --add-label spec-in-progress
-          gh issue edit "${ISSUE_NUMBER}" \
-            --repo "${{ github.repository }}" \
-            --remove-label ready-for-spec || true
 
       - name: Run Oz spec-generation agent
         uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
@@ -138,7 +146,17 @@ jobs:
             The only files you should create or modify live under
             `.github/specs/`.
 
-      - name: On failure - drop spec-in-progress
+      - name: On success - drop ready-for-spec
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label ready-for-spec || true
+
+      - name: On failure - restore ready-for-spec, drop spec-in-progress
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -147,6 +165,11 @@ jobs:
           gh issue edit "${ISSUE_NUMBER}" \
             --repo "${{ github.repository }}" \
             --remove-label spec-in-progress || true
+          # Re-attach ready-for-spec so a maintainer (or another labeled
+          # event) can retry the stage. It is idempotent.
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --add-label ready-for-spec || true
           gh issue comment "${ISSUE_NUMBER}" \
             --repo "${{ github.repository }}" \
             --body "Spec generation failed. See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

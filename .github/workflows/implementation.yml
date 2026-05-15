@@ -50,11 +50,18 @@ jobs:
             exit 1
           fi
 
-      - name: Resolve issue number
+      - name: Resolve and validate issue number
         id: ctx
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
         run: |
+          # Reject anything that is not a bare positive integer to prevent
+          # GITHUB_OUTPUT injection (e.g. newlines, '=') when the value comes
+          # from a free-form workflow_dispatch input.
+          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[0-9]+$'; then
+            echo "::error::issue_number must be a positive integer; got: ${ISSUE_NUMBER}"
+            exit 1
+          fi
           echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
 
       - name: Locate spec file

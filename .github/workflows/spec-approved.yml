@@ -31,12 +31,16 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request.number;
 
-            // Find the spec file(s) added/modified by this PR.
+            // Find the spec file(s) added/modified/renamed by this PR.
+            // Deletions are intentionally excluded: a PR that only removes a
+            // spec file should not flip its issue to spec-approved.
             const files = await github.paginate(
               github.rest.pulls.listFiles,
               { owner, repo, pull_number: prNumber, per_page: 100 },
             );
+            const ADDED_STATES = new Set(["added", "modified", "renamed"]);
             const specFiles = files
+              .filter(f => ADDED_STATES.has(f.status))
               .filter(f => f.filename.startsWith(".github/specs/"))
               .filter(f => f.filename.endsWith(".md"))
               .filter(f => !f.filename.endsWith("/README.md"))
@@ -99,8 +103,12 @@ jobs:
                 }
               }
               // Comment on the issue with a link to the merged spec PR.
+              // The `spec-approved` label was just applied by this workflow,
+              // which will fire the `issues:labeled` trigger for the
+              // Implementation (Oz) workflow automatically. If it does not
+              // start, codeowners can re-run it manually via workflow_dispatch.
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issueNumber,
-                body: `Spec approved and merged in #${prNumber}. Apply \`spec-approved\` (already applied) to trigger implementation.`,
+                body: `Spec approved and merged in #${prNumber}. The Implementation (Oz) workflow will start automatically; re-run it manually via workflow_dispatch with this issue number if needed.`,
               });
             }
