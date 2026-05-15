@@ -163,7 +163,12 @@ jobs:
               `Refs #${{ steps.ctx.outputs.issue_number }}`
               and the Co-Authored-By line for Oz.
             - Push the branch.
-            - Open a PR titled `spec: <issue title>`.
+            - Open the PR as **ready-for-review** (NOT a draft) so that
+              CODEOWNERS are auto-assigned via the `pull_request:
+              ready_for_review` event. If your tooling defaults to draft,
+              flip it to ready before exiting. The workflow also runs a
+              post-step that calls `gh pr ready` as a safety net.
+            - Title: `spec: <issue title>`.
             - PR body MUST include `Refs #${{ steps.ctx.outputs.issue_number }}`
               (not `Fixes`) so the issue stays open through implementation.
             - Apply `spec-ready-for-review` to the originating issue:
@@ -178,6 +183,31 @@ jobs:
             Do NOT modify any Terraform files. Do NOT modify existing modules.
             The only files you should create or modify live under
             `.github/specs/`.
+
+      - name: Mark spec PR ready-for-review
+        # The Oz agent action tends to open PRs as drafts when invoked from
+        # automation, which suppresses GitHub's CODEOWNERS auto-request.
+        # Find the freshly-created draft spec PR (branch prefix
+        # `spec/issue-N-`, isDraft=true, most-recently-created) and flip it
+        # to ready-for-review. Filtering on `isDraft == true` ensures we
+        # never re-flip a stale ready PR; sorting by `createdAt` ensures
+        # we target the current run's PR even if PR numbers raced.
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          pr_number=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --json number,headRefName,isDraft,createdAt \
+            --jq "[.[] | select(.isDraft == true and (.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\")))] | sort_by(.createdAt) | last | .number // empty")
+          if [ -z "${pr_number}" ]; then
+            echo "::notice::No open *draft* spec PR matching 'spec/issue-${ISSUE_NUMBER}-*' found; nothing to flip."
+            exit 0
+          fi
+          echo "::notice::Marking spec PR #${pr_number} ready-for-review."
+          gh pr ready "${pr_number}" --repo "${{ github.repository }}" || true
 
       - name: On success - drop ready-for-spec
         if: success()

@@ -169,15 +169,46 @@ jobs:
               for bugs.
             - Commit messages follow conventional-commit style and include
               a Co-Authored-By line for Oz.
-            - Open a PR titled per the spec's title. The PR body MUST fill
-              in the existing `.github/pull_request_template.md` sections
-              (Description, Issue or Ticket with `Fixes #${{ steps.ctx.outputs.issue_number }}`,
+            - Open the PR as **ready-for-review** (NOT a draft) so that
+              CODEOWNERS are auto-assigned via the `pull_request:
+              ready_for_review` event. If your tooling defaults to draft,
+              flip it to ready before exiting. The workflow also runs a
+              post-step that calls `gh pr ready` as a safety net.
+            - Title: per the spec. The PR body MUST fill in the existing
+              `.github/pull_request_template.md` sections (Description,
+              Issue or Ticket with `Fixes #${{ steps.ctx.outputs.issue_number }}`,
               Type of change, Breaking Changes, TODOs).
             - Post a comment on the originating issue with the PR URL.
 
             Implementation PRs go through the same CI as any other PR
             (`build.yml`, `test.yml`, `scan.yml`). Do not attempt to
             bypass any check.
+
+      - name: Mark implementation PR ready-for-review
+        # The Oz agent action tends to open PRs as drafts when invoked from
+        # automation, which suppresses GitHub's CODEOWNERS auto-request.
+        # Find the freshly-created draft implementation PR (branch prefix
+        # `feat/issue-N-` or `fix/issue-N-`, isDraft=true,
+        # most-recently-created) and flip it to ready-for-review.
+        # Filtering on `isDraft == true` ensures we never re-flip a stale
+        # ready PR; sorting by `createdAt` ensures we target the current
+        # run's PR even if PR numbers raced.
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          pr_number=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --json number,headRefName,isDraft,createdAt \
+            --jq "[.[] | select(.isDraft == true and ((.headRefName | startswith(\"feat/issue-${ISSUE_NUMBER}-\")) or (.headRefName | startswith(\"fix/issue-${ISSUE_NUMBER}-\"))))] | sort_by(.createdAt) | last | .number // empty")
+          if [ -z "${pr_number}" ]; then
+            echo "::notice::No open *draft* implementation PR matching 'feat/issue-${ISSUE_NUMBER}-*' or 'fix/issue-${ISSUE_NUMBER}-*' found; nothing to flip."
+            exit 0
+          fi
+          echo "::notice::Marking implementation PR #${pr_number} ready-for-review."
+          gh pr ready "${pr_number}" --repo "${{ github.repository }}" || true
 
       - name: On failure - drop implementation-in-progress
         if: failure()
