@@ -32,6 +32,12 @@ variable "secret_arn" {
   }
 }
 
+variable "ou_path" {
+  type        = string
+  description = "(Optional) Distinguished name of the OU to place the joined computer object in, e.g. OU=Servers,DC=corp,DC=example,DC=com. If null, the computer is placed in the default Computers container."
+  default     = null
+}
+
 variable "kms_key_arn" {
   type        = string
   description = "(Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key."

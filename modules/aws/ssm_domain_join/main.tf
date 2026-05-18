@@ -39,6 +39,11 @@ resource "aws_ssm_document" "this" {
         type        = "String"
         description = "ARN of Secrets Manager secret with username and password keys"
       }
+      OUPath = {
+        type        = "String"
+        description = "Distinguished name of the OU to place the computer object in. Leave empty to use the default Computers container."
+        default     = ""
+      }
       CloudWatchLogGroup = {
         type        = "String"
         description = "CloudWatch Logs log group name for domain join output. Leave empty to disable CloudWatch logging."
@@ -65,7 +70,7 @@ resource "aws_ssm_document" "this" {
             "Write-Log 'Credentials retrieved'",
             "$cred = New-Object System.Management.Automation.PSCredential($sec.username, (ConvertTo-SecureString $sec.password -AsPlainText -Force))",
             "Write-Log 'Joining domain {{ DomainName }}, system will restart'",
-            "Add-Computer -DomainName '{{ DomainName }}' -Credential $cred -Restart -Force"
+            "if ('{{ OUPath }}') { Add-Computer -DomainName '{{ DomainName }}' -OUPath '{{ OUPath }}' -Credential $cred -Restart -Force } else { Add-Computer -DomainName '{{ DomainName }}' -Credential $cred -Restart -Force }"
           ]
         }
       }
@@ -100,6 +105,7 @@ resource "aws_ssm_association" "this" {
     DnsServers         = join(",", var.dns_servers)
     SecretArn          = var.secret_arn
     CloudWatchLogGroup = var.cloudwatch_log_group_name != null ? var.cloudwatch_log_group_name : ""
+    OUPath             = var.ou_path != null ? var.ou_path : ""
   }
   schedule_expression              = var.schedule_expression
   sync_compliance                  = var.sync_compliance
