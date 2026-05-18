@@ -32,6 +32,16 @@ variable "secret_arn" {
   }
 }
 
+variable "kms_key_arn" {
+  type        = string
+  description = "(Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key."
+  default     = null
+  validation {
+    condition     = var.kms_key_arn == null ? true : can(regex("^arn:", var.kms_key_arn))
+    error_message = "kms_key_arn must be a valid ARN."
+  }
+}
+
 ########################################
 # SSM Document Variables
 ########################################

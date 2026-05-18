@@ -142,13 +142,22 @@ resource "aws_iam_role_policy" "secret_read" {
   name_prefix = var.name_prefix != null ? "${var.name_prefix}-secret-read" : null
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = var.secret_arn
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect   = "Allow"
+          Action   = "secretsmanager:GetSecretValue"
+          Resource = var.secret_arn
+        }
+      ],
+      var.kms_key_arn != null ? [
+        {
+          Effect   = "Allow"
+          Action   = "kms:Decrypt"
+          Resource = var.kms_key_arn
+        }
+      ] : []
+    )
   })
   role = var.instance_role_name
 }
