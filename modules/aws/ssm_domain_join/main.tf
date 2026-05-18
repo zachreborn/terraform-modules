@@ -39,6 +39,11 @@ resource "aws_ssm_document" "this" {
         type        = "String"
         description = "ARN of Secrets Manager secret with username and password keys"
       }
+      CloudWatchLogGroup = {
+        type        = "String"
+        description = "CloudWatch Logs log group name for domain join output. Leave empty to disable CloudWatch logging."
+        default     = ""
+      }
     }
     mainSteps = [
       {
@@ -46,10 +51,20 @@ resource "aws_ssm_document" "this" {
         name   = "DomainJoin"
         inputs = {
           runCommand = [
+            "$_cwlGroup  = '{{ CloudWatchLogGroup }}'",
+            "$_cwlStream = ('{0}/{1}' -f $env:COMPUTERNAME, (Get-Date -Format 'yyyyMMdd-HHmmss'))",
+            "if ($_cwlGroup) { try { New-CWLLogGroup -LogGroupName $_cwlGroup -ErrorAction SilentlyContinue; New-CWLLogStream -LogGroupName $_cwlGroup -LogStreamName $_cwlStream -ErrorAction SilentlyContinue } catch {} }",
+            "function Write-Log { param([string]$Msg); $ts = [System.DateTime]::UtcNow; Write-Output ('[{0}] {1}' -f $ts.ToString('yyyy-MM-ddTHH:mm:ssZ'), $Msg); if (-not $script:_cwlGroup) { return }; try { $e = New-Object Amazon.CloudWatchLogs.Model.InputLogEvent; $e.Message = $Msg; $e.Timestamp = $ts; Write-CWLLogEvent -LogGroupName $script:_cwlGroup -LogStreamName $script:_cwlStream -LogEvent $e } catch {} }",
+            "Write-Log 'Starting domain join'",
+            "Write-Log 'Configuring DNS server addresses'",
             "Set-DnsClientServerAddress -InterfaceAlias 'Ethernet*' -ServerAddresses @('{{ DnsServers }}'.Split(','))",
-            "if ((Get-WmiObject Win32_ComputerSystem).Domain -eq '{{ DomainName }}') { exit 0 }",
+            "Write-Log 'DNS configured; checking current domain membership'",
+            "if ((Get-WmiObject Win32_ComputerSystem).Domain -eq '{{ DomainName }}') { Write-Log 'Already domain joined, exiting'; exit 0 }",
+            "Write-Log 'Retrieving join credentials from Secrets Manager'",
             "$sec  = (Get-SECSecretValue -SecretId '{{ SecretArn }}').SecretString | ConvertFrom-Json",
+            "Write-Log 'Credentials retrieved'",
             "$cred = New-Object System.Management.Automation.PSCredential($sec.username, (ConvertTo-SecureString $sec.password -AsPlainText -Force))",
+            "Write-Log 'Joining domain {{ DomainName }}, system will restart'",
             "Add-Computer -DomainName '{{ DomainName }}' -Credential $cred -Restart -Force"
           ]
         }
@@ -81,9 +96,10 @@ resource "aws_ssm_association" "this" {
   max_errors                  = var.max_errors
   name                        = aws_ssm_document.this.name
   parameters = {
-    DomainName = var.domain_name
-    DnsServers = join(",", var.dns_servers)
-    SecretArn  = var.secret_arn
+    DomainName         = var.domain_name
+    DnsServers         = join(",", var.dns_servers)
+    SecretArn          = var.secret_arn
+    CloudWatchLogGroup = var.cloudwatch_log_group_name != null ? var.cloudwatch_log_group_name : ""
   }
   schedule_expression              = var.schedule_expression
   sync_compliance                  = var.sync_compliance
@@ -109,6 +125,16 @@ resource "aws_ssm_association" "this" {
 }
 
 ###########################
+# CloudWatch Logs
+###########################
+resource "aws_cloudwatch_log_group" "domain_join" {
+  count             = var.cloudwatch_log_group_name != null ? 1 : 0
+  name              = var.cloudwatch_log_group_name
+  retention_in_days = var.cloudwatch_log_retention_days
+  tags              = merge(tomap({ Name = var.cloudwatch_log_group_name }), var.tags)
+}
+
+###########################
 # IAM
 ###########################
 resource "aws_iam_role_policy" "secret_read" {
@@ -121,6 +147,28 @@ resource "aws_iam_role_policy" "secret_read" {
         Effect   = "Allow"
         Action   = "secretsmanager:GetSecretValue"
         Resource = var.secret_arn
+      }
+    ]
+  })
+  role = var.instance_role_name
+}
+
+resource "aws_iam_role_policy" "cloudwatch_logs" {
+  count       = var.cloudwatch_log_group_name != null ? 1 : 0
+  name        = var.name_prefix == null ? "${var.name}-cloudwatch-logs" : null
+  name_prefix = var.name_prefix != null ? "${var.name_prefix}-cloudwatch-logs" : null
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "arn:aws:logs:*:*:log-group:${var.cloudwatch_log_group_name}:*"
       }
     ]
   })

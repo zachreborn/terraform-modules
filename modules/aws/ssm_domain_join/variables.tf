@@ -237,6 +237,29 @@ variable "name_prefix" {
 }
 
 ########################################
+# CloudWatch Variables
+########################################
+variable "cloudwatch_log_group_name" {
+  type        = string
+  description = "(Optional) Name of the CloudWatch Logs log group for domain join output. If null, CloudWatch logging is disabled."
+  default     = null
+  validation {
+    condition     = var.cloudwatch_log_group_name == null ? true : length(var.cloudwatch_log_group_name) > 0
+    error_message = "cloudwatch_log_group_name must not be empty."
+  }
+}
+
+variable "cloudwatch_log_retention_days" {
+  type        = number
+  description = "(Optional) Retention period in days for the CloudWatch Logs log group. Must be a valid CloudWatch retention value."
+  default     = 30
+  validation {
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_log_retention_days)
+    error_message = "cloudwatch_log_retention_days must be a valid CloudWatch Logs retention period."
+  }
+}
+
+########################################
 # Common Variables
 ########################################
 variable "tags" {
