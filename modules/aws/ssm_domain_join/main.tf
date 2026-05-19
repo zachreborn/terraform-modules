@@ -83,7 +83,7 @@ resource "aws_ssm_document" "this" {
             "$_base = (aws ec2 describe-tags --region $_rgn --filters $_filter Name=key,Values=Name --query 'Tags[0].Value' --output text)",
             "if (-not $_base -or $_base -eq 'None') { $_base = $env:COMPUTERNAME; Write-Log 'Name tag not found, using current hostname' }",
             "if ($_base.Length -gt 15) { Write-Log ('Name tag exceeds 15 chars, truncating: ' + $_base); $_base = $_base.Substring(0, 15) }",
-            "$_match = [regex]::Match($_base, '^(.+?)(\d+)$')",
+            "$_match = [regex]::Match($_base, '^(.+?)(\\d+)$')",
             "if ($_match.Success) { $_prefix = $_match.Groups[1].Value; $_trailingLen = $_match.Groups[2].Value.Length; $_n = [int]$_match.Groups[2].Value + 1 } else { $_prefix = $_base; $_trailingLen = 0; $_n = 1 }",
             "$_name = $_base",
             "while (Resolve-DnsName ($_name + '.{{ DomainName }}') -ErrorAction SilentlyContinue) { $_sfx = if ($_trailingLen -gt 0) { ([string]$_n).PadLeft($_trailingLen, '0') } else { [string]$_n }; $_name = $_prefix + $_sfx; if ($_name.Length -gt 15) { Write-Log 'No unique computer name available within 15-char limit'; exit 1 }; $_n++ }",
