@@ -27,7 +27,7 @@
 
 <h3 align="center">SSM Domain Join</h3>
   <p align="center">
-    Automates Active Directory domain join for Windows EC2 instances using SSM State Manager and Secrets Manager. Any EC2 instance matching the configured targets is automatically joined to the domain — no user data or baked-in credentials required.
+    Automates Active Directory domain join for Windows EC2 instances using SSM State Manager and Secrets Manager. Any EC2 instance matching the configured targets is automatically renamed to match its EC2 <code>Name</code> tag, optionally set to a specified time zone, and joined to the domain — all in a single reboot, with no user data or baked-in credentials required. If the desired name is already in DNS, the module increments the trailing number (e.g. <code>SERVER01</code> → <code>SERVER02</code>) to avoid collisions.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -74,6 +74,7 @@ module "ad_join" {
   dns_servers        = ["10.0.0.10", "10.0.0.11"]
   secret_arn         = aws_secretsmanager_secret.ad_join.arn
   instance_role_name = module.session_manager.iam_role_name
+  timezone           = "Eastern Standard Time"
 
   targets = [
     {
@@ -89,10 +90,11 @@ module "ad_join" {
 }
 ```
 
-Tag any EC2 instance you want auto-joined:
+Tag any EC2 instance you want auto-joined. The `Name` tag value becomes the computer name:
 
 ```hcl
 tags = {
+  Name    = "WEBSVR01"
   ad_join = "corp.example.com"
 }
 ```
@@ -109,6 +111,7 @@ module "ad_join_scheduled" {
   dns_servers        = ["10.0.0.10", "10.0.0.11"]
   secret_arn         = aws_secretsmanager_secret.ad_join.arn
   instance_role_name = module.session_manager.iam_role_name
+  timezone           = "Eastern Standard Time"
 
   schedule_expression         = "rate(1 hour)"
   apply_only_at_cron_interval = false
@@ -144,16 +147,20 @@ The diagram below shows the resources this module creates and how they interact 
 |------|-------------|
 | 1 | SSM State Manager targets instances that carry the `ad_join` tag. |
 | 2 | The association delivers the `aws_ssm_document` to the SSM Agent and triggers execution. |
-| 3 | The inline IAM policy (`aws_iam_role_policy`) is attached to the instance's IAM role. |
-| 4 | The IAM role grants the SSM Agent permission to call `GetSecretValue`. |
-| 5 | The SSM Agent calls `GetSecretValue` to retrieve the domain-join credentials. |
-| 6 | Secrets Manager returns the credentials to the agent. |
-| 7 | The agent runs `Add-Computer` to join the instance to Active Directory. |
+| 3 | The inline IAM policy (`aws_iam_role_policy`) is attached to the instance's IAM role, granting `secretsmanager:GetSecretValue`, `kms:Decrypt` (if a KMS key is provided), and `ec2:DescribeTags`. |
+| 4 | The script configures DNS server addresses on the instance. |
+| 5 | If the instance is already domain-joined, the script exits — no further action is taken. |
+| 6 | If `timezone` is set, `Set-TimeZone` applies the specified Windows time zone ID. |
+| 7 | The SSM Agent calls `GetSecretValue` to retrieve the domain-join credentials from Secrets Manager. |
+| 8 | The agent calls the EC2 metadata service (IMDSv2) to read the instance ID and region, then calls `ec2:DescribeTags` to retrieve the `Name` tag value. |
+| 9 | The script checks DNS for the desired computer name. If a record already exists, it increments the trailing number (e.g. `SERVER01` → `SERVER02`) until an available name is found. |
+| 10 | The agent runs `Add-Computer`, renaming the instance to the resolved name and joining it to the domain in a single reboot. |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
+<!-- Run the command above to regenerate the Inputs/Outputs tables after any variable changes. -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

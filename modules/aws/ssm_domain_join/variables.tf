@@ -38,6 +38,16 @@ variable "ou_path" {
   default     = null
 }
 
+variable "timezone" {
+  type        = string
+  description = "(Optional) Windows time zone ID to apply before joining the domain, e.g. 'Mountain Standard Time'. Full list of valid IDs: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones. Despite the 'Standard' suffix on most IDs, DST is observed automatically. If null, the time zone is not changed."
+  default     = null
+  validation {
+    condition     = var.timezone == null ? true : length(var.timezone) > 0
+    error_message = "timezone must not be empty."
+  }
+}
+
 variable "kms_key_arn" {
   type        = string
   description = "(Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key."

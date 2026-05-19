@@ -44,6 +44,11 @@ resource "aws_ssm_document" "this" {
         description = "Distinguished name of the OU to place the computer object in. Leave empty to use the default Computers container."
         default     = ""
       }
+      TimeZone = {
+        type        = "String"
+        description = "Windows time zone ID to apply before joining the domain (e.g. Mountain Standard Time). Full list: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones. Leave empty to skip."
+        default     = ""
+      }
       CloudWatchLogGroup = {
         type        = "String"
         description = "CloudWatch Logs log group name for domain join output. Leave empty to disable CloudWatch logging."
@@ -65,12 +70,29 @@ resource "aws_ssm_document" "this" {
             "Set-DnsClientServerAddress -InterfaceAlias 'Ethernet*' -ServerAddresses @('{{ DnsServers }}'.Split(','))",
             "Write-Log 'DNS configured; checking current domain membership'",
             "if ((Get-WmiObject Win32_ComputerSystem).Domain -eq '{{ DomainName }}') { Write-Log 'Already domain joined, exiting'; exit 0 }",
+            "if ('{{ TimeZone }}') { Write-Log ('Setting time zone to {{ TimeZone }}'); Set-TimeZone -Id '{{ TimeZone }}' }",
             "Write-Log 'Retrieving join credentials from Secrets Manager'",
             "$sec  = (Get-SECSecretValue -SecretId '{{ SecretArn }}').SecretString | ConvertFrom-Json",
             "Write-Log 'Credentials retrieved'",
             "$cred = New-Object System.Management.Automation.PSCredential($sec.username, (ConvertTo-SecureString $sec.password -AsPlainText -Force))",
-            "Write-Log 'Joining domain {{ DomainName }}, system will restart'",
-            "if ('{{ OUPath }}') { Add-Computer -DomainName '{{ DomainName }}' -OUPath '{{ OUPath }}' -Credential $cred -Restart -Force } else { Add-Computer -DomainName '{{ DomainName }}' -Credential $cred -Restart -Force }"
+            "Write-Log 'Determining target computer name from EC2 Name tag'",
+            "$_tok = Invoke-RestMethod -Headers @{'X-aws-ec2-metadata-token-ttl-seconds'='21600'} -Method PUT -Uri 'http://169.254.169.254/latest/api/token'",
+            "$_iid = Invoke-RestMethod -Headers @{'X-aws-ec2-metadata-token'=$_tok} -Method GET -Uri 'http://169.254.169.254/latest/meta-data/instance-id'",
+            "$_rgn = Invoke-RestMethod -Headers @{'X-aws-ec2-metadata-token'=$_tok} -Method GET -Uri 'http://169.254.169.254/latest/meta-data/placement/region'",
+            "$_filter = 'Name=resource-id,Values=' + $_iid",
+            "$_base = (aws ec2 describe-tags --region $_rgn --filters $_filter Name=key,Values=Name --query 'Tags[0].Value' --output text)",
+            "if (-not $_base -or $_base -eq 'None') { $_base = $env:COMPUTERNAME; Write-Log 'Name tag not found, using current hostname' }",
+            "if ($_base.Length -gt 15) { Write-Log ('Name tag exceeds 15 chars, truncating: ' + $_base); $_base = $_base.Substring(0, 15) }",
+            "$_match = [regex]::Match($_base, '^(.+?)(\d+)$')",
+            "if ($_match.Success) { $_prefix = $_match.Groups[1].Value; $_trailingLen = $_match.Groups[2].Value.Length; $_n = [int]$_match.Groups[2].Value + 1 } else { $_prefix = $_base; $_trailingLen = 0; $_n = 1 }",
+            "$_name = $_base",
+            "while (Resolve-DnsName ($_name + '.{{ DomainName }}') -ErrorAction SilentlyContinue) { $_sfx = if ($_trailingLen -gt 0) { ([string]$_n).PadLeft($_trailingLen, '0') } else { [string]$_n }; $_name = $_prefix + $_sfx; if ($_name.Length -gt 15) { Write-Log 'No unique computer name available within 15-char limit'; exit 1 }; $_n++ }",
+            "if ($_name -ne $_base) { Write-Log ('Name ' + $_base + ' is already in DNS; using ' + $_name + ' instead') }",
+            "Write-Log ('Target computer name: ' + $_name)",
+            "$_addArgs = @{ DomainName='{{ DomainName }}'; Credential=$cred; Force=$true; Restart=$true }",
+            "if ('{{ OUPath }}') { $_addArgs['OUPath'] = '{{ OUPath }}' }",
+            "if ($_name -ne $env:COMPUTERNAME) { $_addArgs['NewName'] = $_name; Write-Log ('Joining domain {{ DomainName }} with rename to ' + $_name + ', system will restart') } else { Write-Log 'Joining domain {{ DomainName }}, system will restart' }",
+            "Add-Computer @_addArgs"
           ]
         }
       }
@@ -106,6 +128,7 @@ resource "aws_ssm_association" "this" {
     SecretArn          = var.secret_arn
     CloudWatchLogGroup = var.cloudwatch_log_group_name != null ? var.cloudwatch_log_group_name : ""
     OUPath             = var.ou_path != null ? var.ou_path : ""
+    TimeZone           = var.timezone != null ? var.timezone : ""
   }
   schedule_expression              = var.schedule_expression
   sync_compliance                  = var.sync_compliance
@@ -154,6 +177,11 @@ resource "aws_iam_role_policy" "secret_read" {
           Effect   = "Allow"
           Action   = "secretsmanager:GetSecretValue"
           Resource = var.secret_arn
+        },
+        {
+          Effect   = "Allow"
+          Action   = "ec2:DescribeTags"
+          Resource = "*"
         }
       ],
       var.kms_key_arn != null ? [
