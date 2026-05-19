@@ -80,7 +80,7 @@ resource "aws_ssm_document" "this" {
             "$_iid = Invoke-RestMethod -Headers @{'X-aws-ec2-metadata-token'=$_tok} -Method GET -Uri 'http://169.254.169.254/latest/meta-data/instance-id'",
             "$_rgn = Invoke-RestMethod -Headers @{'X-aws-ec2-metadata-token'=$_tok} -Method GET -Uri 'http://169.254.169.254/latest/meta-data/placement/region'",
             "$_filter = 'Name=resource-id,Values=' + $_iid",
-            "$_base = (aws ec2 describe-tags --region $_rgn --filters $_filter Name=key,Values=Name --query 'Tags[0].Value' --output text)",
+            "$_base = (aws ec2 describe-tags --region $_rgn --filters \"$_filter\" Name=key,Values=Name --query 'Tags[0].Value' --output text)",
             "if (-not $_base -or $_base -eq 'None') { $_base = $env:COMPUTERNAME; Write-Log 'Name tag not found, using current hostname' }",
             "if ($_base.Length -gt 15) { Write-Log ('Name tag exceeds 15 chars, truncating: ' + $_base); $_base = $_base.Substring(0, 15) }",
             "$_match = [regex]::Match($_base, '^(.+?)(\\d+)$')",
