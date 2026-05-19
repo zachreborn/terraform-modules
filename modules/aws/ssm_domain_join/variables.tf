@@ -23,12 +23,13 @@ variable "domain_name" {
   }
 }
 
-variable "secret_arn" {
+variable "kms_key_arn" {
   type        = string
-  description = "(Required) ARN of the Secrets Manager secret holding join credentials. Secret must be JSON-shaped with username and password keys. Cross-account ARNs are supported."
+  description = "(Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key."
+  default     = null
   validation {
-    condition     = can(regex("^arn:", var.secret_arn))
-    error_message = "secret_arn must be a valid ARN."
+    condition     = var.kms_key_arn == null ? true : can(regex("^arn:", var.kms_key_arn))
+    error_message = "kms_key_arn must be a valid ARN."
   }
 }
 
@@ -38,6 +39,15 @@ variable "ou_path" {
   default     = null
 }
 
+variable "secret_arn" {
+  type        = string
+  description = "(Required) ARN of the Secrets Manager secret holding join credentials. Secret must be JSON-shaped with username and password keys. Cross-account ARNs are supported."
+  validation {
+    condition     = can(regex("^arn:", var.secret_arn))
+    error_message = "secret_arn must be a valid ARN."
+  }
+}
+
 variable "timezone" {
   type        = string
   description = "(Optional) Windows time zone ID to apply before joining the domain, e.g. 'Mountain Standard Time'. Full list of valid IDs: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones. Despite the 'Standard' suffix on most IDs, DST is observed automatically. If null, the time zone is not changed."
@@ -45,16 +55,6 @@ variable "timezone" {
   validation {
     condition     = var.timezone == null ? true : length(var.timezone) > 0
     error_message = "timezone must not be empty."
-  }
-}
-
-variable "kms_key_arn" {
-  type        = string
-  description = "(Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key."
-  default     = null
-  validation {
-    condition     = var.kms_key_arn == null ? true : can(regex("^arn:", var.kms_key_arn))
-    error_message = "kms_key_arn must be a valid ARN."
   }
 }
 
@@ -245,7 +245,7 @@ variable "wait_for_success_timeout_seconds" {
 ########################################
 variable "instance_role_name" {
   type        = string
-  description = "(Required) Name of the EC2 IAM role to grant secretsmanager:GetSecretValue on secret_arn."
+  description = "(Required) Name of the EC2 IAM role to grant secretsmanager:GetSecretValue on secret_arn and ec2:DescribeTags."
   validation {
     condition     = length(var.instance_role_name) > 0
     error_message = "instance_role_name must not be empty."

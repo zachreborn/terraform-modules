@@ -123,11 +123,11 @@ resource "aws_ssm_association" "this" {
   max_errors                  = var.max_errors
   name                        = aws_ssm_document.this.name
   parameters = {
-    DomainName         = var.domain_name
-    DnsServers         = join(",", var.dns_servers)
-    SecretArn          = var.secret_arn
     CloudWatchLogGroup = var.cloudwatch_log_group_name != null ? var.cloudwatch_log_group_name : ""
+    DnsServers         = join(",", var.dns_servers)
+    DomainName         = var.domain_name
     OUPath             = var.ou_path != null ? var.ou_path : ""
+    SecretArn          = var.secret_arn
     TimeZone           = var.timezone != null ? var.timezone : ""
   }
   schedule_expression              = var.schedule_expression
