@@ -32,6 +32,7 @@ systemctl stop zpa-connector
 # Write the provisioning key with restrictive permissions
 mkdir -p /opt/zscaler/var
 chmod 700 /opt/zscaler/var
+# shellcheck disable=SC2154  # provisioning_key is a Terraform templatefile() variable, not a shell variable
 echo "${provisioning_key}" > /opt/zscaler/var/provision_key
 chmod 600 /opt/zscaler/var/provision_key
 
