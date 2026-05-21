@@ -16,31 +16,29 @@ terraform {
 ###########################
 data "aws_region" "current" {}
 
-data "aws_ami" "amazon_linux_2" {
+data "aws_ami" "zpa_connector" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["aws-marketplace"]
 
   filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    name   = "product-code"
+    values = ["by1wc5269g0048ix2nqvr0362"]
   }
+}
 
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
+###########################
+# Marketplace Subscription
+###########################
+resource "aws_marketplace_agreement" "zpa_connector" {
+  product_id = "c9c7dfab-017a-40c4-993c-12119713470a"
+  offer_id   = "runInstancesMarketplace"
 }
 
 ###########################
 # Locals
 ###########################
 locals {
-  ami_id          = var.ami_id != null ? var.ami_id : data.aws_ami.amazon_linux_2.id
+  ami_id          = var.ami_id != null ? var.ami_id : data.aws_ami.zpa_connector.id
   connector_count = length(var.subnet_ids)
 }
 

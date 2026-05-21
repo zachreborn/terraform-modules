@@ -1,42 +1,16 @@
-#!/bin/bash
-# Zscaler ZPA App Connector Bootstrap Script
-#
-# This script installs the ZPA App Connector package and registers the instance
-# with Zscaler cloud using the provided provisioning key.
-#
-# IMPORTANT: Registration with ZPA does NOT put this connector into production.
-# Traffic is only routed through this connector after an admin explicitly assigns
-# Application Segments to the App Connector Group in the ZPA admin portal.
-
-# Create the Zscaler YUM repository
-cat > /etc/yum.repos.d/zscaler.repo <<-EOT
-[zscaler]
-name=Zscaler Private Access Repository
-baseurl=https://yum.private.zscaler.com/yum/el7
-enabled=1
-gpgcheck=1
-gpgkey=https://yum.private.zscaler.com/gpg
-EOT
-
-# Install the ZPA App Connector package
-yum install zpa-connector -y
-
-# Stop the service before writing the provisioning key
+#!/usr/bin/bash
+#Stop the App Connector service which was auto-started at boot time
 systemctl stop zpa-connector
-
-# Write the provisioning key with restrictive permissions
-# shellcheck disable=SC2154  # provisioning_key is a Terraform templatefile() variable, not a shell variable
+#Create a file from the App Connector provisioning key created in the ZPA Admin Portal
+#Make sure that the provisioning key is between double quotes
+# shellcheck disable=SC2154
 echo "${provisioning_key}" > /opt/zscaler/var/provision_key
-
-# Apply latest patches
+#Run a yum update to apply the latest patches
 yum update -y
-
-# Start the App Connector service to enroll it in the ZPA cloud
+#Start the App Connector service to enroll it in the ZPA cloud
 systemctl start zpa-connector
-
-# Wait for the App Connector to download the latest build
+#Wait for the App Connector to download latest build
 sleep 60
-
-# Restart to run on the latest build
+#Stop and then start the App Connector for the latest build
 systemctl stop zpa-connector
 systemctl start zpa-connector
