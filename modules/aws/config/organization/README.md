@@ -188,8 +188,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 | <a name="provider_aws.organization_config_account"></a> [aws.organization\_config\_account](#provider\_aws.organization\_config\_account) | >= 6.0.0 |
+| <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 6.0.0 |
 
 ## Modules
 
@@ -199,11 +200,11 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_organizations_delegated_administrator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_delegated_administrator) | resource |
 | [aws_config_configuration_recorder.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/config_configuration_recorder) | resource |
 | [aws_config_configuration_recorder_status.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/config_configuration_recorder_status) | resource |
 | [aws_config_delivery_channel.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/config_delivery_channel) | resource |
 | [aws_config_organization_conformance_pack.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/config_organization_conformance_pack) | resource |
+| [aws_organizations_delegated_administrator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_delegated_administrator) | resource |
 | [aws_s3_bucket.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket_ownership_controls.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
 | [aws_s3_bucket_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
@@ -218,29 +219,29 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_account_id"></a> [admin\_account\_id](#input\_admin\_account\_id) | (Required) The AWS account ID to register as the delegated administrator for AWS Config in the organization. | `string` | n/a | yes |
-| <a name="input_recorder_role_arn"></a> [recorder\_role\_arn](#input\_recorder\_role\_arn) | (Required) ARN of the IAM role that AWS Config uses to record and deliver configuration changes. | `string` | n/a | yes |
-| <a name="input_recorder_name"></a> [recorder\_name](#input\_recorder\_name) | (Optional) The name of the AWS Config configuration recorder. Defaults to 'default'. | `string` | `"default"` | no |
-| <a name="input_include_global_resource_types"></a> [include\_global\_resource\_types](#input\_include\_global\_resource\_types) | (Optional) Whether to include global resource types (e.g., IAM). Defaults to true. | `bool` | `true` | no |
+| <a name="input_conformance_packs"></a> [conformance\_packs](#input\_conformance\_packs) | (Optional) List of organization conformance packs to deploy. Each object requires a name, and either a template\_s3\_uri (S3 URI to a conformance pack template) or template\_body (inline YAML template). Only used when enable\_conformance\_packs is true. | <pre>list(object({<br/>    name            = string<br/>    template_s3_uri = optional(string)<br/>    template_body   = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_create_s3_bucket"></a> [create\_s3\_bucket](#input\_create\_s3\_bucket) | (Optional) If true, creates a new S3 bucket for AWS Config delivery. If false, the s3\_bucket\_name variable must reference an existing bucket. Defaults to true. | `bool` | `true` | no |
 | <a name="input_delivery_channel_name"></a> [delivery\_channel\_name](#input\_delivery\_channel\_name) | (Optional) The name of the AWS Config delivery channel. Defaults to 'default'. | `string` | `"default"` | no |
-| <a name="input_delivery_frequency"></a> [delivery\_frequency](#input\_delivery\_frequency) | (Optional) Snapshot delivery frequency. Valid values: One\_Hour, Three\_Hours, Six\_Hours, Twelve\_Hours, TwentyFour\_Hours. Defaults to TwentyFour\_Hours. | `string` | `"TwentyFour_Hours"` | no |
-| <a name="input_sns_topic_arn"></a> [sns\_topic\_arn](#input\_sns\_topic\_arn) | (Optional) ARN of an SNS topic for Config notifications. Defaults to null. | `string` | `null` | no |
-| <a name="input_create_s3_bucket"></a> [create\_s3\_bucket](#input\_create\_s3\_bucket) | (Optional) If true, creates a new S3 bucket for Config delivery. Defaults to true. | `bool` | `true` | no |
-| <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | (Optional) Name of an existing S3 bucket when create\_s3\_bucket is false. | `string` | `null` | no |
-| <a name="input_s3_bucket_prefix"></a> [s3\_bucket\_prefix](#input\_s3\_bucket\_prefix) | (Optional) Name prefix for a newly created S3 bucket. Defaults to 'config-'. | `string` | `"config-"` | no |
-| <a name="input_s3_key_prefix"></a> [s3\_key\_prefix](#input\_s3\_key\_prefix) | (Optional) S3 key prefix for Config delivery within the bucket. Defaults to null. | `string` | `null` | no |
-| <a name="input_enable_conformance_packs"></a> [enable\_conformance\_packs](#input\_enable\_conformance\_packs) | (Optional) If true, deploys organization conformance packs. Defaults to false. | `bool` | `false` | no |
-| <a name="input_conformance_packs"></a> [conformance\_packs](#input\_conformance\_packs) | (Optional) List of organization conformance packs. Each requires name and template\_s3\_uri or template\_body. | `list(object({...}))` | `[]` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all taggable resources. | `map(string)` | `{...}` | no |
+| <a name="input_delivery_frequency"></a> [delivery\_frequency](#input\_delivery\_frequency) | (Optional) The frequency with which AWS Config delivers configuration snapshots to the S3 bucket. Valid values: One\_Hour, Three\_Hours, Six\_Hours, Twelve\_Hours, TwentyFour\_Hours. Defaults to TwentyFour\_Hours. | `string` | `"TwentyFour_Hours"` | no |
+| <a name="input_enable_conformance_packs"></a> [enable\_conformance\_packs](#input\_enable\_conformance\_packs) | (Optional) If true, deploys the organization conformance packs defined in the conformance\_packs variable. Defaults to false. | `bool` | `false` | no |
+| <a name="input_include_global_resource_types"></a> [include\_global\_resource\_types](#input\_include\_global\_resource\_types) | (Optional) Specifies whether AWS Config includes all supported types of global resources (e.g., IAM) with the resources it records. Defaults to true. | `bool` | `true` | no |
+| <a name="input_recorder_name"></a> [recorder\_name](#input\_recorder\_name) | (Optional) The name of the AWS Config configuration recorder. Only one recorder per region is allowed. Defaults to 'default'. | `string` | `"default"` | no |
+| <a name="input_recorder_role_arn"></a> [recorder\_role\_arn](#input\_recorder\_role\_arn) | (Required) ARN of the IAM role that AWS Config uses to record and deliver configuration changes. Must have the AWSConfigRole managed policy or equivalent permissions. | `string` | n/a | yes |
+| <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | (Optional) The name of an existing S3 bucket to use for AWS Config delivery when create\_s3\_bucket is false. Must be set when create\_s3\_bucket is false. | `string` | `null` | no |
+| <a name="input_s3_bucket_prefix"></a> [s3\_bucket\_prefix](#input\_s3\_bucket\_prefix) | (Optional) Name prefix for the S3 bucket created when create\_s3\_bucket is true. AWS will append a unique suffix to ensure global uniqueness. Defaults to 'config-'. | `string` | `"config-"` | no |
+| <a name="input_s3_key_prefix"></a> [s3\_key\_prefix](#input\_s3\_key\_prefix) | (Optional) The S3 key prefix (folder path) within the delivery bucket where AWS Config stores configuration snapshots and history files. Set to null to store at bucket root. | `string` | `null` | no |
+| <a name="input_sns_topic_arn"></a> [sns\_topic\_arn](#input\_sns\_topic\_arn) | (Optional) The ARN of the SNS topic to which AWS Config sends notifications about configuration changes and compliance. Set to null to disable SNS notifications. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all taggable resources created by this module. | `map(string)` | <pre>{<br/>  "created_by": "<YOUR NAME>",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_delegated_admin_id"></a> [delegated\_admin\_id](#output\_delegated\_admin\_id) | The unique identifier of the delegated administrator registration. |
-| <a name="output_recorder_name"></a> [recorder\_name](#output\_recorder\_name) | The name of the AWS Config configuration recorder. |
+| <a name="output_delegated_admin_id"></a> [delegated\_admin\_id](#output\_delegated\_admin\_id) | The unique identifier of the delegated administrator registration (account\_id:service\_principal). |
 | <a name="output_delivery_channel_name"></a> [delivery\_channel\_name](#output\_delivery\_channel\_name) | The name of the AWS Config delivery channel. |
-| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | The ID (name) of the S3 bucket used for AWS Config delivery. |
-| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | The ARN of the S3 bucket used for AWS Config delivery. |
+| <a name="output_recorder_name"></a> [recorder\_name](#output\_recorder\_name) | The name of the AWS Config configuration recorder. |
+| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | The ARN of the S3 bucket used for AWS Config delivery. Returns null when create\_s3\_bucket is false. |
+| <a name="output_s3_bucket_id"></a> [s3\_bucket\_id](#output\_s3\_bucket\_id) | The ID (name) of the S3 bucket used for AWS Config delivery. Returns null when create\_s3\_bucket is false. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
