@@ -65,8 +65,9 @@ resource "aws_instance" "zpa" {
   instance_type        = var.instance_type
   key_name             = var.key_name
   monitoring           = var.monitoring
-  private_ip           = var.private_ips != null ? element(var.private_ips, count.index) : null
-  subnet_id            = element(var.subnet_ids, count.index)
+  associate_public_ip_address = var.associate_public_ip_address
+  private_ip                  = var.private_ips != null ? element(var.private_ips, count.index) : null
+  subnet_id                   = element(var.subnet_ids, count.index)
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.tftpl", {
     provisioning_key = var.provisioning_key
   }))

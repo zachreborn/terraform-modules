@@ -52,9 +52,9 @@ variable "http_endpoint" {
 }
 
 variable "http_tokens" {
-  description = "(Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to optional to match Zscaler Marketplace AMI default."
+  description = "(Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to required per Zscaler official module."
   type        = string
-  default     = "optional"
+  default     = "required"
   validation {
     condition     = can(regex("^(optional|required)$", var.http_tokens))
     error_message = "http_tokens must be either optional or required."
@@ -79,6 +79,12 @@ variable "instance_type" {
   default     = "m7i.large"
 }
 
+variable "associate_public_ip_address" {
+  description = "(Optional) Whether to associate a public IP address with the instances. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 variable "key_name" {
   description = "(Optional) EC2 Key Pair name to associate with the instances for emergency console access. SSM access is preferred."
   type        = string
@@ -86,9 +92,9 @@ variable "key_name" {
 }
 
 variable "monitoring" {
-  description = "(Optional) Enable detailed CloudWatch monitoring on the instances. Defaults to true."
+  description = "(Optional) Enable detailed CloudWatch monitoring on the instances. Defaults to false per Zscaler official module."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "private_ips" {
