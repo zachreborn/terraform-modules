@@ -32,9 +32,9 @@ variable "vpc_id" {
 ###########################
 
 variable "encrypted" {
-  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to false. Note: Zscaler Marketplace AMI does not support encryption without an explicit KMS key."
+  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to true."
   type        = bool
-  default     = false
+  default     = true
   validation {
     condition     = can(regex("^(true|false)$", var.encrypted))
     error_message = "encrypted must be either true or false."
