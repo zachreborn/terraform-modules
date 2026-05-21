@@ -59,12 +59,12 @@ resource "aws_security_group" "zpa" {
 ###########################
 
 resource "aws_instance" "zpa" {
-  count                = local.connector_count
-  ami                  = local.ami_id
-  iam_instance_profile = var.iam_instance_profile
-  instance_type        = var.instance_type
-  key_name             = var.key_name
-  monitoring           = var.monitoring
+  count                       = local.connector_count
+  ami                         = local.ami_id
+  iam_instance_profile        = var.iam_instance_profile
+  instance_type               = var.instance_type
+  key_name                    = var.key_name
+  monitoring                  = var.monitoring
   associate_public_ip_address = var.associate_public_ip_address
   private_ip                  = var.private_ips != null ? element(var.private_ips, count.index) : null
   subnet_id                   = element(var.subnet_ids, count.index)
