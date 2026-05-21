@@ -27,14 +27,6 @@ data "aws_ami" "zpa_connector" {
 }
 
 ###########################
-# Marketplace Subscription
-###########################
-resource "aws_marketplace_agreement" "zpa_connector" {
-  product_id = "c9c7dfab-017a-40c4-993c-12119713470a"
-  offer_id   = "runInstancesMarketplace"
-}
-
-###########################
 # Locals
 ###########################
 locals {
