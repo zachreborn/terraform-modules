@@ -76,7 +76,7 @@ variable "instance_name_prefix" {
 variable "instance_type" {
   description = "(Optional) EC2 instance type for ZPA App Connector instances. Zscaler recommends m7i-flex.large or larger for production workloads."
   type        = string
-  default     = "m7i-flex.large"
+  default     = "m7i.large"
 }
 
 variable "key_name" {
