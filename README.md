@@ -158,10 +158,17 @@ The authoritative reference for repo conventions, the pipeline design, labels, a
 
 ### Pipeline overview
 
-The diagram below shows the end-to-end flow from issue creation to a merged implementation PR. Each transition is driven by a label that the corresponding workflow either applies or reacts to.
+The diagram below shows the end-to-end flow from issue creation to a merged implementation PR. Each named state corresponds to a GitHub label of the same name on the originating issue. Transitions are triggered by a mix of GitHub events (an issue being opened/edited, or the spec PR being merged) and labels that the Oz workflows apply and react to.
 
 ```mermaid
 stateDiagram-v2
+    state "needs-info" as needs_info
+    state "ready-for-spec" as ready_for_spec
+    state "spec-in-progress" as spec_in_progress
+    state "spec-ready-for-review" as spec_ready_for_review
+    state "spec-approved" as spec_approved
+    state "implementation-in-progress" as implementation_in_progress
+
     [*] --> triage: issue opened/edited
     triage --> needs_info: missing required info
     triage --> ready_for_spec: meets minimum standards
@@ -169,7 +176,7 @@ stateDiagram-v2
     ready_for_spec --> spec_in_progress: Spec Generation (Oz) runs
     spec_in_progress --> spec_ready_for_review: spec PR opened
     spec_in_progress --> ready_for_spec: failure (label restored)
-    spec_ready_for_review --> spec_approved: codeowner merges spec PR
+    spec_ready_for_review --> spec_approved: spec PR merged (pull_request: closed)
     spec_approved --> implementation_in_progress: Implementation (Oz) runs
     implementation_in_progress --> [*]: implementation PR merged
     implementation_in_progress --> spec_approved: failure (label restored)
@@ -223,7 +230,14 @@ You are always free to skip the pipeline and submit a PR the traditional way. Th
 2. Create your feature branch: `git switch -c feat/short-description` (or `fix/...`).
 3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `terraform fmt -recursive`, the tagging pattern, and tfsec/Checkov suppression style.
 4. Validate locally: `terraform -chdir=<module_path> init -backend=false` then `terraform -chdir=<module_path> validate`.
-5. Push and open a PR. Fill in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md). CI will auto-regenerate the `terraform-docs` block and auto-commit it.
+5. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
+
+**A note on `terraform-docs` and `terraform fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `terraform fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. For PRs opened from a **fork**, `GITHUB_TOKEN` is read-only and the workflow cannot push back, so you must run these locally before opening the PR:
+
+```sh
+terraform fmt -recursive
+terraform-docs markdown table --output-file README.md --output-mode inject <module_path>
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
