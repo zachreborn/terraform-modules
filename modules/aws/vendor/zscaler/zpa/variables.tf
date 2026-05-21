@@ -32,9 +32,9 @@ variable "vpc_id" {
 ###########################
 
 variable "encrypted" {
-  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to true."
+  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to false. The Zscaler Marketplace AMI snapshot is unencrypted; overriding to encrypted=true at launch breaks the product code association and causes UnsupportedOperation. To encrypt, supply a kms_key_id and use post-launch re-encryption."
   type        = bool
-  default     = true
+  default     = false
   validation {
     condition     = can(regex("^(true|false)$", var.encrypted))
     error_message = "encrypted must be either true or false."
@@ -76,7 +76,7 @@ variable "instance_name_prefix" {
 variable "instance_type" {
   description = "(Optional) EC2 instance type for ZPA App Connector instances. Defaults to m5a.xlarge per Zscaler's official module recommendation."
   type        = string
-  default     = "m5.large"
+  default     = "m7i.large"
 }
 
 variable "key_name" {
