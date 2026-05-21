@@ -125,14 +125,14 @@ No modules.
 | [aws_cloudwatch_metric_alarm.system](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_instance.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
 | [aws_security_group.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_ami.amazon_linux_2023](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
+| [aws_ami.amazon_linux_2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to use for the ZPA App Connector instances. If not specified, the latest Amazon Linux 2023 x86\_64 AMI will be selected automatically. | `string` | `null` | no |
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to use for the ZPA App Connector instances. If not specified, the latest Amazon Linux 2 x86\_64 AMI will be selected automatically. Note: AL2 is required for compatibility with the Zscaler el7 yum repository. | `string` | `null` | no |
 | <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to true. | `bool` | `true` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the instance metadata service is available. Valid values: enabled, disabled. Defaults to enabled. | `string` | `"enabled"` | no |
 | <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to required. | `string` | `"required"` | no |
