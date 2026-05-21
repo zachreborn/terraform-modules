@@ -152,14 +152,78 @@ See the [open issues](https://github.com/zachreborn/terraform-modules/issues) fo
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thank you!
+This project uses an **Oz-powered agentic development pipeline** that turns well-formed issues into reviewed specs, and approved specs into implementation PRs. You can contribute either by filing an issue and letting the pipeline drive the work, or by opening a PR yourself. Both paths go through the same CI and codeowner review.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+The authoritative reference for repo conventions, the pipeline design, labels, and trust gating is [`AGENTS.md`](./AGENTS.md). The sections below summarize what you need to know to participate.
+
+### Pipeline overview
+
+The diagram below shows the end-to-end flow from issue creation to a merged implementation PR. Each transition is driven by a label that the corresponding workflow either applies or reacts to.
+
+```mermaid
+stateDiagram-v2
+    [*] --> triage: issue opened/edited
+    triage --> needs_info: missing required info
+    triage --> ready_for_spec: meets minimum standards
+    needs_info --> triage: author edits issue
+    ready_for_spec --> spec_in_progress: Spec Generation (Oz) runs
+    spec_in_progress --> spec_ready_for_review: spec PR opened
+    spec_in_progress --> ready_for_spec: failure (label restored)
+    spec_ready_for_review --> spec_approved: codeowner merges spec PR
+    spec_approved --> implementation_in_progress: Implementation (Oz) runs
+    implementation_in_progress --> [*]: implementation PR merged
+    implementation_in_progress --> spec_approved: failure (label restored)
+```
+
+The four Oz workflows that drive these transitions are:
+
+- [`issue-triage.yml`](./.github/workflows/issue-triage.yml) — validates new and edited issues against the minimum standards, then applies `needs-info` or `ready-for-spec`.
+- [`spec-generation.yml`](./.github/workflows/spec-generation.yml) — opens a spec PR under `.github/specs/issue-<N>-<slug>.md` based on `_template.md`.
+- [`spec-approved.yml`](./.github/workflows/spec-approved.yml) — when a spec PR is merged, flips the originating issue to `spec-approved` and dispatches the next stage.
+- [`implementation.yml`](./.github/workflows/implementation.yml) — reads the merged spec from `main` and opens an implementation PR with `Fixes #<N>`.
+
+All three Oz-agent workflows (`issue-triage`, `spec-generation`, `implementation`) gate on the issue author's `author_association` being one of `OWNER`, `MEMBER`, or `COLLABORATOR`. Issues from external contributors are not auto-advanced through the pipeline; a maintainer must shepherd them manually. Apply the `skip-oz` label at any time to opt an issue out of all Oz workflows.
+
+### Filing an issue
+
+Use the issue templates under [`.github/ISSUE_TEMPLATE/`](./.github/ISSUE_TEMPLATE) and include everything the triage agent looks for. Issues that meet the minimum standards are auto-labeled `ready-for-spec` and the pipeline takes over from there.
+
+**Bug** issues must include:
+
+1. Affected module path (e.g. `modules/aws/ec2_instance`).
+2. Terraform version and relevant provider versions.
+3. Reproduction steps.
+4. Expected vs. actual behavior.
+5. One of: error message, stack trace, or `plan`/`apply` output.
+6. Acceptance criteria for "fixed."
+
+**Feature** issues must include:
+
+1. Target module path (existing or proposed under `modules/<provider>/<name>/`).
+2. Motivation / problem being solved.
+3. High-level proposed inputs and outputs.
+4. Breaking-change assessment (yes/no + scope).
+5. Acceptance criteria for "done."
+
+If anything is missing, the triage agent will comment listing the gaps and apply `needs-info`. Edit the issue body and the agent will re-evaluate.
+
+### Reviewing an Oz-generated spec
+
+Spec PRs land under [`.github/specs/`](./.github/specs) and are opened **ready-for-review** (not draft) so CODEOWNERS are auto-assigned. Review them as you would any other PR — focus on the proposed `variables.tf` / `outputs.tf` / `main.tf` shape, the breaking-change assessment, and the acceptance criteria. Merging the spec PR is what triggers the implementation stage; do not merge until the design is what you want built.
+
+### Reviewing an Oz-generated implementation
+
+Implementation PRs are opened from branches named `feat/issue-<N>-<slug>` or `fix/issue-<N>-<slug>`, include `Fixes #<N>` in the body, and run through the standard CI (`build.yml`, `test.yml`, `scan.yml`) like any other PR. The same review and merge rules apply. Squash-and-merge is preferred.
+
+### Contributing a PR directly (no pipeline)
+
+You are always free to skip the pipeline and submit a PR the traditional way. This is the right path for small fixes, dependency bumps, or any change where writing a spec first would be more friction than value.
+
+1. Fork the project.
+2. Create your feature branch: `git switch -c feat/short-description` (or `fix/...`).
+3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `terraform fmt -recursive`, the tagging pattern, and tfsec/Checkov suppression style.
+4. Validate locally: `terraform -chdir=<module_path> init -backend=false` then `terraform -chdir=<module_path> validate`.
+5. Push and open a PR. Fill in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md). CI will auto-regenerate the `terraform-docs` block and auto-commit it.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
