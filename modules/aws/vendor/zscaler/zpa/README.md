@@ -133,7 +133,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to override the Zscaler Marketplace AMI. If not specified, the latest Zscaler App Connector AMI is selected automatically via the AWS Marketplace product code. | `string` | `null` | no |
-| <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to false. Note: Zscaler Marketplace AMI does not support encryption without an explicit KMS key. | `bool` | `false` | no |
+| <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to true. | `bool` | `true` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the instance metadata service is available. Valid values: enabled, disabled. Defaults to enabled. | `string` | `"enabled"` | no |
 | <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to required. | `string` | `"required"` | no |
 | <a name="input_iam_instance_profile"></a> [iam\_instance\_profile](#input\_iam\_instance\_profile) | (Optional) IAM instance profile name to attach to the ZPA App Connector instances for SSM access. | `string` | `null` | no |
