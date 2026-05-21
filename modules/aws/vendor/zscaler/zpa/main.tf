@@ -78,14 +78,6 @@ resource "aws_instance" "zpa" {
     http_tokens   = var.http_tokens
   }
 
-  root_block_device {
-    delete_on_termination = var.root_delete_on_termination
-    encrypted             = var.encrypted
-    volume_type           = var.root_volume_type
-    volume_size           = var.root_volume_size
-    tags                  = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
-  }
-
   tags = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
 
   lifecycle {
