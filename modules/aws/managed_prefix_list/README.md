@@ -195,10 +195,10 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_address_family"></a> [address\_family](#input\_address\_family) | (Required) Address family (IPv4 or IPv6) of this prefix list. Changing this forces a new resource to be created. | `string` | `"IPv4"` | no |
-| <a name="input_entries"></a> [entries](#input\_entries) | (Optional) List of CIDR entry objects to add to the prefix list. Each object requires a 'cidr' key and accepts an optional 'description' key. | `list(object({ cidr = string, description = optional(string) }))` | `[]` | no |
+| <a name="input_entries"></a> [entries](#input\_entries) | (Optional) List of CIDR entry objects to add to the prefix list. Each object requires a 'cidr' key and accepts an optional 'description' key. | <pre>list(object({<br/>    cidr        = string<br/>    description = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_max_entries"></a> [max\_entries](#input\_max\_entries) | (Required) Maximum number of entries that this prefix list can contain. | `number` | `10` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Name of this prefix list. The name must not start with 'com.amazonaws'. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to this resource. | `map(any)` | `{ created_by = "terraform", environment = "prod", terraform = "true" }` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to this resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
