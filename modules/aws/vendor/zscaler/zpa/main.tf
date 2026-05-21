@@ -81,7 +81,6 @@ resource "aws_instance" "zpa" {
   # checkov:skip=CKV_AWS_8:Zscaler Marketplace AMI snapshot (snap-0ee5138b273aea0c2) is unencrypted.
   # Encrypting the root volume at launch breaks the AWS Marketplace product code association,
   # causing UnsupportedOperation. Encryption can be enabled post-launch or via a CMK if required.
-  #tfsec:ignore:aws-ec2-no-ebs-volume-encryption
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
     encrypted             = false
