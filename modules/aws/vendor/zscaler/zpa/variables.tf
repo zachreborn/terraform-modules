@@ -3,7 +3,7 @@
 ###########################
 
 variable "ami_id" {
-  description = "(Optional) AMI ID to use for the ZPA App Connector instances. If not specified, the latest Amazon Linux 2023 x86_64 AMI will be selected automatically."
+  description = "(Optional) AMI ID to use for the ZPA App Connector instances. If not specified, the latest Amazon Linux 2 x86_64 AMI will be selected automatically. Note: AL2 is required for compatibility with the Zscaler el7 yum repository."
   type        = string
   default     = null
   validation {

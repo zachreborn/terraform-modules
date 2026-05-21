@@ -8,34 +8,35 @@
 # Traffic is only routed through this connector after an admin explicitly assigns
 # Application Segments to the App Connector Group in the ZPA admin portal.
 
-set -euo pipefail
-
 # Create the Zscaler YUM repository
-cat > /etc/yum.repos.d/zscaler.repo << 'REPO'
+cat > /etc/yum.repos.d/zscaler.repo <<-EOT
 [zscaler]
 name=Zscaler Private Access Repository
-baseurl=https://yum.private.zscaler.com/yum/el8
+baseurl=https://yum.private.zscaler.com/yum/el7
 enabled=1
 gpgcheck=1
-gpgkey=https://yum.private.zscaler.com/yum/el8/gpg
-REPO
-
-# Update system packages before installation
-yum update -y --skip-broken
+gpgkey=https://yum.private.zscaler.com/gpg
+EOT
 
 # Install the ZPA App Connector package
-yum install -y zpa-connector
+yum install zpa-connector -y
 
 # Stop the service before writing the provisioning key
 systemctl stop zpa-connector
 
 # Write the provisioning key with restrictive permissions
-mkdir -p /opt/zscaler/var
-chmod 700 /opt/zscaler/var
 # shellcheck disable=SC2154  # provisioning_key is a Terraform templatefile() variable, not a shell variable
 echo "${provisioning_key}" > /opt/zscaler/var/provision_key
-chmod 600 /opt/zscaler/var/provision_key
 
-# Enable and start the ZPA App Connector service
-systemctl enable zpa-connector
+# Apply latest patches
+yum update -y
+
+# Start the App Connector service to enroll it in the ZPA cloud
+systemctl start zpa-connector
+
+# Wait for the App Connector to download the latest build
+sleep 60
+
+# Restart to run on the latest build
+systemctl stop zpa-connector
 systemctl start zpa-connector

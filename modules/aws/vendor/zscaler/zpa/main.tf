@@ -16,18 +16,23 @@ terraform {
 ###########################
 data "aws_region" "current" {}
 
-data "aws_ami" "amazon_linux_2023" {
+data "aws_ami" "amazon_linux_2" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 
   filter {
     name   = "architecture"
     values = ["x86_64"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
   }
 }
 
@@ -35,7 +40,7 @@ data "aws_ami" "amazon_linux_2023" {
 # Locals
 ###########################
 locals {
-  ami_id          = var.ami_id != null ? var.ami_id : data.aws_ami.amazon_linux_2023.id
+  ami_id          = var.ami_id != null ? var.ami_id : data.aws_ami.amazon_linux_2.id
   connector_count = length(var.subnet_ids)
 }
 
