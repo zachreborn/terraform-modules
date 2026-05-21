@@ -32,9 +32,9 @@ variable "vpc_id" {
 ###########################
 
 variable "encrypted" {
-  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to false. The Zscaler Marketplace AMI snapshot is unencrypted; overriding to encrypted=true at launch breaks the product code association and causes UnsupportedOperation. To encrypt, supply a kms_key_id and use post-launch re-encryption."
+  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to true."
   type        = bool
-  default     = false
+  default     = true
   validation {
     condition     = can(regex("^(true|false)$", var.encrypted))
     error_message = "encrypted must be either true or false."
@@ -52,9 +52,9 @@ variable "http_endpoint" {
 }
 
 variable "http_tokens" {
-  description = "(Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to required."
+  description = "(Optional) Whether IMDSv2 session tokens are required. Valid values: optional, required. Defaults to optional to match Zscaler Marketplace AMI default."
   type        = string
-  default     = "required"
+  default     = "optional"
   validation {
     condition     = can(regex("^(optional|required)$", var.http_tokens))
     error_message = "http_tokens must be either optional or required."
