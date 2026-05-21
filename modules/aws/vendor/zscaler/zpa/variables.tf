@@ -114,9 +114,9 @@ variable "root_delete_on_termination" {
 }
 
 variable "root_volume_size" {
-  description = "(Optional) Root EBS volume size in GiB. Zscaler recommends a minimum of 40 GiB for the connector OS and logs."
+  description = "(Optional) Root EBS volume size in GiB. Minimum 64 GiB required by the Zscaler Marketplace AMI snapshot."
   type        = number
-  default     = 40
+  default     = 64
 }
 
 variable "root_volume_type" {
