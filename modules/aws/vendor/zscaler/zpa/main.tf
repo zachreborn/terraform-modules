@@ -18,11 +18,11 @@ data "aws_region" "current" {}
 
 data "aws_ami" "zpa_connector" {
   most_recent = true
-  owners      = ["309956199498"] # Red Hat official
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["RHEL-9.*_HVM-*-x86_64-*-Hourly2-GP3"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 
   filter {

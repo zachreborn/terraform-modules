@@ -3,7 +3,7 @@
 ###########################
 
 variable "ami_id" {
-  description = "(Optional) AMI ID to override the default RHEL 9 AMI. If not specified, the latest Red Hat Enterprise Linux 9 x86_64 AMI is selected automatically."
+  description = "(Optional) AMI ID to override the default Amazon Linux 2 AMI. If not specified, the latest Amazon Linux 2 x86_64 AMI is selected automatically."
   type        = string
   default     = null
   validation {

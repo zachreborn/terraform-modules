@@ -3,25 +3,14 @@
 sudo cat > /etc/yum.repos.d/zscaler.repo <<-EOT
 [zscaler]
 name=Zscaler Private Access Repository
-baseurl=https://yum.private.zscaler.com/yum/el9
+baseurl=https://yum.private.zscaler.com/yum/el7
 enabled=1
 gpgcheck=1
-gpgkey=https://yum.private.zscaler.com/yum/el9/gpg
+gpgkey=https://yum.private.zscaler.com/gpg
 EOT
 
-#Sleep to allow the repo file to be registered
-sleep 60
-
-#Install unzip
-yum install -y unzip
-
-#Download and install AWS CLI v2
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install --update -i /usr/bin/aws-cli -b /usr/bin
-
 #Install App Connector packages
-yum install -y zpa-connector
+sudo yum install zpa-connector -y
 
 #Stop the App Connector service which was auto-started at boot time
 systemctl stop zpa-connector
@@ -29,7 +18,6 @@ systemctl stop zpa-connector
 #Create a file from the App Connector provisioning key created in the ZPA Admin Portal
 #Make sure that the provisioning key is between double quotes
 echo "${provisioning_key}" > /opt/zscaler/var/provision_key
-chmod 644 /opt/zscaler/var/provision_key
 
 #Run a yum update to apply the latest patches
 yum update -y
@@ -37,7 +25,7 @@ yum update -y
 #Start the App Connector service to enroll it in the ZPA cloud
 systemctl start zpa-connector
 
-#Wait for the App Connector to download the latest build
+#Wait for the App Connector to download latest build
 sleep 60
 
 #Stop and then start the App Connector for the latest build
