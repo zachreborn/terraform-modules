@@ -86,6 +86,7 @@ resource "aws_instance" "zpa" {
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
     encrypted             = var.encrypted
+    volume_size           = var.root_volume_size
     volume_type           = var.root_volume_type
     tags                  = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
   }
