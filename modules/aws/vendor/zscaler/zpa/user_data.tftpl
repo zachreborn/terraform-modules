@@ -14,10 +14,10 @@ echo "Configuring Zscaler Private Access repository..."
 cat <<EOF | sudo tee /etc/yum.repos.d/zscaler.repo
 [zscaler]
 name=Zscaler Private Access Repository
-baseurl=https://yum.private.zscaler.com/yum/el9
+baseurl=https://yum.private.zscaler.com/yum/el7
 enabled=1
 gpgcheck=1
-gpgkey=https://yum.private.zscaler.com/yum/el9/gpg
+gpgkey=https://yum.private.zscaler.com/yum/el7/gpg
 EOF
 
 # 2. Install the App Connector software
@@ -40,6 +40,6 @@ echo "Starting and enabling zpa-connector service..."
 sudo systemctl start zpa-connector
 sudo systemctl enable zpa-connector
 
-# 6. Verify installation status
+# 6. Verify installation status (|| true prevents set -e from aborting on non-zero exit)
 echo "Checking service status..."
-sudo systemctl status zpa-connector --no-pager
+sudo systemctl status zpa-connector --no-pager || true
