@@ -158,7 +158,7 @@ The authoritative reference for repo conventions, the pipeline design, labels, a
 
 ### Pipeline overview
 
-The diagram below shows the end-to-end flow from issue creation to a merged implementation PR. Each named state corresponds to a GitHub label of the same name on the originating issue. Transitions are triggered by a mix of GitHub events (an issue being opened/edited, or the spec PR being merged) and labels that the Oz workflows apply and react to.
+The diagram below shows the end-to-end flow from issue creation to a merged implementation PR. Every hyphenated state in the diagram (`needs-info`, `ready-for-spec`, `spec-in-progress`, `spec-ready-for-review`, `spec-approved`, `implementation-in-progress`) corresponds to a GitHub label of the same name on the originating issue. The `triage` node is **not** a label — it represents an active run of the `Issue Triage (Oz)` workflow. Transitions are triggered by a mix of GitHub events (an issue being opened/edited, or the spec PR being merged) and labels that the Oz workflows apply and react to.
 
 ```mermaid
 stateDiagram-v2
@@ -175,11 +175,11 @@ stateDiagram-v2
     needs_info --> triage: author edits issue
     ready_for_spec --> spec_in_progress: Spec Generation (Oz) runs
     spec_in_progress --> spec_ready_for_review: spec PR opened
-    spec_in_progress --> ready_for_spec: failure (label restored)
+    spec_in_progress --> ready_for_spec: failure (spec-in-progress removed)
     spec_ready_for_review --> spec_approved: spec PR merged (pull_request: closed)
     spec_approved --> implementation_in_progress: Implementation (Oz) runs
     implementation_in_progress --> [*]: implementation PR merged
-    implementation_in_progress --> spec_approved: failure (label restored)
+    implementation_in_progress --> spec_approved: failure (implementation-in-progress removed)
 ```
 
 The four Oz workflows that drive these transitions are:
@@ -189,7 +189,7 @@ The four Oz workflows that drive these transitions are:
 - [`spec-approved.yml`](./.github/workflows/spec-approved.yml) — when a spec PR is merged, flips the originating issue to `spec-approved` and dispatches the next stage.
 - [`implementation.yml`](./.github/workflows/implementation.yml) — reads the merged spec from `main` and opens an implementation PR with `Fixes #<N>`.
 
-All three Oz-agent workflows (`issue-triage`, `spec-generation`, `implementation`) gate on the issue author's `author_association` being one of `OWNER`, `MEMBER`, or `COLLABORATOR`. Issues from external contributors are not auto-advanced through the pipeline; a maintainer must shepherd them manually. Apply the `skip-oz` label at any time to opt an issue out of all Oz workflows.
+All three Oz-agent workflows (`issue-triage`, `spec-generation`, `implementation`) gate on the issue author's `author_association` being one of `OWNER`, `MEMBER`, or `COLLABORATOR`. Issues from external contributors are not auto-advanced through the pipeline; a maintainer must shepherd them manually. Apply the `skip-oz` label at any time and each Oz agent will abort at the start of its run. Note that `spec-approved.yml` itself does **not** check `skip-oz`, so merging a spec PR will still dispatch `implementation.yml`; the dispatched run then aborts during its eligibility step, producing a (harmless but visible) failed workflow run in the Actions tab.
 
 ### Filing an issue
 
@@ -232,7 +232,7 @@ You are always free to skip the pipeline and submit a PR the traditional way. Th
 4. Validate locally: `terraform -chdir=<module_path> init -backend=false` then `terraform -chdir=<module_path> validate`.
 5. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
 
-**A note on `terraform-docs` and `terraform fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `terraform fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. For PRs opened from a **fork**, `GITHUB_TOKEN` is read-only and the workflow cannot push back, so you must run these locally before opening the PR:
+**A note on `terraform-docs` and `terraform fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `terraform fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. The current `build.yml` is **not fork-compatible** — it checks out `${{ github.event.pull_request.head.ref }}` against the base repository without setting `repository: head.repo.full_name`, so the checkout fails for PRs opened from a fork. Until that is addressed, fork contributors must run these locally before opening the PR:
 
 ```sh
 terraform fmt -recursive
