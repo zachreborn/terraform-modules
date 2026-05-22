@@ -18,11 +18,16 @@ data "aws_region" "current" {}
 
 data "aws_ami" "zpa_connector" {
   most_recent = true
-  owners      = ["aws-marketplace"]
+  owners      = ["309956199498"] # Red Hat official
 
   filter {
-    name   = "product-code"
-    values = ["by1wc5269g0048ix2nqvr0362"]
+    name   = "name"
+    values = ["RHEL-9.*_HVM-*-x86_64-*-Hourly2-GP3"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
   }
 }
 
