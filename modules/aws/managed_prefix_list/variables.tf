@@ -3,11 +3,11 @@
 ###########################
 
 variable "address_family" {
-  description = "(Required) Address family (IPv4 or IPv6) of this prefix list. Changing this forces a new resource to be created."
+  description = "(Optional) Address family (IPv4 or IPv6) of this prefix list. Changing this forces a new resource to be created."
   type        = string
   default     = "IPv4"
   validation {
-    condition     = can(regex("^(IPv4|IPv6)$", var.address_family))
+    condition     = contains(["IPv4", "IPv6"], var.address_family)
     error_message = "address_family must be either 'IPv4' or 'IPv6'."
   }
 }
@@ -22,7 +22,7 @@ variable "entries" {
 }
 
 variable "max_entries" {
-  description = "(Required) Maximum number of entries that this prefix list can contain."
+  description = "(Optional) Maximum number of entries that this prefix list can contain."
   type        = number
   default     = 10
   validation {
