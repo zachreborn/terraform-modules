@@ -24,7 +24,7 @@ resource "aws_ec2_managed_prefix_list" "this" {
     for_each = var.entries
     content {
       cidr        = entry.value.cidr
-      description = lookup(entry.value, "description", null)
+      description = entry.value.description
     }
   }
 }
