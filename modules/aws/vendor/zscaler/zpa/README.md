@@ -132,7 +132,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to override the Zscaler Marketplace AMI. If not specified, the latest Zscaler App Connector AMI is selected automatically via the AWS Marketplace product code. | `string` | `null` | no |
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to override the default RHEL 9 AMI. If not specified, the latest Red Hat Enterprise Linux 9 x86\_64 AMI is selected automatically. | `string` | `null` | no |
 | <a name="input_associate_public_ip_address"></a> [associate\_public\_ip\_address](#input\_associate\_public\_ip\_address) | (Optional) Whether to associate a public IP address with the instances. Defaults to false. | `bool` | `false` | no |
 | <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to true. | `bool` | `true` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Whether the instance metadata service is available. Valid values: enabled, disabled. Defaults to enabled. | `string` | `"enabled"` | no |
