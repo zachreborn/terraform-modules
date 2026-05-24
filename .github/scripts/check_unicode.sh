@@ -20,6 +20,7 @@
 # Exit codes:
 #   0 — no matches found (clean)
 #   1 — one or more matches found (CI failure)
+#   2 — grep itself encountered an error (e.g. unsupported flag, PCRE not available)
 
 set -euo pipefail
 
@@ -47,13 +48,25 @@ echo ""
 #   --include is omitted intentionally — scan all text files
 #   -I  skip binary files
 #   --exclude-dir skips .git to avoid false positives in git internals
+#
+# grep exit codes: 0 = matches found, 1 = no matches, 2+ = error.
+# We run without error suppression so that any grep failure (unsupported
+# --perl-regexp, bad locale, unreadable path, etc.) surfaces immediately
+# rather than silently appearing as a clean scan.
 MATCHES=$(grep \
 	--recursive \
 	--perl-regexp \
 	--line-number \
 	--binary-files=without-match \
 	--exclude-dir=".git" \
-	-- "${PATTERN}" "${REPO_ROOT}" 2>/dev/null || true)
+	-- "${PATTERN}" "${REPO_ROOT}") || GREP_EXIT=$?
+
+# grep exits 1 when it finds no matches — that is the success case.
+# Any other non-zero exit means grep itself failed; abort.
+if [[ "${GREP_EXIT:-0}" -ge 2 ]]; then
+	echo "✗ grep encountered an error (exit ${GREP_EXIT}). Check that grep supports --perl-regexp (GNU grep required)."
+	exit 2
+fi
 
 if [[ -z "${MATCHES}" ]]; then
 	echo "✓ No invisible Unicode characters found."
