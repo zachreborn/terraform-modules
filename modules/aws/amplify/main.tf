@@ -21,7 +21,7 @@ data "aws_region" "current" {}
 # Locals
 ###########################
 locals {
-  notification_rule_name = "${substr(var.name, 0, 43)}-amplify-notifications"
+  notification_rule_name = "${substr(var.name, 0, 42)}-amplify-notifications"
   # Compute the EventBridge rule ARN deterministically so the SNS topic policy
   # can reference it without creating a Terraform dependency cycle.
   notification_rule_arn = "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
@@ -119,6 +119,10 @@ resource "aws_amplify_app" "this" {
       condition     = !var.enable_notifications || var.create_sns_topic || var.sns_topic_arn != null
       error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
     }
+    precondition {
+      condition     = !var.enable_notifications || var.create_sns_topic || var.notification_emails == null
+      error_message = "notification_emails can only be used when create_sns_topic is true; subscriptions against a caller-supplied topic are not managed by this module."
+    }
   }
 }
 
@@ -186,10 +190,11 @@ module "amplify_notifications_sns" {
   source = "../sns"
   count  = var.enable_notifications && var.create_sns_topic ? 1 : 0
 
-  name          = "${var.name}-amplify-notifications"
-  policy        = local.notification_sns_policy
-  subscriptions = local.notification_subscriptions
-  tags          = var.tags
+  name              = "${var.name}-amplify-notifications"
+  kms_master_key_id = null
+  policy            = local.notification_sns_policy
+  subscriptions     = local.notification_subscriptions
+  tags              = var.tags
 }
 
 ###########################
@@ -203,7 +208,7 @@ module "amplify_notifications_event" {
   event_target_arn = local.sns_topic_arn
   name             = local.notification_rule_name
   tags             = var.tags
-  target_id        = "${substr(var.name, 0, 43)}-amplify-notifications"
+  target_id        = "${substr(var.name, 0, 42)}-amplify-notifications"
 
   event_pattern = jsonencode({
     source      = ["aws.amplify"]

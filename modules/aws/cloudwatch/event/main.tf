@@ -38,9 +38,10 @@ resource "aws_cloudwatch_event_rule" "event_rule" {
 # CloudWatch EventBridge Target
 ###########################
 resource "aws_cloudwatch_event_target" "event_target" {
-  arn       = var.event_target_arn
-  rule      = aws_cloudwatch_event_rule.event_rule.name
-  target_id = var.target_id
+  arn            = var.event_target_arn
+  event_bus_name = var.event_bus_name
+  rule           = aws_cloudwatch_event_rule.event_rule.name
+  target_id      = var.target_id
 
   dynamic "input_transformer" {
     for_each = var.input_transformer != null ? [var.input_transformer] : []

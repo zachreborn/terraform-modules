@@ -45,8 +45,8 @@ resource "aws_sns_topic" "this" {
   lambda_failure_feedback_role_arn         = var.lambda_failure_feedback_role_arn
   lambda_success_feedback_role_arn         = var.lambda_success_feedback_role_arn
   lambda_success_feedback_sample_rate      = var.lambda_success_feedback_sample_rate
-  name                                     = var.fifo_topic ? "${var.name}.fifo" : var.name
-  name_prefix                              = var.name_prefix
+  name                                     = var.name != null ? (var.fifo_topic ? "${var.name}.fifo" : var.name) : null
+  name_prefix                              = var.name_prefix != null ? (var.fifo_topic ? "${var.name_prefix}.fifo" : var.name_prefix) : null
   signature_version                        = var.signature_version
   sqs_failure_feedback_role_arn            = var.sqs_failure_feedback_role_arn
   sqs_success_feedback_role_arn            = var.sqs_success_feedback_role_arn

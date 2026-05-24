@@ -19,7 +19,7 @@ output "default_domain" {
 
 output "sns_topic_arn" {
   description = "The ARN of the SNS topic used for Amplify build notifications. Null when notifications are disabled."
-  value       = var.enable_notifications && var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn
+  value       = var.enable_notifications ? (var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn) : null
 }
 
 output "notification_event_rule_arn" {
