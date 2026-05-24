@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
     steps:
       - name: HashiCorp - Setup Terraform
@@ -33,6 +31,8 @@ jobs:
 
       - name: Terraform fmt
         id: fmt
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: terraform fmt -check -diff -recursive
 
   test_unicode:

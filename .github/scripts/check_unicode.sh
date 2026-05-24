@@ -27,7 +27,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # PCRE pattern — matches any of the code points listed above.
 # Each \x{NNNN} escape matches one Unicode scalar value.
-PATTERN=$(cat <<'EOF'
+PATTERN=$(
+	cat <<'EOF'
 [\x{00AD}\x{200B}\x{200C}\x{200D}\x{200E}\x{200F}\x{202A}\x{202B}\x{202C}\x{202D}\x{202E}\x{2060}\x{2066}\x{2067}\x{2068}\x{2069}\x{FEFF}]
 EOF
 )
@@ -47,16 +48,16 @@ echo ""
 #   -I  skip binary files
 #   --exclude-dir skips .git to avoid false positives in git internals
 MATCHES=$(grep \
-  --recursive \
-  --perl-regexp \
-  --line-number \
-  --binary-files=without-match \
-  --exclude-dir=".git" \
-  -- "${PATTERN}" "${REPO_ROOT}" 2>/dev/null || true)
+	--recursive \
+	--perl-regexp \
+	--line-number \
+	--binary-files=without-match \
+	--exclude-dir=".git" \
+	-- "${PATTERN}" "${REPO_ROOT}" 2>/dev/null || true)
 
 if [[ -z "${MATCHES}" ]]; then
-  echo "✓ No invisible Unicode characters found."
-  exit 0
+	echo "✓ No invisible Unicode characters found."
+	exit 0
 fi
 
 echo "✗ Invisible Unicode characters detected. Remove them before merging."
