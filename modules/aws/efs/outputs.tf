@@ -14,8 +14,25 @@ output "id" {
 }
 
 output "mount_target_dns_names" {
-  description = "Map of DNS names for the EFS File System."
+  description = "Map of subnet ID to DNS name for each EFS mount target."
   value = {
-    for mount_target in aws_efs_mount_target.this : mount_target.id => mount_target.dns_name
+    for subnet_id, mount_target in aws_efs_mount_target.this : subnet_id => mount_target.dns_name
   }
+}
+
+output "mount_target_ip_addresses" {
+  description = "Map of subnet ID to IP address for each EFS mount target."
+  value = {
+    for subnet_id, mount_target in aws_efs_mount_target.this : subnet_id => mount_target.ip_address
+  }
+}
+
+output "number_of_mount_targets" {
+  description = "The current number of mount targets that the file system has."
+  value       = aws_efs_file_system.this.number_of_mount_targets
+}
+
+output "size_in_bytes" {
+  description = "The latest known metered size (in bytes) of data stored in the file system."
+  value       = aws_efs_file_system.this.size_in_bytes
 }

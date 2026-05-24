@@ -40,6 +40,22 @@ resource "aws_efs_file_system" "this" {
     content {
       transition_to_ia                    = lifecycle_policy.value.transition_to_ia
       transition_to_primary_storage_class = lifecycle_policy.value.transition_to_primary_storage_class
+      transition_to_archive               = lifecycle_policy.value.transition_to_archive
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.kms_key_id == null || var.encrypted == true
+      error_message = "kms_key_id can only be set when encrypted is true."
+    }
+    precondition {
+      condition     = var.throughput_mode != "provisioned" || var.provisioned_throughput_in_mibps != null
+      error_message = "provisioned_throughput_in_mibps must be set when throughput_mode is 'provisioned'."
+    }
+    precondition {
+      condition     = var.throughput_mode == "provisioned" || var.provisioned_throughput_in_mibps == null
+      error_message = "provisioned_throughput_in_mibps must only be set when throughput_mode is 'provisioned'."
     }
   }
 }

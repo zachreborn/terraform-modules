@@ -21,10 +21,6 @@ variable "encrypted" {
   description = "(Optional) If true, the disk will be encrypted."
   type        = bool
   default     = true
-  validation {
-    condition     = var.encrypted == true || var.encrypted == false
-    error_message = "The encrypted must be true or false."
-  }
 }
 
 variable "kms_key_id" {
@@ -34,18 +30,24 @@ variable "kms_key_id" {
 }
 
 variable "lifecycle_policy" {
-  description = "(Optional) A file system lifecycle policy object. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html"
+  description = "(Optional) A list of lifecycle policy objects for the file system. Each object may set one or more of the optional transition attributes. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html"
   type = list(object({
-    transition_to_ia                    = string
-    transition_to_primary_storage_class = string
+    transition_to_ia                    = optional(string)
+    transition_to_primary_storage_class = optional(string)
+    transition_to_archive               = optional(string)
   }))
   default = []
 
   # Example:
   # lifecycle_policy = [
   #     {
-  #         transition_to_ia                    = "AFTER_30_DAYS"
-  #         transition_to_primary_storage_class = "AFTER_14_DAYS"
+  #         transition_to_ia = "AFTER_30_DAYS"
+  #     },
+  #     {
+  #         transition_to_primary_storage_class = "AFTER_1_ACCESS"
+  #     },
+  #     {
+  #         transition_to_archive = "AFTER_90_DAYS"
   #     }
   # ]
   #
@@ -97,6 +99,10 @@ variable "security_groups" {
   description = "(Optional) A list of up to 5 VPC security group IDs (that must be for the same VPC as subnet_ids) in effect for the mount target."
   type        = list(string)
   default     = []
+  validation {
+    condition     = length(var.security_groups) <= 5
+    error_message = "A maximum of 5 security groups may be associated with a mount target."
+  }
 }
 
 ##############################
