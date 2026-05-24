@@ -107,17 +107,26 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_description"></a> [description](#input\_description) | Description of the cloudwatch event | `any` | n/a | yes |
-| <a name="input_event_target_arn"></a> [event\_target\_arn](#input\_event\_target\_arn) | arn of the target to invoke with this event | `any` | n/a | yes |
-| <a name="input_is_enabled"></a> [is\_enabled](#input\_is\_enabled) | Whether or not the event rule is enabled | `string` | `"true"` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name of the cloudwatch event | `any` | n/a | yes |
-| <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | cron expression of time or rate expression of time | `any` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | Description of the cloudwatch event. | `string` | `null` | no |
+| <a name="input_event_bus_name"></a> [event\_bus\_name](#input\_event\_bus\_name) | The name or ARN of the event bus to associate with this rule. If not provided, the default event bus will be used. | `string` | `null` | no |
+| <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | JSON string for the event pattern. Either event\_pattern or schedule\_expression must be provided, but not both. | `string` | `null` | no |
+| <a name="input_event_target_arn"></a> [event\_target\_arn](#input\_event\_target\_arn) | ARN of the target resource to invoke when the rule is triggered. | `string` | n/a | yes |
+| <a name="input_input_transformer"></a> [input\_transformer](#input\_input\_transformer) | Input transformer to extract values from the event and pass them to the target in a custom format. Only one input\_transformer is supported per event target. | <pre>object({<br/>    input_paths    = map(string)<br/>    input_template = string<br/>  })</pre> | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the CloudWatch event rule. Must be 64 characters or less. Mutually exclusive with name\_prefix. | `string` | `null` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name prefix for the cloudwatch event rule. Must be 38 characters or less. Mutually exclusive with name. | `string` | `null` | no |
+| <a name="input_role_arn"></a> [role\_arn](#input\_role\_arn) | The ARN of the IAM role to associate with this rule. | `string` | `null` | no |
+| <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | The scheduling expression for the rule, e.g. cron(0 20 * * ? *) or rate(5 minutes). Either schedule\_expression or event\_pattern must be provided, but not both. | `string` | `null` | no |
+| <a name="input_state"></a> [state](#input\_state) | The state of the rule. Valid values are ENABLED, DISABLED, or ENABLED\_WITH\_ALL\_CLOUDTRAIL\_MANAGEMENT\_EVENTS. | `string` | `"ENABLED"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_target_id"></a> [target\_id](#input\_target\_id) | The unique target assignment ID. | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the CloudWatch event rule. |
+| <a name="output_rule_name"></a> [rule\_name](#output\_rule\_name) | The name of the CloudWatch event rule. |
+| <a name="output_target_arn"></a> [target\_arn](#output\_target\_arn) | The ARN of the CloudWatch event target. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
