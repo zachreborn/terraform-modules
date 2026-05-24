@@ -112,6 +112,7 @@ No modules.
 | <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | JSON string for the event pattern. Either event\_pattern or schedule\_expression must be provided, but not both. | `string` | `null` | no |
 | <a name="input_event_target_arn"></a> [event\_target\_arn](#input\_event\_target\_arn) | ARN of the target resource to invoke when the rule is triggered. | `string` | n/a | yes |
 | <a name="input_input_transformer"></a> [input\_transformer](#input\_input\_transformer) | Input transformer to extract values from the event and pass them to the target in a custom format. Only one input\_transformer is supported per event target. | <pre>object({<br/>    input_paths    = map(string)<br/>    input_template = string<br/>  })</pre> | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the CloudWatch event rule. Must be 64 characters or less. Mutually exclusive with name\_prefix. | `string` | `null` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name prefix for the cloudwatch event rule. Must be 38 characters or less. Mutually exclusive with name. | `string` | `null` | no |
 | <a name="input_role_arn"></a> [role\_arn](#input\_role\_arn) | The ARN of the IAM role to associate with this rule. | `string` | `null` | no |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | The scheduling expression for the rule, e.g. cron(0 20 * * ? *) or rate(5 minutes). Either schedule\_expression or event\_pattern must be provided, but not both. | `string` | `null` | no |
@@ -123,7 +124,9 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the CloudWatch event rule. |
+| <a name="output_rule_name"></a> [rule\_name](#output\_rule\_name) | The name of the CloudWatch event rule. |
+| <a name="output_target_arn"></a> [target\_arn](#output\_target\_arn) | The ARN of the CloudWatch event target. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
