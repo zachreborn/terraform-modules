@@ -15,16 +15,21 @@ resource "aws_cloudwatch_event_rule" "event_rule" {
   description         = var.description
   event_bus_name      = var.event_bus_name
   event_pattern       = var.event_pattern
+  name                = var.name
   name_prefix         = var.name_prefix
   role_arn            = var.role_arn
   schedule_expression = var.schedule_expression
   state               = var.state
-  tags                = var.tags
+  tags                = merge(tomap({ Name = coalesce(var.name, var.name_prefix, "cloudwatch-event") }), var.tags)
 
   lifecycle {
     precondition {
       condition     = (var.event_pattern != null) != (var.schedule_expression != null)
       error_message = "Exactly one of event_pattern or schedule_expression must be provided."
+    }
+    precondition {
+      condition     = (var.name == null) != (var.name_prefix == null)
+      error_message = "Exactly one of name or name_prefix must be provided."
     }
   }
 }

@@ -14,13 +14,45 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 ###########################
 # Locals
 ###########################
 locals {
-  sns_topic_arn = var.enable_notifications ? (var.create_sns_topic ? aws_sns_topic.this[0].arn : var.sns_topic_arn) : null
+  notification_rule_name = "${substr(var.name, 0, 43)}-amplify-notifications"
+  # Compute the EventBridge rule ARN deterministically so the SNS topic policy
+  # can reference it without creating a Terraform dependency cycle.
+  notification_rule_arn = "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
+  sns_topic_arn         = var.enable_notifications ? (var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn) : null
+
+  notification_subscriptions = var.enable_notifications && var.notification_emails != null ? {
+    for email in var.notification_emails : email => {
+      protocol = "email"
+      endpoint = email
+    }
+  } : {}
+
+  notification_sns_policy = var.enable_notifications && var.create_sns_topic ? jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowEventBridgePublish"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+        Action   = "sns:Publish"
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = local.notification_rule_arn
+          }
+        }
+      }
+    ]
+  }) : null
 }
 
 ###########################
@@ -71,6 +103,7 @@ resource "aws_amplify_app" "this" {
       type = var.cache_config_type
     }
   }
+
   dynamic "custom_rule" {
     for_each = var.custom_rules != null ? var.custom_rules : []
     content {
@@ -78,6 +111,13 @@ resource "aws_amplify_app" "this" {
       source    = custom_rule.value.source
       status    = custom_rule.value.status
       target    = custom_rule.value.target
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_notifications || var.create_sns_topic || var.sns_topic_arn != null
+      error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
     }
   }
 }
@@ -140,58 +180,31 @@ resource "aws_amplify_domain_association" "this" {
 }
 
 ###########################
-# SNS Topic
+# SNS Notifications Topic
 ###########################
-resource "aws_sns_topic" "this" {
-  count = var.create_sns_topic && var.enable_notifications ? 1 : 0
-  name  = "${var.name}-amplify-notifications"
-  tags  = merge(tomap({ Name = "${var.name}-amplify-notifications" }), var.tags)
+module "amplify_notifications_sns" {
+  source = "../sns"
+  count  = var.enable_notifications && var.create_sns_topic ? 1 : 0
+
+  name          = "${var.name}-amplify-notifications"
+  policy        = local.notification_sns_policy
+  subscriptions = local.notification_subscriptions
+  tags          = var.tags
 }
 
 ###########################
-# SNS Topic Policy
+# CloudWatch EventBridge Notification Rule
 ###########################
-data "aws_iam_policy_document" "amplify_notifications_sns" {
-  count = var.create_sns_topic && var.enable_notifications ? 1 : 0
-  statement {
-    sid    = "AllowEventBridgePublish"
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-    actions   = ["sns:Publish"]
-    resources = [aws_sns_topic.this[0].arn]
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values   = [aws_cloudwatch_event_rule.amplify_notifications[0].arn]
-    }
-  }
-}
+module "amplify_notifications_event" {
+  source = "../cloudwatch/event"
+  count  = var.enable_notifications ? 1 : 0
 
-resource "aws_sns_topic_policy" "amplify_notifications" {
-  count  = var.create_sns_topic && var.enable_notifications ? 1 : 0
-  arn    = aws_sns_topic.this[0].arn
-  policy = data.aws_iam_policy_document.amplify_notifications_sns[0].json
-}
+  description      = "Amplify build and deployment status notifications for ${var.name}"
+  event_target_arn = local.sns_topic_arn
+  name             = local.notification_rule_name
+  tags             = var.tags
+  target_id        = "${substr(var.name, 0, 43)}-amplify-notifications"
 
-###########################
-# SNS Topic Subscriptions
-###########################
-resource "aws_sns_topic_subscription" "email" {
-  for_each  = var.enable_notifications && var.notification_emails != null ? toset(var.notification_emails) : toset([])
-  topic_arn = local.sns_topic_arn
-  protocol  = "email"
-  endpoint  = each.value
-}
-
-###########################
-# CloudWatch EventBridge Rule
-###########################
-resource "aws_cloudwatch_event_rule" "amplify_notifications" {
-  count       = var.enable_notifications ? 1 : 0
-  description = "Amplify build and deployment status notifications for ${var.name}"
   event_pattern = jsonencode({
     source      = ["aws.amplify"]
     detail-type = ["Amplify Deployment Status Change"]
@@ -199,28 +212,8 @@ resource "aws_cloudwatch_event_rule" "amplify_notifications" {
       appId = [aws_amplify_app.this.id]
     }
   })
-  name  = "${substr(var.name, 0, 50)}-amplify-notifications"
-  state = "ENABLED"
-  tags  = merge(tomap({ Name = "${var.name}-amplify-notifications" }), var.tags)
 
-  lifecycle {
-    precondition {
-      condition     = var.create_sns_topic || var.sns_topic_arn != null
-      error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
-    }
-  }
-}
-
-###########################
-# CloudWatch EventBridge Target
-###########################
-resource "aws_cloudwatch_event_target" "amplify_notifications" {
-  count     = var.enable_notifications ? 1 : 0
-  arn       = local.sns_topic_arn
-  rule      = aws_cloudwatch_event_rule.amplify_notifications[0].name
-  target_id = "${var.name}-amplify-notifications"
-
-  input_transformer {
+  input_transformer = {
     input_paths = {
       appId      = "$.detail.appId"
       branchName = "$.detail.branchName"

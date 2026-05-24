@@ -19,12 +19,22 @@ variable "event_pattern" {
   default     = null
 }
 
+variable "name" {
+  description = "Name of the CloudWatch event rule. Must be 64 characters or less. Mutually exclusive with name_prefix."
+  type        = string
+  default     = null
+  validation {
+    condition     = var.name == null || try(length(var.name) <= 64, false)
+    error_message = "Name must be 64 characters or less."
+  }
+}
+
 variable "name_prefix" {
   description = "Name prefix for the cloudwatch event rule. Must be 38 characters or less. Mutually exclusive with name."
   type        = string
   default     = null
   validation {
-    condition     = var.name_prefix == null || length(var.name_prefix) <= 38
+    condition     = var.name_prefix == null || try(length(var.name_prefix) <= 38, false)
     error_message = "Name prefix must be 38 characters or less."
   }
 }
