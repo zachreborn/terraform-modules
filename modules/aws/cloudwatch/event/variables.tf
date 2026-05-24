@@ -70,6 +70,7 @@ variable "input_transformer" {
 
 variable "target_id" {
   description = "The unique target assignment ID."
+  type        = string
   default     = null
 }
 

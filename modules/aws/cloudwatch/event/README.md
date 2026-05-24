@@ -117,7 +117,7 @@ No modules.
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | The scheduling expression for the rule, e.g. cron(0 20 * * ? *) or rate(5 minutes). Either schedule\_expression or event\_pattern must be provided, but not both. | `string` | `null` | no |
 | <a name="input_state"></a> [state](#input\_state) | The state of the rule. Valid values are ENABLED, DISABLED, or ENABLED\_WITH\_ALL\_CLOUDTRAIL\_MANAGEMENT\_EVENTS. | `string` | `"ENABLED"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_target_id"></a> [target\_id](#input\_target\_id) | The unique target assignment ID. | `any` | `null` | no |
+| <a name="input_target_id"></a> [target\_id](#input\_target\_id) | The unique target assignment ID. | `string` | `null` | no |
 
 ## Outputs
 
