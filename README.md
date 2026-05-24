@@ -35,7 +35,7 @@
 
 <h3 align="center">terraform-modules</h3>
   <p align="center">
-    Terraform modules to deploy and manage cloud resourcesusing the latest well architected frameworks
+    OpenTofu (and Terraform) modules to deploy and manage cloud resources using the latest well architected frameworks
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -87,7 +87,8 @@ These terraform modules were originally created as part of a six month adoption 
 
 ### Built With
 
-- [![Terraform][Terraform.io]][Terraform-url]
+- [![OpenTofu][OpenTofu.org]][OpenTofu-url] *(default)*
+- [![Terraform][Terraform.io]][Terraform-url] *(also supported)*
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -99,8 +100,24 @@ To get a local copy up and running, simply clone this repo.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
+OpenTofu is the default and recommended tool. Terraform is also supported.
 
+**OpenTofu (recommended):**
+- MacOS
+  ```sh
+  brew install opentofu
+  ```
+- Linux
+  ```sh
+  # See https://opentofu.org/docs/intro/install/ for all options
+  snap install --classic opentofu
+  ```
+- Windows
+  ```sh
+  choco install opentofu
+  ```
+
+**Terraform (alternative):**
 - MacOS
   ```sh
   brew install terraform
@@ -128,6 +145,8 @@ This is an example of how to list things you need to use the software and how to
 ## Usage
 
 Navigate to the folder for the provider and subsequent module, service, or infrastructure you're looking to utilize. Within each module a README.md has documented the usage instructions and examples for that module. Included in each README.md is also an output of automated `terraform-docs` which has requirements, inputs, and outputs.
+
+All modules support both **OpenTofu** (the default) and **Terraform**. Commands are interchangeable — substitute `tofu` for `terraform` (or vice versa) as appropriate for your toolchain.
 
 ### Examples:
 
@@ -288,7 +307,7 @@ Use the issue templates under [`.github/ISSUE_TEMPLATE/`](./.github/ISSUE_TEMPLA
 **Bug** issues must include:
 
 1. Affected module path (e.g. `modules/aws/ec2_instance`).
-2. Terraform version and relevant provider versions.
+2. OpenTofu or Terraform version and relevant provider versions.
 3. Reproduction steps.
 4. Expected vs. actual behavior.
 5. One of: error message, stack trace, or `plan`/`apply` output.
@@ -318,14 +337,14 @@ You are always free to skip the pipeline and submit a PR the traditional way. Th
 
 1. Fork the project.
 2. Create your feature branch: `git switch -c feat/short-description` (or `fix/...`).
-3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `terraform fmt -recursive`, the tagging pattern, and tfsec/Checkov suppression style.
-4. Validate locally: `terraform -chdir=<module_path> init -backend=false` then `terraform -chdir=<module_path> validate`.
+3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `tofu fmt -recursive` (or `terraform fmt -recursive`), the tagging pattern, and tfsec/Checkov suppression style.
+4. Validate locally: `tofu -chdir=<module_path> init -backend=false` then `tofu -chdir=<module_path> validate` (or use `terraform` equivalents).
 5. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
 
-**A note on `terraform-docs` and `terraform fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `terraform fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. The current `build.yml` is **not fork-compatible** — it checks out `${{ github.event.pull_request.head.ref }}` against the base repository without setting `repository: head.repo.full_name`, so the checkout fails for PRs opened from a fork. Until that is addressed, fork contributors must run these locally before opening the PR:
+**A note on `terraform-docs` and `tofu fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `tofu fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. The current `build.yml` is **not fork-compatible** — it checks out `${{ github.event.pull_request.head.ref }}` against the base repository without setting `repository: head.repo.full_name`, so the checkout fails for PRs opened from a fork. Until that is addressed, fork contributors must run these locally before opening the PR:
 
 ```sh
-terraform fmt -recursive
+tofu fmt -recursive
 terraform-docs markdown table --output-file README.md --output-mode inject <module_path>
 ```
 
@@ -390,5 +409,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com
+[OpenTofu.org]: https://img.shields.io/badge/OpenTofu-FFDA18?style=for-the-badge&logo=opentofu&logoColor=black
+[OpenTofu-url]: https://opentofu.org
 [Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
 [Terraform-url]: https://terraform.io

@@ -60,6 +60,8 @@
 
 <!-- USAGE EXAMPLES -->
 
+> **Terraform-only**: This module uses the `hashicorp/tfe` provider to manage Terraform Cloud/Enterprise workspaces. It requires Terraform and is **not compatible with OpenTofu**.
+
 ## Usage
 
 ### Simple Example
