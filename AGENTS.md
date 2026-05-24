@@ -89,9 +89,9 @@ Each module must expose **all attributes and configuration options** available f
 Modules that require resources from another domain **must call the appropriate child module** rather than declaring those resources inline. For example:
 
 - An S3 bucket module that needs a KMS key must call the `modules/aws/kms` module.
-- An S3 bucket module that needs access logging must call the `modules/aws/s3` (logging bucket variant) module.
-- An EC2 module that needs an IAM instance profile must call the `modules/aws/iam` module.
-- A service that needs CloudWatch alarms or log groups must call the `modules/aws/cloudwatch` module.
+- An S3 bucket module that needs access logging must call the `modules/aws/s3/bucket` module (as a separate logging bucket instance).
+- An EC2 module that needs an IAM instance profile must call the `modules/aws/iam/role` module.
+- A service that needs CloudWatch alarms must call the `modules/aws/cloudwatch/alarm` module.
 
 This keeps each module focused on a single resource type, avoids duplicated logic, and ensures cross-cutting concerns (IAM, KMS, CloudWatch, etc.) remain consistent across the library. Inline resource blocks for resources that belong to another module are not permitted.
 
@@ -103,7 +103,7 @@ All default values must reflect **AWS Well-Architected Framework** best practice
 - Public access must be **disabled by default** (e.g., `block_public_acls = true` for S3, no `0.0.0.0/0` ingress rules by default).
 - Logging and monitoring must be **enabled by default** where the resource supports it (e.g., S3 server access logging, VPC flow logs, CloudTrail).
 - Deletion protection and termination protection should be **enabled by default** for stateful resources (RDS, OpenSearch, etc.).
-- MFA delete and versioning should be **enabled by default** for S3 buckets.
+- Versioning should be **enabled by default** for S3 buckets. MFA delete is recommended by CIS but requires out-of-band enablement (the AWS API requires MFA credentials during the call) and cannot be enforced as a Terraform default.
 - IAM least-privilege: modules must not create overly broad policies; use specific actions and resources.
 
 Callers may override any default, but the out-of-the-box configuration should be production-safe without additional tuning.
@@ -121,17 +121,16 @@ Every module `README.md` must include:
 Example block format:
 ```hcl
 module "example_s3_bucket" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/s3"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
 
-  name        = "my-app-data"
-  environment = "production"
+  bucket = "my-app-data"
 
   # Optional overrides
-  versioning_enabled = true
-  kms_key_arn        = module.kms.key_arn
+  versioning_status = "Enabled"
+  sse_algorithm     = "aws:kms"
 
   tags = {
-    Team    = "platform"
+    Team       = "platform"
     CostCenter = "12345"
   }
 }
@@ -164,7 +163,7 @@ locals {
 }
 
 module "s3" {
-  source  = "github.com/zachreborn/terraform-modules//modules/aws/s3"
+  source  = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   buckets = local.buckets
 }
 ```

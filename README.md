@@ -157,10 +157,10 @@ Examples of the composition pattern:
 
 | Module | Instead of inline… | Calls… |
 |---|---|---|
-| `aws/s3` (with server-side encryption) | `aws_kms_key` | `modules/aws/kms` |
-| `aws/s3` (with access logging) | `aws_s3_bucket` (log bucket) | `modules/aws/s3` (log variant) |
-| `aws/ec2_instance` (with instance profile) | `aws_iam_role` / `aws_iam_instance_profile` | `modules/aws/iam` |
-| `aws/rds` (with enhanced monitoring) | `aws_cloudwatch_log_group` | `modules/aws/cloudwatch` |
+| `aws/s3/bucket` (with server-side encryption) | `aws_kms_key` | `modules/aws/kms` |
+| `aws/s3/bucket` (with access logging) | `aws_s3_bucket` (log bucket) | `modules/aws/s3/bucket` (separate log bucket instance) |
+| `aws/ec2_instance` (with instance profile) | `aws_iam_role` / `aws_iam_instance_profile` | `modules/aws/iam/role` |
+| `aws/rds` (with metric alarms) | `aws_cloudwatch_metric_alarm` | `modules/aws/cloudwatch/alarm` |
 
 ### Secure and Well-Architected Defaults
 
@@ -170,7 +170,7 @@ Out-of-the-box defaults reflect the **AWS Well-Architected Framework** and **CIS
 - **Public access** — disabled by default (e.g., S3 `block_public_acls = true`; no `0.0.0.0/0` default ingress rules).
 - **Logging & monitoring** — enabled by default where the resource supports it (S3 server access logging, VPC flow logs, CloudTrail, etc.).
 - **Deletion & termination protection** — enabled by default for stateful resources (RDS, OpenSearch, etc.).
-- **S3 versioning and MFA delete** — enabled by default.
+- **S3 versioning** — enabled by default. MFA delete is recommended by CIS but requires out-of-band enablement (AWS requires MFA credentials during the API call) and cannot be enforced as a Terraform default.
 - **IAM least privilege** — policies use specific actions and resource ARNs; no wildcard `*` actions in defaults.
 
 Callers may override any default. The goal is that the zero-config deployment is production-safe.
@@ -192,14 +192,14 @@ Modules that can manage multiple instances of a resource support a **map-of-obje
 ```hcl
 # HCL map input
 module "iam_roles" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_role"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
 
   roles = {
-    app-server = {
+    "app-server" = {
       description          = "EC2 app server role"
       assume_role_services = ["ec2.amazonaws.com"]
     }
-    lambda-processor = {
+    "lambda-processor" = {
       description          = "Lambda execution role"
       assume_role_services = ["lambda.amazonaws.com"]
     }
@@ -214,7 +214,7 @@ locals {
 }
 
 module "iam_roles" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/iam_role"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
   roles  = local.roles
 }
 ```
