@@ -151,7 +151,9 @@ Every module exposes **all attributes and configuration options** of the underly
 
 ### Module Composition
 
-Modules that depend on resources from a different domain **must call the appropriate sibling module** rather than declaring those resources inline. Cross-cutting concerns — KMS keys, IAM roles/policies, CloudWatch log groups/alarms, S3 logging buckets — each belong to their own module. Inline resource blocks for resources that belong to another module are not permitted. This avoids logic duplication and keeps every module focused on a single resource type.
+Modules that depend on resources from a different domain **must call the appropriate sibling module** rather than declaring those resources inline. Cross-cutting concerns — KMS keys, IAM roles/policies, CloudWatch log groups/alarms, S3 logging buckets — each belong to their own module. This avoids logic duplication and keeps every module focused on a single resource type.
+
+Inline resource blocks for resources that belong to another module are **not permitted in new or significantly updated modules**. Existing modules that currently embed cross-cutting resources inline (e.g., the S3 bucket module's optional inline KMS key) are tracked for future refactoring.
 
 Examples of the composition pattern:
 
@@ -170,7 +172,7 @@ Out-of-the-box defaults reflect the **AWS Well-Architected Framework** and **CIS
 - **Public access** — disabled by default (e.g., S3 `block_public_acls = true`; no `0.0.0.0/0` default ingress rules).
 - **Logging & monitoring** — enabled by default where the resource supports it (S3 server access logging, VPC flow logs, CloudTrail, etc.).
 - **Deletion & termination protection** — enabled by default for stateful resources (RDS, OpenSearch, etc.).
-- **S3 versioning** — enabled by default. MFA delete is recommended by CIS but requires out-of-band enablement (AWS requires MFA credentials during the API call) and cannot be enforced as a Terraform default.
+- **S3 versioning** — new modules must set `versioning_status = "Enabled"` as the default; existing modules with a `Disabled` default will be updated. MFA delete is recommended by CIS but requires out-of-band enablement and cannot be enforced as a Terraform default.
 - **IAM least privilege** — policies use specific actions and resource ARNs; no wildcard `*` actions in defaults.
 
 Callers may override any default. The goal is that the zero-config deployment is production-safe.
@@ -190,7 +192,8 @@ Every module `README.md` must include:
 Modules that can manage multiple instances of a resource support a **map-of-objects** (or YAML-decoded equivalent) input so a single module block can scale to any number of resources:
 
 ```hcl
-# HCL map input
+# Target pattern: a module built to this spec exposes a map-of-objects input.
+# Existing singleton modules (like iam/role) are being updated to this interface.
 module "iam_roles" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
 

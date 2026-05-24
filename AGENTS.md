@@ -93,7 +93,7 @@ Modules that require resources from another domain **must call the appropriate c
 - An EC2 module that needs an IAM instance profile must call the `modules/aws/iam/role` module.
 - A service that needs CloudWatch alarms must call the `modules/aws/cloudwatch/alarm` module.
 
-This keeps each module focused on a single resource type, avoids duplicated logic, and ensures cross-cutting concerns (IAM, KMS, CloudWatch, etc.) remain consistent across the library. Inline resource blocks for resources that belong to another module are not permitted.
+This keeps each module focused on a single resource type, avoids duplicated logic, and ensures cross-cutting concerns (IAM, KMS, CloudWatch, etc.) remain consistent across the library. Inline resource blocks for resources that belong to another module are **not permitted in new or significantly updated modules**. Existing modules that currently embed cross-cutting resources inline (e.g., the S3 bucket module's optional inline KMS key) are tracked for future refactoring to comply with this rule.
 
 ### 3. Secure and Well-Architected Defaults
 
@@ -103,7 +103,7 @@ All default values must reflect **AWS Well-Architected Framework** best practice
 - Public access must be **disabled by default** (e.g., `block_public_acls = true` for S3, no `0.0.0.0/0` ingress rules by default).
 - Logging and monitoring must be **enabled by default** where the resource supports it (e.g., S3 server access logging, VPC flow logs, CloudTrail).
 - Deletion protection and termination protection should be **enabled by default** for stateful resources (RDS, OpenSearch, etc.).
-- Versioning should be **enabled by default** for S3 buckets. MFA delete is recommended by CIS but requires out-of-band enablement (the AWS API requires MFA credentials during the call) and cannot be enforced as a Terraform default.
+- Versioning must default to **`Enabled`** for new S3 bucket modules; existing modules with a `Disabled` default should be updated in a future PR. MFA delete is recommended by CIS but requires out-of-band enablement (the AWS API requires MFA credentials during the call) and cannot be enforced as a Terraform default.
 - IAM least-privilege: modules must not create overly broad policies; use specific actions and resources.
 
 Callers may override any default, but the out-of-the-box configuration should be production-safe without additional tuning.
@@ -147,9 +147,9 @@ Preferred patterns:
 variable "buckets" {
   description = "Map of S3 bucket configurations keyed by logical name."
   type = map(object({
-    versioning_enabled  = optional(bool, true)
-    kms_key_arn         = optional(string, null)
-    lifecycle_rules     = optional(list(any), [])
+    versioning_status = optional(string, "Enabled")
+    sse_algorithm     = optional(string, "aws:kms")
+    lifecycle_rules   = optional(list(any), [])
   }))
   default = {}
 }
@@ -170,10 +170,10 @@ module "s3" {
 ```yaml
 # buckets.yaml
 application-data:
-  versioning_enabled: true
-  kms_key_arn: "arn:aws:kms:us-east-1:123456789012:key/abc"
+  versioning_status: "Enabled"
+  sse_algorithm: "aws:kms"
 audit-logs:
-  versioning_enabled: false
+  versioning_status: "Suspended"
 ```
 
 Modules that manage a single, standalone resource by design (e.g., a VPC — typically one per account/region) do not need map inputs but should be documented as such.
