@@ -66,6 +66,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#module-design-specifications">Module Design Specifications</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -135,6 +136,95 @@ Navigate to the folder for the provider and subsequent module, service, or infra
 - [VPC](https://github.com/zachreborn/terraform-modules/tree/main/modules/aws/vpc)
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MODULE DESIGN -->
+
+## Module Design Specifications
+
+All modules in this library are built to a consistent set of design principles. Contributors and the automated Oz pipeline are expected to follow these when creating or updating any module.
+
+### Complete Resource Coverage
+
+Every module exposes **all attributes and configuration options** of the underlying provider resource(s). No supported provider argument is silently omitted — each maps to a corresponding input variable in `variables.tf`. Attributes with a safe, opinionated default use `default = <value>`; attributes with no sensible default use `default = null` so the provider applies its own default. Meaningful resource attributes are surfaced in `outputs.tf`.
+
+### Module Composition
+
+Modules that depend on resources from a different domain **must call the appropriate sibling module** rather than declaring those resources inline. Cross-cutting concerns — KMS keys, IAM roles/policies, CloudWatch log groups/alarms, S3 logging buckets — each belong to their own module. This avoids logic duplication and keeps every module focused on a single resource type.
+
+Inline resource blocks for resources that belong to another module are **not permitted in new or significantly updated modules**. Existing modules that currently embed cross-cutting resources inline (e.g., the S3 bucket module's optional inline KMS key) are tracked for future refactoring.
+
+Examples of the composition pattern:
+
+| Module | Instead of inline… | Calls… |
+|---|---|---|
+| `aws/s3/bucket` (with server-side encryption) | `aws_kms_key` | `modules/aws/kms` |
+| `aws/s3/bucket` (with access logging) | `aws_s3_bucket` (log bucket) | `modules/aws/s3/bucket` (separate log bucket instance) |
+| `aws/ec2_instance` (with instance profile) | `aws_iam_role` / `aws_iam_instance_profile` | `modules/aws/iam/role` |
+| `aws/rds` (with metric alarms) | `aws_cloudwatch_metric_alarm` | `modules/aws/cloudwatch/alarm` |
+
+### Secure and Well-Architected Defaults
+
+Out-of-the-box defaults reflect the **AWS Well-Architected Framework** and **CIS AWS Foundations Benchmark**:
+
+- **Encryption** — at rest and in transit enabled by default wherever supported.
+- **Public access** — disabled by default (e.g., S3 `block_public_acls = true`; no `0.0.0.0/0` default ingress rules).
+- **Logging & monitoring** — enabled by default where the resource supports it (S3 server access logging, VPC flow logs, CloudTrail, etc.).
+- **Deletion & termination protection** — enabled by default for stateful resources (RDS, OpenSearch, etc.).
+- **S3 versioning** — new modules must set `versioning_status = "Enabled"` as the default; existing modules with a `Disabled` default will be updated. MFA delete is recommended by CIS but requires out-of-band enablement and cannot be enforced as a Terraform default.
+- **IAM least privilege** — policies use specific actions and resource ARNs; no wildcard `*` actions in defaults.
+
+Callers may override any default. The goal is that the zero-config deployment is production-safe.
+
+### Documentation and Usage Examples
+
+Every module `README.md` must include:
+
+1. A brief **description** of what the module manages.
+2. A **prerequisites** section listing upstream modules or resources the caller must provide.
+3. At least one complete **usage example** as a `module {}` block.
+4. A **notes / design decisions** section for non-obvious defaults or behaviours.
+5. The auto-generated `<!-- BEGIN_TF_DOCS --> … <!-- END_TF_DOCS -->` block.
+
+### Scalable Inputs
+
+Modules that can manage multiple instances of a resource support a **map-of-objects** (or YAML-decoded equivalent) input so a single module block can scale to any number of resources:
+
+```hcl
+# Target pattern: a module built to this spec exposes a map-of-objects input.
+# Existing singleton modules (like iam/role) are being updated to this interface.
+module "iam_roles" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
+
+  roles = {
+    "app-server" = {
+      description          = "EC2 app server role"
+      assume_role_services = ["ec2.amazonaws.com"]
+    }
+    "lambda-processor" = {
+      description          = "Lambda execution role"
+      assume_role_services = ["lambda.amazonaws.com"]
+    }
+  }
+}
+```
+
+```hcl
+# YAML-backed input for large deployments
+locals {
+  roles = yamldecode(file("${path.module}/roles.yaml"))
+}
+
+module "iam_roles" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/iam/role"
+  roles  = local.roles
+}
+```
+
+Modules that are inherently singleton (e.g., a VPC, an AWS Organization) are exempt and should document that explicitly.
+
+For the full specification including examples and enforcement rules, see [`AGENTS.md § Module Design Specifications`](./AGENTS.md#module-design-specifications).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
