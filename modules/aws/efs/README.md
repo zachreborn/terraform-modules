@@ -111,7 +111,7 @@ No modules.
 | <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) If true, the disk will be encrypted. | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | (Optional) Environment for which the resources will be created. Recommended that this be set on all resources, such as 'prod', 'dev', 'test,' 'demo', or 'dr'. Defaults to 'dev'. | `string` | `"dev"` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | (Optional) The ARN for the KMS encryption key. If not set, but encrypted is set to true the module will generate a unique KMS key. When specifying kms\_key\_id, encrypted needs to be set to true. | `string` | `null` | no |
-| <a name="input_lifecycle_policy"></a> [lifecycle\_policy](#input\_lifecycle\_policy) | (Optional) A file system lifecycle policy object. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html | <pre>list(object({<br/>    transition_to_ia                    = string<br/>    transition_to_primary_storage_class = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_lifecycle_policy"></a> [lifecycle\_policy](#input\_lifecycle\_policy) | (Optional) A list of lifecycle policy objects for the file system. Each object may set one or more of the optional transition attributes. By default, no policy is used. See user guide for more information - https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html | <pre>list(object({<br/>    transition_to_ia                    = optional(string)<br/>    transition_to_primary_storage_class = optional(string)<br/>    transition_to_archive               = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Optional) The name of the file system. | `string` | `null` | no |
 | <a name="input_performance_mode"></a> [performance\_mode](#input\_performance\_mode) | (Optional) The file system performance mode. Can be either 'generalPurpose' or 'maxIO'. Defaults to 'generalPurpose'. | `string` | `"generalPurpose"` | no |
 | <a name="input_provisioned_throughput_in_mibps"></a> [provisioned\_throughput\_in\_mibps](#input\_provisioned\_throughput\_in\_mibps) | (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with throughput\_mode set to provisioned. Valid values are 1-1024. Required if throughput\_mode is set to provisioned. | `number` | `null` | no |
@@ -127,7 +127,10 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the file system. |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the file system. |
 | <a name="output_id"></a> [id](#output\_id) | The ID that identifies the file system (e.g. fs-ccfc0d65). |
-| <a name="output_mount_target_dns_names"></a> [mount\_target\_dns\_names](#output\_mount\_target\_dns\_names) | Map of DNS names for the EFS File System. |
+| <a name="output_mount_target_dns_names"></a> [mount\_target\_dns\_names](#output\_mount\_target\_dns\_names) | Map of subnet ID to DNS name for each EFS mount target. |
+| <a name="output_mount_target_ip_addresses"></a> [mount\_target\_ip\_addresses](#output\_mount\_target\_ip\_addresses) | Map of subnet ID to IP address for each EFS mount target. |
+| <a name="output_number_of_mount_targets"></a> [number\_of\_mount\_targets](#output\_number\_of\_mount\_targets) | The current number of mount targets that the file system has. |
+| <a name="output_size_in_bytes"></a> [size\_in\_bytes](#output\_size\_in\_bytes) | The latest known metered size (in bytes) of data stored in the file system. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
