@@ -102,7 +102,7 @@ All default values must reflect **AWS Well-Architected Framework** best practice
 - Encryption at rest and in transit must be **enabled by default** wherever supported.
 - Public access must be **disabled by default** (e.g., `block_public_acls = true` for S3, no `0.0.0.0/0` ingress rules by default).
 - Logging and monitoring must be **enabled by default** where the resource supports it (e.g., S3 server access logging, VPC flow logs, CloudTrail).
-- Deletion protection and termination protection should be **enabled by default** for stateful resources (RDS, Elasticsearch, etc.).
+- Deletion protection and termination protection should be **enabled by default** for stateful resources (RDS, OpenSearch, etc.).
 - MFA delete and versioning should be **enabled by default** for S3 buckets.
 - IAM least-privilege: modules must not create overly broad policies; use specific actions and resources.
 
