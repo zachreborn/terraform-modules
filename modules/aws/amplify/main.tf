@@ -19,6 +19,9 @@ terraform {
 ###########################
 # Locals
 ###########################
+locals {
+  sns_topic_arn = var.enable_notifications ? (var.create_sns_topic ? aws_sns_topic.this[0].arn : var.sns_topic_arn) : null
+}
 
 ###########################
 # Module Configuration
@@ -137,5 +140,93 @@ resource "aws_amplify_domain_association" "this" {
 }
 
 ###########################
+# SNS Topic
+###########################
+resource "aws_sns_topic" "this" {
+  count = var.create_sns_topic && var.enable_notifications ? 1 : 0
+  name  = "${var.name}-amplify-notifications"
+  tags  = merge(tomap({ Name = "${var.name}-amplify-notifications" }), var.tags)
+}
+
+###########################
+# SNS Topic Policy
+###########################
+data "aws_iam_policy_document" "amplify_notifications_sns" {
+  count = var.create_sns_topic && var.enable_notifications ? 1 : 0
+  statement {
+    sid    = "AllowEventBridgePublish"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.this[0].arn]
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [aws_cloudwatch_event_rule.amplify_notifications[0].arn]
+    }
+  }
+}
+
+resource "aws_sns_topic_policy" "amplify_notifications" {
+  count  = var.create_sns_topic && var.enable_notifications ? 1 : 0
+  arn    = aws_sns_topic.this[0].arn
+  policy = data.aws_iam_policy_document.amplify_notifications_sns[0].json
+}
+
+###########################
+# SNS Topic Subscriptions
+###########################
+resource "aws_sns_topic_subscription" "email" {
+  for_each  = var.enable_notifications && var.notification_emails != null ? toset(var.notification_emails) : toset([])
+  topic_arn = local.sns_topic_arn
+  protocol  = "email"
+  endpoint  = each.value
+}
+
+###########################
 # CloudWatch EventBridge Rule
 ###########################
+resource "aws_cloudwatch_event_rule" "amplify_notifications" {
+  count       = var.enable_notifications ? 1 : 0
+  description = "Amplify build and deployment status notifications for ${var.name}"
+  event_pattern = jsonencode({
+    source      = ["aws.amplify"]
+    detail-type = ["Amplify Deployment Status Change"]
+    detail = {
+      appId = [aws_amplify_app.this.id]
+    }
+  })
+  name  = "${substr(var.name, 0, 50)}-amplify-notifications"
+  state = "ENABLED"
+  tags  = merge(tomap({ Name = "${var.name}-amplify-notifications" }), var.tags)
+
+  lifecycle {
+    precondition {
+      condition     = var.create_sns_topic || var.sns_topic_arn != null
+      error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
+    }
+  }
+}
+
+###########################
+# CloudWatch EventBridge Target
+###########################
+resource "aws_cloudwatch_event_target" "amplify_notifications" {
+  count     = var.enable_notifications ? 1 : 0
+  arn       = local.sns_topic_arn
+  rule      = aws_cloudwatch_event_rule.amplify_notifications[0].name
+  target_id = "${var.name}-amplify-notifications"
+
+  input_transformer {
+    input_paths = {
+      appId      = "$.detail.appId"
+      branchName = "$.detail.branchName"
+      jobId      = "$.detail.jobId"
+      status     = "$.detail.jobStatus"
+    }
+    input_template = "\"Amplify build for app <appId> on branch <branchName> (job <jobId>) completed with status: <status>\""
+  }
+}

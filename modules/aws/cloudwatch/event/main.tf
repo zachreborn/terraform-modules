@@ -20,6 +20,13 @@ resource "aws_cloudwatch_event_rule" "event_rule" {
   schedule_expression = var.schedule_expression
   state               = var.state
   tags                = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = (var.event_pattern != null) != (var.schedule_expression != null)
+      error_message = "Exactly one of event_pattern or schedule_expression must be provided."
+    }
+  }
 }
 
 ###########################
@@ -31,7 +38,7 @@ resource "aws_cloudwatch_event_target" "event_target" {
   target_id = var.target_id
 
   dynamic "input_transformer" {
-    for_each = var.input_transformer != null ? toset(var.input_transformer) : []
+    for_each = var.input_transformer != null ? [var.input_transformer] : []
     content {
       input_paths    = input_transformer.value.input_paths
       input_template = input_transformer.value.input_template

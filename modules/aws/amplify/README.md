@@ -112,15 +112,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
 
 ## Modules
 
@@ -129,15 +129,21 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_amplify_app.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_app) | resource |
 | [aws_amplify_branch.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_branch) | resource |
 | [aws_amplify_domain_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_domain_association) | resource |
+| [aws_cloudwatch_event_rule.amplify_notifications](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.amplify_notifications](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_sns_topic.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [aws_sns_topic_policy.amplify_notifications](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
+| [aws_sns_topic_subscription.email](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
+| [aws_iam_policy_document.amplify_notifications_sns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_token"></a> [access\_token](#input\_access\_token) | Access token for the Amplify App. | `string` | `null` | no |
 | <a name="input_auto_branch_creation_config"></a> [auto\_branch\_creation\_config](#input\_auto\_branch\_creation\_config) | Auto branch creation config for the Amplify App. | <pre>object({<br/>    basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch. Must be input as "username:password".<br/>    build_spec                    = optional(string)      # Build spec for the branch.<br/>    enable_auto_build             = optional(bool)        # Enable auto build for the branch.<br/>    enable_basic_auth             = optional(bool)        # Enable basic auth for the branch.<br/>    enable_performance_mode       = optional(bool)        # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)        # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string)) # Map of environment variables for the branch.<br/>    framework                     = optional(string)      # The framework for the branch.<br/>    pull_request_environment_name = optional(string)      # The name of the pull request environment.<br/>    stage                         = optional(string)      # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>  })</pre> | `null` | no |
 | <a name="input_auto_branch_creation_patterns"></a> [auto\_branch\_creation\_patterns](#input\_auto\_branch\_creation\_patterns) | Patterns for auto branch creation. | `list(string)` | `null` | no |
@@ -145,6 +151,7 @@ No modules.
 | <a name="input_branches"></a> [branches](#input\_branches) | A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. | <pre>map(object({<br/>    basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".<br/>    certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.<br/>    custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.<br/>    description                   = optional(string)                    # The description of the branch.<br/>    display_name                  = optional(string)                    # The display name of the branch. This gets used as the default domain prefix.<br/>    domain_name                   = string                              # The domain name for the domain association.<br/>    enable_auto_build             = optional(bool, true)                # Enable auto build for the branch.<br/>    enable_auto_sub_domain        = optional(bool, false)               # Enable auto sub domain for the domain association.<br/>    enable_basic_auth             = optional(bool)                      # Enable basic auth for the branch.<br/>    enable_certificate            = optional(bool, true)                # Enable certificate for the domain association.<br/>    enable_notification           = optional(bool)                      # Enable notification for the branch.<br/>    enable_performance_mode       = optional(bool)                      # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)                      # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string))               # Map of environment variables for the branch.<br/>    framework                     = optional(string)                    # The framework for the branch.<br/>    pull_request_environment_name = optional(string)                    # The name of the pull request environment.<br/>    stage                         = optional(string)                    # The stage for the branch. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>    sub_domains                   = optional(set(string))               # A list of sub domains to associate with the branch.<br/>    ttl                           = optional(number)                    # The TTL for the branch.<br/>    wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.<br/>  }))</pre> | n/a | yes |
 | <a name="input_build_spec"></a> [build\_spec](#input\_build\_spec) | Build spec for the Amplify App. | `string` | `null` | no |
 | <a name="input_cache_config_type"></a> [cache\_config\_type](#input\_cache\_config\_type) | Cache config type for the Amplify App. Valid values are AMPLIFY\_MANAGED, AMPLIFY\_MANAGED\_NO\_COOKIES, | `string` | `"AMPLIFY_MANAGED"` | no |
+| <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create an SNS topic for Amplify build notifications. When false, sns\_topic\_arn must be provided. | `bool` | `true` | no |
 | <a name="input_custom_headers"></a> [custom\_headers](#input\_custom\_headers) | Custom headers string for the Amplify App. | `string` | `null` | no |
 | <a name="input_custom_rules"></a> [custom\_rules](#input\_custom\_rules) | List of custom rules for the Amplify App. | <pre>list(object({<br/>    condition = optional(string) # Condition for a URL redirect or rewrite.<br/>    source    = string           # Source pattern for URL redirect or rewrite.<br/>    status    = optional(string) # Status code for URL redirect or rewrite. Valid values are 200, 301, 302, 404, 404-200.<br/>    target    = string           # Target pattern for URL redirect or rewrite.<br/>  }))</pre> | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Amplify App. | `string` | `null` | no |
@@ -152,17 +159,26 @@ No modules.
 | <a name="input_enable_basic_auth"></a> [enable\_basic\_auth](#input\_enable\_basic\_auth) | Enable basic auth for the Amplify App. | `bool` | `false` | no |
 | <a name="input_enable_branch_auto_build"></a> [enable\_branch\_auto\_build](#input\_enable\_branch\_auto\_build) | Enable branch auto build for the Amplify App. | `bool` | `false` | no |
 | <a name="input_enable_branch_auto_deletion"></a> [enable\_branch\_auto\_deletion](#input\_enable\_branch\_auto\_deletion) | Enable branch auto deletion for the Amplify App. | `bool` | `false` | no |
+| <a name="input_enable_notifications"></a> [enable\_notifications](#input\_enable\_notifications) | Whether to enable SNS build notifications for Amplify via EventBridge. Creates an SNS topic (or uses sns\_topic\_arn) and a CloudWatch EventBridge rule that fires on Amplify deployment status changes. | `bool` | `false` | no |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables in a map for the Amplify App. | `map(string)` | `null` | no |
 | <a name="input_iam_service_role_arn"></a> [iam\_service\_role\_arn](#input\_iam\_service\_role\_arn) | IAM service role ARN for the Amplify App. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Amplify App. | `string` | n/a | yes |
+| <a name="input_notification_emails"></a> [notification\_emails](#input\_notification\_emails) | List of email addresses to subscribe to Amplify build notifications. Only used when enable\_notifications is true. | `list(string)` | `null` | no |
 | <a name="input_oauth_token"></a> [oauth\_token](#input\_oauth\_token) | OAuth token for the Amplify App. | `string` | `null` | no |
 | <a name="input_platform"></a> [platform](#input\_platform) | Platform for the Amplify App. Options are WEB or WEB\_COMPUTE. | `string` | `"WEB"` | no |
 | <a name="input_repository"></a> [repository](#input\_repository) | Repository for the Amplify App. This could be hosted in AWS Code Commit, Bitbucket, GitHub, GitLab, etc. | `string` | `null` | no |
+| <a name="input_sns_topic_arn"></a> [sns\_topic\_arn](#input\_sns\_topic\_arn) | ARN of an existing SNS topic to use for Amplify build notifications. Required when enable\_notifications is true and create\_sns\_topic is false. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags for the Amplify App. | `map(string)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_app_arn"></a> [app\_arn](#output\_app\_arn) | The ARN of the Amplify app. |
+| <a name="output_app_id"></a> [app\_id](#output\_app\_id) | The unique ID of the Amplify app. |
+| <a name="output_default_domain"></a> [default\_domain](#output\_default\_domain) | The default domain of the Amplify app. |
+| <a name="output_notification_event_rule_arn"></a> [notification\_event\_rule\_arn](#output\_notification\_event\_rule\_arn) | The ARN of the CloudWatch EventBridge rule for Amplify build notifications. Null when notifications are disabled. |
+| <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | The ARN of the SNS topic used for Amplify build notifications. Null when notifications are disabled. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
