@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0.0"
+    }
+  }
+}
+
 ############################
 # Locals for readability
 ############################
@@ -41,10 +51,3 @@ resource "aws_efs_mount_target" "this" {
   security_groups = var.security_groups
 }
 
-/* resource "aws_efs_mount_target" "this" {
-  count           = length(var.subnet_ids)
-  file_system_id  = aws_efs_file_system.this.id
-  subnet_id       = var.subnet_ids[count.index]
-  security_groups = var.security_groups
-}
- */
