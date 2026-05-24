@@ -154,6 +154,9 @@ skip-check:
   # GuardDuty
   - CKV2_AWS_3 # GuardDuty enabled per org/region - org-level control, not module
 
+  # EFS
+  - CKV2_AWS_18 # EFS in AWS Backup plan - managed by caller
+
   # RDS
   - CKV2_AWS_8 # RDS cluster in AWS Backup plan - managed by caller
   - CKV2_AWS_9 # EBS in AWS Backup plan - managed by caller
