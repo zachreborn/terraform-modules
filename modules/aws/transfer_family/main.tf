@@ -179,7 +179,7 @@ module "cloudwatch_log_group" {
 
   kms_key_id        = module.kms_key.arn
   log_group_class   = var.log_group_class
-  name_prefix       = var.log_group_name_prefix
+  name              = "/aws/transfer/${var.name}"
   retention_in_days = var.log_group_retention_in_days
   tags              = var.tags
 }

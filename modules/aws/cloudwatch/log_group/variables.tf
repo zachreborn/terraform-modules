@@ -22,9 +22,16 @@ variable "log_group_class" {
   }
 }
 
-variable "name_prefix" {
-  description = "(Required) The name prefix of the log group"
+variable "name" {
+  description = "(Optional) The name of the log group. Conflicts with `name_prefix`. Exactly one of `name` or `name_prefix` must be specified."
   type        = string
+  default     = null
+}
+
+variable "name_prefix" {
+  description = "(Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Exactly one of `name` or `name_prefix` must be specified."
+  type        = string
+  default     = null
 }
 
 variable "retention_in_days" {

@@ -98,23 +98,21 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_bucket"></a> [bucket](#module\_bucket) | ../s3/bucket | n/a |
-| <a name="module_cloudwatch_iam_policy"></a> [cloudwatch\_iam\_policy](#module\_cloudwatch\_iam\_policy) | ../iam/policy | n/a |
-| <a name="module_cloudwatch_iam_role"></a> [cloudwatch\_iam\_role](#module\_cloudwatch\_iam\_role) | ../iam/role | n/a |
 | <a name="module_cloudwatch_log_group"></a> [cloudwatch\_log\_group](#module\_cloudwatch\_log\_group) | ../cloudwatch/log_group | n/a |
 | <a name="module_kms_key"></a> [kms\_key](#module\_kms\_key) | ../kms | n/a |
 | <a name="module_transfer_family_iam_role"></a> [transfer\_family\_iam\_role](#module\_transfer\_family\_iam\_role) | ../iam/role | n/a |
@@ -125,8 +123,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Resources
 
 | Name | Type |
-|------|------|
-| [aws_cloudwatch_log_group.transfer_family](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| ---- | ---- |
 | [aws_transfer_server.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server) | resource |
 | [aws_transfer_ssh_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_ssh_key) | resource |
 | [aws_transfer_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_user) | resource |
@@ -136,11 +133,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_address_allocation_ids"></a> [address\_allocation\_ids](#input\_address\_allocation\_ids) | (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your server's endpoint. This can only be set when 'var.endpoint\_type' is set to 'VPC' | `list(string)` | `[]` | no |
 | <a name="input_as2_transports"></a> [as2\_transports](#input\_as2\_transports) | (Optional) The transport method for AS2 messages. Valid values are HTTP. | `list(string)` | `null` | no |
 | <a name="input_certificate"></a> [certificate](#input\_certificate) | (Optional) The ARN of the AWS Certificate Manager certificate to use with the server | `string` | `null` | no |
-| <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | (Optional) The number of days to retain Transfer Family log events in CloudWatch. Valid values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, 0 (never expire). | `number` | `30` | no |
 | <a name="input_directory_id"></a> [directory\_id](#input\_directory\_id) | (Optional) The ID of the AWS Directory Service directory that you want to associate with the server | `string` | `null` | no |
 | <a name="input_endpoint_type"></a> [endpoint\_type](#input\_endpoint\_type) | (Optional) The type of endpoint that you want your server to use. Valid values are PUBLIC, VPC, and VPC\_ENDPOINT. Default value is PUBLIC. | `string` | `"PUBLIC"` | no |
 | <a name="input_function"></a> [function](#input\_function) | (Optional) The ARN of the AWS Lambda function that is invoked for user authentication | `string` | `null` | no |
@@ -151,7 +147,6 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/transfer_family_logs_key_"` | no |
 | <a name="input_lifecycle_rules"></a> [lifecycle\_rules](#input\_lifecycle\_rules) | (Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration. | `any` | `null` | no |
 | <a name="input_log_group_class"></a> [log\_group\_class](#input\_log\_group\_class) | (Optional) The class of the log group. Valid values are 'STANDARD' and 'INFREQUENT\_ACCESS'. Defaults to 'STANDARD'. | `string` | `"STANDARD"` | no |
-| <a name="input_log_group_name_prefix"></a> [log\_group\_name\_prefix](#input\_log\_group\_name\_prefix) | (Optional) The name prefix of the log group | `string` | `"transfer_family_logs_"` | no |
 | <a name="input_log_group_retention_in_days"></a> [log\_group\_retention\_in\_days](#input\_log\_group\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Valid values are: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653. Defaults to 30. | `number` | `90` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Transfer Family server used to name the resources created. | `string` | n/a | yes |
 | <a name="input_passive_ip"></a> [passive\_ip](#input\_passive\_ip) | (Optional) Sets passive mode for FTP and FTPS protocols and the associated IPv4 address to associate. | `string` | `null` | no |
@@ -173,7 +168,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch log group for Transfer Family server logs |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the CloudWatch log group for Transfer Family server logs |
 | <a name="output_logging_role_arn"></a> [logging\_role\_arn](#output\_logging\_role\_arn) | The ARN of the IAM role used by Transfer Family to write CloudWatch logs |
