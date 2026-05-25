@@ -35,7 +35,7 @@
 
 <h3 align="center">terraform-modules</h3>
   <p align="center">
-    OpenTofu (and Terraform) modules to deploy and manage cloud resources using the latest well architected frameworks
+    OpenTofu (and Terraform) modules to deploy and manage cloud resources using the latest well-architected frameworks
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -103,7 +103,7 @@ To get a local copy up and running, simply clone this repo.
 OpenTofu is the default and recommended tool. Terraform is also supported.
 
 **OpenTofu (recommended):**
-- MacOS
+- macOS
   ```sh
   brew install opentofu
   ```
@@ -118,7 +118,7 @@ OpenTofu is the default and recommended tool. Terraform is also supported.
   ```
 
 **Terraform (alternative):**
-- MacOS
+- macOS
   ```sh
   brew install terraform
   ```

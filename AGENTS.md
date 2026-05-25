@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Overview
 
-This is a **OpenTofu/Terraform modules library** providing reusable infrastructure-as-code modules primarily for AWS, with additional support for AzureAD, Cloudflare, vSphere, Scalr, and Terraform Cloud/Enterprise. **OpenTofu is the default and recommended tool**; Terraform is also fully supported. Modules are consumed by callers (including the `global/` directory) via standard `module {}` blocks, which are identical in syntax for both tools.
+This is an **OpenTofu/Terraform modules library** providing reusable infrastructure-as-code modules primarily for AWS, with additional support for AzureAD, Cloudflare, vSphere, Scalr, and Terraform Cloud/Enterprise. **OpenTofu is the default and recommended tool**; Terraform is also fully supported. Modules are consumed by callers (including the `global/` directory) via standard `module {}` blocks, which are identical in syntax for both tools.
 
 ## Key Commands
 
