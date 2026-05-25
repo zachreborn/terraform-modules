@@ -46,7 +46,7 @@ terraform-docs markdown table --output-file README.md --output-mode inject <modu
 
 To regenerate docs for every module at once, run `pre-commit run --all-files` (the `terraform_docs` hook walks each module directory and applies the shared `modules/.terraform-docs.yml` config — matching what CI verifies). Avoid `terraform-docs --recursive modules`: it generates a single empty README at the top level rather than recursing into per-module subdirectories.
 
-The `Verify - terraform-docs` job on every PR regenerates docs in CI and fails the build if the result differs from what was committed. CI **does not** push fixes back to your branch — regenerate docs locally (via `pre-commit run --all-files` or per-module via the command above) and commit the result yourself.
+The `Verify - terraform-docs` job runs on every PR and on every push to `main`, regenerating docs in CI and failing the build if the result differs from what was committed. CI **does not** push fixes back to your branch — regenerate docs locally (via `pre-commit run --all-files` or per-module via the command above) and commit the result yourself.
 
 ### Security Scanning
 
