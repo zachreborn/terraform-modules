@@ -53,6 +53,9 @@ echo ""
 # We run without error suppression so that any grep failure (unsupported
 # --perl-regexp, bad locale, unreadable path, etc.) surfaces immediately
 # rather than silently appearing as a clean scan.
+# Initialize to 0 so an inherited GREP_EXIT in the caller's environment
+# cannot produce a false positive error result.
+GREP_EXIT=0
 MATCHES=$(grep \
 	--recursive \
 	--perl-regexp \
