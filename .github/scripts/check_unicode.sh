@@ -44,7 +44,9 @@ echo ""
 #   -r  recursive
 #   -P  Perl-compatible regex (required for \x{NNNN} Unicode escapes)
 #   -n  print line numbers
-#   -l  (not used) — we want file:line detail, not just filenames
+#   -o  print only the matched character, not the full surrounding line;
+#       this prevents sensitive line content (tokens, credentials) from
+#       leaking into CI logs
 #   --include is omitted intentionally — scan all text files
 #   -I  skip binary files
 #   --exclude-dir skips .git to avoid false positives in git internals
@@ -60,6 +62,7 @@ MATCHES=$(grep \
 	--recursive \
 	--perl-regexp \
 	--line-number \
+	--only-matching \
 	--binary-files=without-match \
 	--exclude-dir=".git" \
 	-- "${PATTERN}" "${REPO_ROOT}") || GREP_EXIT=$?
@@ -78,12 +81,47 @@ fi
 
 echo "✗ Invisible Unicode characters detected. Remove them before merging."
 echo ""
-echo "Matches (file:line:content):"
+echo "Matches (file:line: U+XXXX name):"
 echo "----------------------------------------------------------------------"
-echo "${MATCHES}"
+# Decode each matched invisible character to its Unicode code point name.
+# Raw line content is intentionally omitted to avoid leaking sensitive
+# text (tokens, credentials, keys) that may appear on the same line.
+echo "${MATCHES}" | python3 -c "
+import sys
+NAMES = {
+    0x00AD: 'SOFT HYPHEN',
+    0x200B: 'ZERO WIDTH SPACE',
+    0x200C: 'ZERO WIDTH NON-JOINER',
+    0x200D: 'ZERO WIDTH JOINER',
+    0x200E: 'LEFT-TO-RIGHT MARK',
+    0x200F: 'RIGHT-TO-LEFT MARK',
+    0x202A: 'LEFT-TO-RIGHT EMBEDDING',
+    0x202B: 'RIGHT-TO-LEFT EMBEDDING',
+    0x202C: 'POP DIRECTIONAL FORMATTING',
+    0x202D: 'LEFT-TO-RIGHT OVERRIDE',
+    0x202E: 'RIGHT-TO-LEFT OVERRIDE',
+    0x2060: 'WORD JOINER',
+    0x2066: 'LEFT-TO-RIGHT ISOLATE',
+    0x2067: 'RIGHT-TO-LEFT ISOLATE',
+    0x2068: 'FIRST STRONG ISOLATE',
+    0x2069: 'POP DIRECTIONAL ISOLATE',
+    0xFEFF: 'ZERO WIDTH NO-BREAK SPACE (BOM)',
+}
+for line in sys.stdin:
+    line = line.rstrip()
+    # grep -n -o output: filepath:linenum:CHAR
+    # rsplit from right so filepaths containing colons are preserved
+    parts = line.rsplit(':', 2)
+    if len(parts) == 3:
+        filepath, linenum, char = parts
+        if char:
+            cp = ord(char[0])
+            name = NAMES.get(cp, 'UNKNOWN')
+            print(f'{filepath}:{linenum}: U+{cp:04X} ({name})')
+"
 echo "----------------------------------------------------------------------"
 echo ""
 echo "To locate and remove these manually, run locally:"
-echo "  grep -rPn '${PATTERN}' <file>"
+echo "  grep -rPno '${PATTERN}' <file>"
 echo ""
 exit 1
