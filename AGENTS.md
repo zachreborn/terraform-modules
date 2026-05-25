@@ -4,20 +4,25 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Overview
 
-This is a **Terraform modules library** providing reusable infrastructure-as-code modules primarily for AWS, with additional support for AzureAD, Cloudflare, vSphere, Scalr, and Terraform Cloud/Enterprise. Modules are consumed by callers (including the `global/` directory) via standard Terraform `module {}` blocks.
+This is an **OpenTofu/Terraform modules library** providing reusable infrastructure-as-code modules primarily for AWS, with additional support for AzureAD, Cloudflare, vSphere, Scalr, and Terraform Cloud/Enterprise. **OpenTofu is the default and recommended tool**; Terraform is also fully supported. Modules are consumed by callers (including the `global/` directory) via standard `module {}` blocks, which are identical in syntax for both tools.
 
 ## Key Commands
 
 ### Formatting
 
-All Terraform code must be formatted with:
+All code must be formatted with OpenTofu (the default):
+```sh
+tofu fmt -recursive
+```
+
+Terraform produces identical formatting and may be used as an alternative:
 ```sh
 terraform fmt -recursive
 ```
 
 To check formatting without making changes (as CI does):
 ```sh
-terraform fmt -check -diff -recursive
+tofu fmt -check -diff -recursive
 ```
 
 ### Documentation Generation
@@ -40,7 +45,13 @@ The `.checkov.yaml` at the repo root configures intentionally suppressed checks 
 
 ### Validation (per module)
 
-To validate a module locally, initialize and validate it from its directory:
+To validate a module locally, initialize and validate it from its directory (OpenTofu default):
+```sh
+tofu -chdir=<module_path> init -backend=false
+tofu -chdir=<module_path> validate
+```
+
+Terraform equivalents (also supported):
 ```sh
 terraform -chdir=<module_path> init -backend=false
 terraform -chdir=<module_path> validate
@@ -180,7 +191,11 @@ Modules that manage a single, standalone resource by design (e.g., a VPC — typ
 
 ## Code Conventions
 
-**Provider version requirements**: All modules require `terraform >= 1.0.0` and (for AWS modules) `aws >= 6.0.0`.
+**Tool version requirements**: All modules require `opentofu >= 1.6.0` **or** `terraform >= 1.0.0` (the `required_version = ">= 1.0.0"` constraint in each module's `terraform {}` block satisfies both, since OpenTofu 1.6.x ≥ 1.0.0). For AWS modules, `aws >= 6.0.0` is also required.
+
+**Dual-tool compatibility**: Modules must not use HCL features that are exclusive to one tool post-fork. All standard HCL constructs (`for_each`, `dynamic`, `locals`, `count`, `moved`, etc.) are identical between OpenTofu 1.6+ and Terraform 1.5+.
+
+**Exception — `modules/terraform/`**: The `modules/terraform/` directory (workspace, organization, project, team, etc.) uses the `hashicorp/tfe` provider to manage Terraform Cloud/Enterprise resources. These modules are **Terraform-only** and are not compatible with OpenTofu.
 
 **Section headers**: Group blocks with comment headers using the pattern:
 ```hcl
@@ -207,8 +222,8 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `build.yml` | PR → main | Runs `terraform fmt -recursive` + `terraform-docs`, auto-commits changes |
-| `test.yml` | PR or push → main | Checks `terraform fmt` compliance + super-linter |
+| `build.yml` | PR → main | Runs `tofu fmt -recursive` + `terraform-docs`, auto-commits changes |
+| `test.yml` | PR or push → main | Checks `tofu fmt` compliance + super-linter |
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release.yml` | Push of `v*.*.*` tag | Creates a GitHub release with auto-generated release notes |
 | `issue-triage.yml` | Issue opened/edited/labeled | Oz agent validates issue against minimum standards, comments + labels |
@@ -246,7 +261,7 @@ stateDiagram-v2
 
 **Minimum standards** enforced by triage:
 
-- **Bug**: affected module path, Terraform/provider versions, repro steps, expected vs actual, one of {error, stack trace, plan/apply output}, acceptance criteria.
+- **Bug**: affected module path, OpenTofu or Terraform version and relevant provider versions, repro steps, expected vs actual, one of {error, stack trace, plan/apply output}, acceptance criteria.
 - **Feature**: target module path, motivation, proposed inputs/outputs (high level), breaking-change assessment, acceptance criteria.
 
 **Overrides**:
@@ -267,4 +282,4 @@ This is a **module library** — security enforcement is the caller's responsibi
 1. Copy `modules/module_template/` to the appropriate provider subdirectory.
 2. Implement resources in `main.tf`, declare variables in `variables.tf`, and expose outputs in `outputs.tf`.
 3. Update `README.md` — the `<!-- BEGIN_TF_DOCS -->` block will be regenerated automatically by CI on PR.
-4. Run `terraform fmt -recursive` before committing.
+4. Run `tofu fmt -recursive` before committing.

@@ -69,7 +69,8 @@ jobs:
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
           prompt: |
             You are triaging a GitHub issue in zachreborn/terraform-modules,
-            a Terraform module library. Validate the issue against the
+            a Terraform/OpenTofu module library (OpenTofu is the default;
+            Terraform is also supported). Validate the issue against the
             minimum standards below and update its state via the `gh` CLI.
 
             ## Issue
@@ -91,7 +92,7 @@ jobs:
             ## Minimum standards
             BUG must include:
               1. Affected module path (e.g. `modules/aws/ec2_instance`).
-              2. Terraform version and relevant provider versions.
+              2. OpenTofu or Terraform version and relevant provider versions.
               3. Reproduction steps.
               4. Expected vs. actual behavior.
               5. One of: error message, stack trace, or plan/apply output.
