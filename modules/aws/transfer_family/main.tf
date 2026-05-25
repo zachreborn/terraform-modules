@@ -127,16 +127,23 @@ module "transfer_family_logging_iam_role_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "AllowCloudWatchLogging"
+        Sid    = "AllowCloudWatchLogGroup"
         Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = module.cloudwatch_log_group.arn
+      },
+      {
+        Sid    = "AllowCloudWatchLogStream"
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
           "logs:DescribeLogStreams",
           "logs:PutLogEvents"
         ]
-        Resource = "*"
+        Resource = "${module.cloudwatch_log_group.arn}:log-stream:*"
       }
     ]
   })

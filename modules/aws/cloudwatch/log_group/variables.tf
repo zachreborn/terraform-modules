@@ -39,8 +39,8 @@ variable "retention_in_days" {
   type        = number
   default     = 90
   validation {
-    condition     = var.retention_in_days >= 0 && var.retention_in_days <= 3653
-    error_message = "retention_in_days must be between 0 and 3653"
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653], var.retention_in_days)
+    error_message = "retention_in_days must be one of the valid CloudWatch log retention periods: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653."
   }
 }
 

@@ -63,11 +63,19 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 ### Simple Example
-```
-module test {
-  source = 
 
-  variable = 
+```hcl
+module "app_log_group" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudwatch/log_group"
+
+  name              = "/aws/transfer/my-sftp-server"
+  kms_key_id        = module.kms_key.arn
+  retention_in_days = 90
+
+  tags = {
+    created_by  = "<YOUR NAME>"
+    environment = "production"
+  }
 }
 ```
 
@@ -118,6 +126,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the log group |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the log group |
 | <a name="output_name"></a> [name](#output\_name) | The name of the log group |
 <!-- END_TF_DOCS -->
 
