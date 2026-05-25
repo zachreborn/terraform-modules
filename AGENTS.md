@@ -13,12 +13,13 @@ For each provider, prefer the GitHub source repository (most authoritative schem
 
 | Provider | GitHub Source | Registry Docs |
 |---|---|---|
-| AWS (primary) | https://github.com/opentofu/terraform-provider-aws | https://registry.terraform.io/providers/hashicorp/aws/latest/docs |
+| AWS — OpenTofu (preferred tool) | https://github.com/opentofu/terraform-provider-aws | https://registry.terraform.io/providers/hashicorp/aws/latest/docs |
+| AWS — HashiCorp (`source = "hashicorp/aws"`) | https://github.com/hashicorp/terraform-provider-aws | https://registry.terraform.io/providers/hashicorp/aws/latest/docs |
 | AzureAD | https://github.com/hashicorp/terraform-provider-azuread | https://registry.terraform.io/providers/hashicorp/azuread/latest/docs |
 | Cloudflare | https://github.com/cloudflare/terraform-provider-cloudflare | https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs |
 | vSphere | https://github.com/hashicorp/terraform-provider-vsphere | https://registry.terraform.io/providers/hashicorp/vsphere/latest/docs |
 | TFE (Terraform Cloud/Enterprise) | https://github.com/hashicorp/terraform-provider-tfe | https://registry.terraform.io/providers/hashicorp/tfe/latest/docs |
-| Scalr | https://github.com/Scalr/terraform-provider-scalr | https://registry.terraform.io/providers/Scalr/scalr/latest/docs |
+| Scalr (`source = "registry.scalr.io/scalr/scalr"`) | https://github.com/Scalr/terraform-provider-scalr | https://docs.scalr.io/terraform-provider |
 
 **Why this matters**: provider schemas evolve with each release. A module written without consulting current docs may silently omit newly added arguments, use deprecated attribute names, or set defaults that conflict with provider-enforced constraints. Checking the source before writing variables ensures the module stays in sync with `aws >= 6.0.0` (and equivalent versions for other providers).
 
