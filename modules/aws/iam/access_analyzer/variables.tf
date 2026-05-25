@@ -12,17 +12,16 @@ variable "analyzer_name" {
 
 variable "analyzer_type" {
   type        = string
-  description = "(Optional) Type of analyzer to create. Valid values: ACCOUNT, ACCOUNT_UNUSED_ACCESS, ORGANIZATION, ORGANIZATION_UNUSED_ACCESS. Defaults to ORGANIZATION."
+  description = "(Optional) Type of analyzer to create. Valid values: ACCOUNT, ACCOUNT_INTERNAL_ACCESS, ACCOUNT_UNUSED_ACCESS, ORGANIZATION, ORGANIZATION_INTERNAL_ACCESS, ORGANIZATION_UNUSED_ACCESS. Defaults to ORGANIZATION."
   default     = "ORGANIZATION"
   validation {
-    condition     = contains(["ACCOUNT", "ACCOUNT_UNUSED_ACCESS", "ORGANIZATION", "ORGANIZATION_UNUSED_ACCESS"], var.analyzer_type)
-    error_message = "The analyzer_type must be one of: ACCOUNT, ACCOUNT_UNUSED_ACCESS, ORGANIZATION, ORGANIZATION_UNUSED_ACCESS."
+    condition     = contains(["ACCOUNT", "ACCOUNT_INTERNAL_ACCESS", "ACCOUNT_UNUSED_ACCESS", "ORGANIZATION", "ORGANIZATION_INTERNAL_ACCESS", "ORGANIZATION_UNUSED_ACCESS"], var.analyzer_type)
+    error_message = "The analyzer_type must be one of: ACCOUNT, ACCOUNT_INTERNAL_ACCESS, ACCOUNT_UNUSED_ACCESS, ORGANIZATION, ORGANIZATION_INTERNAL_ACCESS, ORGANIZATION_UNUSED_ACCESS."
   }
 }
 
 variable "archive_rules" {
-  type = list(object({
-    rule_name = string
+  type = map(object({
     filter = list(object({
       criteria = string
       eq       = optional(list(string), null)
@@ -31,7 +30,39 @@ variable "archive_rules" {
       exists   = optional(bool, null)
     }))
   }))
-  description = "(Optional) List of archive rules to create on the analyzer. Each rule requires a rule_name and one or more filter blocks. Each filter specifies a criteria property and exactly one of: eq (exact match list), neq (not-equal list), contains (substring match list), or exists (bool)."
+  description = "(Optional) Map of archive rules to create on the analyzer, keyed by rule name. Each rule requires one or more filter blocks. Each filter specifies a criteria property and exactly one of: eq (exact match list), neq (not-equal list), contains (substring match list), or exists (bool)."
+  default     = {}
+}
+
+###########################
+# Configuration Variables
+###########################
+variable "unused_access_age" {
+  type        = number
+  description = "(Optional) Number of days for which to generate findings for unused access. Only applicable for ACCOUNT_UNUSED_ACCESS and ORGANIZATION_UNUSED_ACCESS analyzer types. If null, the AWS default is used."
+  default     = null
+  validation {
+    condition     = var.unused_access_age == null ? true : var.unused_access_age > 0
+    error_message = "unused_access_age must be a positive integer."
+  }
+}
+
+variable "unused_access_analysis_rule_exclusions" {
+  type = list(object({
+    account_ids   = optional(list(string), null)
+    resource_tags = optional(list(map(string)), null)
+  }))
+  description = "(Optional) List of exclusion rules for the unused access analyzer. Entities matching any exclusion will not generate findings. Each exclusion may specify account_ids (list of AWS account IDs to exclude) and/or resource_tags (list of tag key-value maps to exclude). Only applicable for ACCOUNT_UNUSED_ACCESS and ORGANIZATION_UNUSED_ACCESS analyzer types."
+  default     = []
+}
+
+variable "internal_access_analysis_rule_inclusions" {
+  type = list(object({
+    account_ids    = optional(list(string), null)
+    resource_arns  = optional(list(string), null)
+    resource_types = optional(list(string), null)
+  }))
+  description = "(Optional) List of inclusion rules for the internal access analyzer. Only resources matching an inclusion rule will generate findings. Each inclusion may specify account_ids, resource_arns, and/or resource_types. Only applicable for ACCOUNT_INTERNAL_ACCESS and ORGANIZATION_INTERNAL_ACCESS analyzer types."
   default     = []
 }
 
@@ -40,9 +71,10 @@ variable "archive_rules" {
 ###########################
 variable "admin_account_id" {
   type        = string
-  description = "(Required) The AWS account ID of the security/delegated admin account where the Access Analyzer will be created."
+  description = "(Optional) The AWS account ID of the security/delegated admin account. Required when register_delegated_admin is true."
+  default     = null
   validation {
-    condition     = can(regex("^\\d{12}$", var.admin_account_id))
+    condition     = var.admin_account_id == null ? true : can(regex("^\\d{12}$", var.admin_account_id))
     error_message = "The admin_account_id must be a 12-digit AWS account ID."
   }
 }
