@@ -1,0 +1,33 @@
+---
+# pre-commit hooks for this repository.
+#
+# These hooks run the same OpenTofu/Terraform formatting and terraform-docs
+# generation that CI verifies on every PR. Running them locally keeps the
+# branch clean so the "Verify - terraform-docs" status check and the
+# "OpenTofu fmt" check in test.yml both pass on the first push.
+#
+# One-time setup:
+#   brew install pre-commit terraform-docs
+#   pre-commit install            # installs the git hook
+#   pre-commit run --all-files    # run across the whole repo on demand
+#
+# CI does NOT auto-commit fixes. Format and regenerate docs locally,
+# then commit the result on your own branch (signed).
+
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.105.0
+    hooks:
+      # Recursively format every *.tf / *.tofu file. Mirrors
+      # `tofu fmt -recursive` (and `terraform fmt -recursive`, which produces
+      # identical output) that test.yml verifies.
+      - id: terraform_fmt
+
+      # Regenerate the <!-- BEGIN_TF_DOCS --> block in each module's README.md
+      # using the project's shared config at modules/.terraform-docs.yml.
+      # Mirrors what build.yml verifies on every PR.
+      - id: terraform_docs
+        args:
+          - --args=--config=modules/.terraform-docs.yml
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=false
