@@ -4,52 +4,38 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  build_opentofu:
-    name: Build - OpenTofu
+  verify_terraform_docs:
+    name: Verify - terraform-docs
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
 
     steps:
-      - name: OpenTofu - Setup OpenTofu
-        uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4 # v2.0.1
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: List all files
-        run: ls -lha
-
-      - name: stat .git/objects
-        run: stat .git/objects
-
-      - name: OpenTofu fmt on all files
-        id: fmt
-        run: tofu fmt -recursive
-
-      - name: Build terraform docs
+      - name: Regenerate terraform-docs (in place)
         uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1
         with:
           config-file: ./modules/.terraform-docs.yml
           find-dir: ./modules
+          output-method: inject
+          git-push: false
 
-      - name: List all files
-        run: ls -lha
-
-      - name: stat .git/objects
-        run: stat .git/objects
-
-      - name: Fix .git owner
-        run: sudo chown runner:docker -R .git
-
-      - name: Git stage all, commit, and push
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        with:
-          commit_message: "chore: tofu fmt and terraform-docs"
-          commit_user_name: github-actions
+      - name: Fail if terraform-docs output is stale
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::terraform-docs output is out of date. Run 'pre-commit run --all-files' (or 'terraform-docs markdown table --output-file README.md --output-mode inject <module_path>') locally and commit the result."
+            exit 1
+          fi
