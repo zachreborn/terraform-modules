@@ -94,7 +94,7 @@ module "kms_key" {
       {
         "Effect" = "Allow",
         "Principal" = {
-          "Service" = "logs.${data.aws_region.current.name}.amazonaws.com"
+          "Service" = "logs.${data.aws_region.current.region}.amazonaws.com"
         },
         "Action" = [
           "kms:Encrypt*",
@@ -106,7 +106,7 @@ module "kms_key" {
         "Resource" = "*",
         "Condition" = {
           "ArnEquals" = {
-            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"
           }
         }
       }
@@ -185,56 +185,6 @@ module "cloudwatch_log_group" {
 }
 
 ##############
-# Create CloudWatch log group IAM policy
-##############
-module "cloudwatch_iam_policy" {
-  source = "../iam/policy"
-
-  description = "CloudWatch Log Group IAM policy for ${var.name} Transfer Family"
-  name_prefix = "${var.name}_cloudwatch_log_group_policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid = "AllowLogging",
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Effect   = "Allow",
-        Resource = module.cloudwatch_log_group.arn
-      }
-    ]
-  })
-  tags = var.tags
-}
-
-##############
-# Create CloudWatch log group IAM role
-##############
-
-module "cloudwatch_iam_role" {
-  source = "../iam/role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "transfer.amazonaws.com"
-        }
-      }
-    ]
-  })
-  description = "CloudWatch Log Group IAM role for ${var.name}"
-  name_prefix = "${var.name}-cloudwatch-log-group-role"
-  policy_arns = [module.cloudwatch_iam_policy.arn]
-  tags        = var.tags
-}
-
-##############
 # Create the AWS transfer family server
 ##############
 
@@ -248,6 +198,7 @@ resource "aws_transfer_server" "this" {
   identity_provider_type           = var.identity_provider_type
   invocation_role                  = var.invocation_role
   logging_role                     = module.transfer_family_logging_iam_role.arn
+  structured_log_destinations      = ["${module.cloudwatch_log_group.arn}:*"]
   pre_authentication_login_banner  = var.pre_authentication_login_banner
   post_authentication_login_banner = var.post_authentication_login_banner
   protocols                        = var.protocols

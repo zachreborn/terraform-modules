@@ -7,7 +7,7 @@
 ###########################
 
 variable "kms_key_id" {
-  description = "(Optiona) The ARN of the KMS key to use for encryption"
+  description = "(Optional) The ARN of the KMS key to use for encryption"
   type        = string
   default     = null
 }
