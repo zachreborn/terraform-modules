@@ -10,17 +10,13 @@ on:
         required: true
         type: string
 
-# Allow concurrent triage runs for the same issue. Setting
-# cancel-in-progress: false prevents a simultaneous `labeled` event (e.g.
-# when an issue is created with a label already attached) from cancelling the
-# in-flight `opened` event run. The `labeled` non-`needs-info` runs are still
-# correctly skipped by the job-level `if` condition, so they cannot cause
-# duplicate triage. The downside is that rapid re-edits may produce two
-# concurrent runs, but the second is idempotent once the first has already
-# applied a state label.
+# Cancel any in-progress triage run for the same issue when a newer event
+# arrives. With the corrected `if` condition below, human-applied labels
+# (e.g. `bug`) pass the condition and will run triage rather than being
+# skipped, so whichever run survives the cancellation will do the work.
 concurrency:
   group: oz-triage-${{ github.event.issue.number || inputs.issue_number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -36,16 +32,15 @@ jobs:
     name: Triage issue with Oz
     runs-on: ubuntu-latest
 
-    # Skip when (issues trigger only - workflow_dispatch bypasses all these
-    # checks and re-validates at runtime via the eligibility step below):
-    #   - The issue has already advanced past triage, or
-    #   - The human explicitly opted out via skip-oz, or
-    #   - The author is untrusted (gates secrets/agent against prompt injection
-    #     from arbitrary issue text), or
-    #   - The triggering event is a label that this workflow itself just
-    #     applied (`labeled` event whose sender is github-actions[bot]).
-    # For `labeled` events we additionally narrow to the `needs-info` label so
-    # human edits to other labels do not re-run triage.
+    # Skip when (issues trigger only — workflow_dispatch re-validates at
+    # runtime via the eligibility step below):
+    #   - The issue has already advanced past triage (pipeline labels present)
+    #   - The author is untrusted (protects secrets from arbitrary issue text)
+    #   - The triggering label was applied by a bot (prevents triage loops
+    #     where the agent's own label changes re-fire the workflow). Any
+    #     human-applied label — including GitHub built-ins like `bug` or
+    #     `enhancement` — is allowed through so issues created with labels
+    #     pre-attached are still triaged correctly.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (!contains(github.event.issue.labels.*.name, 'skip-oz') &&
@@ -57,8 +52,7 @@ jobs:
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
                 github.event.issue.author_association) &&
        (github.event.action != 'labeled' ||
-        (github.event.label.name == 'needs-info' &&
-         github.event.sender.login != 'github-actions[bot]')))
+        github.event.sender.type != 'Bot'))
 
     steps:
       - name: Checkout
