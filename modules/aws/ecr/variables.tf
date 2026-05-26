@@ -36,11 +36,11 @@ variable "image_tag_mutability_exclusion_filter" {
 
 variable "kms_key" {
   type        = string
-  description = "(Optional) The ARN of the KMS CMK to use when encryption_type is 'KMS'. If not specified, the AWS-managed ECR CMK is used. Must be a valid KMS key ARN."
+  description = "(Optional) The ARN of the KMS CMK to use when encryption_type is 'KMS'. If not specified, the AWS-managed ECR CMK is used. Must be a valid KMS key ARN. Ignored when encryption_type is 'AES256'."
   default     = null
   validation {
-    condition     = var.kms_key == null || can(regex("^arn:aws[a-z-]*:kms:[^:]+:[0-9]{12}:key/[0-9a-f-]+$", var.kms_key))
-    error_message = "kms_key must be null or a valid KMS key ARN (arn:aws:kms:<region>:<account_id>:key/<key_id>)."
+    condition     = var.kms_key == null || can(regex("^arn:aws[a-z-]*:kms:[^:]+:[0-9]{12}:key/[0-9a-zA-Z-]+$", var.kms_key))
+    error_message = "kms_key must be null or a valid KMS key ARN (arn:aws:kms:<region>:<account_id>:key/<key_id>). Multi-region key IDs (mrk-...) are supported."
   }
 }
 
@@ -73,7 +73,7 @@ variable "scan_on_push" {
 
 variable "tags" {
   type        = map(string)
-  description = "(Optional) A map of tags to assign to the ECR repository. A 'Name' tag is always added automatically from the repository name."
+  description = "(Optional) A map of tags to assign to the ECR repository. A 'Name' tag is added by default using the repository name and may be overridden by passing a 'Name' key in this map."
   default = {
     terraform = "true"
   }
