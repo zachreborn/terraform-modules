@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -13,7 +13,14 @@ terraform {
 ###########################################################
 
 resource "aws_organizations_delegated_administrator" "this" {
-  for_each          = var.delegated_admins
-  account_id        = each.key
-  service_principal = each.value
+  for_each = merge([
+    for account_id, services in var.delegated_admins : {
+      for service in services : "${account_id}-${service}" => {
+        account_id        = account_id
+        service_principal = service
+      }
+    }
+  ]...)
+  account_id        = each.value.account_id
+  service_principal = each.value.service_principal
 }

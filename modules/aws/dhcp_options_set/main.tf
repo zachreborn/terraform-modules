@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -13,13 +13,16 @@ terraform {
 ###########################
 
 resource "aws_vpc_dhcp_options" "this" {
-  domain_name         = var.domain_name
-  domain_name_servers = var.domain_name_servers
-  ntp_servers         = var.ntp_servers
-  tags                = var.tags
+  domain_name          = var.domain_name
+  domain_name_servers  = var.domain_name_servers
+  ntp_servers          = var.ntp_servers
+  netbios_name_servers = var.netbios_name_servers
+  netbios_node_type    = var.netbios_node_type
+  tags                 = var.tags
 }
 
 resource "aws_vpc_dhcp_options_association" "this" {
+  for_each        = var.vpc_ids
   dhcp_options_id = aws_vpc_dhcp_options.this.id
-  vpc_id          = var.vpc_id
+  vpc_id          = each.value
 }

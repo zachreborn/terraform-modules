@@ -6,7 +6,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -14,11 +14,46 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 ###########################
 # Locals
 ###########################
+locals {
+  notification_rule_name = "${substr(var.name, 0, 42)}-amplify-notifications"
+  # Compute the EventBridge rule ARN deterministically so the SNS topic policy
+  # can reference it without creating a Terraform dependency cycle.
+  notification_rule_arn = "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
+  sns_topic_arn         = var.enable_notifications ? (var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn) : null
+
+  notification_subscriptions = var.enable_notifications && var.notification_emails != null ? {
+    for email in var.notification_emails : email => {
+      protocol = "email"
+      endpoint = email
+    }
+  } : {}
+
+  notification_sns_policy = var.enable_notifications && var.create_sns_topic ? jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowEventBridgePublish"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+        Action   = "sns:Publish"
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = local.notification_rule_arn
+          }
+        }
+      }
+    ]
+  }) : null
+}
 
 ###########################
 # Module Configuration
@@ -68,6 +103,7 @@ resource "aws_amplify_app" "this" {
       type = var.cache_config_type
     }
   }
+
   dynamic "custom_rule" {
     for_each = var.custom_rules != null ? var.custom_rules : []
     content {
@@ -75,6 +111,17 @@ resource "aws_amplify_app" "this" {
       source    = custom_rule.value.source
       status    = custom_rule.value.status
       target    = custom_rule.value.target
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_notifications || var.create_sns_topic || var.sns_topic_arn != null
+      error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
+    }
+    precondition {
+      condition     = !var.enable_notifications || var.create_sns_topic || var.notification_emails == null
+      error_message = "notification_emails can only be used when create_sns_topic is true; subscriptions against a caller-supplied topic are not managed by this module."
     }
   }
 }
@@ -133,5 +180,51 @@ resource "aws_amplify_domain_association" "this" {
       branch_name = each.key
       prefix      = sub_domain.key
     }
+  }
+}
+
+###########################
+# SNS Notifications Topic
+###########################
+module "amplify_notifications_sns" {
+  source = "../sns"
+  count  = var.enable_notifications && var.create_sns_topic ? 1 : 0
+
+  name              = "${var.name}-amplify-notifications"
+  kms_master_key_id = null
+  policy            = local.notification_sns_policy
+  subscriptions     = local.notification_subscriptions
+  tags              = var.tags
+}
+
+###########################
+# CloudWatch EventBridge Notification Rule
+###########################
+module "amplify_notifications_event" {
+  source = "../cloudwatch/event"
+  count  = var.enable_notifications ? 1 : 0
+
+  description      = "Amplify build and deployment status notifications for ${var.name}"
+  event_target_arn = local.sns_topic_arn
+  name             = local.notification_rule_name
+  tags             = var.tags
+  target_id        = "${substr(var.name, 0, 42)}-amplify-notifications"
+
+  event_pattern = jsonencode({
+    source      = ["aws.amplify"]
+    detail-type = ["Amplify Deployment Status Change"]
+    detail = {
+      appId = [aws_amplify_app.this.id]
+    }
+  })
+
+  input_transformer = {
+    input_paths = {
+      appId      = "$.detail.appId"
+      branchName = "$.detail.branchName"
+      jobId      = "$.detail.jobId"
+      status     = "$.detail.jobStatus"
+    }
+    input_template = "\"Amplify build for app <appId> on branch <branchName> (job <jobId>) completed with status: <status>\""
   }
 }

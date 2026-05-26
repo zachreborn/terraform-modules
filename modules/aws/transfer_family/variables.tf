@@ -1,10 +1,46 @@
 ###########################
+# KMS Key Variables
+###########################
+variable "key_description" {
+  description = "(Optional) The description of the key as viewed in AWS console."
+  default     = "CloudWatch kms key used to encrypt transfer family logs"
+  type        = string
+}
+
+variable "key_name_prefix" {
+  description = "(Optional) Creates a unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
+  default     = "alias/transfer_family_logs_key_"
+  type        = string
+}
+
+###########################
 # Cloudwatch Log Group Variables
 ###########################
+
+variable "log_group_class" {
+  description = "(Optional) The class of the log group. Valid values are 'STANDARD' and 'INFREQUENT_ACCESS'. Defaults to 'STANDARD'."
+  type        = string
+  default     = "STANDARD"
+  validation {
+    condition     = var.log_group_class == "STANDARD" || var.log_group_class == "INFREQUENT_ACCESS"
+    error_message = "log_group_class must be either 'STANDARD' or 'INFREQUENT_ACCESS'"
+  }
+}
+
+variable "log_group_retention_in_days" {
+  description = "(Optional) Specifies the number of days you want to retain log events in the specified log group. Valid values are: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653. Defaults to 90."
+  type        = number
+  default     = 90
+  validation {
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653], var.log_group_retention_in_days)
+    error_message = "log_group_retention_in_days must be one of the valid CloudWatch log retention periods: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653."
+  }
+}
 
 ###########################
 # Transfer Server Variables
 ###########################
+
 
 variable "address_allocation_ids" {
   description = "(Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your server's endpoint. This can only be set when 'var.endpoint_type' is set to 'VPC'"
@@ -68,12 +104,6 @@ variable "identity_provider_type" {
 
 variable "invocation_role" {
   description = "(Optional) The ARN of the IAM role that controls your authentication with an identity provider_type through API_GATEWAY."
-  type        = string
-  default     = null
-}
-
-variable "logging_role" {
-  description = "(Optional) The ARN of the IAM role that allows the service to write your server access logs to a Amazon CloudWatch log group."
   type        = string
   default     = null
 }
@@ -230,6 +260,7 @@ variable "users" {
     home_directory_type = optional(string, "LOGICAL") # The type of landing directory. Valid values are `PATH` and `LOGICAL`. Defaults to `LOGICAL`.
     policy              = optional(string)            # Set for a custom session policy see https://docs.aws.amazon.com/transfer/latest/userguide/requirements-roles.html#session-policy for more information
     public_key          = optional(string)            # The public key portion of an SSH key pair. See https://docs.aws.amazon.com/transfer/latest/userguide/key-management.html for supported key algorithms.
+    tags                = optional(map(string), {})   # Additional tags to apply to this user, merged with module-level tags.
     username            = string                      # The username of the user.
   }))
   default = {}

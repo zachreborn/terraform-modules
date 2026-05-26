@@ -1,7 +1,7 @@
 <!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -11,6 +11,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -18,17 +19,16 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
+    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">Route53 Registered Domain</h3>
   <p align="center">
-    This module manages the registration of a domain with Route53. This module does not create a registar, but per Terraform will manage the registration of a domain already transfered or registered with Route53.
+    This module manages the registration of a domain with Route53. This module does not create a registar, but per Terraform will manage the registration of a domain already transferred or registered with Route53.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -40,7 +40,6 @@
     <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
   </p>
 </div>
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,16 +58,19 @@
   </ol>
 </details>
 
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
+
 ### Simple Example
+
 This example will manage a registered domain with Route53. The domain will be registered with the provided contact information. The domain will be registered with the provided name servers. The domain will be locked from transfer. The domain will be set to auto renew.
 
 ```hcl
 module "registered_domains" {
   source             = "github.com/zachreborn/terraform-modules//modules/aws/route53/registered_domain"
   admin_contact      = var.my_contact_info
+  billing_contact    = var.my_contact_info
   registrant_contact = var.my_contact_info
   tech_contact       = var.my_contact_info
   domains = {
@@ -129,13 +131,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -151,13 +153,15 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_contact"></a> [admin\_contact](#input\_admin\_contact) | The admin contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_admin_contact"></a> [admin\_contact](#input\_admin\_contact) | The admin contact information for the domain. Set to null to omit the admin\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
 | <a name="input_admin_privacy"></a> [admin\_privacy](#input\_admin\_privacy) | Whether to enable admin privacy protection. Default is true. | `bool` | `true` | no |
+| <a name="input_billing_contact"></a> [billing\_contact](#input\_billing\_contact) | The billing contact information for the domain. Set to null to omit the billing\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
+| <a name="input_billing_privacy"></a> [billing\_privacy](#input\_billing\_privacy) | Whether to enable billing privacy protection. Default is true. | `bool` | `true` | no |
 | <a name="input_domains"></a> [domains](#input\_domains) | A map of domains to register with Route53. | <pre>map(object({<br/>    auto_renew    = bool<br/>    name_servers  = list(string)<br/>    transfer_lock = bool<br/>  }))</pre> | n/a | yes |
-| <a name="input_registrant_contact"></a> [registrant\_contact](#input\_registrant\_contact) | The registrant contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_registrant_contact"></a> [registrant\_contact](#input\_registrant\_contact) | The registrant contact information for the domain. Set to null to omit the registrant\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
 | <a name="input_registrant_privacy"></a> [registrant\_privacy](#input\_registrant\_privacy) | Whether to enable registrant privacy protection. Default is true. | `bool` | `true` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_tech_contact"></a> [tech\_contact](#input\_tech\_contact) | The tech contact information for the domain. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tech_contact"></a> [tech\_contact](#input\_tech\_contact) | The tech contact information for the domain. Set to null to omit the tech\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
 | <a name="input_tech_privacy"></a> [tech\_privacy](#input\_tech\_privacy) | Whether to enable tech privacy protection. Default is true. | `bool` | `true` | no |
 
 ## Outputs
@@ -171,15 +175,15 @@ No modules.
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
@@ -188,19 +192,18 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
-* [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
 [contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge

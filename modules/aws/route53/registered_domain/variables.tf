@@ -2,8 +2,8 @@
 # Route 53 Registered Domains Variables
 ########################################
 
-variable "admin_contact" {
-  description = "The admin contact information for the domain."
+variable "billing_contact" {
+  description = "The billing contact information for the domain. Set to null to omit the billing_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -20,6 +20,36 @@ variable "admin_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
+}
+
+variable "admin_contact" {
+  description = "The admin contact information for the domain. Set to null to omit the admin_contact block."
+  type = object({
+    address_line_1    = string
+    address_line_2    = string
+    city              = string
+    contact_type      = string
+    country_code      = string
+    email             = string
+    extra_params      = map(any)
+    fax               = string
+    first_name        = string
+    last_name         = string
+    organization_name = string
+    phone_number      = string
+    state             = string
+    zip_code          = string
+  })
+  default  = null
+  nullable = true
+}
+
+variable "billing_privacy" {
+  description = "Whether to enable billing privacy protection. Default is true."
+  type        = bool
+  default     = true
 }
 
 variable "admin_privacy" {
@@ -51,7 +81,7 @@ variable "domains" {
 }
 
 variable "registrant_contact" {
-  description = "The registrant contact information for the domain."
+  description = "The registrant contact information for the domain. Set to null to omit the registrant_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -68,6 +98,8 @@ variable "registrant_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "registrant_privacy" {
@@ -83,7 +115,7 @@ variable "tags" {
 }
 
 variable "tech_contact" {
-  description = "The tech contact information for the domain."
+  description = "The tech contact information for the domain. Set to null to omit the tech_contact block."
   type = object({
     address_line_1    = string
     address_line_2    = string
@@ -100,6 +132,8 @@ variable "tech_contact" {
     state             = string
     zip_code          = string
   })
+  default  = null
+  nullable = true
 }
 
 variable "tech_privacy" {

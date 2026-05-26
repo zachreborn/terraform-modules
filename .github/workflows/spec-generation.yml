@@ -1,0 +1,240 @@
+---
+name: Spec Generation (Oz)
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to generate a spec for"
+        required: true
+        type: string
+
+# One spec generation at a time per issue.
+concurrency:
+  group: oz-spec-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  generate-spec:
+    name: Generate spec with Oz
+    runs-on: ubuntu-latest
+
+    # For labeled events, only trigger on the ready-for-spec label, skip if
+    # skip-oz is set, and require a trusted issue author so untrusted issue
+    # bodies never reach the secret-backed Oz agent. workflow_dispatch is
+    # subject to the same checks at runtime via the eligibility step below.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'ready-for-spec' &&
+       !contains(github.event.issue.labels.*.name, 'skip-oz') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.issue.author_association))
+
+    steps:
+      # Credentials are intentionally persisted so the Oz agent can push the
+      # spec branch back to origin. zizmor's artipacked warning is acknowledged.
+      - name: Checkout # zizmor: ignore[artipacked]
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # Needed so the agent can create a new branch and push.
+          fetch-depth: 0
+
+      - name: Guard - require WARP_API_KEY
+        env:
+          WARP_API_KEY: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
+        run: |
+          if [ -z "${WARP_API_KEY}" ]; then
+            echo "::error::WARP_API_KEY secret is not configured for this repository."
+            exit 1
+          fi
+
+      - name: Resolve and validate issue number
+        id: ctx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+        run: |
+          # Reject anything that is not a bare positive integer (>= 1) to
+          # prevent GITHUB_OUTPUT injection (e.g. newlines, '=') when the
+          # value comes from a free-form workflow_dispatch input. GitHub
+          # issue numbers start at 1, so disallow 0 explicitly.
+          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[1-9][0-9]*$'; then
+            echo "::error::issue_number must be a positive integer (>= 1); got: ${ISSUE_NUMBER}"
+            exit 1
+          fi
+          echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify issue eligibility on manual dispatch
+        # The job-level `if` only enforces skip-oz and author_association for
+        # the `labeled` trigger because `github.event.issue` is unavailable
+        # for workflow_dispatch. Re-check both on the target issue here so
+        # manual dispatch respects the documented skip-oz override and the
+        # same trust gate that protects the labeled path.
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          # gh issue view does not expose authorAssociation; use the REST
+          # API directly so we can read .author_association (snake_case).
+          issue=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}")
+          labels=$(printf '%s' "${issue}" | jq -r '.labels[].name')
+          assoc=$(printf '%s' "${issue}" | jq -r '.author_association')
+          if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
+            echo "::notice::Issue #${ISSUE_NUMBER} has the skip-oz label; aborting per AGENTS.md."
+            exit 1
+          fi
+          case "${assoc}" in
+            OWNER|MEMBER|COLLABORATOR) ;;
+            *)
+              echo "::error::Issue #${ISSUE_NUMBER} author_association=${assoc} is not in {OWNER,MEMBER,COLLABORATOR}; refusing to run the Oz agent on untrusted issue content."
+              exit 1
+              ;;
+          esac
+
+      - name: Mark issue spec-in-progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          # Keep ready-for-spec attached for now; the success step below
+          # removes it only after the agent has opened a spec PR. This way
+          # a failure mid-run does not leave the issue stuck with no
+          # actionable label.
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --add-label spec-in-progress
+
+      - name: Run Oz spec-generation agent
+        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          prompt: |
+            You are generating a technical specification for an issue in
+            zachreborn/terraform-modules. The repository is a
+            Terraform/OpenTofu modules library (OpenTofu is the default;
+            Terraform is also supported). Conventions are documented in
+            `AGENTS.md`.
+
+            ## Target issue
+            Issue number: #${{ steps.ctx.outputs.issue_number }}
+            Repository: ${{ github.repository }}
+
+            Fetch the issue body and comments with:
+              gh issue view ${{ steps.ctx.outputs.issue_number }} \
+                --repo ${{ github.repository }} \
+                --json title,body,labels,comments
+
+            ## Required reading (consult before writing)
+            - `AGENTS.md` (root) — repo conventions, four-file module layout,
+              tagging pattern, lifecycle ignores, tfsec suppression style.
+            - `.github/specs/_template.md` — canonical spec layout.
+            - `modules/module_template/` — starting point for new modules.
+
+            ## Output
+            Create a new branch named:
+              spec/issue-${{ steps.ctx.outputs.issue_number }}-<short-kebab-slug>
+
+            Write the spec to:
+              .github/specs/issue-${{ steps.ctx.outputs.issue_number }}-<slug>.md
+
+            The spec MUST be based on `_template.md` and MUST contain:
+              - Background
+              - Non-goals
+              - Affected module path(s)
+              - Proposed `variables.tf` / `outputs.tf` / `main.tf` shape
+                (SIGNATURES ONLY — variable names, types, descriptions,
+                resource block names. NO full implementation.)
+              - Breaking-change assessment
+              - Checkov / tfsec suppression considerations (state "none"
+                if no new suppressions are needed)
+              - terraform-docs impact (will the auto-generated README change?)
+              - Acceptance criteria
+
+            ## Commit and PR
+            - Commit message: `spec: <issue title>` with body
+              `Refs #${{ steps.ctx.outputs.issue_number }}`
+              and the Co-Authored-By line for Oz.
+            - Push the branch.
+            - Open the PR as **ready-for-review** (NOT a draft) so that
+              CODEOWNERS are auto-assigned via the `pull_request:
+              ready_for_review` event. If your tooling defaults to draft,
+              flip it to ready before exiting. The workflow also runs a
+              post-step that calls `gh pr ready` as a safety net.
+            - Title: `spec: <issue title>`.
+            - PR body MUST include `Refs #${{ steps.ctx.outputs.issue_number }}`
+              (not `Fixes`) so the issue stays open through implementation.
+            - Apply `spec-ready-for-review` to the originating issue:
+                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                  --repo ${{ github.repository }} \
+                  --add-label spec-ready-for-review
+                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                  --repo ${{ github.repository }} \
+                  --remove-label spec-in-progress || true
+            - Post a comment on the issue with the spec PR URL.
+
+            Do NOT modify any Terraform/OpenTofu files. Do NOT modify existing modules.
+            The only files you should create or modify live under
+            `.github/specs/`.
+
+      - name: Mark spec PR ready-for-review
+        # The Oz agent action tends to open PRs as drafts when invoked from
+        # automation, which suppresses GitHub's CODEOWNERS auto-request.
+        # Find the freshly-created draft spec PR (branch prefix
+        # `spec/issue-N-`, isDraft=true, most-recently-created) and flip it
+        # to ready-for-review. Filtering on `isDraft == true` ensures we
+        # never re-flip a stale ready PR; sorting by `createdAt` ensures
+        # we target the current run's PR even if PR numbers raced.
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          pr_number=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --json number,headRefName,isDraft,createdAt \
+            --jq "[.[] | select(.isDraft == true and (.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\")))] | sort_by(.createdAt) | last | .number // empty")
+          if [ -z "${pr_number}" ]; then
+            echo "::notice::No open *draft* spec PR matching 'spec/issue-${ISSUE_NUMBER}-*' found; nothing to flip."
+            exit 0
+          fi
+          echo "::notice::Marking spec PR #${pr_number} ready-for-review."
+          gh pr ready "${pr_number}" --repo "${{ github.repository }}" || true
+
+      - name: On success - drop ready-for-spec
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label ready-for-spec || true
+
+      - name: On failure - restore ready-for-spec, drop spec-in-progress
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --remove-label spec-in-progress || true
+          # Re-attach ready-for-spec so a maintainer (or another labeled
+          # event) can retry the stage. It is idempotent.
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --add-label ready-for-spec || true
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --body "Spec generation failed. See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

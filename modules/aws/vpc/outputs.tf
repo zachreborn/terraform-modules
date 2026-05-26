@@ -90,3 +90,13 @@ output "name" {
   description = "The name of the VPC"
   value       = aws_vpc.vpc.tags["Name"]
 }
+
+output "vpc_arn" {
+  description = "The ARN of the VPC"
+  value       = aws_vpc.vpc.arn
+}
+
+output "private_subnet_arns" {
+  description = "List of ARNs of private subnets"
+  value       = aws_subnet.private_subnets[*].arn
+}

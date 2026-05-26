@@ -3,13 +3,14 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
 
 resource "aws_route" "route" {
   carrier_gateway_id          = var.carrier_gateway_id
+  core_network_arn            = var.core_network_arn
   count                       = length(flatten(var.route_table_ids))
   destination_cidr_block      = var.destination_cidr_block
   destination_ipv6_cidr_block = var.destination_ipv6_cidr_block

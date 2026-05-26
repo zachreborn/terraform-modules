@@ -1,13 +1,13 @@
 variable "alias" {
   type        = string
   description = "(Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable_sso."
-  default     = "default_value"
+  default     = null
 }
 
 variable "description" {
   type        = string
   description = "(Optional) A textual description for the directory."
-  default     = "default_value"
+  default     = null
 }
 
 variable "name" {
@@ -18,12 +18,30 @@ variable "name" {
 variable "password" {
   type        = string
   description = "(Required) The password for the directory administrator or connector user."
+  sensitive   = true
+}
+
+variable "enable_sso" {
+  type        = bool
+  description = "(Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false."
+  default     = false
+}
+
+variable "short_name" {
+  type        = string
+  description = "(Optional) The short name of the directory, such as CORP."
+  default     = null
 }
 
 variable "size" {
   type        = string
-  description = "(Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values)."
+  description = "(Required) The size of the directory. Valid values: Small, Large."
   default     = "Small"
+
+  validation {
+    condition     = contains(["Small", "Large"], var.size)
+    error_message = "Size must be 'Small' or 'Large'."
+  }
 }
 
 variable "tags" {
@@ -34,19 +52,13 @@ variable "tags" {
 
 variable "type" {
   type        = string
-  description = "(Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD."
+  description = "(Optional) The directory type. For this module, SimpleAD is the supported type."
   default     = "SimpleAD"
-}
 
-variable "customer_dns_ips" {
-  type        = list(string)
-  description = "(Required) The DNS IP addresses of the domain to connect to."
-  default     = []
-}
-
-variable "customer_username" {
-  type        = string
-  description = "(Required) The username corresponding to the password provided."
+  validation {
+    condition     = contains(["SimpleAD", "ADConnector", "MicrosoftAD"], var.type)
+    error_message = "Type must be one of: SimpleAD, ADConnector, MicrosoftAD."
+  }
 }
 
 variable "subnet_ids" {

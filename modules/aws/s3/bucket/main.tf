@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0.0"
+      version = ">= 6.0.0"
     }
   }
 }
@@ -174,10 +174,54 @@ resource "aws_s3_bucket_logging" "this" {
   target_prefix = var.logging_target_prefix
 }
 
+###########################
+# S3 Bucket Policy
+###########################
+
+# SSL enforcement policy document
+data "aws_iam_policy_document" "ssl_only" {
+  count = var.enforce_ssl ? 1 : 0
+
+  statement {
+    sid     = "DenyInsecureTransport"
+    effect  = "Deny"
+    actions = ["s3:*"]
+
+    resources = [
+      aws_s3_bucket.this.arn,
+      "${aws_s3_bucket.this.arn}/*",
+    ]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+# Merge custom policy with SSL enforcement when both exist
+data "aws_iam_policy_document" "merged" {
+  count = var.enforce_ssl && var.bucket_policy != null ? 1 : 0
+
+  source_policy_documents = [
+    var.bucket_policy,
+    data.aws_iam_policy_document.ssl_only[0].json,
+  ]
+}
+
 resource "aws_s3_bucket_policy" "this" {
-  count  = var.bucket_policy == null ? 0 : 1
+  count  = var.enforce_ssl || var.bucket_policy != null ? 1 : 0
   bucket = aws_s3_bucket.this.id
-  policy = var.bucket_policy
+
+  policy = (
+    var.enforce_ssl && var.bucket_policy != null ? data.aws_iam_policy_document.merged[0].json : var.bucket_policy != null ? var.bucket_policy : data.aws_iam_policy_document.ssl_only[0].json
+  )
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
@@ -209,14 +253,14 @@ resource "aws_s3_bucket_website_configuration" "this" {
   dynamic "error_document" {
     for_each = local.error_document == null ? [] : [local.error_document]
     content {
-      key = error_document.value.key
+      key = error_document.value
     }
   }
 
   dynamic "index_document" {
     for_each = local.index_document == null ? [] : [local.index_document]
     content {
-      suffix = index_document.value.suffix
+      suffix = index_document.value
     }
   }
 
