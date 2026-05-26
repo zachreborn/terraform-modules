@@ -123,7 +123,7 @@ skip-check:
   - CKV_AWS_340 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
 
   # ECR
-  - CKV_AWS_51  # Image scan on push - exposed as scan_on_push variable (default true)
+  - CKV_AWS_51 # Image scan on push - exposed as scan_on_push variable (default true)
   - CKV_AWS_136 # KMS encryption - exposed as encryption_type variable (default KMS)
 
   # SNS
