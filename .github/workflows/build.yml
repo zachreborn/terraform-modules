@@ -4,51 +4,38 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  build_terraform:
-    name: Build - Terraform
+  verify_terraform_docs:
+    name: Verify - terraform-docs
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
 
     steps:
-      - name: HashiCorp - Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
 
-      - name: List all files
-        run: ls -lha
-
-      - name: stat .git/objects
-        run: stat .git/objects
-
-      - name: Terraform fmt on all files
-        id: fmt
-        run: terraform fmt -recursive
-
-      - name: Build terraform docs
-        uses: terraform-docs/gh-actions@v1
+      - name: Regenerate terraform-docs (in place)
+        uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1
         with:
           config-file: ./modules/.terraform-docs.yml
           find-dir: ./modules
+          output-method: inject
+          git-push: false
 
-      - name: List all files
-        run: ls -lha
-
-      - name: stat .git/objects
-        run: stat .git/objects
-
-      - name: Fix .git owner
-        run: sudo chown runner:docker -R .git
-
-      - name: Git stage all, commit, and push
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "chore: terraform fmt and terraform-docs"
-          commit_user_name: github-actions
+      - name: Fail if terraform-docs output is stale
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::terraform-docs output is out of date. Run 'pre-commit run --all-files' (or 'terraform-docs markdown table --output-file README.md --output-mode inject <module_path>') locally and commit the result."
+            exit 1
+          fi

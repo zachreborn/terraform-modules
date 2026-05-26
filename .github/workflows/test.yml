@@ -10,30 +10,43 @@ permissions:
   contents: read
 
 jobs:
-  test_terraform:
-    name: Test Terraform
+  test_opentofu:
+    name: Test OpenTofu
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
-      - name: HashiCorp - Setup Terraform
-        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4
-        with:
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: OpenTofu - Setup OpenTofu
+        uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4 # v2.0.1
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
-      - name: Terraform version
+      - name: OpenTofu version
         id: version
-        run: terraform version
+        run: tofu version
 
-      - name: Terraform fmt
+      - name: OpenTofu fmt
         id: fmt
-        run: terraform fmt -check -diff -recursive
+        run: tofu fmt -check -diff -recursive
+
+  test_unicode:
+    name: Invisible Unicode Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Check for invisible Unicode characters
+        run: bash .github/scripts/check_unicode.sh
 
   test_linter:
     name: Linter

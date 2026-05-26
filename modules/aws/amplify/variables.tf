@@ -208,6 +208,34 @@ variable "branches" {
 }
 
 ###########################
+# Notifications
+###########################
+
+variable "create_sns_topic" {
+  description = "Whether to create an SNS topic for Amplify build notifications. When false, sns_topic_arn must be provided."
+  type        = bool
+  default     = true
+}
+
+variable "enable_notifications" {
+  description = "Whether to enable SNS build notifications for Amplify via EventBridge. Creates an SNS topic (or uses sns_topic_arn) and a CloudWatch EventBridge rule that fires on Amplify deployment status changes."
+  type        = bool
+  default     = false
+}
+
+variable "notification_emails" {
+  description = "List of email addresses to subscribe to Amplify build notifications. Only used when enable_notifications is true."
+  type        = list(string)
+  default     = null
+}
+
+variable "sns_topic_arn" {
+  description = "ARN of an existing SNS topic to use for Amplify build notifications. Required when enable_notifications is true and create_sns_topic is false."
+  type        = string
+  default     = null
+}
+
+###########################
 # General Variables
 ###########################
 

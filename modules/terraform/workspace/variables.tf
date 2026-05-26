@@ -178,7 +178,7 @@ variable "oauth_token_id" {
 
 variable "permission_map" {
   type        = map(any)
-  description = "(Required) The permissions map which maps the team_id to the permission access level. Exampe: 'terraform_all_admin = {id = team-fdsa5122q6rwYXP, access = admin}'"
+  description = "(Required) The permissions map which maps the team_id to the permission access level. Example: 'terraform_all_admin = {id = team-fdsa5122q6rwYXP, access = admin}'"
 }
 
 ##############################

@@ -12,3 +12,5 @@
 
 # CI/CD and repo configuration
 /.github/             @zachreborn @Jakeasaurus
+/.github/scripts/     @zachreborn @Jakeasaurus
+/.github/specs/       @zachreborn @Jakeasaurus

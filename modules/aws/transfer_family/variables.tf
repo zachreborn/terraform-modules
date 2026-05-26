@@ -1,20 +1,46 @@
 ###########################
+# KMS Key Variables
+###########################
+variable "key_description" {
+  description = "(Optional) The description of the key as viewed in AWS console."
+  default     = "CloudWatch kms key used to encrypt transfer family logs"
+  type        = string
+}
+
+variable "key_name_prefix" {
+  description = "(Optional) Creates a unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
+  default     = "alias/transfer_family_logs_key_"
+  type        = string
+}
+
+###########################
 # Cloudwatch Log Group Variables
 ###########################
 
-variable "cloudwatch_log_retention_days" {
-  description = "(Optional) The number of days to retain Transfer Family log events in CloudWatch. Valid values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, 0 (never expire)."
-  type        = number
-  default     = 30
+variable "log_group_class" {
+  description = "(Optional) The class of the log group. Valid values are 'STANDARD' and 'INFREQUENT_ACCESS'. Defaults to 'STANDARD'."
+  type        = string
+  default     = "STANDARD"
   validation {
-    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_log_retention_days)
-    error_message = "The value of cloudwatch_log_retention_days must be a valid CloudWatch log retention period."
+    condition     = var.log_group_class == "STANDARD" || var.log_group_class == "INFREQUENT_ACCESS"
+    error_message = "log_group_class must be either 'STANDARD' or 'INFREQUENT_ACCESS'"
+  }
+}
+
+variable "log_group_retention_in_days" {
+  description = "(Optional) Specifies the number of days you want to retain log events in the specified log group. Valid values are: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653. Defaults to 90."
+  type        = number
+  default     = 90
+  validation {
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653], var.log_group_retention_in_days)
+    error_message = "log_group_retention_in_days must be one of the valid CloudWatch log retention periods: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653."
   }
 }
 
 ###########################
 # Transfer Server Variables
 ###########################
+
 
 variable "address_allocation_ids" {
   description = "(Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your server's endpoint. This can only be set when 'var.endpoint_type' is set to 'VPC'"

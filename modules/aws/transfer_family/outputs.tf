@@ -4,12 +4,12 @@
 
 output "cloudwatch_log_group_arn" {
   description = "The ARN of the CloudWatch log group for Transfer Family server logs"
-  value       = aws_cloudwatch_log_group.transfer_family.arn
+  value       = module.cloudwatch_log_group.arn
 }
 
 output "cloudwatch_log_group_name" {
   description = "The name of the CloudWatch log group for Transfer Family server logs"
-  value       = aws_cloudwatch_log_group.transfer_family.name
+  value       = module.cloudwatch_log_group.name
 }
 
 output "logging_role_arn" {
