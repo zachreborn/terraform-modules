@@ -64,15 +64,64 @@
 
 ### Simple Example
 
-```
-module test {
-  source =
+```hcl
+module "ecr" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ecr"
 
-  variable =
+  name = "my-app"
+
+  tags = {
+    created_by  = "terraform"
+    environment = "prod"
+    team        = "platform"
+    terraform   = "true"
+  }
+}
+```
+
+### With Lifecycle Policy
+
+```hcl
+module "ecr" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ecr"
+
+  name            = "my-app"
+  encryption_type = "KMS"
+  kms_key         = "arn:aws:kms:us-east-1:123456789012:key/mrk-abc123"
+
+  lifecycle_policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire untagged images older than 30 days"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 30
+        }
+        action = { type = "expire" }
+      }
+    ]
+  })
+
+  tags = {
+    created_by  = "terraform"
+    environment = "prod"
+    team        = "platform"
+    terraform   = "true"
+  }
 }
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+## Notes
+
+- **Encryption is always enabled.** ECR encrypts all images at rest. This module exposes `encryption_type` (`AES256` or `KMS`) and an optional `kms_key` ARN. When `encryption_type = "KMS"` and no `kms_key` is provided, the AWS-managed ECR CMK is used.
+- **Tags are immutable by default.** `image_tag_mutability` defaults to `IMMUTABLE`, which prevents any image tag from being overwritten. Set to `MUTABLE` or use an exclusion filter if your pipeline requires reusing tags (e.g., `latest`).
+- **Image scanning is enabled by default.** `scan_on_push = true` ensures every pushed image is scanned for vulnerabilities. Disable only if you manage scanning externally.
+- **Lifecycle and repository policies are optional.** Pass a JSON-encoded policy string to `lifecycle_policy` or `repository_policy` to create the corresponding sub-resources inline.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -82,15 +131,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
 
 ## Modules
 
@@ -99,27 +148,35 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
+| [aws_ecr_lifecycle_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_lifecycle_policy) | resource |
 | [aws_ecr_repository.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
+| [aws_ecr_repository_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_enable_encryption"></a> [enable\_encryption](#input\_enable\_encryption) | Whether to enable encryption for the ECR repository. | `bool` | `false` | no |
-| <a name="input_encryption_type"></a> [encryption\_type](#input\_encryption\_type) | The encryption type to use for the ECR repository. Must be one of 'AES256' or 'KMS'. | `string` | `"AES256"` | no |
-| <a name="input_force_delete"></a> [force\_delete](#input\_force\_delete) | Whether to force delete the repository if images exist. | `bool` | `false` | no |
-| <a name="input_image_tag_mutability"></a> [image\_tag\_mutability](#input\_image\_tag\_mutability) | The tag mutability setting for the repository. Must be one of 'MUTABLE', 'IMMUTABLE', 'IMMUTABLE\_WITH\_EXCLUSION', or 'MUTABLE\_WITH\_EXCLUSION'. | `string` | `"MUTABLE"` | no |
-| <a name="input_image_tag_mutability_exclusion_filter"></a> [image\_tag\_mutability\_exclusion\_filter](#input\_image\_tag\_mutability\_exclusion\_filter) | A list of tags. Tags that match these filters will be mutable (can be overwritten). Using wildcards (*) will match zero or more image tag characters. | `list(string)` | `null` | no |
-| <a name="input_kms_key"></a> [kms\_key](#input\_kms\_key) | The ARN of the KMS key to use when encryption\_type is KMS. Must be a valid KMS ARN. If not specified, uses the default AWS managed key for ECR. | `string` | `null` | no |
-| <a name="input_name"></a> [name](#input\_name) | The name of the ECR repository. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the ECR repository. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_encryption_type"></a> [encryption\_type](#input\_encryption\_type) | (Optional) The encryption type to use for the ECR repository. Valid values are 'AES256' or 'KMS'. Defaults to 'KMS' for Well-Architected compliance. | `string` | `"KMS"` | no |
+| <a name="input_force_delete"></a> [force\_delete](#input\_force\_delete) | (Optional) Whether to force delete the repository even if it contains images. Defaults to false. | `bool` | `false` | no |
+| <a name="input_image_tag_mutability"></a> [image\_tag\_mutability](#input\_image\_tag\_mutability) | (Optional) The tag mutability setting for the repository. Valid values are 'MUTABLE', 'IMMUTABLE', 'IMMUTABLE\_WITH\_EXCLUSION', or 'MUTABLE\_WITH\_EXCLUSION'. Defaults to 'IMMUTABLE' to prevent tag overwrites. | `string` | `"IMMUTABLE"` | no |
+| <a name="input_image_tag_mutability_exclusion_filter"></a> [image\_tag\_mutability\_exclusion\_filter](#input\_image\_tag\_mutability\_exclusion\_filter) | (Optional) A list of tag filter expressions. Tags matching these filters will remain mutable even when the repository is set to IMMUTABLE\_WITH\_EXCLUSION or MUTABLE\_WITH\_EXCLUSION. Wildcards (*) match zero or more tag characters. Defaults to null (no exclusions). | `list(string)` | `null` | no |
+| <a name="input_kms_key"></a> [kms\_key](#input\_kms\_key) | (Optional) The ARN of the KMS CMK to use when encryption\_type is 'KMS'. If not specified, the AWS-managed ECR CMK is used. Must be a valid KMS key ARN. | `string` | `null` | no |
+| <a name="input_lifecycle_policy"></a> [lifecycle\_policy](#input\_lifecycle\_policy) | (Optional) A JSON-encoded ECR lifecycle policy document. When set, an aws\_ecr\_lifecycle\_policy resource is created for this repository. Defaults to null (no lifecycle policy). | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the ECR repository. | `string` | n/a | yes |
+| <a name="input_repository_policy"></a> [repository\_policy](#input\_repository\_policy) | (Optional) A JSON-encoded IAM policy document to attach to the repository. When set, an aws\_ecr\_repository\_policy resource is created. Defaults to null (no repository policy). | `string` | `null` | no |
+| <a name="input_scan_on_push"></a> [scan\_on\_push](#input\_scan\_on\_push) | (Optional) Whether to enable automatic image scanning on push. Defaults to true. | `bool` | `true` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the ECR repository. A 'Name' tag is always added automatically from the repository name. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the ECR repository. |
+| <a name="output_id"></a> [id](#output\_id) | The registry ID (AWS account ID) where the repository was created. |
+| <a name="output_registry_id"></a> [registry\_id](#output\_registry\_id) | The registry ID (AWS account ID) where the repository was created. |
+| <a name="output_repository_url"></a> [repository\_url](#output\_repository\_url) | The URL of the ECR repository in the form <registry\_id>.dkr.ecr.<region>.amazonaws.com/<repository\_name>. |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | A map of all tags assigned to the ECR repository, including those inherited from the provider default\_tags block. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
