@@ -4,10 +4,17 @@ on:
   issues:
     types: [opened, edited, labeled]
 
-# Cancel in-progress triage on the same issue if a new event arrives.
+# Allow concurrent triage runs for the same issue. Setting
+# cancel-in-progress: false prevents a simultaneous `labeled` event (e.g.
+# when an issue is created with a label already attached) from cancelling the
+# in-flight `opened` event run. The `labeled` non-`needs-info` runs are still
+# correctly skipped by the job-level `if` condition, so they cannot cause
+# duplicate triage. The downside is that rapid re-edits may produce two
+# concurrent runs, but the second is idempotent once the first has already
+# applied a state label.
 concurrency:
   group: oz-triage-${{ github.event.issue.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
