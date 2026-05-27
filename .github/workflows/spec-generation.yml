@@ -211,6 +211,43 @@ jobs:
           echo "::notice::Marking spec PR #${pr_number} ready-for-review."
           gh pr ready "${pr_number}" --repo "${{ github.repository }}" || true
 
+      - name: Notify issue author on spec PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          # Resolve the issue author's login via the REST API so this works
+          # for both the labeled trigger and manual workflow_dispatch (where
+          # github.event.issue is unavailable).
+          author=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" \
+            --jq '.user.login')
+
+          # Find the spec PR for this issue (most recently created, any draft state).
+          pr_number=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --json number,headRefName,createdAt \
+            --jq "[.[] | select(.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\"))] | sort_by(.createdAt) | last | .number // empty")
+
+          if [ -z "${pr_number}" ]; then
+            echo "::notice::No open spec PR found for issue #${ISSUE_NUMBER}; skipping notification."
+            exit 0
+          fi
+
+          # Request a review from the issue author. This may be a no-op if
+          # GitHub prevents requesting review from non-collaborators; the
+          # || true ensures the step does not fail in that case.
+          gh pr edit "${pr_number}" \
+            --repo "${{ github.repository }}" \
+            --add-reviewer "${author}" || true
+
+          # Post a comment on the spec PR so the author is notified regardless
+          # of whether the review request above succeeded.
+          gh pr comment "${pr_number}" \
+            --repo "${{ github.repository }}" \
+            --body "@${author} A spec has been generated from issue #${ISSUE_NUMBER}. Please review it and approve the PR so the implementation phase can begin."
+
       - name: On success - drop ready-for-spec
         if: success()
         env:
