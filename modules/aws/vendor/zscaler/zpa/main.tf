@@ -48,6 +48,7 @@ resource "aws_security_group" "zpa" {
   description = "Zscaler ZPA App Connector security group - egress only. Connectors initiate all sessions outbound to Zscaler cloud."
   vpc_id      = var.vpc_id
 
+  #tfsec:ignore:aws-ec2-no-public-egress-sgr
   egress {
     description = "All outbound traffic to Zscaler cloud endpoints"
     from_port   = 0

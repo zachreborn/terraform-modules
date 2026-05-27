@@ -146,11 +146,6 @@ variable "subnet_ids" {
 
 variable "tags" {
   description = "(Optional) Map of tags to assign to all resources created by this module."
-  type        = map(any)
-  default = {
-    created_by  = "terraform"
-    environment = "prod"
-    role        = "zpa_connector"
-    terraform   = "true"
-  }
+  type        = map(string)
+  default     = {}
 }
