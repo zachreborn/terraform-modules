@@ -13,18 +13,11 @@ terraform {
 }
 
 ##############################
-# Data Sources
-##############################
-data "aws_caller_identity" "config_account" {
-  provider = aws.organization_config_account
-}
-
-##############################
 # Locals
 ##############################
 locals {
-  bucket_name      = var.create_s3_bucket ? aws_s3_bucket.this[0].id : var.s3_bucket_name
-  bucket_arn       = var.create_s3_bucket ? aws_s3_bucket.this[0].arn : "arn:aws:s3:::${var.s3_bucket_name}"
+  bucket_name      = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_id : var.s3_bucket_name
+  bucket_arn       = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_arn : "arn:aws:s3:::${var.s3_bucket_name}"
   s3_delivery_path = var.s3_key_prefix != null ? "${var.s3_key_prefix}/AWSLogs/*/Config/*" : "AWSLogs/*/Config/*"
 }
 
@@ -40,6 +33,12 @@ resource "aws_organizations_delegated_administrator" "this" {
 ##############################
 # Config S3 Bucket
 ##############################
+
+# The Config-specific access policy (GetBucketAcl, ListBucket, PutObject for
+# config.amazonaws.com, plus DenyInsecureTransport) is managed here rather than
+# passed into the child s3/bucket module because the policy document must
+# reference the bucket ARN — which is only known after the module creates the
+# bucket — and passing it as a module input would create a Terraform cycle.
 data "aws_iam_policy_document" "config_bucket" {
   count = var.create_s3_bucket ? 1 : 0
 
@@ -53,7 +52,7 @@ data "aws_iam_policy_document" "config_bucket" {
     }
 
     actions   = ["s3:GetBucketAcl"]
-    resources = [aws_s3_bucket.this[0].arn]
+    resources = [module.config_bucket[0].s3_bucket_arn]
   }
 
   statement {
@@ -66,7 +65,7 @@ data "aws_iam_policy_document" "config_bucket" {
     }
 
     actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.this[0].arn]
+    resources = [module.config_bucket[0].s3_bucket_arn]
   }
 
   statement {
@@ -79,7 +78,7 @@ data "aws_iam_policy_document" "config_bucket" {
     }
 
     actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.this[0].arn}/${local.s3_delivery_path}"]
+    resources = ["${module.config_bucket[0].s3_bucket_arn}/${local.s3_delivery_path}"]
 
     condition {
       test     = "StringEquals"
@@ -100,8 +99,8 @@ data "aws_iam_policy_document" "config_bucket" {
     actions = ["s3:*"]
 
     resources = [
-      aws_s3_bucket.this[0].arn,
-      "${aws_s3_bucket.this[0].arn}/*",
+      module.config_bucket[0].s3_bucket_arn,
+      "${module.config_bucket[0].s3_bucket_arn}/*",
     ]
 
     condition {
@@ -112,72 +111,42 @@ data "aws_iam_policy_document" "config_bucket" {
   }
 }
 
-resource "aws_s3_bucket" "this" {
-  count    = var.create_s3_bucket ? 1 : 0
-  provider = aws.organization_config_account
+module "config_bucket" {
+  count  = var.create_s3_bucket ? 1 : 0
+  source = "../../s3/bucket"
 
-  bucket_prefix = var.s3_bucket_prefix # e.g., "config-" yields globally unique name
-  force_destroy = false
-  tags          = var.tags
-}
-
-resource "aws_s3_bucket_ownership_controls" "this" {
-  count    = var.create_s3_bucket ? 1 : 0
-  provider = aws.organization_config_account
-
-  bucket = aws_s3_bucket.this[0].id
-
-  rule {
-    object_ownership = "BucketOwnerEnforced"
+  providers = {
+    aws = aws.organization_config_account
   }
-}
 
-resource "aws_s3_bucket_public_access_block" "this" {
-  count    = var.create_s3_bucket ? 1 : 0
-  provider = aws.organization_config_account
+  bucket_prefix              = var.s3_bucket_prefix
+  bucket_force_destroy       = var.s3_bucket_force_destroy
+  bucket_object_lock_enabled = var.s3_bucket_object_lock_enabled
 
-  bucket = aws_s3_bucket.this[0].id
+  # SSL enforcement is handled by the inline aws_s3_bucket_policy below,
+  # which also includes Config-specific permissions. Disable it in the child
+  # module to avoid a separate, conflicting bucket policy resource.
+  enforce_ssl = false
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
+  versioning_status = "Enabled"
+  sse_algorithm     = "aws:kms"
+  enable_kms_key    = false # AWS-managed key by default; use var.s3_kms_key_arn on the delivery channel for CMK
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
-  count    = var.create_s3_bucket ? 1 : 0
-  provider = aws.organization_config_account
+  enable_s3_bucket_logging = var.enable_s3_bucket_logging
+  logging_target_bucket    = var.s3_logging_target_bucket
+  logging_target_prefix    = var.s3_logging_target_prefix
 
-  bucket = aws_s3_bucket.this[0].id
-
-  rule {
-    bucket_key_enabled = true
-
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms" # SSE-KMS with AWS managed key
-    }
-  }
-}
-
-resource "aws_s3_bucket_versioning" "this" {
-  count    = var.create_s3_bucket ? 1 : 0
-  provider = aws.organization_config_account
-
-  bucket = aws_s3_bucket.this[0].id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
+  tags = merge(tomap({ Name = var.name }), var.tags)
 }
 
 resource "aws_s3_bucket_policy" "this" {
   count    = var.create_s3_bucket ? 1 : 0
   provider = aws.organization_config_account
 
-  bucket = aws_s3_bucket.this[0].id
+  bucket = module.config_bucket[0].s3_bucket_id
   policy = data.aws_iam_policy_document.config_bucket[0].json
 
-  depends_on = [aws_s3_bucket_public_access_block.this]
+  depends_on = [module.config_bucket]
 }
 
 ##############################
@@ -190,8 +159,30 @@ resource "aws_config_configuration_recorder" "this" {
   role_arn = var.recorder_role_arn
 
   recording_group {
-    all_supported                 = true
+    all_supported                 = var.all_supported
     include_global_resource_types = var.include_global_resource_types
+    resource_types                = length(var.resource_types) > 0 ? var.resource_types : null
+
+    dynamic "exclusion_by_resource_types" {
+      for_each = length(var.exclusion_resource_types) > 0 ? [1] : []
+      content {
+        resource_types = var.exclusion_resource_types
+      }
+    }
+
+    dynamic "recording_strategy" {
+      for_each = var.recording_strategy != null ? [var.recording_strategy] : []
+      content {
+        use_only = recording_strategy.value
+      }
+    }
+  }
+
+  dynamic "recording_mode" {
+    for_each = var.recording_frequency != null ? [var.recording_frequency] : []
+    content {
+      recording_frequency = recording_mode.value
+    }
   }
 }
 
@@ -204,10 +195,11 @@ resource "aws_config_delivery_channel" "this" {
   name           = var.delivery_channel_name
   s3_bucket_name = local.bucket_name
   s3_key_prefix  = var.s3_key_prefix
+  s3_kms_key_arn = var.s3_kms_key_arn
   sns_topic_arn  = var.sns_topic_arn
 
   snapshot_delivery_properties {
-    delivery_frequency = var.delivery_frequency # How often Config snapshots are delivered
+    delivery_frequency = var.delivery_frequency
   }
 
   depends_on = [aws_config_configuration_recorder.this]
@@ -232,9 +224,20 @@ resource "aws_config_organization_conformance_pack" "this" {
   for_each = var.enable_conformance_packs ? { for pack in var.conformance_packs : pack.name => pack } : {}
   provider = aws.organization_config_account
 
-  name            = each.value.name
-  template_s3_uri = try(each.value.template_s3_uri, null)
-  template_body   = try(each.value.template_body, null)
+  name                   = each.value.name
+  template_s3_uri        = try(each.value.template_s3_uri, null)
+  template_body          = try(each.value.template_body, null)
+  delivery_s3_bucket     = var.conformance_pack_delivery_s3_bucket
+  delivery_s3_key_prefix = var.conformance_pack_delivery_s3_key_prefix
+  excluded_accounts      = try(each.value.excluded_accounts, null)
+
+  dynamic "input_parameter" {
+    for_each = try(each.value.input_parameters, [])
+    content {
+      parameter_name  = input_parameter.value.parameter_name
+      parameter_value = input_parameter.value.parameter_value
+    }
+  }
 
   depends_on = [aws_config_configuration_recorder_status.this]
 }

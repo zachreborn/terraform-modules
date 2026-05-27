@@ -15,10 +15,10 @@ output "delivery_channel_name" {
 
 output "s3_bucket_id" {
   description = "The ID (name) of the S3 bucket used for AWS Config delivery. Returns null when create_s3_bucket is false."
-  value       = var.create_s3_bucket ? aws_s3_bucket.this[0].id : null
+  value       = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_id : null
 }
 
 output "s3_bucket_arn" {
   description = "The ARN of the S3 bucket used for AWS Config delivery. Returns null when create_s3_bucket is false."
-  value       = var.create_s3_bucket ? aws_s3_bucket.this[0].arn : null
+  value       = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_arn : null
 }
