@@ -3,19 +3,12 @@ name: Issue Triage (Oz)
 on:
   issues:
     types: [opened, edited, labeled]
-  workflow_dispatch:
-    inputs:
-      issue_number:
-        description: "Issue number to triage"
-        required: true
-        type: string
 
 # Cancel any in-progress triage run for the same issue when a newer event
-# arrives. With the corrected `if` condition below, human-applied labels
-# (e.g. `bug`) pass the condition and will run triage rather than being
-# skipped, so whichever run survives the cancellation will do the work.
+# arrives. The job-level `if` ensures the surviving run will actually execute
+# triage rather than be skipped.
 concurrency:
-  group: oz-triage-${{ github.event.issue.number || inputs.issue_number }}
+  group: oz-triage-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 permissions:
@@ -32,68 +25,32 @@ jobs:
     name: Triage issue with Oz
     runs-on: ubuntu-latest
 
-    # Skip when (issues trigger only — workflow_dispatch re-validates at
-    # runtime via the eligibility step below):
+    # Skip when:
     #   - The issue has already advanced past triage (pipeline labels present)
+    #   - The human explicitly opted out via skip-oz
     #   - The author is untrusted (protects secrets from arbitrary issue text)
-    #   - The triggering label was applied by a bot (prevents triage loops
-    #     where the agent's own label changes re-fire the workflow). Any
-    #     human-applied label — including GitHub built-ins like `bug` or
-    #     `enhancement` — is allowed through so issues created with labels
-    #     pre-attached are still triaged correctly.
+    #   - The event was sent by a bot, unless it is an `opened` event (prevents
+    #     triage loops from the agent's own label/edit activity, while still
+    #     allowing issues created with labels pre-attached to be triaged via the
+    #     `opened` event; bot-authored issues are already excluded by the
+    #     author_association check).
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (!contains(github.event.issue.labels.*.name, 'skip-oz') &&
-       !contains(github.event.issue.labels.*.name, 'ready-for-spec') &&
-       !contains(github.event.issue.labels.*.name, 'spec-in-progress') &&
-       !contains(github.event.issue.labels.*.name, 'spec-ready-for-review') &&
-       !contains(github.event.issue.labels.*.name, 'spec-approved') &&
-       !contains(github.event.issue.labels.*.name, 'implementation-in-progress') &&
-       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
-                github.event.issue.author_association) &&
-       (github.event.action != 'labeled' ||
-        github.event.sender.type != 'Bot'))
+      !contains(github.event.issue.labels.*.name, 'skip-oz') &&
+      !contains(github.event.issue.labels.*.name, 'ready-for-spec') &&
+      !contains(github.event.issue.labels.*.name, 'spec-in-progress') &&
+      !contains(github.event.issue.labels.*.name, 'spec-ready-for-review') &&
+      !contains(github.event.issue.labels.*.name, 'spec-approved') &&
+      !contains(github.event.issue.labels.*.name, 'implementation-in-progress') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.issue.author_association) &&
+      (github.event.action == 'opened' ||
+       github.event.sender.type != 'Bot')
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
-
-      - name: Resolve and validate issue number
-        id: ctx
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
-        run: |
-          if ! printf '%s' "${ISSUE_NUMBER}" | grep -Eq '^[1-9][0-9]*$'; then
-            echo "::error::issue_number must be a positive integer (>= 1); got: ${ISSUE_NUMBER}"
-            exit 1
-          fi
-          echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
-
-      - name: Verify issue eligibility on manual dispatch
-        # Re-check skip-oz and author_association for workflow_dispatch because
-        # the job-level `if` cannot access github.event.issue on that trigger.
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
-        run: |
-          issue=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}")
-          labels=$(printf '%s' "${issue}" | jq -r '.labels[].name')
-          assoc=$(printf '%s' "${issue}" | jq -r '.author_association')
-          if printf '%s\n' "${labels}" | grep -Fxq 'skip-oz'; then
-            echo "::notice::Issue #${ISSUE_NUMBER} has the skip-oz label; aborting."
-            exit 1
-          fi
-          case "${assoc}" in
-            OWNER|MEMBER|COLLABORATOR) ;;
-            *)
-              echo "::error::Issue #${ISSUE_NUMBER} author_association=${assoc} is not in {OWNER,MEMBER,COLLABORATOR}; refusing."
-              exit 1
-              ;;
-          esac
 
       - name: Guard - require WARP_API_KEY
         env:
@@ -118,11 +75,15 @@ jobs:
             minimum standards below and update its state via the `gh` CLI.
 
             ## Issue
-            Number: #${{ steps.ctx.outputs.issue_number }}
-            Fetch full details with:
-              gh issue view ${{ steps.ctx.outputs.issue_number }} \
-                --repo ${{ github.repository }} \
-                --json number,title,body,labels,url
+            Number: #${{ github.event.issue.number }}
+            URL: ${{ github.event.issue.html_url }}
+            Title: ${{ github.event.issue.title }}
+            Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}
+
+            Body:
+            ---
+            ${{ github.event.issue.body }}
+            ---
 
             ## Classification
             Classify as `bug` or `feature` based on the existing labels and
@@ -153,7 +114,7 @@ jobs:
               - Post a single comment listing each missing item by name and
                 briefly explaining what is needed.
               - Run:
-                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                gh issue edit ${{ github.event.issue.number }} \
                   --repo ${{ github.repository }} \
                   --add-label needs-info
 
@@ -164,10 +125,10 @@ jobs:
                   * Breaking-change risk (none/low/medium/high) with one
                     sentence of rationale
               - Run:
-                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                gh issue edit ${{ github.event.issue.number }} \
                   --repo ${{ github.repository }} \
                   --remove-label needs-info || true
-                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
+                gh issue edit ${{ github.event.issue.number }} \
                   --repo ${{ github.repository }} \
                   --add-label ready-for-spec
 
@@ -185,7 +146,7 @@ jobs:
         if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           labels=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" \
             --jq '.labels[].name')
