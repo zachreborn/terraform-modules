@@ -1,12 +1,12 @@
 # S3 Access Log Bucket Module
 
-This module creates a centralized S3 bucket configured as the **destination** for S3 server access logs. It enforces the constraints required by the AWS S3 log delivery service:
+This module creates a centralized S3 bucket configured as the **destination** for S3 server access logs. It wraps the `s3/bucket` module and enforces the constraints required by the AWS S3 log delivery service:
 
 - **SSE-S3 (AES256)** encryption — the S3 log delivery service does not support SSE-KMS on target buckets.
 - **`BucketOwnerPreferred`** ownership controls — required for the `log-delivery-write` ACL grant.
 - **`log-delivery-write`** ACL — grants the AWS S3 log delivery group write permissions.
 - All public access blocked.
-- SSL-only bucket policy with an explicit allow for `logging.s3.amazonaws.com`.
+- SSL enforcement with an explicit allow for `logging.s3.amazonaws.com`.
 
 Source buckets should use the existing `s3/bucket` module with `enable_s3_bucket_logging = true` and `logging_target_bucket = <this bucket name>` to direct their logs here.
 
@@ -62,19 +62,17 @@ module "my_bucket" {
 |------|---------|
 | aws | >= 6.0.0 |
 
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| this | ../bucket | n/a |
+
 ## Resources
 
 | Name | Type |
 |------|------|
-| aws_s3_bucket.this | resource |
-| aws_s3_bucket_ownership_controls.this | resource |
-| aws_s3_bucket_acl.this | resource |
-| aws_s3_bucket_server_side_encryption_configuration.this | resource |
-| aws_s3_bucket_public_access_block.this | resource |
-| aws_s3_bucket_lifecycle_configuration.this | resource |
-| aws_s3_bucket_versioning.this | resource |
-| aws_s3_bucket_policy.this | resource |
-| aws_iam_policy_document.this | data source |
+| aws_iam_policy_document.log_delivery | data source |
 
 ## Inputs
 
@@ -92,8 +90,7 @@ module "my_bucket" {
 |------|-------------|
 | bucket_id | Name (ID) of the S3 access log bucket |
 | bucket_arn | ARN of the S3 access log bucket |
-| bucket_domain_name | Bucket domain name (`<bucket>.s3.amazonaws.com`) |
-| bucket_regional_domain_name | Region-specific bucket domain name (`<bucket>.s3.<region>.amazonaws.com`) |
+| bucket_region | Region of the S3 access log bucket |
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -111,21 +108,15 @@ module "my_bucket" {
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_this"></a> [this](#module\_this) | ../bucket | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_s3_bucket.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_acl.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
-| [aws_s3_bucket_lifecycle_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
-| [aws_s3_bucket_ownership_controls.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
-| [aws_s3_bucket_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
-| [aws_s3_bucket_public_access_block.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
-| [aws_s3_bucket_server_side_encryption_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
-| [aws_s3_bucket_versioning.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
-| [aws_iam_policy_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.log_delivery](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
@@ -142,7 +133,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_bucket_arn"></a> [bucket\_arn](#output\_bucket\_arn) | ARN of the S3 access log bucket |
-| <a name="output_bucket_domain_name"></a> [bucket\_domain\_name](#output\_bucket\_domain\_name) | Bucket domain name in the format: <bucket>.s3.amazonaws.com |
 | <a name="output_bucket_id"></a> [bucket\_id](#output\_bucket\_id) | Name (ID) of the S3 access log bucket |
-| <a name="output_bucket_regional_domain_name"></a> [bucket\_regional\_domain\_name](#output\_bucket\_regional\_domain\_name) | Bucket region-specific domain name in the format: <bucket>.s3.<region>.amazonaws.com |
+| <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | Region of the S3 access log bucket |
 <!-- END_TF_DOCS -->
