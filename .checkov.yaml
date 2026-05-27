@@ -41,6 +41,10 @@ skip-check:
   # Transfer Server module supports public exposure as a caller-controlled variable
   - CKV_AWS_164
 
+  # S3 access_log_bucket requires ACLs enabled: the AWS log delivery service cannot write
+  # to buckets with ACLs disabled; BucketOwnerPreferred + log-delivery-write ACL is required
+  - CKV2_AWS_65
+
   # ============================================================
   # CONFIGURABLE BY CALLER: Checkov cannot see variable values
   # These modules expose the flagged settings as input variables.
