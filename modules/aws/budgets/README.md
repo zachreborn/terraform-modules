@@ -65,7 +65,7 @@ This example creates a monthly $100 cost budget with no notifications.
 
 ```
 module "budget" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets/budget"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets"
 
   name         = "monthly-cost-budget"
   limit_amount = "100"
@@ -78,7 +78,7 @@ This example creates a monthly cost budget with email alerts at 80% actual and 1
 
 ```
 module "budget" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets/budget"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets"
 
   name         = "prod-monthly-cost-budget"
   budget_type  = "COST"
@@ -125,7 +125,7 @@ locals {
 module "account_budgets" {
   for_each = local.accounts
 
-  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets/budget"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets"
 
   name         = "${each.key}-monthly-cost-budget"
   account_id   = each.value
@@ -156,7 +156,7 @@ This example creates a budget scoped to a specific AWS service.
 
 ```
 module "ec2_budget" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets/budget"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/budgets"
 
   name         = "ec2-monthly-cost-budget"
   limit_amount = "150"
@@ -198,7 +198,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
