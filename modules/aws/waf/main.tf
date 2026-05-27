@@ -1,3 +1,6 @@
+############################
+# Provider Configuration
+############################
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -7,12 +10,6 @@ terraform {
     }
   }
 }
-
-############################
-# Data Sources
-############################
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 ############################
 # Locals
