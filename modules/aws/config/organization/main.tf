@@ -17,7 +17,6 @@ terraform {
 ##############################
 locals {
   bucket_name      = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_id : var.s3_bucket_name
-  bucket_arn       = var.create_s3_bucket ? module.config_bucket[0].s3_bucket_arn : "arn:aws:s3:::${var.s3_bucket_name}"
   s3_delivery_path = var.s3_key_prefix != null ? "${var.s3_key_prefix}/AWSLogs/*/Config/*" : "AWSLogs/*/Config/*"
 }
 
@@ -194,7 +193,7 @@ resource "aws_config_delivery_channel" "this" {
 
   name           = var.delivery_channel_name
   s3_bucket_name = local.bucket_name
-  s3_key_prefix  = var.s3_key_prefix
+  s3_key_prefix  = var.s3_key_prefix  # gitleaks:allow
   s3_kms_key_arn = var.s3_kms_key_arn
   sns_topic_arn  = var.sns_topic_arn
 
