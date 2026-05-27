@@ -18,6 +18,31 @@ variable "account_id" {
   default     = null
 }
 
+variable "auto_adjust_data" {
+  type = object({
+    auto_adjust_type = string
+    historical_options = optional(object({
+      budget_adjustment_period = number
+    }))
+  })
+  description = "(Optional) Object containing AutoAdjustData which determines the budget amount for an auto-adjusting budget. auto_adjust_type must be FORECAST or HISTORICAL. historical_options is required when auto_adjust_type is HISTORICAL."
+  default     = null
+  validation {
+    condition     = var.auto_adjust_data == null ? true : contains(["FORECAST", "HISTORICAL"], var.auto_adjust_data.auto_adjust_type)
+    error_message = "auto_adjust_data.auto_adjust_type must be one of: FORECAST, HISTORICAL."
+  }
+  validation {
+    condition     = var.auto_adjust_data == null ? true : (var.auto_adjust_data.auto_adjust_type != "HISTORICAL" || var.auto_adjust_data.historical_options != null)
+    error_message = "auto_adjust_data.historical_options is required when auto_adjust_type is HISTORICAL."
+  }
+}
+
+variable "billing_view_arn" {
+  type        = string
+  description = "(Optional) The ARN of the billing view to associate with the budget."
+  default     = null
+}
+
 variable "budget_type" {
   type        = string
   description = "(Required) Whether this budget tracks monetary cost or usage. Valid values: COST, USAGE, SAVINGS_PLANS_UTILIZATION, SAVINGS_PLANS_COVERAGE, RI_UTILIZATION, RI_COVERAGE."
@@ -30,10 +55,10 @@ variable "budget_type" {
 
 variable "limit_amount" {
   type        = string
-  description = "(Required) The amount of cost or usage being measured for a budget. For COST budgets this is a dollar value (e.g. '100'). For USAGE budgets this is the usage type amount."
+  description = "(Optional) The amount of cost or usage being measured for a budget. For COST budgets this is a dollar value (e.g. '100'). For USAGE budgets this is the usage type amount. Omit when using planned_limit."
   default     = null
   validation {
-    condition     = var.limit_amount != null && can(regex("^[0-9]+(\\.[0-9]+)?$", var.limit_amount))
+    condition     = var.limit_amount == null ? true : can(regex("^[0-9]+(\\.[0-9]+)?$", var.limit_amount))
     error_message = "limit_amount must be a numeric string (e.g. '100' or '99.99')."
   }
 }
@@ -79,6 +104,28 @@ variable "time_period_end" {
 }
 
 ###########################
+# Cost Types
+###########################
+
+variable "cost_types" {
+  type = object({
+    include_credit             = optional(bool)
+    include_discount           = optional(bool)
+    include_other_subscription = optional(bool)
+    include_recurring          = optional(bool)
+    include_refund             = optional(bool)
+    include_subscription       = optional(bool)
+    include_support            = optional(bool)
+    include_tax                = optional(bool)
+    include_upfront            = optional(bool)
+    use_amortized              = optional(bool)
+    use_blended                = optional(bool)
+  })
+  description = "(Optional) Object containing CostTypes to configure which cost categories are included in the budget. Required for RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, and SAVINGS_PLANS_COVERAGE budget types to override conflicting provider defaults. Conflicts with filter_expression."
+  default     = null
+}
+
+###########################
 # Notifications
 ###########################
 
@@ -113,6 +160,34 @@ variable "notification" {
       contains(["PERCENTAGE", "ABSOLUTE_VALUE"], n.threshold_type)
     ])
     error_message = "Each notification threshold_type must be one of: PERCENTAGE, ABSOLUTE_VALUE."
+  }
+}
+
+###########################
+# Planned Limits
+###########################
+
+variable "planned_limit" {
+  type = list(object({
+    start_time = string
+    amount     = string
+    unit       = string
+  }))
+  description = "(Optional) List of planned budget limits. Each entry sets a budget limit starting at start_time (format: YYYY-MM-DD_HH:MM). Useful for budgets that change over time. When planned_limit is set, limit_amount and limit_unit should be omitted."
+  default     = []
+  validation {
+    condition = alltrue([
+      for pl in var.planned_limit :
+      can(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}$", pl.start_time))
+    ])
+    error_message = "Each planned_limit start_time must be in the format YYYY-MM-DD_HH:MM (e.g. '2024-01-01_00:00')."
+  }
+  validation {
+    condition = alltrue([
+      for pl in var.planned_limit :
+      can(regex("^[0-9]+(\\.[0-9]+)?$", pl.amount))
+    ])
+    error_message = "Each planned_limit amount must be a numeric string (e.g. '100' or '99.99')."
   }
 }
 

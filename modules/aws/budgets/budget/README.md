@@ -1,6 +1,3 @@
-<!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
@@ -193,15 +190,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
 
 ## Modules
 
@@ -210,20 +207,24 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_budgets_budget.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/budgets_budget) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_account_id"></a> [account\_id](#input\_account\_id) | (Optional) The ID of the target account for budget. Defaults to the current account if not specified. Useful when managing budgets for member accounts from a management account. | `string` | `null` | no |
+| <a name="input_auto_adjust_data"></a> [auto\_adjust\_data](#input\_auto\_adjust\_data) | (Optional) Object containing AutoAdjustData which determines the budget amount for an auto-adjusting budget. auto\_adjust\_type must be FORECAST or HISTORICAL. historical\_options is required when auto\_adjust\_type is HISTORICAL. | <pre>object({<br/>    auto_adjust_type = string<br/>    historical_options = optional(object({<br/>      budget_adjustment_period = number<br/>    }))<br/>  })</pre> | `null` | no |
+| <a name="input_billing_view_arn"></a> [billing\_view\_arn](#input\_billing\_view\_arn) | (Optional) The ARN of the billing view to associate with the budget. | `string` | `null` | no |
 | <a name="input_budget_type"></a> [budget\_type](#input\_budget\_type) | (Required) Whether this budget tracks monetary cost or usage. Valid values: COST, USAGE, SAVINGS\_PLANS\_UTILIZATION, SAVINGS\_PLANS\_COVERAGE, RI\_UTILIZATION, RI\_COVERAGE. | `string` | `"COST"` | no |
 | <a name="input_cost_filter"></a> [cost\_filter](#input\_cost\_filter) | (Optional) List of cost filters to apply to the budget. Common filter names: LinkedAccount (filter by member account ID), Service (filter by AWS service), Region, TagKeyValue. | <pre>list(object({<br/>    name   = string<br/>    values = list(string)<br/>  }))</pre> | `[]` | no |
-| <a name="input_limit_amount"></a> [limit\_amount](#input\_limit\_amount) | (Required) The amount of cost or usage being measured for a budget. For COST budgets this is a dollar value (e.g. '100'). For USAGE budgets this is the usage type amount. | `string` | `null` | no |
+| <a name="input_cost_types"></a> [cost\_types](#input\_cost\_types) | (Optional) Object containing CostTypes to configure which cost categories are included in the budget. Required for RI\_UTILIZATION, RI\_COVERAGE, SAVINGS\_PLANS\_UTILIZATION, and SAVINGS\_PLANS\_COVERAGE budget types to override conflicting provider defaults. Conflicts with filter\_expression. | <pre>object({<br/>    include_credit             = optional(bool)<br/>    include_discount           = optional(bool)<br/>    include_other_subscription = optional(bool)<br/>    include_recurring          = optional(bool)<br/>    include_refund             = optional(bool)<br/>    include_subscription       = optional(bool)<br/>    include_support            = optional(bool)<br/>    include_tax                = optional(bool)<br/>    include_upfront            = optional(bool)<br/>    use_amortized              = optional(bool)<br/>    use_blended                = optional(bool)<br/>  })</pre> | `null` | no |
+| <a name="input_limit_amount"></a> [limit\_amount](#input\_limit\_amount) | (Optional) The amount of cost or usage being measured for a budget. For COST budgets this is a dollar value (e.g. '100'). For USAGE budgets this is the usage type amount. Omit when using planned\_limit. | `string` | `null` | no |
 | <a name="input_limit_unit"></a> [limit\_unit](#input\_limit\_unit) | (Required) The unit of measurement used for the budget. For COST budgets use 'USD'. For USAGE budgets use the service-specific unit (e.g. 'GB' for S3 storage). | `string` | `"USD"` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of a budget. Unique within accounts. | `string` | `null` | no |
 | <a name="input_notification"></a> [notification](#input\_notification) | (Optional) List of notification configurations for the budget. Each entry creates a budget alert. comparison\_operator: LESS\_THAN, EQUAL\_TO, GREATER\_THAN. notification\_type: ACTUAL or FORECASTED. threshold\_type: PERCENTAGE or ABSOLUTE\_VALUE. | <pre>list(object({<br/>    comparison_operator        = string<br/>    notification_type          = string<br/>    threshold                  = number<br/>    threshold_type             = string<br/>    subscriber_email_addresses = optional(list(string), [])<br/>    subscriber_sns_topic_arns  = optional(list(string), [])<br/>  }))</pre> | `[]` | no |
+| <a name="input_planned_limit"></a> [planned\_limit](#input\_planned\_limit) | (Optional) List of planned budget limits. Each entry sets a budget limit starting at start\_time (format: YYYY-MM-DD\_HH:MM). Useful for budgets that change over time. When planned\_limit is set, limit\_amount and limit\_unit should be omitted. | <pre>list(object({<br/>    start_time = string<br/>    amount     = string<br/>    unit       = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the budget resource. | `map(string)` | `{}` | no |
 | <a name="input_time_period_end"></a> [time\_period\_end](#input\_time\_period\_end) | (Optional) The end of the time period covered by the budget. If not provided, defaults to 2087-06-15\_00:00. Format: YYYY-MM-DD\_HH:MM. | `string` | `null` | no |
 | <a name="input_time_period_start"></a> [time\_period\_start](#input\_time\_period\_start) | (Optional) The start of the time period covered by the budget. If not provided, defaults to the beginning of the current month. Format: YYYY-MM-DD\_HH:MM. | `string` | `null` | no |
@@ -232,10 +233,11 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the budget. |
 | <a name="output_id"></a> [id](#output\_id) | The unique identifier of the budget (same as the budget name). |
 | <a name="output_name"></a> [name](#output\_name) | The name of the budget. |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | A map of tags assigned to the resource, including those inherited from the provider default\_tags configuration block. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
