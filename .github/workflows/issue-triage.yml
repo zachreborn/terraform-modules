@@ -110,7 +110,11 @@ jobs:
 
             If ANY required item is missing:
               - Post a single comment listing each missing item by name and
-                briefly explaining what is needed.
+                briefly explaining what is needed. End the comment with this
+                exact sentence (replacing the bracketed items with the actual
+                list): "Please **edit the issue body** (not a comment reply)
+                to add the items above — editing the body re-triggers triage
+                automatically."
               - Run:
                 gh issue edit ${{ github.event.issue.number }} \
                   --repo ${{ github.repository }} \
