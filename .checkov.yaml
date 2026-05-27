@@ -119,8 +119,8 @@ skip-check:
   - CKV_AWS_103 # WAF association - optional caller configuration
 
   # WAFv2
-  - CKV_AWS_192  # Log4j CVE-2021-44228 managed rule - caller selects which managed rule groups to enable
-  - CKV_AWS_342  # WAF rule actions - rules support action, override_action, or neither; caller-defined rule set
+  - CKV_AWS_192 # Log4j CVE-2021-44228 managed rule - caller selects which managed rule groups to enable
+  - CKV_AWS_342 # WAF rule actions - rules support action, override_action, or neither; caller-defined rule set
 
   # Elastic Beanstalk - checkov runtime crash on these checks
   - CKV_AWS_312 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
