@@ -2,9 +2,11 @@
 name: Issue Triage (Oz)
 on:
   issues:
-    types: [opened, edited, labeled]
+    types: [opened, edited]
 
-# Cancel in-progress triage on the same issue if a new event arrives.
+# Cancel any in-progress triage run for the same issue when a newer event
+# arrives. The job-level `if` ensures the surviving run will actually execute
+# triage rather than be skipped.
 concurrency:
   group: oz-triage-${{ github.event.issue.number }}
   cancel-in-progress: true
@@ -24,14 +26,12 @@ jobs:
     runs-on: ubuntu-latest
 
     # Skip when:
-    #   - The issue has already advanced past triage, or
-    #   - The human explicitly opted out via skip-oz, or
-    #   - The author is untrusted (gates secrets/agent against prompt injection
-    #     from arbitrary issue text), or
-    #   - The triggering event is a label that this workflow itself just
-    #     applied (`labeled` event whose sender is github-actions[bot]).
-    # For `labeled` events we additionally narrow to the `needs-info` label so
-    # human edits to other labels do not re-run triage.
+    #   - The issue has already advanced past triage (pipeline labels present)
+    #   - The human explicitly opted out via skip-oz
+    #   - The author is untrusted (protects secrets from arbitrary issue text)
+    #   - The event is an `edited` event sent by a bot (prevents triage loops
+    #     from automated issue edits; bot-authored issues are already excluded
+    #     by the author_association check).
     if: >-
       !contains(github.event.issue.labels.*.name, 'skip-oz') &&
       !contains(github.event.issue.labels.*.name, 'ready-for-spec') &&
@@ -41,9 +41,8 @@ jobs:
       !contains(github.event.issue.labels.*.name, 'implementation-in-progress') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
                github.event.issue.author_association) &&
-      (github.event.action != 'labeled' ||
-       (github.event.label.name == 'needs-info' &&
-        github.event.sender.login != 'github-actions[bot]'))
+      (github.event.action == 'opened' ||
+       github.event.sender.type != 'Bot')
 
     steps:
       - name: Checkout
