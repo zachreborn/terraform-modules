@@ -193,7 +193,7 @@ resource "aws_config_delivery_channel" "this" {
 
   name           = var.delivery_channel_name
   s3_bucket_name = local.bucket_name
-  s3_key_prefix  = var.s3_key_prefix # gitleaks:allow
+  s3_key_prefix  = var.s3_key_prefix
   s3_kms_key_arn = var.s3_kms_key_arn
   sns_topic_arn  = var.sns_topic_arn
 
