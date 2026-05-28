@@ -83,15 +83,22 @@ provider "aws" {
 }
 ```
 
-```
+```hcl
 # Module configuration
 module "guardduty" {
-  source           = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
-  providers        = {
-      aws.organization_management_account = aws.organization_management_account
-      aws.organization_security_account   = aws.organization_security_account
+  source = "github.com/zachreborn/terraform-modules//modules/aws/guardduty/organization"
+  providers = {
+    aws.organization_management_account = aws.organization_management_account
+    aws.organization_security_account   = aws.organization_security_account
   }
-  admin_account_id = module.account_security.id
+
+  admin_account_id                 = module.account_security.id
+  auto_enable_organization_members = "ALL"
+
+  # Optional feature toggles
+  enable_s3_data_events       = true
+  enable_eks_audit_logs       = true
+  enable_ebs_malware_protection = true
 }
 ```
 
