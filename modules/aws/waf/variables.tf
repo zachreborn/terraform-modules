@@ -118,6 +118,35 @@ variable "ip_sets" {
 }
 
 ############################################
+# Logging Configuration
+############################################
+
+variable "logging_configuration" {
+  description = "WAF logging configuration. Set log_destination_configs to a list of Kinesis Firehose, CloudWatch Logs, or S3 ARNs. redacted_fields and logging_filter are optional."
+  type = object({
+    log_destination_configs = list(string)
+    redacted_fields = optional(list(object({
+      single_header = optional(object({ name = string }))
+      uri_path      = optional(object({}))
+      query_string  = optional(object({}))
+      method        = optional(object({}))
+    })), [])
+    logging_filter = optional(object({
+      default_behavior = string
+      filter = list(object({
+        behavior    = string
+        requirement = string
+        condition = list(object({
+          action_condition     = optional(object({ action = string }))
+          label_name_condition = optional(object({ label_name = string }))
+        }))
+      }))
+    }))
+  })
+  default = null
+}
+
+############################################
 # Association Configuration
 ############################################
 

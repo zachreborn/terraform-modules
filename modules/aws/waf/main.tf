@@ -172,3 +172,69 @@ resource "aws_wafv2_web_acl_association" "this" {
   resource_arn = var.associate_with_resource
   web_acl_arn  = aws_wafv2_web_acl.this.arn
 }
+
+############################
+# WAF Logging
+############################
+
+resource "aws_wafv2_logging_configuration" "this" {
+  count = var.logging_configuration != null ? 1 : 0
+
+  log_destination_configs = var.logging_configuration.log_destination_configs
+  resource_arn            = aws_wafv2_web_acl.this.arn
+
+  dynamic "redacted_fields" {
+    for_each = var.logging_configuration.redacted_fields
+    content {
+      dynamic "single_header" {
+        for_each = redacted_fields.value.single_header != null ? [redacted_fields.value.single_header] : []
+        content {
+          name = single_header.value.name
+        }
+      }
+      dynamic "uri_path" {
+        for_each = redacted_fields.value.uri_path != null ? [1] : []
+        content {}
+      }
+      dynamic "query_string" {
+        for_each = redacted_fields.value.query_string != null ? [1] : []
+        content {}
+      }
+      dynamic "method" {
+        for_each = redacted_fields.value.method != null ? [1] : []
+        content {}
+      }
+    }
+  }
+
+  dynamic "logging_filter" {
+    for_each = var.logging_configuration.logging_filter != null ? [var.logging_configuration.logging_filter] : []
+    content {
+      default_behavior = logging_filter.value.default_behavior
+      dynamic "filter" {
+        for_each = logging_filter.value.filter
+        content {
+          behavior    = filter.value.behavior
+          requirement = filter.value.requirement
+          dynamic "condition" {
+            for_each = filter.value.condition
+            content {
+              dynamic "action_condition" {
+                for_each = condition.value.action_condition != null ? [condition.value.action_condition] : []
+                content {
+                  action = action_condition.value.action
+                }
+              }
+              dynamic "label_name_condition" {
+                for_each = condition.value.label_name_condition != null ? [condition.value.label_name_condition] : []
+                content {
+                  label_name = label_name_condition.value.label_name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
