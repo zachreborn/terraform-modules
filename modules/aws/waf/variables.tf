@@ -8,6 +8,12 @@ variable "description" {
   default     = "WAF WebACL managed by Terraform"
 }
 
+variable "token_domains" {
+  description = "Specifies the domains to use for CAPTCHA and Challenge token sharing. Required when using CAPTCHA or Challenge across multiple domains."
+  type        = list(string)
+  default     = null
+}
+
 variable "name" {
   description = "A friendly name of the WebACL. Must be unique within the AWS region."
   type        = string
@@ -115,6 +121,30 @@ variable "ip_sets" {
     addresses          = list(string)
   }))
   default = {}
+}
+
+############################################
+# ACL-Level Captcha and Challenge Configuration
+############################################
+
+variable "captcha_config" {
+  description = "Specifies how AWS WAF should handle CAPTCHA evaluations at the Web ACL level."
+  type = object({
+    immunity_time_property = optional(object({
+      immunity_time = optional(number, 300)
+    }), { immunity_time = 300 })
+  })
+  default = null
+}
+
+variable "challenge_config" {
+  description = "Specifies how AWS WAF should handle Challenge evaluations at the Web ACL level."
+  type = object({
+    immunity_time_property = optional(object({
+      immunity_time = optional(number, 300)
+    }), { immunity_time = 300 })
+  })
+  default = null
 }
 
 ############################################
