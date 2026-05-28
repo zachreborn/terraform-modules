@@ -148,7 +148,7 @@ skip-check:
   - CKV2_AWS_47 # WAFv2 WebACL with Log4j rule - optional caller configuration
 
   # WAFv2
-  - CKV2_AWS_31 # WAF logging configuration - exposed as optional; caller provides log destination ARN
+  - CKV2_AWS_31 # WAF logging configuration - exposed via logging_configuration variable; suppressed because logging is optional (callers must provide a log destination)
 
   # CloudTrail
   - CKV2_AWS_10 # CloudWatch Logs integration - exposed as cloud_watch_logs_group_arn variable

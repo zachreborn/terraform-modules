@@ -23,7 +23,7 @@ No reusable WAFv2 module exists in the library. DEVSECOPS-4 requires a WAF modul
 |---|---|---|---|
 | `name` | `string` | required | Web ACL name |
 | `scope` | `string` | `"REGIONAL"` | REGIONAL or CLOUDFRONT |
-| `default_action` | `string` | `"allow"` | allow or block — validated string (not object) |
+| `default_action` | `string` | `"block"` | allow or block — validated string (not object); defaults to block for secure posture |
 | `description` | `string` | `null` | Web ACL description |
 | `ip_sets` | `map(object)` | `{}` | Map of IP set definitions (name → addresses, ip_address_version) |
 | `rule` | `list(any)` | `[]` | List of rule objects; supports managed_rule_group_statement and ip_set_reference_statement |
