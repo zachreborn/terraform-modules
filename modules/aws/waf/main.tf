@@ -39,9 +39,10 @@ resource "aws_wafv2_ip_set" "this" {
 ############################
 
 resource "aws_wafv2_web_acl" "this" {
-  name        = var.name
-  scope       = var.scope # REGIONAL or CLOUDFRONT
-  description = var.description
+  name          = var.name
+  scope         = var.scope # REGIONAL or CLOUDFRONT
+  description   = var.description
+  token_domains = var.token_domains
 
   dynamic "default_action" {
     for_each = [var.default_action]
@@ -149,6 +150,24 @@ resource "aws_wafv2_web_acl" "this" {
         cloudwatch_metrics_enabled = rule.value.visibility_config.cloudwatch_metrics_enabled
         metric_name                = rule.value.visibility_config.metric_name
         sampled_requests_enabled   = rule.value.visibility_config.sampled_requests_enabled
+      }
+    }
+  }
+
+  dynamic "captcha_config" {
+    for_each = var.captcha_config != null ? [var.captcha_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = captcha_config.value.immunity_time_property.immunity_time
+      }
+    }
+  }
+
+  dynamic "challenge_config" {
+    for_each = var.challenge_config != null ? [var.challenge_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = challenge_config.value.immunity_time_property.immunity_time
       }
     }
   }
