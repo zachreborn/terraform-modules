@@ -60,6 +60,13 @@
 
 
 <!-- USAGE EXAMPLES -->
+## Prerequisites
+
+- An AWS provider configured for the target region.
+- **CloudFront WAFs** (`scope = "CLOUDFRONT"`) require the AWS provider to be configured for `us-east-1` regardless of where your other resources reside. Pass the provider explicitly or alias it.
+- For WAF logging, a Kinesis Data Firehose delivery stream, CloudWatch Logs log group, or S3 bucket must exist before passing its ARN via `logging_configuration.log_destination_configs`.
+- IP set ARNs referenced in `rule` statements must already be created (either by this module's `ip_sets` input or externally).
+
 ## Usage
 
 ### Simple Example
@@ -143,6 +150,15 @@ module "waf" {
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Notes / Design Decisions
+
+- **`default_action = "block"`**: The module defaults to blocking all requests not matched by a rule. This is the most secure posture. Override to `"allow"` if your rules are not yet exhaustive and you want to start in monitoring mode.
+- **`action` vs. `override_action`**: Use `action` for rules that use IP set, regex, geo, rate, byte, or custom statement types. Use `override_action` for rules that use `managed_rule_group_statement` — AWS WAFv2 requires managed rule groups to use `override_action`, not `action`. Setting both on the same rule will cause a WAFv2 API error.
+- **`visibility_config.metric_name`**: If left null, the metric name falls back to the WebACL `name` via `coalesce()`. Rule-level metric names must be specified explicitly in each rule's `visibility_config`.
+- **Scope**: REGIONAL WAFs can be attached to ALBs, API Gateways, AppSync APIs, Cognito user pools, and App Runner services. CLOUDFRONT WAFs attach to CloudFront distributions and must be created in `us-east-1`.
+- **WAF Logging**: Logging is optional. When provided, the module creates an `aws_wafv2_logging_configuration` resource. You must pre-create the log destination (Firehose, CloudWatch Logs, or S3). Checkov check `CKV2_AWS_31` is suppressed because the log destination is caller-supplied.
+- **`rule_action_overrides`**: Currently only supports overriding individual managed rules to `count` mode. Phase 3 of the refactor will expand this to support all action types.
 
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
