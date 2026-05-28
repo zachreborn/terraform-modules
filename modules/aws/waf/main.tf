@@ -58,6 +58,15 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
+  dynamic "custom_response_body" {
+    for_each = var.custom_response_body
+    content {
+      key          = custom_response_body.key
+      content      = custom_response_body.value.content
+      content_type = custom_response_body.value.content_type
+    }
+  }
+
   dynamic "rule" {
     for_each = var.rule
     content {
@@ -150,6 +159,41 @@ resource "aws_wafv2_web_acl" "this" {
         cloudwatch_metrics_enabled = rule.value.visibility_config.cloudwatch_metrics_enabled
         metric_name                = rule.value.visibility_config.metric_name
         sampled_requests_enabled   = rule.value.visibility_config.sampled_requests_enabled
+      }
+    }
+  }
+
+  dynamic "association_config" {
+    for_each = var.association_config != null ? [var.association_config] : []
+    content {
+      dynamic "request_body" {
+        for_each = association_config.value.request_body != null ? [association_config.value.request_body] : []
+        content {
+          dynamic "api_gateway" {
+            for_each = request_body.value.api_gateway != null ? [request_body.value.api_gateway] : []
+            content {
+              default_size_inspection_limit = api_gateway.value.default_size_inspection_limit
+            }
+          }
+          dynamic "app_runner_service" {
+            for_each = request_body.value.app_runner_service != null ? [request_body.value.app_runner_service] : []
+            content {
+              default_size_inspection_limit = app_runner_service.value.default_size_inspection_limit
+            }
+          }
+          dynamic "cognito_user_pool" {
+            for_each = request_body.value.cognito_user_pool != null ? [request_body.value.cognito_user_pool] : []
+            content {
+              default_size_inspection_limit = cognito_user_pool.value.default_size_inspection_limit
+            }
+          }
+          dynamic "verified_access_instance" {
+            for_each = request_body.value.verified_access_instance != null ? [request_body.value.verified_access_instance] : []
+            content {
+              default_size_inspection_limit = verified_access_instance.value.default_size_inspection_limit
+            }
+          }
+        }
       }
     }
   }
