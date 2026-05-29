@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# ==============================================================================
+# Provisioning key injected by Terraform templatefile() from var.provisioning_key
+# shellcheck disable=SC2154
+# ==============================================================================
+PROVISIONING_KEY="${provisioning_key}"
+
+# 1. Create the Zscaler Repository
+echo "Configuring Zscaler Private Access repository..."
+cat <<EOF | sudo tee /etc/yum.repos.d/zscaler.repo
+[zscaler]
+name=Zscaler Private Access Repository
+baseurl=https://yum.private.zscaler.com/yum/el7
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.private.zscaler.com/yum/el7/gpg
+EOF
+
+# 2. Install the App Connector software
+echo "Installing zpa-connector package..."
+sudo yum clean all
+sudo yum install zpa-connector -y
+
+# 3. Stop the service to configure enrollment
+echo "Stopping zpa-connector service for initial configuration..."
+sudo systemctl stop zpa-connector
+
+# 4. Apply the Provisioning Key
+echo "Applying ZPA Provisioning Key..."
+sudo mkdir -p /opt/zscaler/var
+echo "$PROVISIONING_KEY" | sudo tee /opt/zscaler/var/provision_key
+sudo chmod 644 /opt/zscaler/var/provision_key
+
+# 5. Start and enable the service
+echo "Starting and enabling zpa-connector service..."
+sudo systemctl start zpa-connector
+sudo systemctl enable zpa-connector
+
+# 6. Verify installation status (|| true prevents set -e from aborting on non-zero exit)
+echo "Checking service status..."
+sudo systemctl status zpa-connector --no-pager || true
