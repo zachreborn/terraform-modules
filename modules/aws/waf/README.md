@@ -159,6 +159,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Scope**: REGIONAL WAFs can be attached to ALBs, API Gateways, AppSync APIs, Cognito user pools, and App Runner services. CLOUDFRONT WAFs attach to CloudFront distributions and must be created in `us-east-1`.
 - **WAF Logging**: Logging is optional. When provided, the module creates an `aws_wafv2_logging_configuration` resource. You must pre-create the log destination (Firehose, CloudWatch Logs, or S3). Checkov check `CKV2_AWS_31` is suppressed because the log destination is caller-supplied.
 - **`rule_action_overrides`**: Currently only supports overriding individual managed rules to `count` mode. Phase 3 of the refactor will expand this to support all action types.
+- **Rule management via `aws_wafv2_web_acl_rule`**: Rules are managed as separate `aws_wafv2_web_acl_rule` Terraform resources (not as inline `rule {}` blocks inside the Web ACL). This prevents deletion-ordering errors when IP sets are destroyed while still referenced by a rule, eliminates spurious diffs from AWS returning rules in unpredictable order, and prevents one rule change from recreating all rules. The Web ACL resource has `lifecycle { ignore_changes = [rule] }` as required by the provider.
+- **Zero-downtime migration**: If you are upgrading from an older version of this module that used inline rules, Terraform will show new `aws_wafv2_web_acl_rule` resources in the plan. Because `aws_wafv2_web_acl_rule` uses create-or-adopt semantics (if a rule with the same `name` already exists in the Web ACL, it is adopted rather than created), applying the plan makes no infrastructure changes. **Always run `tofu plan` and confirm there are no unexpected replacements before applying.**
 
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
@@ -188,6 +190,7 @@ No modules.
 | [aws_wafv2_web_acl.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
 | [aws_wafv2_web_acl_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
 | [aws_wafv2_web_acl_logging_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration) | resource |
+| [aws_wafv2_web_acl_rule.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_rule) | resource |
 
 ## Inputs
 
