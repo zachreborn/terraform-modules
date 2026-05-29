@@ -240,7 +240,7 @@ resource "aws_wafv2_web_acl_association" "this" {
 # WAF Logging
 ############################
 
-resource "aws_wafv2_logging_configuration" "this" {
+resource "aws_wafv2_web_acl_logging_configuration" "this" {
   count = var.logging_configuration != null ? 1 : 0
 
   log_destination_configs = var.logging_configuration.log_destination_configs
