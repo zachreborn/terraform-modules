@@ -119,6 +119,7 @@ skip-check:
   - CKV_AWS_103 # WAF association - optional caller configuration
 
   # WAFv2
+  - CKV_AWS_175 # WAF has associated rules - rules are managed via aws_wafv2_web_acl_rule resources; Checkov static analysis cannot see rules declared outside the aws_wafv2_web_acl block
   - CKV_AWS_192 # Log4j CVE-2021-44228 managed rule - caller selects which managed rule groups to enable
   - CKV_AWS_342 # WAF rule actions - rules support action, override_action, or neither; caller-defined rule set
 
