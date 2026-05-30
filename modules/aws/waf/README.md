@@ -157,7 +157,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **`action` vs. `override_action`**: Use `action` for rules that use IP set, regex, geo, rate, byte, or custom statement types. Use `override_action` for rules that use `managed_rule_group_statement` — AWS WAFv2 requires managed rule groups to use `override_action`, not `action`. Setting both on the same rule will cause a WAFv2 API error.
 - **`visibility_config.metric_name`**: If left null, the metric name falls back to the WebACL `name` via `coalesce()`. Rule-level metric names must be specified explicitly in each rule's `visibility_config`.
 - **Scope**: REGIONAL WAFs can be attached to ALBs, API Gateways, AppSync APIs, Cognito user pools, and App Runner services. CLOUDFRONT WAFs attach to CloudFront distributions and must be created in `us-east-1`.
-- **WAF Logging**: Logging is optional. When provided, the module creates an `aws_wafv2_logging_configuration` resource. You must pre-create the log destination (Firehose, CloudWatch Logs, or S3). Checkov check `CKV2_AWS_31` is suppressed because the log destination is caller-supplied.
+- **WAF Logging**: Logging is optional. When provided, the module creates an `aws_wafv2_web_acl_logging_configuration` resource. You must pre-create the log destination (Firehose, CloudWatch Logs, or S3). Checkov check `CKV2_AWS_31` is suppressed because the log destination is caller-supplied.
 - **`rule_action_overrides`**: Currently only supports overriding individual managed rules to `count` mode. Phase 3 of the refactor will expand this to support all action types.
 
 <!-- terraform-docs output will be input automatically below-->
@@ -216,7 +216,7 @@ No modules.
 | <a name="output_associated_resource_arn"></a> [associated\_resource\_arn](#output\_associated\_resource\_arn) | The ARN of the associated resource (if any) |
 | <a name="output_association_id"></a> [association\_id](#output\_association\_id) | The ID of the WAF association (if created) |
 | <a name="output_ip_sets"></a> [ip\_sets](#output\_ip\_sets) | Map of created IP sets |
-| <a name="output_logging_configuration_id"></a> [logging\_configuration\_id](#output\_logging\_configuration\_id) | The ARN of the WAF WebACL used as the logging configuration resource ID (if logging is configured) |
+| <a name="output_logging_configuration_id"></a> [logging\_configuration\_id](#output\_logging\_configuration\_id) | The ID of the WAF logging configuration resource (null if logging is not configured) |
 | <a name="output_waf_acl_arn"></a> [waf\_acl\_arn](#output\_waf\_acl\_arn) | The ARN of the WAF WebACL |
 | <a name="output_waf_acl_id"></a> [waf\_acl\_id](#output\_waf\_acl\_id) | The ID of the WAF WebACL |
 | <a name="output_waf_acl_name"></a> [waf\_acl\_name](#output\_waf\_acl\_name) | The name of the WAF WebACL |
