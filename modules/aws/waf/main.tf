@@ -39,9 +39,10 @@ resource "aws_wafv2_ip_set" "this" {
 ############################
 
 resource "aws_wafv2_web_acl" "this" {
-  name        = var.name
-  scope       = var.scope # REGIONAL or CLOUDFRONT
-  description = var.description
+  name          = var.name
+  scope         = var.scope # REGIONAL or CLOUDFRONT
+  description   = var.description
+  token_domains = var.token_domains
 
   dynamic "default_action" {
     for_each = [var.default_action]
@@ -54,6 +55,15 @@ resource "aws_wafv2_web_acl" "this" {
         for_each = default_action.value == "block" ? [1] : []
         content {}
       }
+    }
+  }
+
+  dynamic "custom_response_body" {
+    for_each = var.custom_response_body
+    content {
+      key          = custom_response_body.key
+      content      = custom_response_body.value.content
+      content_type = custom_response_body.value.content_type
     }
   }
 
@@ -153,6 +163,59 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
+  dynamic "association_config" {
+    for_each = var.association_config != null ? [var.association_config] : []
+    content {
+      dynamic "request_body" {
+        for_each = association_config.value.request_body != null ? [association_config.value.request_body] : []
+        content {
+          dynamic "api_gateway" {
+            for_each = request_body.value.api_gateway != null ? [request_body.value.api_gateway] : []
+            content {
+              default_size_inspection_limit = api_gateway.value.default_size_inspection_limit
+            }
+          }
+          dynamic "app_runner_service" {
+            for_each = request_body.value.app_runner_service != null ? [request_body.value.app_runner_service] : []
+            content {
+              default_size_inspection_limit = app_runner_service.value.default_size_inspection_limit
+            }
+          }
+          dynamic "cognito_user_pool" {
+            for_each = request_body.value.cognito_user_pool != null ? [request_body.value.cognito_user_pool] : []
+            content {
+              default_size_inspection_limit = cognito_user_pool.value.default_size_inspection_limit
+            }
+          }
+          dynamic "verified_access_instance" {
+            for_each = request_body.value.verified_access_instance != null ? [request_body.value.verified_access_instance] : []
+            content {
+              default_size_inspection_limit = verified_access_instance.value.default_size_inspection_limit
+            }
+          }
+        }
+      }
+    }
+  }
+
+  dynamic "captcha_config" {
+    for_each = var.captcha_config != null ? [var.captcha_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = captcha_config.value.immunity_time_property.immunity_time
+      }
+    }
+  }
+
+  dynamic "challenge_config" {
+    for_each = var.challenge_config != null ? [var.challenge_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = challenge_config.value.immunity_time_property.immunity_time
+      }
+    }
+  }
+
   visibility_config {
     cloudwatch_metrics_enabled = var.visibility_config.cloudwatch_metrics_enabled
     metric_name                = local.visibility_metric_name
@@ -171,4 +234,70 @@ resource "aws_wafv2_web_acl_association" "this" {
 
   resource_arn = var.associate_with_resource
   web_acl_arn  = aws_wafv2_web_acl.this.arn
+}
+
+############################
+# WAF Logging
+############################
+
+resource "aws_wafv2_web_acl_logging_configuration" "this" {
+  count = var.logging_configuration != null ? 1 : 0
+
+  log_destination_configs = var.logging_configuration.log_destination_configs
+  resource_arn            = aws_wafv2_web_acl.this.arn
+
+  dynamic "redacted_fields" {
+    for_each = var.logging_configuration.redacted_fields
+    content {
+      dynamic "single_header" {
+        for_each = redacted_fields.value.single_header != null ? [redacted_fields.value.single_header] : []
+        content {
+          name = single_header.value.name
+        }
+      }
+      dynamic "uri_path" {
+        for_each = redacted_fields.value.uri_path != null ? [1] : []
+        content {}
+      }
+      dynamic "query_string" {
+        for_each = redacted_fields.value.query_string != null ? [1] : []
+        content {}
+      }
+      dynamic "method" {
+        for_each = redacted_fields.value.method != null ? [1] : []
+        content {}
+      }
+    }
+  }
+
+  dynamic "logging_filter" {
+    for_each = var.logging_configuration.logging_filter != null ? [var.logging_configuration.logging_filter] : []
+    content {
+      default_behavior = logging_filter.value.default_behavior
+      dynamic "filter" {
+        for_each = logging_filter.value.filter
+        content {
+          behavior    = filter.value.behavior
+          requirement = filter.value.requirement
+          dynamic "condition" {
+            for_each = filter.value.condition
+            content {
+              dynamic "action_condition" {
+                for_each = condition.value.action_condition != null ? [condition.value.action_condition] : []
+                content {
+                  action = action_condition.value.action
+                }
+              }
+              dynamic "label_name_condition" {
+                for_each = condition.value.label_name_condition != null ? [condition.value.label_name_condition] : []
+                content {
+                  label_name = label_name_condition.value.label_name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -8,6 +8,12 @@ variable "description" {
   default     = "WAF WebACL managed by Terraform"
 }
 
+variable "token_domains" {
+  description = "Specifies the domains to use for CAPTCHA and Challenge token sharing. Required when using CAPTCHA or Challenge across multiple domains."
+  type        = list(string)
+  default     = null
+}
+
 variable "name" {
   description = "A friendly name of the WebACL. Must be unique within the AWS region."
   type        = string
@@ -32,6 +38,19 @@ variable "tags" {
 ############################################
 # Rule Configuration
 ############################################
+
+variable "custom_response_body" {
+  description = "Map of custom response bodies that can be referenced by custom_response block actions. Key is the unique response body key used in rule actions."
+  type = map(object({
+    content      = string
+    content_type = string
+  }))
+  default = {}
+  validation {
+    condition     = alltrue([for v in values(var.custom_response_body) : contains(["TEXT_PLAIN", "TEXT_HTML", "APPLICATION_JSON"], v.content_type)])
+    error_message = "content_type must be one of TEXT_PLAIN, TEXT_HTML, or APPLICATION_JSON."
+  }
+}
 
 variable "default_action" {
   description = "The action to perform if none of the rules contained in the WebACL match. Valid values are 'allow' or 'block'."
@@ -118,8 +137,82 @@ variable "ip_sets" {
 }
 
 ############################################
+# ACL-Level Captcha and Challenge Configuration
+############################################
+
+variable "captcha_config" {
+  description = "Specifies how AWS WAF should handle CAPTCHA evaluations at the Web ACL level."
+  type = object({
+    immunity_time_property = optional(object({
+      immunity_time = optional(number, 300)
+    }), { immunity_time = 300 })
+  })
+  default = null
+}
+
+variable "challenge_config" {
+  description = "Specifies how AWS WAF should handle Challenge evaluations at the Web ACL level."
+  type = object({
+    immunity_time_property = optional(object({
+      immunity_time = optional(number, 300)
+    }), { immunity_time = 300 })
+  })
+  default = null
+}
+
+############################################
+# Logging Configuration
+############################################
+
+variable "logging_configuration" {
+  description = "WAF logging configuration. Set log_destination_configs to a list of Kinesis Firehose, CloudWatch Logs, or S3 ARNs. redacted_fields and logging_filter are optional."
+  type = object({
+    log_destination_configs = list(string)
+    redacted_fields = optional(list(object({
+      single_header = optional(object({ name = string }))
+      uri_path      = optional(object({}))
+      query_string  = optional(object({}))
+      method        = optional(object({}))
+    })), [])
+    logging_filter = optional(object({
+      default_behavior = string
+      filter = list(object({
+        behavior    = string
+        requirement = string
+        condition = list(object({
+          action_condition     = optional(object({ action = string }))
+          label_name_condition = optional(object({ label_name = string }))
+        }))
+      }))
+    }))
+  })
+  default = null
+}
+
+############################################
 # Association Configuration
 ############################################
+
+variable "association_config" {
+  description = "Specifies custom configurations for the associations between the web ACL and protected resources. Controls request body inspection size limits per resource type."
+  type = object({
+    request_body = optional(object({
+      api_gateway = optional(object({
+        default_size_inspection_limit = optional(string, "KB_16")
+      }))
+      app_runner_service = optional(object({
+        default_size_inspection_limit = optional(string, "KB_16")
+      }))
+      cognito_user_pool = optional(object({
+        default_size_inspection_limit = optional(string, "KB_16")
+      }))
+      verified_access_instance = optional(object({
+        default_size_inspection_limit = optional(string, "KB_16")
+      }))
+    }))
+  })
+  default = null
+}
 
 variable "associate_with_resource" {
   description = "The ARN of the resource to associate with the web ACL. Supported resources include ALB, API Gateway REST API, AppSync GraphQL API, or Cognito user pool."

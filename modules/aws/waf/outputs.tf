@@ -33,3 +33,8 @@ output "associated_resource_arn" {
   description = "The ARN of the associated resource (if any)"
   value       = var.associate_with_resource
 }
+
+output "logging_configuration_id" {
+  description = "The ID of the WAF logging configuration resource (null if logging is not configured)"
+  value       = length(aws_wafv2_web_acl_logging_configuration.this) > 0 ? aws_wafv2_web_acl_logging_configuration.this[0].id : null
+}
