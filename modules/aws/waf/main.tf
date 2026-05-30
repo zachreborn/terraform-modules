@@ -149,7 +149,7 @@ resource "aws_wafv2_web_acl_association" "this" {
 ############################
 
 resource "aws_wafv2_web_acl_rule" "this" {
-  for_each = var.rule
+  for_each = { for k, v in var.rule : v.name => v }
 
   name        = each.value.name
   priority    = each.value.priority
@@ -195,7 +195,7 @@ resource "aws_wafv2_web_acl_rule" "this" {
         vendor_name = managed_rule_group_statement.value.vendor_name
 
         dynamic "rule_action_override" {
-          for_each = managed_rule_group_statement.value.rule_action_overrides
+          for_each = coalesce(managed_rule_group_statement.value.rule_action_overrides, [])
           content {
             name = rule_action_override.value
             action_to_use {
@@ -227,13 +227,13 @@ resource "aws_wafv2_web_acl_rule" "this" {
 
   captcha_config {
     immunity_time_property {
-      immunity_time = each.value.captcha_config.immunity_time_property.immunity_time
+      immunity_time = try(each.value.captcha_config.immunity_time_property.immunity_time, 300)
     }
   }
 
   challenge_config {
     immunity_time_property {
-      immunity_time = each.value.challenge_config.immunity_time_property.immunity_time
+      immunity_time = try(each.value.challenge_config.immunity_time_property.immunity_time, 300)
     }
   }
 
