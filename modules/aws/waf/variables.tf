@@ -70,18 +70,317 @@ variable "rule" {
     action          = optional(string) # "allow", "block", or "count" — used for non-managed-rule-group statements
     override_action = optional(string) # "none" or "count" — used with managed_rule_group_statement
     statement = object({
+      ############################
+      # Managed Rule Group
+      ############################
       managed_rule_group_statement = optional(object({
-        name                  = string
-        vendor_name           = string
-        rule_action_overrides = optional(list(string), []) # rule names to override to count mode
+        name        = string
+        vendor_name = string
+        # BREAKING CHANGE: was list(string), now map keyed by rule name
+        rule_action_overrides = optional(map(object({
+          action = string # allow, block, count, captcha, or challenge
+        })), {})
+        # Scope down to a subset of requests; accepts any leaf statement shape
+        scope_down_statement = optional(any)
       }))
-      not_statement = optional(object({
-        ip_set_reference_statement = object({
-          arn = string
-        })
-      }))
+
+      ############################
+      # IP Set Reference
+      ############################
       ip_set_reference_statement = optional(object({
         arn = string
+      }))
+
+      ############################
+      # Geo Match
+      ############################
+      geo_match_statement = optional(object({
+        country_codes = list(string)
+        forwarded_ip_config = optional(object({
+          header_name       = string
+          fallback_behavior = string # MATCH or NO_MATCH
+        }))
+      }))
+
+      ############################
+      # Rate Based
+      ############################
+      rate_based_statement = optional(object({
+        limit                 = number
+        aggregate_key_type    = string           # IP, CONSTANT, FORWARDED_IP
+        evaluation_window_sec = optional(number) # 60, 120, 300, or 600
+        forwarded_ip_config = optional(object({
+          header_name       = string
+          fallback_behavior = string
+        }))
+        # Scope down to a subset of requests; accepts any leaf statement shape
+        scope_down_statement = optional(any)
+      }))
+
+      ############################
+      # Byte Match
+      ############################
+      byte_match_statement = optional(object({
+        positional_constraint = string # EXACTLY, STARTS_WITH, ENDS_WITH, CONTAINS, CONTAINS_WORD
+        search_string         = string
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string # ALL, KEY, or VALUE
+            oversize_handling = string # CONTINUE, MATCH, or NO_MATCH
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # Size Constraint
+      ############################
+      size_constraint_statement = optional(object({
+        comparison_operator = string # EQ, NE, LE, LT, GE, GT
+        size                = number
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # SQLi Match
+      ############################
+      sqli_match_statement = optional(object({
+        sensitivity_level = optional(string, "LOW") # LOW or HIGH
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # XSS Match
+      ############################
+      xss_match_statement = optional(object({
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # Regex Match
+      ############################
+      regex_match_statement = optional(object({
+        regex_string = string
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # Regex Pattern Set Reference
+      ############################
+      regex_pattern_set_reference_statement = optional(object({
+        arn = string
+        field_to_match = object({
+          all_query_arguments   = optional(bool, false)
+          body                  = optional(object({ oversize_handling = optional(string, "CONTINUE") }))
+          method                = optional(bool, false)
+          query_string          = optional(bool, false)
+          uri_path              = optional(bool, false)
+          single_header         = optional(object({ name = string }))
+          single_query_argument = optional(object({ name = string }))
+          headers = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_headers = optional(list(string), [])
+              excluded_headers = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+          cookies = optional(object({
+            match_pattern = object({
+              all              = optional(bool, false)
+              included_cookies = optional(list(string), [])
+              excluded_cookies = optional(list(string), [])
+            })
+            match_scope       = string
+            oversize_handling = string
+          }))
+        })
+        text_transformation = list(object({
+          priority = number
+          type     = string
+        }))
+      }))
+
+      ############################
+      # Label Match
+      ############################
+      label_match_statement = optional(object({
+        key   = string
+        scope = string # LABEL or NAMESPACE
+      }))
+
+      ############################
+      # Rule Group Reference
+      ############################
+      rule_group_reference_statement = optional(object({
+        arn = string
+        rule_action_overrides = optional(map(object({
+          action = string # allow, block, count, captcha, or challenge
+        })), {})
+      }))
+
+      ############################
+      # Compound Statements (1 level deep)
+      # For deeper nesting use rule_group_reference_statement
+      ############################
+      not_statement = optional(object({
+        # Accepts any leaf statement shape; use try() to access fields safely
+        statement = any
+      }))
+
+      and_statement = optional(object({
+        # List of leaf statement objects; each should contain exactly one statement type key
+        statements = list(any)
+      }))
+
+      or_statement = optional(object({
+        # List of leaf statement objects; each should contain exactly one statement type key
+        statements = list(any)
       }))
     })
     captcha_config = optional(object({
