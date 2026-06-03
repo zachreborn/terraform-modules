@@ -112,7 +112,7 @@ jobs:
             --add-label spec-in-progress
 
       - name: Run Oz spec-generation agent
-        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
+        uses: warpdotdev/oz-agent-action@960b59065ed52c7a3f0c7d0de2665cd058f93626 # main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
