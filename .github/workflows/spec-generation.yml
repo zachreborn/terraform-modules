@@ -40,7 +40,7 @@ jobs:
       # Credentials are intentionally persisted so the Oz agent can push the
       # spec branch back to origin. zizmor's artipacked warning is acknowledged.
       - name: Checkout # zizmor: ignore[artipacked]
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Needed so the agent can create a new branch and push.
           fetch-depth: 0
@@ -112,7 +112,7 @@ jobs:
             --add-label spec-in-progress
 
       - name: Run Oz spec-generation agent
-        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
+        uses: warpdotdev/oz-agent-action@cc32546e933acdc86dd6a9b4dd02ec956dcd8a5b # v1.0.17
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
