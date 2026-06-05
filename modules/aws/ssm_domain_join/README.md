@@ -46,6 +46,7 @@
   <ol>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#cross-account-usage">Cross-Account Usage</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -155,6 +156,107 @@ The diagram below shows the resources this module creates and how they interact 
 | 8 | The agent calls the EC2 metadata service (IMDSv2) to read the instance ID and region, then calls `ec2:DescribeTags` to retrieve the `Name` tag value. |
 | 9 | The script checks DNS for the desired computer name. If a record already exists, it increments the trailing number (e.g. `SERVER01` → `SERVER02`) until an available name is found. |
 | 10 | The agent runs `Add-Computer`, renaming the instance to the resolved name and joining it to the domain in a single reboot. |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CROSS-ACCOUNT USAGE -->
+
+## Cross-Account Usage
+
+A common topology is a central **hub** account that holds the domain-join credentials secret, with EC2 instances running in one or more **spoke** accounts. In that model you deploy this module **in each spoke** — it creates the SSM document, the State Manager association, and the inline policy on the instance role *locally* — while the secret and its KMS key stay in the hub and are read cross-account.
+
+Cross-account access to a Secrets Manager secret encrypted with a customer-managed KMS key requires grants on **both** sides. This module handles only the spoke (identity) side; the hub-side grants are yours to add:
+
+| Side | Grant | Provided by |
+|------|-------|-------------|
+| **Spoke** (instance role identity) | Inline policy: `secretsmanager:GetSecretValue` on `secret_arn`, `kms:Decrypt` on `kms_key_arn`, `ec2:DescribeTags` | **This module** — automatic when you pass `secret_arn` (and `kms_key_arn`) |
+| **Hub** — secret resource policy | Allow the spoke role `secretsmanager:GetSecretValue` | You (hub account) |
+| **Hub** — KMS key policy | Allow the spoke role `kms:Decrypt` | You (hub account) |
+
+> [!WARNING]
+> **Both hub grants are required.** If you add the secret resource policy but forget the KMS key policy, the spoke role will succeed at `GetSecretValue` and then **fail to decrypt** the secret value — the value is encrypted with the customer-managed key, and an identity-side `kms:Decrypt` grant is not sufficient without a matching key-policy grant. This failure mode is easy to miss because the secret metadata call succeeds.
+
+> [!NOTE]
+> **Apply ordering.** KMS key policies validate principals at apply time. Create the spoke instance role **before** applying the hub key-policy grant, or the hub apply fails with `MalformedPolicyDocument`. (Secret resource policies that name a spoke role principal have the same constraint.)
+
+### Example
+
+**Spoke account** — deploy the module pointing at the hub's secret and key ARNs:
+
+```hcl
+module "ad_join" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=v0.0.1"
+
+  domain_name        = "corp.example.com"
+  dns_servers        = ["10.0.0.10", "10.0.0.11"]
+  secret_arn         = "arn:aws:secretsmanager:us-west-2:111111111111:secret:ad-join-credentials-AbCdEf"
+  kms_key_arn        = "arn:aws:kms:us-west-2:111111111111:key/00000000-0000-0000-0000-000000000000"
+  instance_role_name = aws_iam_role.ssm_role.name # e.g. "ssm-role"
+
+  targets = [
+    {
+      key    = "tag:ad_join"
+      values = ["corp.example.com"]
+    }
+  ]
+
+  tags = {
+    terraform   = "true"
+    environment = "test"
+  }
+}
+```
+
+**Hub account** — grant the spoke role on **both** the secret resource policy and the KMS key policy:
+
+```hcl
+# 1) Secret resource policy
+resource "aws_secretsmanager_secret_policy" "ad_join" {
+  secret_arn = aws_secretsmanager_secret.ad_join.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "SpokeRead"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::222222222222:role/ssm-role" }
+        Action    = "secretsmanager:GetSecretValue"
+        Resource  = "*"
+      }
+    ]
+  })
+}
+
+# 2) KMS key policy — the easy-to-miss half
+resource "aws_kms_key" "ad_join" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "RootAccountAccess"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::111111111111:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "SecretsManagerAccess"
+        Effect    = "Allow"
+        Principal = { Service = "secretsmanager.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
+        Resource  = "*"
+      },
+      {
+        Sid       = "SpokeDecrypt"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::222222222222:role/ssm-role" }
+        Action    = "kms:Decrypt"
+        Resource  = "*"
+      }
+    ]
+  })
+}
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
