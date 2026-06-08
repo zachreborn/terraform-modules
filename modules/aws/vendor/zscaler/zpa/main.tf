@@ -16,19 +16,34 @@ terraform {
 ###########################
 data "aws_region" "current" {}
 
+# Zscaler publishes pre-built RHEL 9 App Connector AMIs via AWS Marketplace.
+# The RHEL 9 license is included at no extra cost (covered by your Zscaler subscription).
+# The connector software is pre-installed; user_data only injects the provisioning key.
+# Marketplace subscription must be accepted before first apply:
+#   https://aws.amazon.com/marketplace/pp/prodview-cvvqe5hxw2bku
 data "aws_ami" "zpa_connector" {
   most_recent = true
-  owners      = ["137112412989"] # Amazon official
+  owners      = ["aws-marketplace"]
 
   filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    name   = "product-code"
+    values = ["by1wc5269g0048ix2nqvr0362"]
   }
 
   filter {
     name   = "state"
     values = ["available"]
   }
+}
+
+###########################
+# Marketplace Agreement
+###########################
+# Tracks the active Marketplace subscription in Terraform state.
+# If already accepted in the console this imports the existing agreement.
+resource "aws_marketplace_agreement" "zpa_connector" {
+  product_id = "c9c7dfab-017a-40c4-993c-12119713470a"
+  offer_id   = "runInstancesMarketplace"
 }
 
 ###########################
@@ -86,10 +101,12 @@ resource "aws_instance" "zpa" {
 
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
-    encrypted             = var.encrypted
-    volume_size           = var.root_volume_size
-    volume_type           = var.root_volume_type
-    tags                  = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
+    # encrypted is intentionally omitted: the Marketplace AMI snapshot is already
+    # encrypted by Zscaler. Setting encrypted=true triggers a re-encryption attempt
+    # that AWS rejects for Marketplace snapshots. The volume remains encrypted at rest.
+    volume_size = var.root_volume_size
+    volume_type = var.root_volume_type
+    tags        = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
   }
 
   tags = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })

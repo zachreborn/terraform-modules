@@ -1,45 +1,21 @@
 #!/bin/bash
-
-# Exit immediately if a command exits with a non-zero status
-set -e
-
-# ==============================================================================
-# Provisioning key injected by Terraform templatefile() from var.provisioning_key
+# Bootstrap script for Zscaler ZPA App Connector - Marketplace RHEL 9 AMI
+# The connector software is pre-installed in this AMI; this script only
+# injects the provisioning key and starts enrollment.
 # shellcheck disable=SC2154
-# ==============================================================================
-PROVISIONING_KEY="${provisioning_key}"
 
-# 1. Create the Zscaler Repository
-echo "Configuring Zscaler Private Access repository..."
-cat <<EOF | sudo tee /etc/yum.repos.d/zscaler.repo
-[zscaler]
-name=Zscaler Private Access Repository
-baseurl=https://yum.private.zscaler.com/yum/el7
-enabled=1
-gpgcheck=1
-gpgkey=https://yum.private.zscaler.com/yum/el7/gpg
-EOF
-
-# 2. Install the App Connector software
-echo "Installing zpa-connector package..."
-sudo yum clean all
-sudo yum install zpa-connector -y
-
-# 3. Stop the service to configure enrollment
-echo "Stopping zpa-connector service for initial configuration..."
-sudo systemctl stop zpa-connector
-
-# 4. Apply the Provisioning Key
-echo "Applying ZPA Provisioning Key..."
-sudo mkdir -p /opt/zscaler/var
-echo "$PROVISIONING_KEY" | sudo tee /opt/zscaler/var/provision_key
-sudo chmod 644 /opt/zscaler/var/provision_key
-
-# 5. Start and enable the service
-echo "Starting and enabling zpa-connector service..."
-sudo systemctl start zpa-connector
-sudo systemctl enable zpa-connector
-
-# 6. Verify installation status (|| true prevents set -e from aborting on non-zero exit)
-echo "Checking service status..."
-sudo systemctl status zpa-connector --no-pager || true
+#Stop the App Connector service which was auto-started at boot time
+systemctl stop zpa-connector
+#Create a file from the App Connector provisioning key created in the ZPA Admin Portal
+#Make sure that the provisioning key is between double quotes
+echo "${provisioning_key}" > /opt/zscaler/var/provision_key
+chmod 644 /opt/zscaler/var/provision_key
+#Run a yum update to apply the latest patches
+yum update -y
+#Start the App Connector service to enroll it in the ZPA cloud
+systemctl start zpa-connector
+#Wait for the App Connector to download latest build
+sleep 60
+#Stop and then start the App Connector for the latest build
+systemctl stop zpa-connector
+systemctl start zpa-connector

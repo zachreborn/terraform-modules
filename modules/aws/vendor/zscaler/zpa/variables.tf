@@ -3,7 +3,7 @@
 ###########################
 
 variable "ami_id" {
-  description = "(Optional) AMI ID to override the default Amazon Linux 2 AMI. If not specified, the latest Amazon Linux 2 x86_64 HVM GP2 AMI is selected automatically."
+  description = "(Optional) AMI ID to override the default Zscaler Marketplace RHEL 9 AMI. If not specified, the latest Zscaler App Connector AMI is selected automatically via product code."
   type        = string
   default     = null
   validation {
@@ -32,7 +32,7 @@ variable "vpc_id" {
 ###########################
 
 variable "encrypted" {
-  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to true."
+  description = "(Optional) Reserved for future BYOL use. Not applied when using the Marketplace AMI — the Zscaler-published snapshot is already encrypted at rest and re-encryption is not supported for Marketplace AMIs."
   type        = bool
   default     = true
   validation {
@@ -74,7 +74,7 @@ variable "instance_name_prefix" {
 }
 
 variable "instance_type" {
-  description = "(Optional) EC2 instance type for ZPA App Connector instances. Defaults to m7i.large."
+  description = "(Optional) EC2 instance type for ZPA App Connector instances. Defaults to m7i.large. NOTE: Do not use 'flex' instance variants (e.g. m7i-flex) — Marketplace AMIs with RHEL licensing do not support flex pricing models and will fail with UnsupportedOperation."
   type        = string
   default     = "m7i.large"
 }
