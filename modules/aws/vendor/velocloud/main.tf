@@ -14,10 +14,13 @@ terraform {
 # data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+# Skipped when ami_id is provided directly to avoid failing lookups
+# when the Broadcom/VMware Marketplace AMI name pattern has changed.
 data "aws_ami" "velocloud" {
+  count       = var.ami_id == null ? 1 : 0
   most_recent = true
   name_regex  = "VeloCloud VCE ${var.velocloud_version}*"
-  owners      = ["679593333241"] # VMware
+  owners      = ["679593333241"] # VMware/Broadcom
 
   filter {
     name   = "state"
@@ -175,7 +178,7 @@ resource "aws_network_interface" "private_nic" {
 ############################################
 
 resource "aws_instance" "ec2_instance" {
-  ami                  = var.ami_id != null ? var.ami_id : data.aws_ami.velocloud.id
+  ami                  = var.ami_id != null ? var.ami_id : data.aws_ami.velocloud[0].id
   count                = length(var.velocloud_activation_keys)
   ebs_optimized        = var.ebs_optimized
   hibernation          = var.hibernation
