@@ -37,16 +37,6 @@ data "aws_ami" "zpa_connector" {
 }
 
 ###########################
-# Marketplace Agreement
-###########################
-# Tracks the active Marketplace subscription in Terraform state.
-# If already accepted in the console this imports the existing agreement.
-resource "aws_marketplace_agreement" "zpa_connector" {
-  product_id = "c9c7dfab-017a-40c4-993c-12119713470a"
-  offer_id   = "runInstancesMarketplace"
-}
-
-###########################
 # Locals
 ###########################
 locals {
