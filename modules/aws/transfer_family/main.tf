@@ -70,13 +70,48 @@ locals {
 ###########################
 
 ##############
-# Create CloudWatch log group
+# Create KMS Key
 ##############
 
-resource "aws_cloudwatch_log_group" "transfer_family" {
-  name              = "/aws/transfer/${var.name}"
-  retention_in_days = var.cloudwatch_log_retention_days
-  tags              = merge(var.tags, { "Name" = "/aws/transfer/${var.name}" })
+module "kms_key" {
+  source = "../kms"
+
+  description = var.key_description
+  name_prefix = var.key_name_prefix
+  tags        = var.tags
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Sid"    = "Enable IAM User Permissions",
+        "Effect" = "Allow",
+        "Principal" = {
+          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action"   = "kms:*",
+        "Resource" = "*"
+      },
+      {
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "logs.${data.aws_region.current.region}.amazonaws.com"
+        },
+        "Action" = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ],
+        "Resource" = "*",
+        "Condition" = {
+          "ArnEquals" = {
+            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"
+          }
+        }
+      }
+    ]
+  })
 }
 
 ##############
@@ -92,16 +127,23 @@ module "transfer_family_logging_iam_role_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "AllowCloudWatchLogging"
+        Sid    = "AllowCloudWatchLogGroup"
         Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = module.cloudwatch_log_group.arn
+      },
+      {
+        Sid    = "AllowCloudWatchLogStream"
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
           "logs:DescribeLogStreams",
           "logs:PutLogEvents"
         ]
-        Resource = "*"
+        Resource = "${module.cloudwatch_log_group.arn}:log-stream:*"
       }
     ]
   })
@@ -136,6 +178,20 @@ module "transfer_family_logging_iam_role" {
 }
 
 ##############
+# Create CloudWatch log group
+##############
+
+module "cloudwatch_log_group" {
+  source = "../cloudwatch/log_group"
+
+  kms_key_id        = module.kms_key.arn
+  log_group_class   = var.log_group_class
+  name              = "/aws/transfer/${var.name}"
+  retention_in_days = var.log_group_retention_in_days
+  tags              = var.tags
+}
+
+##############
 # Create the AWS transfer family server
 ##############
 
@@ -149,6 +205,7 @@ resource "aws_transfer_server" "this" {
   identity_provider_type           = var.identity_provider_type
   invocation_role                  = var.invocation_role
   logging_role                     = module.transfer_family_logging_iam_role.arn
+  structured_log_destinations      = ["${module.cloudwatch_log_group.arn}:*"]
   pre_authentication_login_banner  = var.pre_authentication_login_banner
   post_authentication_login_banner = var.post_authentication_login_banner
   protocols                        = var.protocols

@@ -40,7 +40,7 @@ jobs:
       # Credentials are intentionally persisted so the Oz agent can push the
       # spec branch back to origin. zizmor's artipacked warning is acknowledged.
       - name: Checkout # zizmor: ignore[artipacked]
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # Needed so the agent can create a new branch and push.
           fetch-depth: 0
@@ -112,7 +112,7 @@ jobs:
             --add-label spec-in-progress
 
       - name: Run Oz spec-generation agent
-        uses: warpdotdev/oz-agent-action@ce1621abf6a8ed8afdd4e4cc994545ede8fe1c6f # main
+        uses: warpdotdev/oz-agent-action@cc32546e933acdc86dd6a9b4dd02ec956dcd8a5b # v1.0.17
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -120,8 +120,10 @@ jobs:
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
           prompt: |
             You are generating a technical specification for an issue in
-            zachreborn/terraform-modules. The repository is a Terraform
-            modules library. Conventions are documented in `AGENTS.md`.
+            zachreborn/terraform-modules. The repository is a
+            Terraform/OpenTofu modules library (OpenTofu is the default;
+            Terraform is also supported). Conventions are documented in
+            `AGENTS.md`.
 
             ## Target issue
             Issue number: #${{ steps.ctx.outputs.issue_number }}
@@ -180,7 +182,7 @@ jobs:
                   --remove-label spec-in-progress || true
             - Post a comment on the issue with the spec PR URL.
 
-            Do NOT modify any Terraform files. Do NOT modify existing modules.
+            Do NOT modify any Terraform/OpenTofu files. Do NOT modify existing modules.
             The only files you should create or modify live under
             `.github/specs/`.
 
@@ -208,6 +210,43 @@ jobs:
           fi
           echo "::notice::Marking spec PR #${pr_number} ready-for-review."
           gh pr ready "${pr_number}" --repo "${{ github.repository }}" || true
+
+      - name: Notify issue author on spec PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.ctx.outputs.issue_number }}
+        run: |
+          # Resolve the issue author's login via the REST API so this works
+          # for both the labeled trigger and manual workflow_dispatch (where
+          # github.event.issue is unavailable).
+          author=$(gh api "/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}" \
+            --jq '.user.login')
+
+          # Find the spec PR for this issue (most recently created, any draft state).
+          pr_number=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --json number,headRefName,createdAt \
+            --jq "[.[] | select(.headRefName | startswith(\"spec/issue-${ISSUE_NUMBER}-\"))] | sort_by(.createdAt) | last | .number // empty")
+
+          if [ -z "${pr_number}" ]; then
+            echo "::notice::No open spec PR found for issue #${ISSUE_NUMBER}; skipping notification."
+            exit 0
+          fi
+
+          # Request a review from the issue author. This may be a no-op if
+          # GitHub prevents requesting review from non-collaborators; the
+          # || true ensures the step does not fail in that case.
+          gh pr edit "${pr_number}" \
+            --repo "${{ github.repository }}" \
+            --add-reviewer "${author}" || true
+
+          # Post a comment on the spec PR so the author is notified regardless
+          # of whether the review request above succeeded.
+          gh pr comment "${pr_number}" \
+            --repo "${{ github.repository }}" \
+            --body "@${author} A spec has been generated from issue #${ISSUE_NUMBER}. Please review it and approve the PR so the implementation phase can begin."
 
       - name: On success - drop ready-for-spec
         if: success()

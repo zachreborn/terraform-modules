@@ -10,7 +10,7 @@ variable "allow_force_delete_workspaces" {
 
 variable "assessments_enforced" {
   type        = bool
-  description = "(Optional) (Available only in Terraform Cloud) Whether to force health assessments (drift detection) on all eligible workspaces or allow workspaces to set thier own preferences. Defaults to false."
+  description = "(Optional) (Available only in Terraform Cloud) Whether to force health assessments (drift detection) on all eligible workspaces or allow workspaces to set their own preferences. Defaults to false."
   default     = false
   validation {
     condition     = can(regex("true|false", var.assessments_enforced))
