@@ -252,7 +252,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_bucket_lifecycle" {
     id     = var.bucket_lifecycle_rule_id
     status = "Enabled"
 
-    filter {}
     expiration {
       days = var.bucket_lifecycle_expiration_days
     }
