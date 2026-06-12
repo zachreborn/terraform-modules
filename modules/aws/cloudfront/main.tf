@@ -24,6 +24,19 @@ data "aws_cloudfront_cache_policy" "this" {
 ###########################
 
 ###########################
+# Origin Access Control
+###########################
+resource "aws_cloudfront_origin_access_control" "this" {
+  for_each = var.origin_access_controls != null ? var.origin_access_controls : {}
+
+  name                              = each.key
+  description                       = each.value.description
+  origin_access_control_origin_type = each.value.origin_access_control_origin_type
+  signing_behavior                  = each.value.signing_behavior
+  signing_protocol                  = each.value.signing_protocol
+}
+
+###########################
 # Module Configuration
 ###########################
 
@@ -104,12 +117,16 @@ resource "aws_cloudfront_distribution" "this" {
   dynamic "origin" {
     for_each = var.origins != null ? var.origins : {}
     content {
-      connection_attempts      = origin.value.connection_attempts
-      connection_timeout       = origin.value.connection_timeout
-      domain_name              = origin.value.domain_name
-      origin_access_control_id = origin.value.origin_access_control_id
-      origin_id                = origin.key
-      origin_path              = origin.value.origin_path
+      connection_attempts = origin.value.connection_attempts
+      connection_timeout  = origin.value.connection_timeout
+      domain_name         = origin.value.domain_name
+      origin_access_control_id = try(
+        aws_cloudfront_origin_access_control.this[origin.value.origin_access_control_name].id,
+        origin.value.origin_access_control_id,
+        null
+      )
+      origin_id   = origin.key
+      origin_path = origin.value.origin_path
 
       dynamic "custom_header" {
         for_each = origin.value.custom_headers != null ? origin.value.custom_headers : []
@@ -161,5 +178,18 @@ resource "aws_cloudfront_distribution" "this" {
     iam_certificate_id             = var.iam_certificate_id
     minimum_protocol_version       = var.ssl_minimum_protocol_version
     ssl_support_method             = var.ssl_support_method
+  }
+
+  lifecycle {
+    # Fail fast on a dangling reference: every origins[*].origin_access_control_name
+    # must match a key in var.origin_access_controls, otherwise the try() resolution
+    # in the origin block would silently fall back to null (no OAC attached).
+    precondition {
+      condition = var.origins == null ? true : alltrue([
+        for k, v in var.origins :
+        v.origin_access_control_name == null ? true : contains(keys(var.origin_access_controls != null ? var.origin_access_controls : {}), v.origin_access_control_name)
+      ])
+      error_message = "Each origins[*].origin_access_control_name must match a key in var.origin_access_controls."
+    }
   }
 }

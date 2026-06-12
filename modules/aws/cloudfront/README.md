@@ -88,6 +88,39 @@ module "example_com_redirect_cloudfront" {
 }
 ```
 
+### S3 Origin with Origin Access Control (OAC) Example
+
+This example creates a Cloudfront distribution that serves content from a private S3 bucket secured with an Origin Access Control (OAC). The module creates and manages the OAC: the `origin_access_controls` map key is used as the OAC name and is referenced from an origin via `origin_access_control_name`, and the module resolves it to the created OAC ID. This replaces the need to declare an `aws_cloudfront_origin_access_control` resource outside the module and pass its ID into `origins[*].origin_access_control_id`.
+
+Note: attaching the S3 bucket policy that grants this OAC access to the origin bucket is the caller's responsibility (managed by the S3 bucket module/caller) and is intentionally out of scope for this module.
+
+```
+module "s3_oac_cloudfront" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudfront"
+
+  default_cache_target_origin_id = "s3-app-data"
+  managed_cache_policy_name      = "CachingOptimized"
+
+  # The module creates and manages the OAC. The map key doubles as the OAC name.
+  origin_access_controls = {
+    s3-app-data = {
+      description                       = "OAC for the app data S3 bucket"
+      origin_access_control_origin_type = "s3"
+      signing_behavior                  = "always"
+      signing_protocol                  = "sigv4"
+    }
+  }
+
+  origins = {
+    s3-app-data = {
+      domain_name = module.app_data_bucket.bucket_regional_domain_name
+      # Reference the origin_access_controls map key; the module resolves the OAC ID.
+      origin_access_control_name = "s3-app-data"
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
