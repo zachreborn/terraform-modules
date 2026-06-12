@@ -290,6 +290,8 @@ stateDiagram-v2
 3. Spec PR merged → `spec-approved.yml` flips the issue to `spec-approved`.
 4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress` and closes on PR merge.
 
+**Running CI on Oz PRs**: Spec and implementation PRs are opened by `github-actions[bot]` using the built-in `GITHUB_TOKEN`. GitHub suppresses cascading workflow runs triggered by `GITHUB_TOKEN`, so as of GitHub's 2026-06-11 change ("Bot-created pull requests can run workflows if approved") these PRs create the required checks (`Linter`, `Test OpenTofu`, `Verify - terraform-docs`, `Invisible Unicode Check`) in an **approval-required** state instead of running them automatically. A maintainer with **write access** must click **Approve workflows to run** in the PR's merge-box banner (or the Actions tab) to start them. This approval is required **per PR**, also applies to any later push the agent makes to the PR branch, and cannot be performed by the agent itself. (Before this change the only option was to manually re-trigger CI, e.g. by closing and reopening the PR.)
+
 **Trust gate**: the three Oz-agent workflows (`issue-triage.yml`, `spec-generation.yml`, `implementation.yml`) only run when the originating issue's `author_association` is one of `OWNER`, `MEMBER`, or `COLLABORATOR`. Issues from `CONTRIBUTOR`/`FIRST_TIME_CONTRIBUTOR`/`NONE` will not be auto-triaged and will not advance through the pipeline until a maintainer takes manual action. This is intentional: it keeps untrusted issue bodies out of the secret-backed agent prompts.
 
 **Minimum standards** enforced by triage:
