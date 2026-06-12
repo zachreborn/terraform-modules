@@ -20,3 +20,21 @@ output "id" {
   description = "ID of the CloudFront distribution"
   value       = aws_cloudfront_distribution.this.id
 }
+
+###########################
+# Origin Access Control Outputs
+###########################
+output "origin_access_control_ids" {
+  description = "Map of Origin Access Control IDs created by this module, keyed by OAC name. Empty when origin_access_controls is null."
+  value       = { for k, v in aws_cloudfront_origin_access_control.this : k => v.id }
+}
+
+output "origin_access_control_arns" {
+  description = "Map of Origin Access Control ARNs created by this module, keyed by OAC name. Empty when origin_access_controls is null."
+  value       = { for k, v in aws_cloudfront_origin_access_control.this : k => v.arn }
+}
+
+output "origin_access_control_etags" {
+  description = "Map of Origin Access Control etags created by this module, keyed by OAC name. Empty when origin_access_controls is null."
+  value       = { for k, v in aws_cloudfront_origin_access_control.this : k => v.etag }
+}
