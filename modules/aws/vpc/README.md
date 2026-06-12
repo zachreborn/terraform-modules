@@ -207,6 +207,38 @@ module "vpc" {
 }
 ```
 
+### CloudWatch Internet Monitor Example
+
+This example enables an Amazon CloudWatch Internet Monitor for the VPC to surface internet performance (RTT) and availability health events for the city-networks (client location + ASN) that reach your resources. The feature is fully opt-in via `enable_internet_monitor` (default `false`) and monitors the module's own VPC ARN. Optionally, internet measurements beyond the top-500 city-networks can be delivered to an existing S3 bucket supplied by the caller (this module does not create the bucket).
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name     = "client_prod_vpc"
+    vpc_cidr = "10.11.0.0/16"
+    azs      = ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+    # CloudWatch Internet Monitor
+    enable_internet_monitor                        = true
+    internet_monitor_monitor_name                  = "client_prod_vpc_monitor"
+    internet_monitor_traffic_percentage_to_monitor = 100
+    internet_monitor_max_city_networks_to_monitor  = 100
+
+    # Optional: deliver internet measurements to an existing S3 bucket
+    internet_monitor_s3_bucket_name   = "my-existing-internet-monitor-bucket"
+    internet_monitor_s3_bucket_prefix = "internet-monitor"
+    internet_monitor_s3_bucket_status = "ENABLED"
+
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -239,6 +271,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 |------|------|
 | [aws_eip.nateip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
 | [aws_internet_gateway.igw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway) | resource |
+| [aws_internetmonitor_monitor.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internetmonitor_monitor) | resource |
 | [aws_nat_gateway.natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) | resource |
 | [aws_route.db_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.db_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
@@ -301,6 +334,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_enable_firewall"></a> [enable\_firewall](#input\_enable\_firewall) | (Optional) A boolean flag to enable/disable the use of a firewall instance within the VPC. Defaults False. | `bool` | `false` | no |
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_internet_gateway"></a> [enable\_internet\_gateway](#input\_enable\_internet\_gateway) | (Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True. | `bool` | `true` | no |
+| <a name="input_enable_internet_monitor"></a> [enable\_internet\_monitor](#input\_enable\_internet\_monitor) | (Optional) A boolean flag to enable/disable the creation of a CloudWatch Internet Monitor for this VPC. Defaults false. | `bool` | `false` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. | `bool` | `false` | no |
 | <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. | `bool` | `false` | no |
@@ -316,6 +350,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_iam_role_description"></a> [iam\_role\_description](#input\_iam\_role\_description) | (Optional) The description of the role. | `string` | `"Role utilized for VPC flow logs. This role allows creation of log streams and adding logs to the log streams in cloudwatch"` | no |
 | <a name="input_iam_role_name_prefix"></a> [iam\_role\_name\_prefix](#input\_iam\_role\_name\_prefix) | (Required, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with name. | `string` | `"flow_logs_role_"` | no |
 | <a name="input_instance_tenancy"></a> [instance\_tenancy](#input\_instance\_tenancy) | A tenancy option for instances launched into the VPC | `string` | `"default"` | no |
+| <a name="input_internet_monitor_availability_score_threshold"></a> [internet\_monitor\_availability\_score\_threshold](#input\_internet\_monitor\_availability\_score\_threshold) | (Optional) The health-event trigger threshold percentage for the availability score. Valid values are 1-100. Defaults 95. | `number` | `95` | no |
+| <a name="input_internet_monitor_max_city_networks_to_monitor"></a> [internet\_monitor\_max\_city\_networks\_to\_monitor](#input\_internet\_monitor\_max\_city\_networks\_to\_monitor) | (Optional) The maximum number of city-networks (location + ASN pairs) to monitor. This is a hard billing cap. Valid values are 1-500000. Defaults 100. | `number` | `100` | no |
+| <a name="input_internet_monitor_monitor_name"></a> [internet\_monitor\_monitor\_name](#input\_internet\_monitor\_monitor\_name) | (Optional) The name of the Internet Monitor. Required when enable\_internet\_monitor is true. Maps to the monitor\_name argument. | `string` | `null` | no |
+| <a name="input_internet_monitor_performance_score_threshold"></a> [internet\_monitor\_performance\_score\_threshold](#input\_internet\_monitor\_performance\_score\_threshold) | (Optional) The health-event trigger threshold percentage for the performance score. Valid values are 1-100. Defaults 95. | `number` | `95` | no |
+| <a name="input_internet_monitor_s3_bucket_name"></a> [internet\_monitor\_s3\_bucket\_name](#input\_internet\_monitor\_s3\_bucket\_name) | (Optional) The name of an existing S3 bucket for publishing internet measurements beyond the top-500 city-networks. When null, S3 measurement delivery is not configured. The bucket must be supplied by the caller. | `string` | `null` | no |
+| <a name="input_internet_monitor_s3_bucket_prefix"></a> [internet\_monitor\_s3\_bucket\_prefix](#input\_internet\_monitor\_s3\_bucket\_prefix) | (Optional) The S3 key prefix for internet-measurements delivery. | `string` | `null` | no |
+| <a name="input_internet_monitor_s3_bucket_status"></a> [internet\_monitor\_s3\_bucket\_status](#input\_internet\_monitor\_s3\_bucket\_status) | (Optional) Enables (ENABLED) or disables (DISABLED) S3 internet-measurement delivery. Valid values: ENABLED, DISABLED. Defaults DISABLED. | `string` | `"DISABLED"` | no |
+| <a name="input_internet_monitor_status"></a> [internet\_monitor\_status](#input\_internet\_monitor\_status) | (Optional) The status for the monitor. Valid values: ACTIVE, INACTIVE. Defaults ACTIVE. | `string` | `"ACTIVE"` | no |
+| <a name="input_internet_monitor_traffic_percentage_to_monitor"></a> [internet\_monitor\_traffic\_percentage\_to\_monitor](#input\_internet\_monitor\_traffic\_percentage\_to\_monitor) | (Optional) The percentage of internet-facing traffic to monitor with this monitor. Valid values are 1-100. Controls cost. Defaults 100. | `number` | `100` | no |
 | <a name="input_ipv4_ipam_pool_id"></a> [ipv4\_ipam\_pool\_id](#input\_ipv4\_ipam\_pool\_id) | (Optional) The ID of an IPv4 IPAM pool to source the VPC CIDR from. When set, vpc\_cidr is ignored and the CIDR is allocated from the pool using ipv4\_netmask\_length. | `string` | `null` | no |
 | <a name="input_ipv4_netmask_length"></a> [ipv4\_netmask\_length](#input\_ipv4\_netmask\_length) | (Optional) The netmask length of the IPv4 CIDR to allocate from the IPAM pool referenced by ipv4\_ipam\_pool\_id. Required when ipv4\_ipam\_pool\_id is set. | `number` | `null` | no |
 | <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/flow_logs_key_"` | no |
@@ -345,6 +388,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_dmz_route_table_ids"></a> [dmz\_route\_table\_ids](#output\_dmz\_route\_table\_ids) | n/a |
 | <a name="output_dmz_subnet_ids"></a> [dmz\_subnet\_ids](#output\_dmz\_subnet\_ids) | n/a |
 | <a name="output_igw_id"></a> [igw\_id](#output\_igw\_id) | n/a |
+| <a name="output_internet_monitor_arn"></a> [internet\_monitor\_arn](#output\_internet\_monitor\_arn) | The ARN of the CloudWatch Internet Monitor. Null when enable\_internet\_monitor is false. |
+| <a name="output_internet_monitor_id"></a> [internet\_monitor\_id](#output\_internet\_monitor\_id) | The ID (name) of the CloudWatch Internet Monitor. Null when enable\_internet\_monitor is false. |
 | <a name="output_mgmt_route_table_ids"></a> [mgmt\_route\_table\_ids](#output\_mgmt\_route\_table\_ids) | n/a |
 | <a name="output_mgmt_subnet_ids"></a> [mgmt\_subnet\_ids](#output\_mgmt\_subnet\_ids) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | The name of the VPC |

@@ -462,3 +462,44 @@ module "vpc_flow_logs" {
   flow_vpc_ids                    = [aws_vpc.vpc.id]
   tags                            = var.tags
 }
+
+###########################
+# CloudWatch Internet Monitor
+###########################
+
+resource "aws_internetmonitor_monitor" "this" {
+  count = var.enable_internet_monitor ? 1 : 0
+
+  monitor_name                  = var.internet_monitor_monitor_name
+  resources                     = [aws_vpc.vpc.arn]
+  status                        = var.internet_monitor_status
+  traffic_percentage_to_monitor = var.internet_monitor_traffic_percentage_to_monitor
+  max_city_networks_to_monitor  = var.internet_monitor_max_city_networks_to_monitor
+  tags                          = merge(tomap({ Name = var.name }), var.tags)
+
+  health_events_config {
+    availability_score_threshold = var.internet_monitor_availability_score_threshold
+    performance_score_threshold  = var.internet_monitor_performance_score_threshold
+  }
+
+  # Only wire S3 measurement delivery when the caller supplies a bucket name.
+  dynamic "internet_measurements_log_delivery" {
+    for_each = var.internet_monitor_s3_bucket_name != null ? [1] : []
+    content {
+      s3_config {
+        bucket_name         = var.internet_monitor_s3_bucket_name
+        bucket_prefix       = var.internet_monitor_s3_bucket_prefix
+        log_delivery_status = var.internet_monitor_s3_bucket_status
+      }
+    }
+  }
+
+  lifecycle {
+    # required_version (>= 1.0.0) predates cross-variable validation, so enforce
+    # the "monitor_name required when enabled" contract with a precondition.
+    precondition {
+      condition     = !var.enable_internet_monitor || var.internet_monitor_monitor_name != null
+      error_message = "internet_monitor_monitor_name must be set when enable_internet_monitor is true."
+    }
+  }
+}
