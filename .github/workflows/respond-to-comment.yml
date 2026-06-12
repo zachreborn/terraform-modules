@@ -51,7 +51,7 @@ jobs:
         github.event_name == 'pull_request_review_comment' ||
         (github.event_name == 'issue_comment' && github.event.issue.pull_request)
       ) &&
-      github.actor != 'github-actions[bot]' &&
+      github.event.sender.type != 'Bot' &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
                github.event.comment.author_association)
 
@@ -62,6 +62,8 @@ jobs:
 
     steps:
       - name: Checkout
+        # zizmor: ignore[artipacked] — credentials must persist so the
+        # "Commit and Push Changes" step can git push to the PR branch.
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
@@ -211,6 +213,15 @@ jobs:
           git config user.name "Oz Agent"
           git config user.email "oz-agent@warp.dev"
 
+          # GITHUB_TOKEN cannot push to a fork's branch — skip commit for fork PRs
+          # and let the agent reply-only path handle the response.
+          HEAD_REPO=$(gh pr view "${{ github.event.issue.number || github.event.pull_request.number }}" --json headRepositoryOwner --jq '.headRepositoryOwner.login' 2>/dev/null || echo '')
+          BASE_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          if [ "$HEAD_REPO" != "$BASE_OWNER" ] && [ -n "$HEAD_REPO" ]; then
+            echo "::notice::PR is from a fork ($HEAD_REPO); skipping commit — agent response will be posted as a comment only."
+            exit 0
+          fi
+
           if [[ -n $(git status --porcelain) ]]; then
             git add .
             # Use printf to avoid YAML indentation corrupting the Co-Authored-By trailer
@@ -272,7 +283,7 @@ jobs:
             }
 
       - name: Report Agent Error
-        if: failure() && steps.agent.outcome == 'failure'
+        if: failure()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ github.token }}
