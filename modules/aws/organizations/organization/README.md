@@ -80,6 +80,36 @@ module "organization" {
 }
 ```
 
+### Identity Center Service Control Policy
+
+By default this module creates and attaches a Service Control Policy (SCP) to the
+organization root which denies `sso:CreateInstance` organization-wide. This
+prevents member (child) accounts from creating their own account-level IAM
+Identity Center (AWS SSO) instances, keeping Identity Center management
+centralized in the management account / delegated administrator.
+
+**Prerequisite:** SCP support must be enabled on the organization. Include
+`"SERVICE_CONTROL_POLICY"` in `enabled_policy_types`, otherwise the apply fails
+with a precondition error. The organization `feature_set` must be `ALL`.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+
+    # Required so the SCP can be created and attached.
+    enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+
+    # The following are the defaults and may be omitted.
+    enable_identity_center_scp = true
+    attach_identity_center_scp = true
+}
+```
+
+To opt out entirely (no new resources, clean plan), set
+`enable_identity_center_scp = false`. To create the policy without enforcing it,
+set `attach_identity_center_scp = false`. To attach the SCP to specific OUs or
+accounts instead of the organization root, set `identity_center_scp_target_ids`.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
