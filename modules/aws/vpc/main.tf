@@ -29,7 +29,11 @@ locals {
 ###########################
 
 resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr
+  # When ipv4_ipam_pool_id is set, the CIDR is sourced from the IPAM pool and
+  # cidr_block must be null; otherwise fall back to the static vpc_cidr.
+  cidr_block           = var.ipv4_ipam_pool_id == null ? var.vpc_cidr : null
+  ipv4_ipam_pool_id    = var.ipv4_ipam_pool_id
+  ipv4_netmask_length  = var.ipv4_netmask_length
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
   instance_tenancy     = var.instance_tenancy
@@ -52,7 +56,9 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    # Reference the VPC's resolved CIDR so IPAM-sourced VPCs (where the CIDR is
+    # not known until apply) work without requiring a separate vpc_cidr value.
+    cidr_blocks = [aws_vpc.vpc.cidr_block]
   }
 
   ingress {
@@ -60,7 +66,7 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
     from_port   = 443
     to_port     = 443
     protocol    = "udp"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = [aws_vpc.vpc.cidr_block]
   }
 
   egress {

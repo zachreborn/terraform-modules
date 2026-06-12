@@ -2,9 +2,21 @@
 # VPC
 ##########################
 variable "vpc_cidr" {
-  description = "The CIDR block for the VPC"
+  description = "The CIDR block for the VPC. Ignored when ipv4_ipam_pool_id is set, in which case the CIDR is sourced from the IPAM pool."
   type        = string
   default     = "10.11.0.0/16"
+}
+
+variable "ipv4_ipam_pool_id" {
+  description = "(Optional) The ID of an IPv4 IPAM pool to source the VPC CIDR from. When set, vpc_cidr is ignored and the CIDR is allocated from the pool using ipv4_netmask_length."
+  type        = string
+  default     = null
+}
+
+variable "ipv4_netmask_length" {
+  description = "(Optional) The netmask length of the IPv4 CIDR to allocate from the IPAM pool referenced by ipv4_ipam_pool_id. Required when ipv4_ipam_pool_id is set."
+  type        = number
+  default     = null
 }
 
 variable "enable_dns_hostnames" {
