@@ -37,6 +37,26 @@ resource "aws_cloudfront_origin_access_control" "this" {
 }
 
 ###########################
+# ACM Certificate Validation
+###########################
+# Optional, gated waiter. When var.wait_for_certificate_validation is true the
+# module creates this resource so the distribution is created only after the
+# certificate reaches ISSUED. It creates no DNS records; the caller still owns
+# the validation records in their own DNS zone. This release uses the module's
+# default aws provider, which must target us-east-1 (CloudFront ACM region)
+# when this is enabled. A dedicated aws.acm provider alias is deferred to the
+# next major version.
+resource "aws_acm_certificate_validation" "this" {
+  count = var.wait_for_certificate_validation ? 1 : 0
+
+  certificate_arn = var.acm_certificate_arn
+
+  timeouts {
+    create = var.certificate_validation_timeout
+  }
+}
+
+###########################
 # Module Configuration
 ###########################
 
@@ -173,7 +193,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = var.acm_certificate_arn
+    acm_certificate_arn            = try(aws_acm_certificate_validation.this[0].certificate_arn, var.acm_certificate_arn)
     cloudfront_default_certificate = var.cloudfront_default_certificate
     iam_certificate_id             = var.iam_certificate_id
     minimum_protocol_version       = var.ssl_minimum_protocol_version
@@ -190,6 +210,22 @@ resource "aws_cloudfront_distribution" "this" {
         v.origin_access_control_name == null ? true : contains(keys(var.origin_access_controls != null ? var.origin_access_controls : {}), v.origin_access_control_name)
       ])
       error_message = "Each origins[*].origin_access_control_name must match a key in var.origin_access_controls."
+    }
+
+    # Steer callers away from the ACM validation race condition. A custom ACM
+    # certificate (acm_certificate_arn) must reach ISSUED before the
+    # distribution is created. Terraform cannot tell a validated ARN from a raw
+    # one at plan time, so this gate keys off the variable flags: either gate on
+    # validation in-module (wait_for_certificate_validation), or use a non-ACM
+    # certificate path (cloudfront_default_certificate / iam_certificate_id).
+    precondition {
+      condition = (
+        var.acm_certificate_arn == null ||
+        var.cloudfront_default_certificate ||
+        var.iam_certificate_id != null ||
+        var.wait_for_certificate_validation
+      )
+      error_message = "When using a custom ACM certificate, either set wait_for_certificate_validation = true, or pass acm_certificate_arn from an aws_acm_certificate_validation resource (not aws_acm_certificate) so CloudFront waits for ISSUED state."
     }
   }
 }

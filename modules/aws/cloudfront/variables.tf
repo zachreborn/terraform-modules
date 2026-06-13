@@ -3,7 +3,7 @@
 ###########################
 
 variable "acm_certificate_arn" {
-  description = "(Optional) The ARN of the ACM certificate that you want to use with the distribution. This must be used if custom domain names are used. The ACM certificate must be in the us-east-1 (Virginia) region."
+  description = "(Optional) The ARN of the ACM certificate for the distribution. The certificate must be in us-east-1. IMPORTANT: pass the certificate_arn from an aws_acm_certificate_validation resource (NOT the raw aws_acm_certificate arn) so CloudFront waits for the certificate to reach ISSUED state. Alternatively set wait_for_certificate_validation = true to have the module gate on validation internally."
   type        = string
   default     = null
 }
@@ -12,6 +12,12 @@ variable "aliases" {
   description = "(Optional) Extra CNAMEs (alternate domain names), if any, for this distribution."
   type        = list(string)
   default     = null
+}
+
+variable "certificate_validation_timeout" {
+  description = "(Optional) The create timeout for the aws_acm_certificate_validation resource when wait_for_certificate_validation is true."
+  type        = string
+  default     = "45m"
 }
 
 variable "cloudfront_default_certificate" {
@@ -345,6 +351,16 @@ variable "staging" {
   description = "(Optional) Whether the distribution is in a staging environment. Default is false."
   type        = bool
   default     = false
+}
+
+variable "wait_for_certificate_validation" {
+  description = "(Optional) When true, the module creates an aws_acm_certificate_validation resource so the distribution waits for the certificate to reach ISSUED before creation. Requires acm_certificate_arn to be set. The module does not create DNS validation records; the caller must still create those in their own DNS zone. NOTE (this release): the validation resource uses the module's default aws provider, which must be configured for us-east-1 when this is true."
+  type        = bool
+  default     = false
+  validation {
+    condition     = var.wait_for_certificate_validation == false || var.acm_certificate_arn != null
+    error_message = "wait_for_certificate_validation = true requires acm_certificate_arn to be set."
+  }
 }
 
 variable "wait_for_deployment" {

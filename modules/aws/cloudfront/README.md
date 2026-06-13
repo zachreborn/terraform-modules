@@ -121,6 +121,50 @@ module "s3_oac_cloudfront" {
 }
 ```
 
+### Custom ACM Certificate with In-Module Validation Wait
+
+When a distribution uses a custom ACM certificate, that certificate must be in the `ISSUED` state before CloudFront can be created. Passing the raw `aws_acm_certificate` ARN creates no dependency on validation finishing, so the apply races and can fail with `InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.`
+
+This example sets `wait_for_certificate_validation = true`, which makes the module create an `aws_acm_certificate_validation` resource internally. The distribution then waits for the certificate to reach `ISSUED` before it is created, removing the race condition. The `viewer_certificate` block consumes the validated ARN automatically.
+
+**Prerequisites for this pattern:**
+
+- You create the ACM certificate and pass its ARN via `acm_certificate_arn`.
+- You create the DNS validation records (CNAMEs) in your own DNS zone. The module does **not** create DNS validation records under any option, so it works with both Route 53 and external DNS.
+- This release uses the module's default `aws` provider for the validation resource, so that provider must be configured for `us-east-1` (the region CloudFront requires for ACM certificates) when `wait_for_certificate_validation = true`. A dedicated `aws.acm` provider alias is planned for the next major version.
+
+If you do not enable the in-module wait, the alternative is to pass the `certificate_arn` from your own `aws_acm_certificate_validation` resource (not the raw `aws_acm_certificate` ARN) into `acm_certificate_arn` so CloudFront still waits for `ISSUED`.
+
+```
+module "example_com_cloudfront" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudfront"
+
+  # The module gates on validation internally, so the distribution is created
+  # only after the certificate reaches ISSUED. The caller still owns the DNS
+  # validation records (see prerequisites above).
+  acm_certificate_arn             = aws_acm_certificate.example_com.arn
+  wait_for_certificate_validation = true
+  certificate_validation_timeout  = "45m"
+
+  aliases                        = ["example.com"]
+  default_cache_target_origin_id = "s3-app-data"
+  managed_cache_policy_name      = "CachingOptimized"
+
+  origin_access_controls = {
+    s3-app-data = {
+      description = "OAC for the app data S3 bucket"
+    }
+  }
+
+  origins = {
+    s3-app-data = {
+      domain_name                = module.app_data_bucket.bucket_regional_domain_name
+      origin_access_control_name = "s3-app-data"
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
