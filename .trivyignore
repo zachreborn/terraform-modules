@@ -66,3 +66,10 @@ AVD-AWS-0017
 # AVD-AWS-0006: Athena workgroup does not have encryption configured
 # Exposed as encryption_configuration variable; caller provides the encryption type and KMS key
 AVD-AWS-0006
+
+# AVD-AWS-0104: Security group allows unrestricted egress to any IP address (*******/0)
+# Security group modules must accept any CIDR as inputs; caller enforces restrictions.
+# For the ZPA App Connector vendor module specifically, unrestricted egress is required by
+# design — Zscaler connectors initiate all sessions outbound to Zscaler cloud endpoints
+# and the destination IPs are managed dynamically by Zscaler infrastructure.
+AVD-AWS-0104
