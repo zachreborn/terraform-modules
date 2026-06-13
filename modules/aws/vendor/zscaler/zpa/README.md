@@ -149,7 +149,7 @@ No modules.
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Root EBS volume type. Valid values: standard, gp2, gp3, io1, io2, sc1, st1. Defaults to gp3. | `string` | `"gp3"` | no |
 | <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | (Optional) Name for the ZPA App Connector security group. | `string` | `"zpa_connector_sg"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) List of private subnet IDs in which to launch one connector per subnet. The number of subnets determines the number of connector instances created. | `list(string)` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to all resources created by this module. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "role": "zpa_connector",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required, Forces new resource) VPC ID in which to create the ZPA App Connector instances and security group. | `string` | n/a | yes |
 
 ## Outputs
