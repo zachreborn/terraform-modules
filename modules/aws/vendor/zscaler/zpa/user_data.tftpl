@@ -33,7 +33,7 @@ sudo systemctl stop zpa-connector
 echo "Applying ZPA Provisioning Key..."
 sudo mkdir -p /opt/zscaler/var
 echo "$PROVISIONING_KEY" | sudo tee /opt/zscaler/var/provision_key
-sudo chmod 644 /opt/zscaler/var/provision_key
+sudo chmod 600 /opt/zscaler/var/provision_key
 
 # 5. Start and enable the service
 echo "Starting and enabling zpa-connector service..."
