@@ -41,6 +41,10 @@ skip-check:
   # Transfer Server module supports public exposure as a caller-controlled variable
   - CKV_AWS_164
 
+  # S3 access_log_bucket requires ACLs enabled: the AWS log delivery service cannot write
+  # to buckets with ACLs disabled; BucketOwnerPreferred + log-delivery-write ACL is required
+  - CKV2_AWS_65
+
   # ============================================================
   # CONFIGURABLE BY CALLER: Checkov cannot see variable values
   # These modules expose the flagged settings as input variables.
@@ -118,9 +122,17 @@ skip-check:
   # API Gateway WAF
   - CKV_AWS_103 # WAF association - optional caller configuration
 
+  # WAFv2
+  - CKV_AWS_192 # Log4j CVE-2021-44228 managed rule - caller selects which managed rule groups to enable
+  - CKV_AWS_342 # WAF rule actions - rules support action, override_action, or neither; caller-defined rule set
+
   # Elastic Beanstalk - checkov runtime crash on these checks
   - CKV_AWS_312 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
   - CKV_AWS_340 # Checkov crashes evaluating this on aws_elastic_beanstalk_environment
+
+  # ECR
+  - CKV_AWS_51 # Image scan on push - exposed as scan_on_push variable (default true)
+  - CKV_AWS_136 # KMS encryption - exposed as encryption_type variable (default KMS)
 
   # SNS
   - CKV_AWS_26 # SNS topic encryption - exposed as kms_master_key_id variable
@@ -143,6 +155,9 @@ skip-check:
   - CKV2_AWS_32 # Response headers policy - optional caller configuration
   - CKV2_AWS_47 # WAFv2 WebACL with Log4j rule - optional caller configuration
 
+  # WAFv2
+  - CKV2_AWS_31 # WAF logging configuration - exposed via logging_configuration variable; suppressed because logging is optional (callers must provide a log destination)
+
   # CloudTrail
   - CKV2_AWS_10 # CloudWatch Logs integration - exposed as cloud_watch_logs_group_arn variable
 
@@ -153,6 +168,9 @@ skip-check:
 
   # GuardDuty
   - CKV2_AWS_3 # GuardDuty enabled per org/region - org-level control, not module
+
+  # EFS
+  - CKV2_AWS_18 # EFS in AWS Backup plan - managed by caller
 
   # RDS
   - CKV2_AWS_8 # RDS cluster in AWS Backup plan - managed by caller

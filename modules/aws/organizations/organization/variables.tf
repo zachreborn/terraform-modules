@@ -41,6 +41,40 @@ variable "enabled_features" {
 }
 
 ############################################################
+# Identity Center Service Control Policy
+############################################################
+
+variable "enable_identity_center_scp" {
+  description = "(Optional) If true, creates a Service Control Policy (SCP) which denies sso:CreateInstance organization-wide so member accounts cannot create account-level IAM Identity Center instances. Defaults to true. Requires SERVICE_CONTROL_POLICY in enabled_policy_types."
+  type        = bool
+  default     = true
+}
+
+variable "identity_center_scp_name" {
+  description = "(Optional) Name of the Identity Center deny SCP. Used as the name of the aws_organizations_policy created via the policy module."
+  type        = string
+  default     = "DenyMemberAccountIdentityCenter"
+}
+
+variable "identity_center_scp_description" {
+  description = "(Optional) Description of the Identity Center deny SCP."
+  type        = string
+  default     = "Denies sso:CreateInstance org-wide so member accounts cannot create account-level IAM Identity Center instances."
+}
+
+variable "attach_identity_center_scp" {
+  description = "(Optional) If true, attaches the Identity Center deny SCP to the targets in identity_center_scp_target_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "identity_center_scp_target_ids" {
+  description = "(Optional) List of organization root, OU, or account IDs to attach the Identity Center deny SCP to. When null and attach_identity_center_scp is true, the SCP is attached to the organization root. Defaults to null."
+  type        = list(string)
+  default     = null
+}
+
+############################################################
 # General Variables
 ############################################################
 

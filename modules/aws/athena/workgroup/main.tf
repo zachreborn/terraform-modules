@@ -15,6 +15,7 @@ terraform {
 # Athena Workgroup
 ##############################
 
+#trivy:ignore:AVD-AWS-0006 # Encryption is caller-controlled via var.encryption_option; static analysis cannot evaluate the dynamic block
 resource "aws_athena_workgroup" "this" {
   name          = var.name
   description   = var.description

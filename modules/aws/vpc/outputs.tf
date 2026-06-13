@@ -100,3 +100,13 @@ output "private_subnet_arns" {
   description = "List of ARNs of private subnets"
   value       = aws_subnet.private_subnets[*].arn
 }
+
+output "internet_monitor_arn" {
+  description = "The ARN of the CloudWatch Internet Monitor. Null when enable_internet_monitor is false."
+  value       = one(aws_internetmonitor_monitor.this[*].arn)
+}
+
+output "internet_monitor_id" {
+  description = "The ID (name) of the CloudWatch Internet Monitor. Null when enable_internet_monitor is false."
+  value       = one(aws_internetmonitor_monitor.this[*].id)
+}

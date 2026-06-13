@@ -60,14 +60,19 @@
 
 <!-- USAGE EXAMPLES -->
 
+## Prerequisites
+
+- AWS Identity Center (IAM Identity Center) must be **enabled** in your AWS organization's management account before applying this module. The `data.aws_ssoadmin_instances` data source will fail if Identity Center is not yet configured.
+- This module is intended for **manual** user/group management. If you use an external IdP (Okta, Entra ID, etc.) for SSO, users and groups will be managed by the IdP sync — use this module only if you are managing identities directly in Identity Center.
+
 ## Usage
 
 ### Simple Example
 
-This example creates users and groups managed by terraform. Note, we recommend using an IAM platform like AWS SSO, Microsoft Entra ID, or Okta as your IDP to manage groups and users automatically. This offers a way to get started with Identity Center.
+This example creates users and groups managed by Terraform and assigns a user to the `admins` group. Note: we recommend using an external IdP for production environments; this module offers a way to get started quickly with Identity Center without one.
 
-```
-module "users" {
+```hcl
+module "identity_center" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center"
 
   groups = {
@@ -77,7 +82,7 @@ module "users" {
     },
     "terraform" = {
       display_name = "terraform"
-      description  = "Terraform users for CI/CD deployment"
+      # description is optional — omit to use the provider default (no description)
     }
   }
 
@@ -97,6 +102,21 @@ module "users" {
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
+## Notes / Design Decisions
+
+### Group membership interface
+
+User-to-group assignment is expressed **per-user** via the optional `users[*].groups` list. Each entry must exactly match a key in `var.groups`. The module flattens these lists into `aws_identitystore_group_membership` resources internally and surfaces the results via the `group_memberships` output.
+
+This user-centric approach means:
+- Adding a user to a group is done by editing the user's `groups` list, not a separate membership block.
+- A user with no `groups` value is still created; it simply has no memberships.
+- The `group_memberships` output is keyed by `"<user_display_name>-<group_name>"` and exposes `membership_id`, `member` (user ID), and `group` (group ID) for downstream reference (e.g. audit tooling or permission-set modules).
+
+### `groups.description` is optional
+
+The underlying `aws_identitystore_group` resource treats `description` as optional. The module now reflects that — omitting it causes the provider to leave the description unset rather than requiring callers to pass an empty string.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- terraform-docs output will be input automatically below-->
@@ -105,14 +125,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -122,7 +142,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_identitystore_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
 | [aws_identitystore_group_membership.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group_membership) | resource |
 | [aws_identitystore_user.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
@@ -131,15 +151,16 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string # (Required) The friendly name to identify the group.<br/>    description  = string # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The list of groups to create. | <pre>map(object({<br/>    display_name = string           # (Required) The friendly name to identify the group.<br/>    description  = optional(string) # (Optional) The description of the group.<br/>  }))</pre> | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | (Required) The list of users to create. | <pre>map(object({<br/>    given_name  = string # (Required) The given name of the user.<br/>    family_name = string # (Required) The family name of the user.<br/>    user_name   = string # (Required) The username of the user.<br/><br/>    honorific_prefix = optional(string) # (Optional) The honorific prefix of the user.<br/>    honorific_suffix = optional(string) # (Optional) The honorific suffix of the user.<br/>    middle_name      = optional(string) # (Optional) The middle name of the user.<br/>    nickname         = optional(string) # (Optional) The nickname of the user.<br/><br/>    email                   = optional(string) # (Optional) The email address of the user.<br/>    email_is_primary        = optional(bool)   # (Optional) Indicates whether the email address is the primary email address of the user.<br/>    email_type              = optional(string) # (Optional) The type of the email address of the user.<br/>    phone_number            = optional(string) # (Optional) The phone number of the user.<br/>    phone_number_is_primary = optional(bool)   # (Optional) Indicates whether the phone number is the primary phone number of the user.<br/>    phone_number_type       = optional(string) # (Optional) The type of the phone number of the user.<br/><br/>    preferred_language = optional(string) # (Optional) The user's preferred language.<br/>    timezone           = optional(string) # (Optional) The user's time zone.<br/>    title              = optional(string) # (Optional) The user's title.<br/>    user_type          = optional(string) # (Optional) The type of the user.<br/><br/>    groups = optional(list(string)) # (Optional) The list of groups the user belongs to.<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
+| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | The group memberships created in the identity store, keyed by '<user\_display\_name>-<group\_name>' |
 | <a name="output_user_ids"></a> [user\_ids](#output\_user\_ids) | The IDs of the users in the identity store |
 <!-- END_TF_DOCS -->
 
