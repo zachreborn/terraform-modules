@@ -1,5 +1,6 @@
 ---
 name: Implementation (Oz)
+run-name: "Implementation (Oz) — Issue #${{ github.event.issue.number || inputs.issue_number }}"
 on:
   issues:
     types: [labeled]
@@ -21,7 +22,7 @@ permissions:
 
 jobs:
   implement:
-    name: Implement spec with Oz
+    name: "Implement spec for Issue #${{ github.event.issue.number || inputs.issue_number }}"
     runs-on: ubuntu-latest
 
     # For labeled events, only trigger on the spec-approved label, skip if

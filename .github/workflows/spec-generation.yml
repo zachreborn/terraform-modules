@@ -1,5 +1,6 @@
 ---
 name: Spec Generation (Oz)
+run-name: "Spec Generation (Oz) — Issue #${{ github.event.issue.number || inputs.issue_number }}"
 on:
   issues:
     types: [labeled]
@@ -22,7 +23,7 @@ permissions:
 
 jobs:
   generate-spec:
-    name: Generate spec with Oz
+    name: "Generate spec for Issue #${{ github.event.issue.number || inputs.issue_number }}"
     runs-on: ubuntu-latest
 
     # For labeled events, only trigger on the ready-for-spec label, skip if
