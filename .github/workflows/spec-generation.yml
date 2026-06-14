@@ -118,73 +118,14 @@ jobs:
         with:
           warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          # Canonical spec-generation instructions live in
+          # .warp/skills/spec-generation/SKILL.md and are referenced via `skill:`.
+          # Pass only per-run context through `prompt:` below.
+          skill: zachreborn/terraform-modules:spec-generation
           prompt: |
-            You are generating a technical specification for an issue in
-            zachreborn/terraform-modules. The repository is a
-            Terraform/OpenTofu modules library (OpenTofu is the default;
-            Terraform is also supported). Conventions are documented in
-            `AGENTS.md`.
-
-            ## Target issue
+            ## Run context
             Issue number: #${{ steps.ctx.outputs.issue_number }}
             Repository: ${{ github.repository }}
-
-            Fetch the issue body and comments with:
-              gh issue view ${{ steps.ctx.outputs.issue_number }} \
-                --repo ${{ github.repository }} \
-                --json title,body,labels,comments
-
-            ## Required reading (consult before writing)
-            - `AGENTS.md` (root) — repo conventions, four-file module layout,
-              tagging pattern, lifecycle ignores, tfsec suppression style.
-            - `.github/specs/_template.md` — canonical spec layout.
-            - `modules/module_template/` — starting point for new modules.
-
-            ## Output
-            Create a new branch named:
-              spec/issue-${{ steps.ctx.outputs.issue_number }}-<short-kebab-slug>
-
-            Write the spec to:
-              .github/specs/issue-${{ steps.ctx.outputs.issue_number }}-<slug>.md
-
-            The spec MUST be based on `_template.md` and MUST contain:
-              - Background
-              - Non-goals
-              - Affected module path(s)
-              - Proposed `variables.tf` / `outputs.tf` / `main.tf` shape
-                (SIGNATURES ONLY — variable names, types, descriptions,
-                resource block names. NO full implementation.)
-              - Breaking-change assessment
-              - Checkov / tfsec suppression considerations (state "none"
-                if no new suppressions are needed)
-              - terraform-docs impact (will the auto-generated README change?)
-              - Acceptance criteria
-
-            ## Commit and PR
-            - Commit message: `spec: <issue title>` with body
-              `Refs #${{ steps.ctx.outputs.issue_number }}`
-              and the Co-Authored-By line for Oz.
-            - Push the branch.
-            - Open the PR as **ready-for-review** (NOT a draft) so that
-              CODEOWNERS are auto-assigned via the `pull_request:
-              ready_for_review` event. If your tooling defaults to draft,
-              flip it to ready before exiting. The workflow also runs a
-              post-step that calls `gh pr ready` as a safety net.
-            - Title: `spec: <issue title>`.
-            - PR body MUST include `Refs #${{ steps.ctx.outputs.issue_number }}`
-              (not `Fixes`) so the issue stays open through implementation.
-            - Apply `spec-ready-for-review` to the originating issue:
-                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
-                  --repo ${{ github.repository }} \
-                  --add-label spec-ready-for-review
-                gh issue edit ${{ steps.ctx.outputs.issue_number }} \
-                  --repo ${{ github.repository }} \
-                  --remove-label spec-in-progress || true
-            - Post a comment on the issue with the spec PR URL.
-
-            Do NOT modify any Terraform/OpenTofu files. Do NOT modify existing modules.
-            The only files you should create or modify live under
-            `.github/specs/`.
 
       - name: Mark spec PR ready-for-review
         # The Oz agent action tends to open PRs as drafts when invoked from

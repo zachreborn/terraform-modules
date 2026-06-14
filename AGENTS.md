@@ -308,6 +308,14 @@ stateDiagram-v2
 
 **Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
+**Agent instructions live in skills**: the canonical instructions for each pipeline stage are versioned [skills](https://docs.warp.dev/agent-platform/cloud-agents/skills-as-agents) under `.warp/skills/`:
+
+- `.warp/skills/issue-triage/` — triage/classification/labeling (used by `issue-triage.yml`)
+- `.warp/skills/spec-generation/` — spec authoring + spec PR (used by `spec-generation.yml`)
+- `.warp/skills/spec-implementation/` — implementation + impl PR (used by `implementation.yml`)
+
+Each workflow references its skill via the `skill:` input of `warpdotdev/oz-agent-action` (e.g. `skill: zachreborn/terraform-modules:issue-triage`) and passes only the run-specific context each stage needs through `prompt:` — triage receives the issue number, repository, and the issue title/body/labels; spec-generation receives the issue number and repository; implementation also receives the resolved spec-file path. Edit the `SKILL.md` files to change agent behavior — do **not** re-embed instructions in the workflow YAML. Because the skills live in this repo, the same stages can also be launched from the Oz CLI, web app, or a schedule, e.g. `oz agent run-cloud --skill "zachreborn/terraform-modules:issue-triage" --prompt "Triage issue #NNN"`.
+
 ## Security Posture Philosophy
 
 This is a **module library** — security enforcement is the caller's responsibility. Many Checkov checks are suppressed in `.checkov.yaml` because modules must accept any value for variables like CIDR ranges, ports, encryption settings, etc. When adding new suppressions, document the reason in the same format as existing entries.
