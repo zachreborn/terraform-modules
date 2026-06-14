@@ -258,11 +258,76 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `build.yml` | PR or push → main | Regenerates `terraform-docs` in a sandbox and fails the build if the committed docs are out of date (read-only — no auto-commit) |
 | `test.yml` | PR or push → main | Checks `tofu fmt` compliance + invisible-Unicode check + super-linter |
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
-| `release.yml` | Push of `v*.*.*` tag | Creates a GitHub release with auto-generated release notes |
+| `release-please.yml` | Push → main | Maintains the Release PR + `CHANGELOG.md` from Conventional Commits; merging the Release PR cuts the `vX.Y.Z` tag and publishes the GitHub Release (the single automated publisher) |
+| `release.yml` | Manual (`workflow_dispatch`) | Emergency/manual fallback only — publishes a GitHub Release for an **already-existing** `vX.Y.Z` tag; no longer triggers on tag pushes |
 | `issue-triage.yml` | Issue opened/edited/labeled | Oz agent validates issue against minimum standards, comments + labels |
 | `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
 | `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
 | `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
+
+## Release & Tag Strategy
+
+Releases are **review-gated automation**: the version is *computed* from
+Conventional Commit history, but a human still merges the PR that cuts the tag.
+
+**Single, repo-wide SemVer line.** Tags are `vMAJOR.MINOR.PATCH`, `v`-prefixed
+(e.g. `v8.16.0`). There is exactly one version line for the whole repository,
+which is why callers can pin any module with `?ref=vX.Y.Z`. **Per-module tags**
+(e.g. `module-name-vX.Y.Z`) are explicitly **deferred** — they would break the
+existing `?ref=` consumption pattern and are noted only as a possible future
+enhancement.
+
+**Bump rules** (derived from the `/commit-standards` Conventional Commit type of
+each squash-merged PR title):
+
+- `feat:` → **MINOR**
+- `fix:` → **PATCH**
+- `feat!:` / `fix!:` / any `BREAKING CHANGE:` footer → **MAJOR**
+- `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` → **no
+  release on their own** (they ride along in the next feat/fix release).
+
+There is **no pre-`1.0` leniency** — the repo is well past `v1.0.0`, so breaking
+changes must bump MAJOR.
+
+**How it works (release-please).** On every push to `main`,
+`release-please.yml` runs [`release-please`](https://github.com/googleapis/release-please)
+with `release-type: simple` and a manifest-driven config
+(`release-please-config.json` + `.release-please-manifest.json`). It computes the
+next version from commits since the last tag and opens/maintains a **Release
+PR** that owns `CHANGELOG.md` and the manifest version. **Merging the Release PR**
+is the human gate: it cuts the `vX.Y.Z` tag and publishes the GitHub Release.
+The manifest is seeded to `8.16.0`, so the first computed release builds off the
+existing `v8.16.0` tag rather than re-scanning history from zero.
+
+**Exactly one publisher.** `release-please.yml` is the single automated
+publisher. Because release-please uses the default `GITHUB_TOKEN`, the tag it
+creates does **not** trigger other workflows (GitHub suppresses cascading runs
+for the default token), so the tag-listening behavior was removed from
+`release.yml`. `release.yml` is now a **manual `workflow_dispatch` fallback**
+for hand-cut/emergency tags only: create the tag by hand, then run the workflow
+with the `tag_name` input to publish its GitHub Release. This is the documented
+manual emergency-tagging path.
+
+**Milestones stay the roadmap.** Automated tags and milestones are used
+**together**: milestones (`v8.17.0`, `v9.0.0`, …) remain the forward-looking
+human planning layer, while the cut version is *computed*. Because of that, a
+milestone name may drift from the version release-please actually cuts (a
+`v8.17.0` milestone becomes `v9.0.0` if a breaking change lands first). After
+each release, **reconcile**: rename/close the milestone to match the version
+that was actually released.
+
+**One-time repo configuration.** Enable **Settings → Actions → General → "Allow
+GitHub Actions to create and approve pull requests"** so release-please can open
+the Release PR. The Release PR is created via `GITHUB_TOKEN`, so its required
+checks (`Linter`, `Test OpenTofu`, `Verify - terraform-docs`, `Invisible
+Unicode Check`) land in the **approval-required** state — the same per-PR
+"Approve workflows to run" gate already documented for Oz bot PRs; a maintainer
+clicks it before merge. Adopting a PAT or GitHub App token (e.g.
+`actions/create-github-app-token`) would remove that click and is tracked as a
+future enhancement.
+
+The third-party `googleapis/release-please-action` is **pinned by commit SHA**
+per the zizmor supply-chain policy (same convention as `actions/checkout`).
 
 ## Automated issue/spec/impl pipeline
 
