@@ -1,5 +1,6 @@
 ---
 name: Issue Triage (Oz)
+run-name: "Issue Triage (Oz) — Issue #${{ github.event.issue.number }}"
 on:
   issues:
     types: [opened, edited]
@@ -22,7 +23,7 @@ permissions:
 
 jobs:
   triage:
-    name: Triage issue with Oz
+    name: "Triage Issue #${{ github.event.issue.number }}"
     runs-on: ubuntu-latest
 
     # Skip when:
