@@ -24,7 +24,7 @@ locals {
   notification_rule_name = "${substr(var.name, 0, 42)}-amplify-notifications"
   # Compute the EventBridge rule ARN deterministically so the SNS topic policy
   # can reference it without creating a Terraform dependency cycle.
-  notification_rule_arn = "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
+  notification_rule_arn = "arn:aws:events:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
   sns_topic_arn         = var.enable_notifications ? (var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn) : null
 
   notification_subscriptions = var.enable_notifications && var.notification_emails != null ? {
