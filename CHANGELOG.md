@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.19.1](https://github.com/zachreborn/terraform-modules/compare/v8.19.0...v8.19.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **amplify:** replace deprecated data.aws_region.current.id with .region ([#309](https://github.com/zachreborn/terraform-modules/issues/309)) ([190f2da](https://github.com/zachreborn/terraform-modules/commit/190f2daf6ef1f532c141c783ef11266ec6d040fa))
+
 ## [8.19.0](https://github.com/zachreborn/terraform-modules/compare/v8.18.0...v8.19.0) (2026-06-14)
 
 
