@@ -1,11 +1,55 @@
 version: 2
 updates:
+  # ─── GitHub Actions ──────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
     cooldown:
       default-days: 7
+    open-pull-requests-limit: 10
     reviewers:
       - "zachreborn"
       - "Jakeasaurus"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions-minor-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ─── Terraform / OpenTofu providers and registry modules ─────────────────────
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+    reviewers:
+      - "zachreborn"
+      - "Jakeasaurus"
+    labels:
+      - "dependencies"
+      - "terraform"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      terraform-minor-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
