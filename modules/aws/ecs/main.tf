@@ -157,7 +157,6 @@ module "service" {
   assign_public_ip      = try(each.value.assign_public_ip, false)
   create_security_group = try(each.value.create_security_group, false)
   vpc_id                = try(each.value.vpc_id, null)
-  security_group_rules  = try(each.value.security_group_rules, {})
 
   load_balancers     = try(each.value.load_balancers, [])
   service_registries = try(each.value.service_registries, null)

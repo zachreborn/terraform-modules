@@ -84,12 +84,6 @@ variable "vpc_id" {
   default     = null
 }
 
-variable "security_group_rules" {
-  description = "(Optional) Reserved for future rule management. The composed modules/aws/security_group module currently manages only the security group itself; manage rules on the caller side or via dedicated security group rule resources."
-  type        = any
-  default     = {}
-}
-
 ###########################
 # Load Balancing & Discovery Variables
 ###########################

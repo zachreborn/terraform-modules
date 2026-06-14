@@ -26,6 +26,16 @@ data "aws_region" "current" {}
 data "aws_iam_policy_document" "kms" {
   count = var.create_kms_key ? 1 : 0
 
+  # This document is the *key policy* for the CMK created via the kms module
+  # below. A KMS key policy's scope is implicitly the key it is attached to, so
+  # `resources = ["*"]` is the required (and only valid) form: the key ARN does
+  # not exist when the policy is authored and cannot be self-referenced. The
+  # wildcard therefore does not grant access to any other resource, so the
+  # following IAM "unconstrained resource" findings are false positives here.
+  # checkov:skip=CKV_AWS_111:KMS key policy scope is the key itself; "*" is the required resource form
+  # checkov:skip=CKV_AWS_356:KMS key policy scope is the key itself; "*" is the required resource form
+  # checkov:skip=CKV_AWS_109:KMS key policy scope is the key itself; "*" is the required resource form
+
   statement {
     sid       = "EnableRootAccount"
     effect    = "Allow"
@@ -60,13 +70,6 @@ data "aws_iam_policy_document" "kms" {
 ###########################
 
 locals {
-  # The setting blocks always include containerInsights plus any caller-supplied
-  # additional settings.
-  cluster_settings = concat(
-    [{ name = "containerInsights", value = var.container_insights }],
-    var.additional_settings,
-  )
-
   # Effective KMS key ARN for exec-command logging encryption.
   kms_key_arn = var.create_kms_key ? module.kms[0].arn : var.kms_key_arn
 
@@ -118,8 +121,16 @@ module "log_group" {
 resource "aws_ecs_cluster" "this" {
   name = var.name
 
+  # Declared as a static block (rather than folded into the dynamic block below)
+  # so static analyzers can verify the secure-by-default containerInsights value.
+  setting {
+    name  = "containerInsights"
+    value = var.container_insights
+  }
+
+  # Any caller-supplied settings beyond containerInsights.
   dynamic "setting" {
-    for_each = local.cluster_settings
+    for_each = var.additional_settings
     content {
       name  = setting.value.name
       value = setting.value.value
