@@ -25,6 +25,11 @@ locals {
   # Set error_document and index_document to null if redirect_all_requests_to is set.
   error_document = var.redirect_all_requests_to != null ? null : var.error_document
   index_document = var.redirect_all_requests_to != null ? null : var.index_document
+
+  # bucket_key_enabled only applies to SSE-KMS (aws:kms / aws:kms:dsse). When using
+  # AES256 (SSE-S3) the setting has no effect, so resolve it to false to avoid
+  # spurious plan diffs on AES256 buckets.
+  bucket_key_enabled = var.sse_algorithm == "AES256" ? false : var.bucket_key_enabled
 }
 
 ###########################
@@ -233,11 +238,11 @@ resource "aws_s3_bucket_public_access_block" "this" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
-  bucket                = aws_s3_bucket.this.bucket
-  expected_bucket_owner = var.expected_bucket_owner
+  bucket = aws_s3_bucket.this.bucket
 
   rule {
-    bucket_key_enabled = var.bucket_key_enabled
+    bucket_key_enabled       = local.bucket_key_enabled
+    blocked_encryption_types = var.blocked_encryption_types
     apply_server_side_encryption_by_default {
       kms_master_key_id = var.enable_kms_key ? aws_kms_key.s3[0].arn : null
       sse_algorithm     = var.sse_algorithm

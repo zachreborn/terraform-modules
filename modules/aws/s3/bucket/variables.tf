@@ -313,9 +313,19 @@ variable "restrict_public_buckets" {
 # S3 Encryption Variables
 ######################
 
+variable "blocked_encryption_types" {
+  type        = list(string)
+  description = "(Optional) List of encryption types to block on object uploads. Valid values are SSE-C and NONE. Defaults to [\"SSE-C\"], which blocks customer-provided key (SSE-C) uploads to align with the AWS enforcement that begins April 2026. Set to [] or [\"NONE\"] to opt out."
+  default     = ["SSE-C"]
+  validation {
+    condition     = alltrue([for t in var.blocked_encryption_types : contains(["SSE-C", "NONE"], t)])
+    error_message = "Each value must be one of SSE-C or NONE."
+  }
+}
+
 variable "bucket_key_enabled" {
   type        = bool
-  description = "(Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is reused to encrypt the object. When an object is copied, the S3 bucket key is reused to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is reused to encrypt the object. Defaults to true."
+  description = "(Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is reused to encrypt the object. When an object is copied, the S3 bucket key is reused to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is reused to encrypt the object. Defaults to true. This setting only applies to SSE-KMS (aws:kms / aws:kms:dsse); it is ignored when sse_algorithm = AES256, in which case the module derives an effective value of false internally to avoid spurious plan diffs."
   default     = true
   validation {
     condition     = can(regex("true|false", var.bucket_key_enabled))
@@ -325,11 +335,11 @@ variable "bucket_key_enabled" {
 
 variable "sse_algorithm" {
   type        = string
-  description = "(Optional) The server-side encryption algorithm to use. Valid values are AES256 and aws:kms"
+  description = "(Optional) The server-side encryption algorithm to use. Valid values are AES256, aws:kms, and aws:kms:dsse."
   default     = "aws:kms"
   validation {
-    condition     = can(regex("AES256|aws:kms", var.sse_algorithm))
-    error_message = "The value must be AES256 or aws:kms."
+    condition     = can(regex("^(AES256|aws:kms|aws:kms:dsse)$", var.sse_algorithm))
+    error_message = "The value must be AES256, aws:kms, or aws:kms:dsse."
   }
 }
 
