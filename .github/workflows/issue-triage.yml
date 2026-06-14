@@ -66,14 +66,14 @@ jobs:
         with:
           warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          # Canonical triage instructions live in
+          # .warp/skills/issue-triage/SKILL.md and are referenced via `skill:`.
+          # Pass only per-run context through `prompt:` below.
+          skill: zachreborn/terraform-modules:issue-triage
           prompt: |
-            You are triaging a GitHub issue in zachreborn/terraform-modules,
-            a Terraform/OpenTofu module library (OpenTofu is the default;
-            Terraform is also supported). Validate the issue against the
-            minimum standards below and update its state via the `gh` CLI.
-
-            ## Issue
-            Number: #${{ github.event.issue.number }}
+            ## Run context
+            Issue number: #${{ github.event.issue.number }}
+            Repository: ${{ github.repository }}
             URL: ${{ github.event.issue.html_url }}
             Title: ${{ github.event.issue.title }}
             Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}
@@ -82,58 +82,6 @@ jobs:
             ---
             ${{ github.event.issue.body }}
             ---
-
-            ## Classification
-            Classify as `bug` or `feature` based on the existing labels and
-            body content. If both/neither, ask in a comment and apply
-            `needs-info`.
-
-            ## Minimum standards
-            BUG must include:
-              1. Affected module path (e.g. `modules/aws/ec2_instance`).
-              2. OpenTofu or Terraform version and relevant provider versions.
-              3. Reproduction steps.
-              4. Expected vs. actual behavior.
-              5. One of: error message, stack trace, or plan/apply output.
-              6. Acceptance criteria for "fixed."
-
-            FEATURE must include:
-              1. Target module path (existing or proposed under
-                 `modules/<provider>/<name>/`).
-              2. Motivation / problem being solved.
-              3. High-level proposed inputs and outputs.
-              4. Breaking-change assessment (yes/no + scope).
-              5. Acceptance criteria for "done."
-
-            ## Actions you must take
-            Use the `gh` CLI (already authenticated via GH_TOKEN).
-
-            If ANY required item is missing:
-              - Post a single comment listing each missing item by name and
-                briefly explaining what is needed. End the comment with:
-                "Please **edit the issue body** (not a comment reply) to add the items above — editing the body re-triggers triage automatically."
-              - Run:
-                gh issue edit ${{ github.event.issue.number }} \
-                  --repo ${{ github.repository }} \
-                  --add-label needs-info
-
-            If ALL required items are present:
-              - Post a single short comment with:
-                  * Classification (bug/feature)
-                  * Affected module path(s)
-                  * Breaking-change risk (none/low/medium/high) with one
-                    sentence of rationale
-              - Run:
-                gh issue edit ${{ github.event.issue.number }} \
-                  --repo ${{ github.repository }} \
-                  --remove-label needs-info || true
-                gh issue edit ${{ github.event.issue.number }} \
-                  --repo ${{ github.repository }} \
-                  --add-label ready-for-spec
-
-            Do not edit any files. Do not push commits. Do not open PRs.
-            Do not invoke `terraform`. Your only side effects are issue
-            comments and label changes via `gh`.
 
       - name: Chain to Spec Generation if ready-for-spec was applied
         # Labels applied with GITHUB_TOKEN do not trigger downstream
