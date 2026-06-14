@@ -383,6 +383,27 @@ module "example_org_redirect_bucket" {
 }
 ```
 
+### Encryption Defaults
+
+This module enables server-side encryption by default and exposes the full set of S3 encryption controls.
+
+- **`sse_algorithm` defaults to `aws:kms`.** With `enable_kms_key = false` (the default), the bucket is encrypted with the AWS-managed `aws/s3` KMS key. This is intentional: using SSE-KMS (rather than `AES256`/SSE-S3) produces a CloudTrail audit trail of key usage and aligns with CIS AWS Foundations Benchmark recommendations. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse` (Dual-Layer Server-Side Encryption with KMS keys). Callers who want a customer-managed key can set `enable_kms_key = true`.
+- **`bucket_key_enabled` defaults to `true`.** S3 Bucket Keys reduce KMS request costs for SSE-KMS buckets. This setting only applies to SSE-KMS (`aws:kms` / `aws:kms:dsse`); when `sse_algorithm = "AES256"` the module internally resolves the effective value to `false` so plans for `AES256` buckets do not surface a spurious `bucket_key_enabled` change.
+- **`blocked_encryption_types` defaults to `["SSE-C"]`.** This blocks object uploads that use server-side encryption with customer-provided keys (SSE-C), aligning with the AWS enforcement that automatically blocks SSE-C for new buckets starting April 2026. Callers who rely on SSE-C uploads can opt out by setting `blocked_encryption_types = []` or `blocked_encryption_types = ["NONE"]`.
+
+```
+module "dsse_bucket" {
+  source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix = "octo-prod-dsse-"
+  sse_algorithm = "aws:kms:dsse"
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -434,9 +455,10 @@ No modules.
 | <a name="input_acl"></a> [acl](#input\_acl) | (Optional) The canned ACL to apply. Defaults to private. Valid values are private, public-read, public-read-write, aws-exec-read, authenticated-read, log-delivery-write, bucket-owner-read, bucket-owner-full-control, and authenticated-read. | `string` | `null` | no |
 | <a name="input_block_public_acls"></a> [block\_public\_acls](#input\_block\_public\_acls) | (Optional) Whether Amazon S3 should block public ACLs for this bucket. Defaults to false. Enabling this setting does not affect existing policies or ACLs. | `bool` | `true` | no |
 | <a name="input_block_public_policy"></a> [block\_public\_policy](#input\_block\_public\_policy) | (Optional) Whether Amazon S3 should block public bucket policies for this bucket. Defaults to false. Enabling this setting does not affect the existing bucket policy. | `bool` | `true` | no |
+| <a name="input_blocked_encryption_types"></a> [blocked\_encryption\_types](#input\_blocked\_encryption\_types) | (Optional) List of encryption types to block on object uploads. Valid values are SSE-C and NONE. Defaults to ["SSE-C"], which blocks customer-provided key (SSE-C) uploads to align with the AWS enforcement that begins April 2026. Set to [] or ["NONE"] to opt out. | `list(string)` | <pre>[<br/>  "SSE-C"<br/>]</pre> | no |
 | <a name="input_bucket"></a> [bucket](#input\_bucket) | (Optional, bucket or bucket\_prefix must exist) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. Conflicts with bucket\_prefix. | `string` | `null` | no |
 | <a name="input_bucket_force_destroy"></a> [bucket\_force\_destroy](#input\_bucket\_force\_destroy) | (Optional, Default:false) Boolean that indicates all objects (including any locked objects) should be deleted from the bucket when the bucket is destroyed so that the bucket can be destroyed without error. These objects are not recoverable. This only deletes objects when the bucket is destroyed, not when setting this parameter to true. Once this parameter is set to true, there must be a successful terraform apply run before a destroy is required to update this value in the resource state. Without a successful terraform apply after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful terraform apply is required to set this value in state before it will take effect on a destroy operation. | `bool` | `false` | no |
-| <a name="input_bucket_key_enabled"></a> [bucket\_key\_enabled](#input\_bucket\_key\_enabled) | (Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is reused to encrypt the object. When an object is copied, the S3 bucket key is reused to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is reused to encrypt the object. Defaults to true. | `bool` | `true` | no |
+| <a name="input_bucket_key_enabled"></a> [bucket\_key\_enabled](#input\_bucket\_key\_enabled) | (Optional) Specifies whether Amazon S3 should use an S3 bucket key for object encryption with server-side encryption using AWS KMS (SSE-KMS). Setting this element to true causes the following behavior: When an object is uploaded, the S3 bucket key is used to encrypt the object. When an object is overwritten, the S3 bucket key is reused to encrypt the object. When an object is copied, the S3 bucket key is reused to encrypt the object. When an object is restored from Amazon Glacier, the S3 bucket key is reused to encrypt the object. Defaults to true. This setting only applies to SSE-KMS (aws:kms / aws:kms:dsse); it is ignored when sse\_algorithm = AES256, in which case the module derives an effective value of false internally to avoid spurious plan diffs. | `bool` | `true` | no |
 | <a name="input_bucket_object_lock_enabled"></a> [bucket\_object\_lock\_enabled](#input\_bucket\_object\_lock\_enabled) | (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Valid values are true or false. This argument is not supported in all regions or partitions. | `bool` | `false` | no |
 | <a name="input_bucket_policy"></a> [bucket\_policy](#input\_bucket\_policy) | (Optional) Text of the policy. Although this is a bucket policy rather than an IAM policy, the aws\_iam\_policy\_document data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the AWS IAM Policy Document Guide. Note: Bucket policies are limited to 20 KB in size. | `string` | `null` | no |
 | <a name="input_bucket_prefix"></a> [bucket\_prefix](#input\_bucket\_prefix) | (Optional, bucket\_name or bucket\_prefix must exist) Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket. Must be lowercase and less than or equal to 37 characters in length. | `string` | `null` | no |
@@ -471,7 +493,7 @@ No modules.
 | <a name="input_redirect_all_requests_to"></a> [redirect\_all\_requests\_to](#input\_redirect\_all\_requests\_to) | (Optional) A map with hostname to redirect all website requests for this bucket to. The default is the protocol that is used in the original request. | `any` | `null` | no |
 | <a name="input_restrict_public_buckets"></a> [restrict\_public\_buckets](#input\_restrict\_public\_buckets) | (Optional) Whether Amazon S3 should restrict public bucket policies for this bucket. Defaults to false. Enabling this setting does not affect the previously stored bucket policy, except that public and cross-account access within the public bucket policy, including non-public delegation to specific accounts, is blocked. | `bool` | `true` | no |
 | <a name="input_routing_rules"></a> [routing\_rules](#input\_routing\_rules) | (Optional) A list of routing rules that can redirect requests to different directories or buckets. These rules are applied in the order that you specify them. For more information about routing rules, see Configuring advanced conditional redirects in the Amazon Simple Storage Service Developer Guide. | `any` | `null` | no |
-| <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | (Optional) The server-side encryption algorithm to use. Valid values are AES256 and aws:kms | `string` | `"aws:kms"` | no |
+| <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | (Optional) The server-side encryption algorithm to use. Valid values are AES256, aws:kms, and aws:kms:dsse. | `string` | `"aws:kms"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the bucket. | `map(any)` | <pre>{<br/>  "created_by": "<YOUR NAME>",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_versioning_status"></a> [versioning\_status](#input\_versioning\_status) | (Optional) Versioning state of the bucket. Valid values: Enabled, Suspended, or Disabled. Disabled should only be used when creating or importing resources that correspond to unversioned S3 buckets. | `string` | `"Disabled"` | no |
 
