@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.18.0](https://github.com/zachreborn/terraform-modules/compare/v8.17.0...v8.18.0) (2026-06-14)
+
+
+### Features
+
+* **iam:** add policy name lookup to user_policy_attachment ([#301](https://github.com/zachreborn/terraform-modules/issues/301)) ([422e714](https://github.com/zachreborn/terraform-modules/commit/422e714661c013591d64cbfad9b50ed88dc40c48))
+
 ## [8.17.0](https://github.com/zachreborn/terraform-modules/compare/v8.16.0...v8.17.0) (2026-06-14)
 
 
