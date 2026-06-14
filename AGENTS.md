@@ -314,7 +314,7 @@ stateDiagram-v2
 - `.warp/skills/spec-generation/` — spec authoring + spec PR (used by `spec-generation.yml`)
 - `.warp/skills/spec-implementation/` — implementation + impl PR (used by `implementation.yml`)
 
-Each workflow references its skill via the `skill:` input of `warpdotdev/oz-agent-action` (e.g. `skill: zachreborn/terraform-modules:issue-triage`) and passes only per-run context (issue number, title, body, labels, spec path) through `prompt:`. Edit the `SKILL.md` files to change agent behavior — do **not** re-embed instructions in the workflow YAML. Because the skills live in this repo, the same stages can also be launched from the Oz CLI, web app, or a schedule, e.g. `oz agent run-cloud --skill "zachreborn/terraform-modules:issue-triage" --prompt "Triage issue #NNN"`.
+Each workflow references its skill via the `skill:` input of `warpdotdev/oz-agent-action` (e.g. `skill: zachreborn/terraform-modules:issue-triage`) and passes only the run-specific context each stage needs through `prompt:` — triage receives the issue number, repository, and the issue title/body/labels; spec-generation receives the issue number and repository; implementation also receives the resolved spec-file path. Edit the `SKILL.md` files to change agent behavior — do **not** re-embed instructions in the workflow YAML. Because the skills live in this repo, the same stages can also be launched from the Oz CLI, web app, or a schedule, e.g. `oz agent run-cloud --skill "zachreborn/terraform-modules:issue-triage" --prompt "Triage issue #NNN"`.
 
 ## Security Posture Philosophy
 
