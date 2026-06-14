@@ -41,7 +41,7 @@ updates:
       - "Jakeasaurus"
     labels:
       - "dependencies"
-      - "terraform"
+      - "opentofu-terraform"
     commit-message:
       prefix: "chore"
       include: "scope"
