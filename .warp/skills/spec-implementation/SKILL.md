@@ -44,8 +44,11 @@ Read the spec file in full before making any changes.
 
 - Stay within the scope defined by the spec. Do not modify unrelated modules.
 - Run `tofu fmt -recursive` before committing.
-- Do not run `terraform-docs` locally — CI (`build.yml`) auto-injects the
-  README block.
+- If you change module inputs/outputs or the README `terraform-docs` markers,
+  regenerate the docs locally (e.g. `pre-commit run --all-files`) and commit the
+  result. CI (`build.yml`) only verifies the committed docs and fails the
+  `Verify - terraform-docs` job if they are stale — it does not auto-commit
+  fixes back to the PR.
 - Run `tofu -chdir=<module_path> init -backend=false` and
   `tofu -chdir=<module_path> validate` for any module you create or modify, and
   ensure both succeed.
