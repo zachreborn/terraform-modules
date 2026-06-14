@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.19.0](https://github.com/zachreborn/terraform-modules/compare/v8.18.0...v8.19.0) (2026-06-14)
+
+
+### Features
+
+* **s3:** modernize bucket server-side encryption options ([#305](https://github.com/zachreborn/terraform-modules/issues/305)) ([a1bba3d](https://github.com/zachreborn/terraform-modules/commit/a1bba3d423431c1411ad7388b6957ccd1078cf00))
+
 ## [8.18.0](https://github.com/zachreborn/terraform-modules/compare/v8.17.0...v8.18.0) (2026-06-14)
 
 
