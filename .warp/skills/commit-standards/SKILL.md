@@ -89,7 +89,7 @@ Reviewed-by: Jane Smith <jane@example.com>
 **Footer trailers** (one per line after a blank line following the body):
 - `Closes #123` — links and closes a GitHub/GitLab issue
 - `Fixes #123` — same, but signals a bug fix specifically
-- `Co-authored-by: Name <email>` — credits a collaborator
+- `Co-Authored-By: Name <email>` — credits a collaborator
 - `Reviewed-by: Name <email>` — credits a reviewer
 - `BREAKING CHANGE: <description>` — mandatory if using Option B above
 
