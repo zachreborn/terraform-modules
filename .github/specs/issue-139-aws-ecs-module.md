@@ -16,6 +16,14 @@ one focused submodule per ECS resource type — so a caller can compose
 blocks and get Well-Architected, CIS-aligned defaults out of the box. It follows
 the established submodule pattern used by `modules/aws/iam/*`,
 `modules/aws/route53/*`, and `modules/aws/s3/*`.
+In addition to the focused submodules, the family includes an **integrated root
+module** at `modules/aws/ecs/` that composes every submodule and can stand up an
+entire ECS stack — namespace + cluster + capacity providers + task definitions +
+services — from a single `module {}` block driven by a map / YAML input
+(`AGENTS.md` §5). The root module declares no `aws_*` resources of its own; it
+only calls the submodules and wires their outputs together, so callers get both
+clean building blocks (consume one submodule) and a single-call, declarative way
+to manage a whole stack.
 Cross-cutting concerns are satisfied by **composition** with existing modules
 rather than inline resources, per `AGENTS.md` §2: task/execution roles via
 `modules/aws/iam/role`, encryption keys via `modules/aws/kms`, log groups via
@@ -55,6 +63,7 @@ breaking-change risk.
 
 ## 3. Affected module path(s)
 All new; nothing existing changes:
+- `modules/aws/ecs/` (new) — **integrated root module**; composes the submodules below and declares no `aws_*` resources directly.
 - `modules/aws/ecs/cluster/` (new) — `aws_ecs_cluster` (+ `aws_ecs_cluster_capacity_providers`).
 - `modules/aws/ecs/capacity_provider/` (new) — `aws_ecs_capacity_provider` (EC2 Auto Scaling-backed).
 - `modules/aws/ecs/task_definition/` (new) — `aws_ecs_task_definition`.
@@ -64,10 +73,10 @@ All new; nothing existing changes:
 Referenced via composition only (not modified):
 - `modules/aws/iam/role`, `modules/aws/kms`, `modules/aws/cloudwatch/log_group`, `modules/aws/security_group`.
 
-Each submodule contains `main.tf`, `variables.tf`, `outputs.tf`, and `README.md`,
-started from `modules/module_template/`, with the standard `terraform {}` block
-(`required_version = ">= 1.0.0"`, `aws >= 6.0.0`) and the repo tagging pattern
-`tags = merge(tomap({ Name = var.name }), var.tags)`.
+The integrated root module and each submodule contain `main.tf`, `variables.tf`,
+`outputs.tf`, and `README.md`, started from `modules/module_template/`, with the
+standard `terraform {}` block (`required_version = ">= 1.0.0"`, `aws >= 6.0.0`)
+and the repo tagging pattern `tags = merge(tomap({ Name = var.name }), var.tags)`.
 
 ## 4. Proposed design
 **Signatures only — no full implementations.** Names mirror the underlying
@@ -207,10 +216,39 @@ applies its own default unless the caller overrides.
 #### `main.tf`
 - `aws_service_discovery_http_namespace.this` — single resource; callers scale via `for_each` on the module.
 
+### `modules/aws/ecs` (integrated root module)
+A thin composition layer — it declares **no `aws_*` resources directly**. It
+calls the submodules above and wires their outputs together so dependency
+ordering and Service Connect plumbing are automatic, and it accepts the whole
+stack as a map-of-objects (in-line HCL) **or** a YAML document via
+`yamldecode(file(...))` (`AGENTS.md` §5). The caller passes one declarative
+document; the module fans out task definitions and services with `for_each`.
+#### `variables.tf`
+- `namespace` — `object({ name = string, description = optional(string) })`, default `null` — When set, creates a Cloud Map namespace (via the `namespace` submodule) whose ARN is wired into the cluster (`service_connect_defaults`) and every service (`service_connect_configuration`).
+- `existing_namespace_arn` — `string`, default `null` — Reference an existing namespace instead of creating one; mutually exclusive with `namespace`.
+- `cluster` — `object({ ... })` — Cluster configuration; mirrors the `cluster` submodule variables (`name`, `container_insights`, `capacity_providers`, `default_capacity_provider_strategy`, execute-command logging toggles, etc.).
+- `capacity_providers` — `map(object({ ... }))`, default `{}` — Optional EC2 capacity providers keyed by logical name (each mirrors the `capacity_provider` submodule); created provider names are merged into the cluster's provider list.
+- `task_definitions` — `map(object({ ... }))`, default `{}` — Task definitions keyed by logical name (each mirrors the `task_definition` submodule). The map key is what services reference.
+- `services` — `map(object({ ... }))`, default `{}` — Services keyed by logical name (each mirrors the `service` submodule) plus a `task_definition` field naming a `task_definitions` key; the root resolves that key to the produced task-definition ARN and injects `cluster_arn` automatically.
+- `tags` — `map(string)`, default `{}` — Merged into every child module's tags.
+#### `outputs.tf`
+- `cluster_id`, `cluster_arn`, `cluster_name`.
+- `namespace_id`, `namespace_arn` — created or passed-through namespace.
+- `task_definition_arns` — `map(string)` keyed by `task_definitions` key.
+- `service_ids`, `service_names` — `map(string)` keyed by `services` key.
+- `kms_key_arn`, `cloud_watch_log_group_name` — passthrough from the `cluster` submodule when created.
+#### `main.tf`
+- `module "namespace"` (`modules/aws/ecs/namespace`) — conditional on `var.namespace != null`; the effective namespace ARN resolves to the created namespace or `var.existing_namespace_arn`.
+- `module "capacity_provider"` (`modules/aws/ecs/capacity_provider`) — `for_each = var.capacity_providers`; created provider names merged into the `cluster` input.
+- `module "cluster"` (`modules/aws/ecs/cluster`) — receives the resolved namespace ARN as `service_connect_namespace_arn` and the merged capacity-provider list.
+- `module "task_definition"` (`modules/aws/ecs/task_definition`) — `for_each = var.task_definitions`.
+- `module "service"` (`modules/aws/ecs/service`) — `for_each = var.services`; `cluster_arn = module.cluster.arn`, `task_definition_arn = module.task_definition[each.value.task_definition].arn`, and `service_connect_configuration.namespace` defaulted to the resolved namespace ARN.
+- Declares no `aws_*` resources; all ordering is handled by inter-module references.
+
 ## 5. Breaking-change assessment
 - Breaking: **no.**
-- All five submodules are brand new and have no existing callers (nothing in
-  `global/` or elsewhere references ECS today).
+- The integrated root module and all five submodules are brand new and have no
+  existing callers (nothing in `global/` or elsewhere references ECS today).
 - No existing module is modified; cross-cutting modules (`iam/role`, `kms`,
   `cloudwatch/log_group`, `security_group`) are only consumed via composition.
 
@@ -231,12 +269,14 @@ applies its own default unless the caller overrides.
 - Existing suppressions affected: none.
 
 ## 7. terraform-docs impact
-- New `<!-- BEGIN_TF_DOCS -->` blocks are injected into all five new READMEs
-  (`modules/aws/ecs/{cluster,capacity_provider,task_definition,service,namespace}/README.md`)
+- New `<!-- BEGIN_TF_DOCS -->` blocks are injected into all six new READMEs
+  (`modules/aws/ecs/README.md` plus
+  `modules/aws/ecs/{cluster,capacity_provider,task_definition,service,namespace}/README.md`)
   during implementation and verified by the `Verify - terraform-docs` CI job.
 - No existing module README changes, since the change is purely additive.
 
 ## 8. Testing
+- `tofu -chdir=modules/aws/ecs init -backend=false && tofu -chdir=modules/aws/ecs validate` for the integrated root module.
 - `tofu -chdir=modules/aws/ecs/<submodule> init -backend=false && tofu -chdir=modules/aws/ecs/<submodule> validate` for each of the five submodules.
 - `tofu fmt -check -diff -recursive` is clean.
 - `terraform-docs markdown table --output-file README.md --output-mode inject modules/aws/ecs/<submodule>` for each submodule, or `pre-commit run --all-files`.
@@ -248,15 +288,20 @@ applies its own default unless the caller overrides.
   default on; confirm `assign_public_ip = false` by default; confirm
   `create_*` composition toggles produce the IAM roles / KMS key / log group /
   security group via the existing child modules and not inline.
+- Integrated root module: confirm a single `module "ecs"` block fed by a
+  `yamldecode(file(...))` document stands up namespace + cluster + task
+  definitions + services end-to-end, auto-wires the namespace ARN into the
+  cluster and services, and resolves each service's `task_definition` map key to
+  the correct task-definition ARN.
 
 ## 9. Open questions
-- **Internal map inputs vs. caller `for_each`:** `service`, `task_definition`,
-  and `namespace` are specified as single-resource modules scaled by `for_each`
-  on the module block (satisfying `AGENTS.md` §5's "map or `for_each`" and
-  matching the `modules/aws/budgets/budget` precedent). Should they instead
-  accept an internal `map(object(...))` input? Preference: keep single-resource
-  + caller `for_each` for clarity, revisit if a YAML-driven multi-service input
-  is requested.
+- **Internal map inputs vs. caller `for_each`** (resolved): the submodules stay
+  single-resource for clarity (scaled by `for_each` on the block, satisfying
+  `AGENTS.md` §5 and matching the `modules/aws/budgets/budget` precedent). The
+  **integrated root module** `modules/aws/ecs/` now provides the YAML/map-driven
+  multi-service interface by composing those submodules with `for_each`
+  internally, so callers get both clean building blocks and a single-call,
+  YAML-driven way to manage a full stack.
 - **Application Auto Scaling:** Should the `service` submodule manage
   `aws_appautoscaling_target` / `aws_appautoscaling_policy`, or should that be a
   future `modules/aws/ecs/autoscaling` submodule? Preference: separate future
@@ -274,9 +319,18 @@ applies its own default unless the caller overrides.
   document the `create_security_group` path clearly.
 
 ## 10. Acceptance criteria
-- `modules/aws/ecs/{cluster,capacity_provider,task_definition,service,namespace}/`
+- `modules/aws/ecs/` (integrated root module) and
+  `modules/aws/ecs/{cluster,capacity_provider,task_definition,service,namespace}/`
   each contain `main.tf`, `variables.tf`, `outputs.tf`, and `README.md`, started
   from `modules/module_template/`.
+- **Integrated root module:** `modules/aws/ecs/` composes the submodules,
+  declares no `aws_*` resources directly, auto-wires the namespace ARN into the
+  cluster (`service_connect_defaults`) and services
+  (`service_connect_configuration`), and resolves each service's
+  `task_definition` map key to the produced task-definition ARN.
+- **YAML-driven stack:** the root module manages a full stack (namespace +
+  cluster + capacity providers + task definitions + services) from a single
+  `yamldecode(file(...))` (or map-of-objects) input.
 - **Clusters:** create `aws_ecs_cluster` with Container Insights enabled by
   default and encrypted execute-command logging; capacity providers managed via
   `aws_ecs_cluster_capacity_providers`.
@@ -299,7 +353,7 @@ applies its own default unless the caller overrides.
 - Each `README.md` includes a description, prerequisites, a complete `module {}`
   usage example, a notes/design-decisions section, and the auto-generated
   `terraform-docs` block.
-- `tofu fmt -check -diff -recursive` is clean and `tofu -chdir=<submodule> validate`
-  passes for every submodule; `terraform-docs` verification and Checkov pass in
-  CI.
+- `tofu fmt -check -diff -recursive` is clean and `tofu -chdir=<path> validate`
+  passes for the integrated root module and every submodule; `terraform-docs`
+  verification and Checkov pass in CI.
 - No breaking changes to existing modules or callers.
