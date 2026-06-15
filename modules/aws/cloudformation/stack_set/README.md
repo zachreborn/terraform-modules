@@ -107,6 +107,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Notes / Design Decisions
+
+- **`stack_set_instance_region`**: Use this variable when the StackSet control-plane region differs from the instance deployment region. For example, if you manage the StackSet from `us-east-1` but need instances deployed in `us-west-2`, set `stack_set_instance_region = "us-west-2"`. When left as `null` (the default), instances are created in the provider's configured region — identical to the behaviour before this variable was introduced, so existing deployments see no plan diff.
+- **ForceNew behaviour**: The `stack_set_instance_region` argument is `ForceNew` in the AWS provider — changing it on an existing deployment will destroy and re-create the affected stack instances. This reflects an AWS constraint (an instance's region is immutable) and is not a regression introduced by this module.
+- **Deprecated `region` argument not used**: The module wires the new input into the non-deprecated `stack_set_instance_region` provider argument (introduced in `aws >= 6.0.0`) rather than the deprecated `region` argument. Callers on the module's minimum supported provider version (`aws >= 6.0.0`) will not see any `Deprecated attribute` warnings.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
@@ -121,7 +129,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
 
 ## Modules
 
@@ -159,6 +167,7 @@ No modules.
 | <a name="input_region_concurrency_type"></a> [region\_concurrency\_type](#input\_region\_concurrency\_type) | The concurrency type of the stack set operation. Valid values are: SEQUENTIAL, PARALLEL | `string` | `"SEQUENTIAL"` | no |
 | <a name="input_region_order"></a> [region\_order](#input\_region\_order) | The order of the regions in which to create or update stack set instances. | `list(string)` | `null` | no |
 | <a name="input_retain_stacks_on_account_removal"></a> [retain\_stacks\_on\_account\_removal](#input\_retain\_stacks\_on\_account\_removal) | Whether to retain stack instances in accounts that are removed from the stack set. | `bool` | `false` | no |
+| <a name="input_stack_set_instance_region"></a> [stack\_set\_instance\_region](#input\_stack\_set\_instance\_region) | The AWS region in which to create the stack set instances. When null, the provider's configured region is used. This is useful when the StackSet control-plane region differs from the instance deployment region (for example, the StackSet is managed in us-east-1 but instances should be deployed in us-west-2). Maps to the non-deprecated stack\_set\_instance\_region argument introduced in provider v6.0.0 (the successor to the deprecated region argument). Note: this argument is ForceNew — changing it on an existing deployment will destroy and re-create the stack instances. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the stack. | `map(string)` | `{}` | no |
 | <a name="input_template_body"></a> [template\_body](#input\_template\_body) | Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template\_url' parameter. | `string` | `null` | no |
 | <a name="input_template_url"></a> [template\_url](#input\_template\_url) | URL of the CloudFormation template. Conflicts with 'template\_body' parameter. | `string` | `null` | no |
