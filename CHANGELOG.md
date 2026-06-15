@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.20.0](https://github.com/zachreborn/terraform-modules/compare/v8.19.1...v8.20.0) (2026-06-15)
+
+
+### Features
+
+* **cloudformation/stack_set:** add stack_set_instance_region variable to stack set instance ([#316](https://github.com/zachreborn/terraform-modules/issues/316)) ([da78e71](https://github.com/zachreborn/terraform-modules/commit/da78e714646661e768754ce74df9434300b8abfe))
+
 ## [8.19.1](https://github.com/zachreborn/terraform-modules/compare/v8.19.0...v8.19.1) (2026-06-14)
 
 
