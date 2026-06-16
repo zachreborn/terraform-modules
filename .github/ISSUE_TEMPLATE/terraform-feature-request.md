@@ -1,22 +1,46 @@
 ---
 name: Feature Request
-about: Feature template for tracking issues, next steps, and solutions.
-title: ''
+about: Propose a new module or an enhancement to an existing one.
+title: 'feat: <short description>'
 labels: feature
 assignees: zachreborn
 ---
 
-### Describe the feature
-A clear and concise description of what the feature is.
+### Target module path
 
-Considerations: 
-What is the issue we are solving with this request?
-Does it require modifying an existing module or adding a new module?
-What will be the most scalable, repeatable way to create and add/edit/modify this feature?
-What is the desired outcome?
+<!-- Required. Path to the existing module or proposed path for a new module,
+     e.g. modules/aws/s3/bucket or modules/aws/new_service -->
 
-### Examples
-Example branches/successful runs/working versions demonstrating this prior to completion.
+### Motivation
 
-### Confirmation
-Confirmation that proposed solution is successful. 
+<!-- Required. What problem does this solve? Why is this needed? -->
+
+### Proposed inputs and outputs
+
+<!-- Required. List the key variables (inputs) and outputs this change would add or modify.
+     High-level is fine — exact types can be refined in the spec. -->
+
+**Inputs:**
+
+- `variable_name` — description
+
+**Outputs:**
+
+- `output_name` — description
+
+### Breaking-change assessment
+
+<!-- Required. Would this change break existing callers? Answer yes or no and explain the scope. -->
+
+- Breaking change: yes / no
+- Scope:
+
+### Acceptance criteria
+
+<!-- Required. How will we know this feature is complete? List specific, verifiable conditions. -->
+
+- [ ]
+
+### Additional context
+
+<!-- Optional. Examples, related issues, prior art, links to provider docs, etc. -->
