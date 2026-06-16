@@ -273,7 +273,7 @@ resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
 module "organization_backup_plan" {
   source = "../../aws/organizations/delegated_resource_policy"
 
-  for_each = var.enable_organization_backup ? [true] : []
+  for_each = var.enable_organization_backup ? toset(["this"]) : toset([])
 
   content = file("org_backup_plan.json")
   tags    = var.tags
