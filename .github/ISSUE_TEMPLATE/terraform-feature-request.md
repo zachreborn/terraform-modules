@@ -39,7 +39,8 @@ assignees: zachreborn
 
 <!-- Required. How will we know this feature is complete? List specific, verifiable conditions. -->
 
-- [ ]
+- [ ] <!-- e.g. The new variable is accepted and applied without error -->
+- [ ] <!-- e.g. Existing callers are unaffected / migrate successfully -->
 
 ### Additional context
 

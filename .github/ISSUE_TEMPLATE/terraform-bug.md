@@ -25,9 +25,10 @@ assignees: zachreborn
 
 <!-- Required. Minimal steps to reproduce the behavior. -->
 
-1.
-2.
-3.
+1. <!-- e.g. Add the following module block to main.tf ... -->
+2. <!-- e.g. Run `tofu init && tofu plan` -->
+3. <!-- e.g. Observe the error -->
+<!-- Add or remove steps as needed -->
 
 ### Expected behavior
 
@@ -41,15 +42,17 @@ assignees: zachreborn
 
 <!-- Required. Paste the full error message, stack trace, or relevant plan/apply output. -->
 
-```
-
+```hcl
+# Paste the full error message, stack trace, or plan/apply output here.
+# Do not truncate — the triage agent reads the full output.
 ```
 
 ### Acceptance criteria
 
 <!-- Required. How will we know this bug is fixed? List specific, verifiable conditions. -->
 
-- [ ]
+- [ ] <!-- e.g. `tofu apply` completes without error on the affected module -->
+- [ ] <!-- e.g. The previously failing resource is created/updated as expected -->
 
 ### Additional context
 
