@@ -199,7 +199,7 @@ resource "aws_wafv2_web_acl_rule" "this" {
         vendor_name = managed_rule_group_statement.value.vendor_name
 
         dynamic "rule_action_override" {
-          for_each = coalesce(managed_rule_group_statement.value.rule_action_overrides, [])
+          for_each = managed_rule_group_statement.value.rule_action_overrides != null ? managed_rule_group_statement.value.rule_action_overrides : {}
           content {
             name = rule_action_override.key
             action_to_use {
@@ -291,6 +291,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
                         name = single_query_argument.value.name
                       }
                     }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
                   }
                 }
                 dynamic "text_transformation" {
@@ -370,6 +400,89 @@ resource "aws_wafv2_web_acl_rule" "this" {
               content {
                 key   = label_match_statement.value.key
                 scope = label_match_statement.value.scope
+              }
+            }
+            dynamic "byte_match_statement" {
+              for_each = try(scope_down_statement.value.byte_match_statement, null) != null ? [scope_down_statement.value.byte_match_statement] : []
+              content {
+                positional_constraint = byte_match_statement.value.positional_constraint
+                search_string         = byte_match_statement.value.search_string
+                dynamic "field_to_match" {
+                  for_each = [byte_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = byte_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
               }
             }
           }
@@ -509,6 +622,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 name = single_query_argument.value.name
               }
             }
+            dynamic "headers" {
+              for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+              content {
+                match_scope       = headers.value.match_scope
+                oversize_handling = headers.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_headers = try(headers.value.match_pattern.included_headers, [])
+                  excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                }
+              }
+            }
+            dynamic "cookies" {
+              for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+              content {
+                match_scope       = cookies.value.match_scope
+                oversize_handling = cookies.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                  excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                }
+              }
+            }
           }
         }
         dynamic "text_transformation" {
@@ -565,6 +708,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 name = single_query_argument.value.name
               }
             }
+            dynamic "headers" {
+              for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+              content {
+                match_scope       = headers.value.match_scope
+                oversize_handling = headers.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_headers = try(headers.value.match_pattern.included_headers, [])
+                  excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                }
+              }
+            }
+            dynamic "cookies" {
+              for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+              content {
+                match_scope       = cookies.value.match_scope
+                oversize_handling = cookies.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                  excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                }
+              }
+            }
           }
         }
         dynamic "text_transformation" {
@@ -618,6 +791,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
               for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
               content {
                 name = single_query_argument.value.name
+              }
+            }
+            dynamic "headers" {
+              for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+              content {
+                match_scope       = headers.value.match_scope
+                oversize_handling = headers.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_headers = try(headers.value.match_pattern.included_headers, [])
+                  excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                }
+              }
+            }
+            dynamic "cookies" {
+              for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+              content {
+                match_scope       = cookies.value.match_scope
+                oversize_handling = cookies.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                  excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                }
               }
             }
           }
@@ -676,6 +879,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 name = single_query_argument.value.name
               }
             }
+            dynamic "headers" {
+              for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+              content {
+                match_scope       = headers.value.match_scope
+                oversize_handling = headers.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_headers = try(headers.value.match_pattern.included_headers, [])
+                  excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                }
+              }
+            }
+            dynamic "cookies" {
+              for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+              content {
+                match_scope       = cookies.value.match_scope
+                oversize_handling = cookies.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                  excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                }
+              }
+            }
           }
         }
         dynamic "text_transformation" {
@@ -732,6 +965,36 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 name = single_query_argument.value.name
               }
             }
+            dynamic "headers" {
+              for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+              content {
+                match_scope       = headers.value.match_scope
+                oversize_handling = headers.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_headers = try(headers.value.match_pattern.included_headers, [])
+                  excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                }
+              }
+            }
+            dynamic "cookies" {
+              for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+              content {
+                match_scope       = cookies.value.match_scope
+                oversize_handling = cookies.value.oversize_handling
+                match_pattern {
+                  dynamic "all" {
+                    for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                    content {}
+                  }
+                  included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                  excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                }
+              }
+            }
           }
         }
         dynamic "text_transformation" {
@@ -763,7 +1026,7 @@ resource "aws_wafv2_web_acl_rule" "this" {
       content {
         arn = rule_group_reference_statement.value.arn
         dynamic "rule_action_override" {
-          for_each = rule_group_reference_statement.value.rule_action_overrides
+          for_each = rule_group_reference_statement.value.rule_action_overrides != null ? rule_group_reference_statement.value.rule_action_overrides : {}
           content {
             name = rule_action_override.key
             action_to_use {
@@ -795,6 +1058,8 @@ resource "aws_wafv2_web_acl_rule" "this" {
 
     ############################
     # NOT Statement (1 level deep)
+    # Note: managed_rule_group, rate_based, and rule_group_reference
+    # cannot be nested inside logical statements (AWS constraint).
     ############################
     dynamic "not_statement" {
       for_each = each.value.statement.not_statement != null ? [each.value.statement.not_statement] : []
@@ -819,13 +1084,6 @@ resource "aws_wafv2_web_acl_rule" "this" {
               scope = label_match_statement.value.scope
             }
           }
-          dynamic "rate_based_statement" {
-            for_each = try(not_statement.value.statement.rate_based_statement, null) != null ? [not_statement.value.statement.rate_based_statement] : []
-            content {
-              limit              = rate_based_statement.value.limit
-              aggregate_key_type = rate_based_statement.value.aggregate_key_type
-            }
-          }
           dynamic "byte_match_statement" {
             for_each = try(not_statement.value.statement.byte_match_statement, null) != null ? [not_statement.value.statement.byte_match_statement] : []
             content {
@@ -836,6 +1094,20 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 content {
                   dynamic "all_query_arguments" {
                     for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
                     content {}
                   }
                   dynamic "uri_path" {
@@ -854,18 +1126,34 @@ resource "aws_wafv2_web_acl_rule" "this" {
                       name = single_query_argument.value.name
                     }
                   }
-                  dynamic "query_string" {
-                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
-                    content {}
-                  }
-                  dynamic "method" {
-                    for_each = try(field_to_match.value.method, false) ? [1] : []
-                    content {}
-                  }
-                  dynamic "body" {
-                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
                     content {
-                      oversize_handling = body.value.oversize_handling
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
                     }
                   }
                 }
@@ -879,12 +1167,424 @@ resource "aws_wafv2_web_acl_rule" "this" {
               }
             }
           }
+          dynamic "size_constraint_statement" {
+            for_each = try(not_statement.value.statement.size_constraint_statement, null) != null ? [not_statement.value.statement.size_constraint_statement] : []
+            content {
+              comparison_operator = size_constraint_statement.value.comparison_operator
+              size                = size_constraint_statement.value.size
+              dynamic "field_to_match" {
+                for_each = [size_constraint_statement.value.field_to_match]
+                content {
+                  dynamic "all_query_arguments" {
+                    for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "uri_path" {
+                    for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "single_header" {
+                    for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                    content {
+                      name = single_header.value.name
+                    }
+                  }
+                  dynamic "single_query_argument" {
+                    for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                    content {
+                      name = single_query_argument.value.name
+                    }
+                  }
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                    content {
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
+                    }
+                  }
+                }
+              }
+              dynamic "text_transformation" {
+                for_each = size_constraint_statement.value.text_transformation
+                content {
+                  priority = text_transformation.value.priority
+                  type     = text_transformation.value.type
+                }
+              }
+            }
+          }
+          dynamic "sqli_match_statement" {
+            for_each = try(not_statement.value.statement.sqli_match_statement, null) != null ? [not_statement.value.statement.sqli_match_statement] : []
+            content {
+              sensitivity_level = sqli_match_statement.value.sensitivity_level
+              dynamic "field_to_match" {
+                for_each = [sqli_match_statement.value.field_to_match]
+                content {
+                  dynamic "all_query_arguments" {
+                    for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "uri_path" {
+                    for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "single_header" {
+                    for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                    content {
+                      name = single_header.value.name
+                    }
+                  }
+                  dynamic "single_query_argument" {
+                    for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                    content {
+                      name = single_query_argument.value.name
+                    }
+                  }
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                    content {
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
+                    }
+                  }
+                }
+              }
+              dynamic "text_transformation" {
+                for_each = sqli_match_statement.value.text_transformation
+                content {
+                  priority = text_transformation.value.priority
+                  type     = text_transformation.value.type
+                }
+              }
+            }
+          }
+          dynamic "xss_match_statement" {
+            for_each = try(not_statement.value.statement.xss_match_statement, null) != null ? [not_statement.value.statement.xss_match_statement] : []
+            content {
+              dynamic "field_to_match" {
+                for_each = [xss_match_statement.value.field_to_match]
+                content {
+                  dynamic "all_query_arguments" {
+                    for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "uri_path" {
+                    for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "single_header" {
+                    for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                    content {
+                      name = single_header.value.name
+                    }
+                  }
+                  dynamic "single_query_argument" {
+                    for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                    content {
+                      name = single_query_argument.value.name
+                    }
+                  }
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                    content {
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
+                    }
+                  }
+                }
+              }
+              dynamic "text_transformation" {
+                for_each = xss_match_statement.value.text_transformation
+                content {
+                  priority = text_transformation.value.priority
+                  type     = text_transformation.value.type
+                }
+              }
+            }
+          }
+          dynamic "regex_match_statement" {
+            for_each = try(not_statement.value.statement.regex_match_statement, null) != null ? [not_statement.value.statement.regex_match_statement] : []
+            content {
+              regex_string = regex_match_statement.value.regex_string
+              dynamic "field_to_match" {
+                for_each = [regex_match_statement.value.field_to_match]
+                content {
+                  dynamic "all_query_arguments" {
+                    for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "uri_path" {
+                    for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "single_header" {
+                    for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                    content {
+                      name = single_header.value.name
+                    }
+                  }
+                  dynamic "single_query_argument" {
+                    for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                    content {
+                      name = single_query_argument.value.name
+                    }
+                  }
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                    content {
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
+                    }
+                  }
+                }
+              }
+              dynamic "text_transformation" {
+                for_each = regex_match_statement.value.text_transformation
+                content {
+                  priority = text_transformation.value.priority
+                  type     = text_transformation.value.type
+                }
+              }
+            }
+          }
+          dynamic "regex_pattern_set_reference_statement" {
+            for_each = try(not_statement.value.statement.regex_pattern_set_reference_statement, null) != null ? [not_statement.value.statement.regex_pattern_set_reference_statement] : []
+            content {
+              arn = regex_pattern_set_reference_statement.value.arn
+              dynamic "field_to_match" {
+                for_each = [regex_pattern_set_reference_statement.value.field_to_match]
+                content {
+                  dynamic "all_query_arguments" {
+                    for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "body" {
+                    for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                    content {
+                      oversize_handling = body.value.oversize_handling
+                    }
+                  }
+                  dynamic "method" {
+                    for_each = try(field_to_match.value.method, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "query_string" {
+                    for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "uri_path" {
+                    for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                    content {}
+                  }
+                  dynamic "single_header" {
+                    for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                    content {
+                      name = single_header.value.name
+                    }
+                  }
+                  dynamic "single_query_argument" {
+                    for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                    content {
+                      name = single_query_argument.value.name
+                    }
+                  }
+                  dynamic "headers" {
+                    for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                    content {
+                      match_scope       = headers.value.match_scope
+                      oversize_handling = headers.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_headers = try(headers.value.match_pattern.included_headers, [])
+                        excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                      }
+                    }
+                  }
+                  dynamic "cookies" {
+                    for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                    content {
+                      match_scope       = cookies.value.match_scope
+                      oversize_handling = cookies.value.oversize_handling
+                      match_pattern {
+                        dynamic "all" {
+                          for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                          content {}
+                        }
+                        included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                        excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                      }
+                    }
+                  }
+                }
+              }
+              dynamic "text_transformation" {
+                for_each = regex_pattern_set_reference_statement.value.text_transformation
+                content {
+                  priority = text_transformation.value.priority
+                  type     = text_transformation.value.type
+                }
+              }
+            }
+          }
         }
       }
     }
 
     ############################
     # AND Statement (1 level deep)
+    # Note: managed_rule_group, rate_based, and rule_group_reference
+    # cannot be nested inside logical statements (AWS constraint).
     ############################
     dynamic "and_statement" {
       for_each = each.value.statement.and_statement != null ? [each.value.statement.and_statement] : []
@@ -911,13 +1611,6 @@ resource "aws_wafv2_web_acl_rule" "this" {
                 scope = label_match_statement.value.scope
               }
             }
-            dynamic "rate_based_statement" {
-              for_each = try(statement.value.rate_based_statement, null) != null ? [statement.value.rate_based_statement] : []
-              content {
-                limit              = rate_based_statement.value.limit
-                aggregate_key_type = rate_based_statement.value.aggregate_key_type
-              }
-            }
             dynamic "byte_match_statement" {
               for_each = try(statement.value.byte_match_statement, null) != null ? [statement.value.byte_match_statement] : []
               content {
@@ -928,6 +1621,20 @@ resource "aws_wafv2_web_acl_rule" "this" {
                   content {
                     dynamic "all_query_arguments" {
                       for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
                       content {}
                     }
                     dynamic "uri_path" {
@@ -946,12 +1653,57 @@ resource "aws_wafv2_web_acl_rule" "this" {
                         name = single_query_argument.value.name
                       }
                     }
-                    dynamic "query_string" {
-                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
-                      content {}
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
                     }
-                    dynamic "method" {
-                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = byte_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "size_constraint_statement" {
+              for_each = try(statement.value.size_constraint_statement, null) != null ? [statement.value.size_constraint_statement] : []
+              content {
+                comparison_operator = size_constraint_statement.value.comparison_operator
+                size                = size_constraint_statement.value.size
+                dynamic "field_to_match" {
+                  for_each = [size_constraint_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
                       content {}
                     }
                     dynamic "body" {
@@ -960,10 +1712,391 @@ resource "aws_wafv2_web_acl_rule" "this" {
                         oversize_handling = body.value.oversize_handling
                       }
                     }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
                   }
                 }
                 dynamic "text_transformation" {
-                  for_each = byte_match_statement.value.text_transformation
+                  for_each = size_constraint_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "sqli_match_statement" {
+              for_each = try(statement.value.sqli_match_statement, null) != null ? [statement.value.sqli_match_statement] : []
+              content {
+                sensitivity_level = sqli_match_statement.value.sensitivity_level
+                dynamic "field_to_match" {
+                  for_each = [sqli_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = sqli_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "xss_match_statement" {
+              for_each = try(statement.value.xss_match_statement, null) != null ? [statement.value.xss_match_statement] : []
+              content {
+                dynamic "field_to_match" {
+                  for_each = [xss_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = xss_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "regex_match_statement" {
+              for_each = try(statement.value.regex_match_statement, null) != null ? [statement.value.regex_match_statement] : []
+              content {
+                regex_string = regex_match_statement.value.regex_string
+                dynamic "field_to_match" {
+                  for_each = [regex_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = regex_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "regex_pattern_set_reference_statement" {
+              for_each = try(statement.value.regex_pattern_set_reference_statement, null) != null ? [statement.value.regex_pattern_set_reference_statement] : []
+              content {
+                arn = regex_pattern_set_reference_statement.value.arn
+                dynamic "field_to_match" {
+                  for_each = [regex_pattern_set_reference_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = regex_pattern_set_reference_statement.value.text_transformation
                   content {
                     priority = text_transformation.value.priority
                     type     = text_transformation.value.type
@@ -978,6 +2111,8 @@ resource "aws_wafv2_web_acl_rule" "this" {
 
     ############################
     # OR Statement (1 level deep)
+    # Note: managed_rule_group, rate_based, and rule_group_reference
+    # cannot be nested inside logical statements (AWS constraint).
     ############################
     dynamic "or_statement" {
       for_each = each.value.statement.or_statement != null ? [each.value.statement.or_statement] : []
@@ -1016,6 +2151,20 @@ resource "aws_wafv2_web_acl_rule" "this" {
                       for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
                       content {}
                     }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
                     dynamic "uri_path" {
                       for_each = try(field_to_match.value.uri_path, false) ? [1] : []
                       content {}
@@ -1032,12 +2181,57 @@ resource "aws_wafv2_web_acl_rule" "this" {
                         name = single_query_argument.value.name
                       }
                     }
-                    dynamic "query_string" {
-                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
-                      content {}
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
                     }
-                    dynamic "method" {
-                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = byte_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "size_constraint_statement" {
+              for_each = try(statement.value.size_constraint_statement, null) != null ? [statement.value.size_constraint_statement] : []
+              content {
+                comparison_operator = size_constraint_statement.value.comparison_operator
+                size                = size_constraint_statement.value.size
+                dynamic "field_to_match" {
+                  for_each = [size_constraint_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
                       content {}
                     }
                     dynamic "body" {
@@ -1046,10 +2240,391 @@ resource "aws_wafv2_web_acl_rule" "this" {
                         oversize_handling = body.value.oversize_handling
                       }
                     }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
                   }
                 }
                 dynamic "text_transformation" {
-                  for_each = byte_match_statement.value.text_transformation
+                  for_each = size_constraint_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "sqli_match_statement" {
+              for_each = try(statement.value.sqli_match_statement, null) != null ? [statement.value.sqli_match_statement] : []
+              content {
+                sensitivity_level = sqli_match_statement.value.sensitivity_level
+                dynamic "field_to_match" {
+                  for_each = [sqli_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = sqli_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "xss_match_statement" {
+              for_each = try(statement.value.xss_match_statement, null) != null ? [statement.value.xss_match_statement] : []
+              content {
+                dynamic "field_to_match" {
+                  for_each = [xss_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = xss_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "regex_match_statement" {
+              for_each = try(statement.value.regex_match_statement, null) != null ? [statement.value.regex_match_statement] : []
+              content {
+                regex_string = regex_match_statement.value.regex_string
+                dynamic "field_to_match" {
+                  for_each = [regex_match_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = regex_match_statement.value.text_transformation
+                  content {
+                    priority = text_transformation.value.priority
+                    type     = text_transformation.value.type
+                  }
+                }
+              }
+            }
+            dynamic "regex_pattern_set_reference_statement" {
+              for_each = try(statement.value.regex_pattern_set_reference_statement, null) != null ? [statement.value.regex_pattern_set_reference_statement] : []
+              content {
+                arn = regex_pattern_set_reference_statement.value.arn
+                dynamic "field_to_match" {
+                  for_each = [regex_pattern_set_reference_statement.value.field_to_match]
+                  content {
+                    dynamic "all_query_arguments" {
+                      for_each = try(field_to_match.value.all_query_arguments, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "body" {
+                      for_each = try(field_to_match.value.body, null) != null ? [field_to_match.value.body] : []
+                      content {
+                        oversize_handling = body.value.oversize_handling
+                      }
+                    }
+                    dynamic "method" {
+                      for_each = try(field_to_match.value.method, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "query_string" {
+                      for_each = try(field_to_match.value.query_string, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "uri_path" {
+                      for_each = try(field_to_match.value.uri_path, false) ? [1] : []
+                      content {}
+                    }
+                    dynamic "single_header" {
+                      for_each = try(field_to_match.value.single_header, null) != null ? [field_to_match.value.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+                    dynamic "single_query_argument" {
+                      for_each = try(field_to_match.value.single_query_argument, null) != null ? [field_to_match.value.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+                    dynamic "headers" {
+                      for_each = try(field_to_match.value.headers, null) != null ? [field_to_match.value.headers] : []
+                      content {
+                        match_scope       = headers.value.match_scope
+                        oversize_handling = headers.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(headers.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_headers = try(headers.value.match_pattern.included_headers, [])
+                          excluded_headers = try(headers.value.match_pattern.excluded_headers, [])
+                        }
+                      }
+                    }
+                    dynamic "cookies" {
+                      for_each = try(field_to_match.value.cookies, null) != null ? [field_to_match.value.cookies] : []
+                      content {
+                        match_scope       = cookies.value.match_scope
+                        oversize_handling = cookies.value.oversize_handling
+                        match_pattern {
+                          dynamic "all" {
+                            for_each = try(cookies.value.match_pattern.all, false) ? [1] : []
+                            content {}
+                          }
+                          included_cookies = try(cookies.value.match_pattern.included_cookies, [])
+                          excluded_cookies = try(cookies.value.match_pattern.excluded_cookies, [])
+                        }
+                      }
+                    }
+                  }
+                }
+                dynamic "text_transformation" {
+                  for_each = regex_pattern_set_reference_statement.value.text_transformation
                   content {
                     priority = text_transformation.value.priority
                     type     = text_transformation.value.type

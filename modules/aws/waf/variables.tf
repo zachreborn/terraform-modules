@@ -366,20 +366,24 @@ variable "rule" {
 
       ############################
       # Compound Statements (1 level deep)
-      # For deeper nesting use rule_group_reference_statement
+      # Supported leaf types: geo_match, ip_set_reference, label_match,
+      # byte_match, size_constraint, sqli_match, xss_match, regex_match,
+      # regex_pattern_set_reference.
+      # NOT supported nested: managed_rule_group, rate_based, rule_group_reference
+      # (AWS WAFv2 constraint). Use rule_group_reference_statement for deeper nesting.
       ############################
       not_statement = optional(object({
-        # Accepts any leaf statement shape; use try() to access fields safely
+        # Accepts any nestable leaf statement shape; use try() to access fields safely.
         statement = any
       }))
 
       and_statement = optional(object({
-        # List of leaf statement objects; each should contain exactly one statement type key
+        # List of nestable leaf statement objects; each should contain exactly one statement type key.
         statements = list(any)
       }))
 
       or_statement = optional(object({
-        # List of leaf statement objects; each should contain exactly one statement type key
+        # List of nestable leaf statement objects; each should contain exactly one statement type key.
         statements = list(any)
       }))
     })
@@ -400,6 +404,10 @@ variable "rule" {
     })
   }))
   default = {}
+  validation {
+    condition     = length(var.rule) == length(distinct([for r in values(var.rule) : r.name]))
+    error_message = "Each entry in var.rule must have a unique 'name'. Duplicate rule names are not allowed because rules are keyed by name."
+  }
 }
 
 ############################################
