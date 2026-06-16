@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.20.1](https://github.com/zachreborn/terraform-modules/compare/v8.20.0...v8.20.1) (2026-06-16)
+
+
+### Bug Fixes
+
+* **aws_backup:** use set(string) for organization_backup_plan for_each ([#323](https://github.com/zachreborn/terraform-modules/issues/323)) ([a09502b](https://github.com/zachreborn/terraform-modules/commit/a09502bafa95684d3f45ce9c646311ff0f9f1dc7))
+
 ## [8.20.0](https://github.com/zachreborn/terraform-modules/compare/v8.19.1...v8.20.0) (2026-06-15)
 
 
