@@ -135,6 +135,14 @@ skip-check:
   - CKV_AWS_51 # Image scan on push - exposed as scan_on_push variable (default true)
   - CKV_AWS_136 # KMS encryption - exposed as encryption_type variable (default KMS)
 
+  # ECS
+  # Container Insights is exposed as the cluster container_insights variable and
+  # is set to "enabled" by default (the cluster submodule passes when scanned
+  # directly). The integrated root module forwards it through an any-typed
+  # `cluster` object, so Checkov cannot resolve the effective value in that
+  # calling context even though it is enabled by default.
+  - CKV_AWS_65 # Container Insights - exposed as container_insights variable (default "enabled")
+
   # SNS
   - CKV_AWS_26 # SNS topic encryption - exposed as kms_master_key_id variable
 
