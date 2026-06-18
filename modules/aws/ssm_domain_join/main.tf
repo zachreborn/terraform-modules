@@ -102,14 +102,13 @@ resource "aws_ssm_document" "this" {
   document_format = "JSON"
   document_type   = "Command"
   name            = var.name
-  tags            = merge(tomap({ Name = var.name }), var.tags)
-  target_type     = var.target_type
-  version_name    = var.version_name
-
   permissions = var.permissions != null ? {
     account_ids = var.permissions.account_ids
     type        = var.permissions.type
   } : null
+  tags         = merge(tomap({ Name = var.name }), var.tags)
+  target_type  = var.target_type
+  version_name = var.version_name
 }
 
 ###########################
