@@ -74,6 +74,7 @@ resource "aws_instance" "zpa" {
   associate_public_ip_address = var.associate_public_ip_address
   private_ip                  = var.private_ips != null ? element(var.private_ips, count.index) : null
   subnet_id                   = element(var.subnet_ids, count.index)
+  source_dest_check           = var.source_dest_check
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.tftpl", {
     provisioning_key = var.provisioning_key
   }))
@@ -86,10 +87,11 @@ resource "aws_instance" "zpa" {
 
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
-    encrypted             = var.encrypted
-    volume_size           = var.root_volume_size
-    volume_type           = var.root_volume_type
-    tags                  = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
+    #tfsec:ignore:aws-ec2-encrypted-volumes
+    encrypted   = var.encrypted
+    volume_size = var.root_volume_size
+    volume_type = var.root_volume_type
+    tags        = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })
   }
 
   tags = merge(var.tags, { "Name" = format("%s%02d", var.instance_name_prefix, count.index + 1) })

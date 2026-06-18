@@ -32,9 +32,9 @@ variable "vpc_id" {
 ###########################
 
 variable "encrypted" {
-  description = "(Optional) Whether to encrypt the root EBS volume. Defaults to true."
+  description = "(Optional) Whether to encrypt the root EBS volume. For Marketplace AMIs (Zscaler RHEL), the snapshot is already encrypted by Zscaler; setting to true triggers a re-encryption attempt that AWS rejects. Defaults to false to prevent forced replacement of Marketplace instances."
   type        = bool
-  default     = true
+  default     = false
   validation {
     condition     = can(regex("^(true|false)$", var.encrypted))
     error_message = "encrypted must be either true or false."
@@ -133,6 +133,12 @@ variable "root_volume_type" {
     condition     = can(regex("^(standard|gp2|gp3|io1|io2|sc1|st1)$", var.root_volume_type))
     error_message = "root_volume_type must be one of: standard, gp2, gp3, io1, io2, sc1, st1."
   }
+}
+
+variable "source_dest_check" {
+  description = "(Optional) Whether to enable source/destination checking on the instances. Set to false for SD-WAN and proxy appliances that forward traffic on behalf of others. Defaults to true (enabled)."
+  type        = bool
+  default     = true
 }
 
 variable "subnet_ids" {
