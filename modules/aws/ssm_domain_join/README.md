@@ -285,17 +285,54 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_log_group.domain_join](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_role_policy.cloudwatch_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.secret_read](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_ssm_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association) | resource |
 | [aws_ssm_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_apply_only_at_cron_interval"></a> [apply\_only\_at\_cron\_interval](#input\_apply\_only\_at\_cron\_interval) | (Optional) When true, the association runs only at the cron interval specified by schedule\_expression and not on instance start. | `bool` | `false` | no |
+| <a name="input_association_name"></a> [association\_name](#input\_association\_name) | (Optional) Descriptive name for the SSM association. If null, AWS assigns a default name. | `string` | `null` | no |
+| <a name="input_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#input\_cloudwatch\_log\_group\_name) | (Optional) Name of the CloudWatch Logs log group for domain join output. If null, CloudWatch logging is disabled. | `string` | `null` | no |
+| <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | (Optional) Retention period in days for the CloudWatch Logs log group. Must be a valid CloudWatch retention value. | `number` | `30` | no |
+| <a name="input_compliance_severity"></a> [compliance\_severity](#input\_compliance\_severity) | (Optional) Compliance severity reported when instances are non-compliant. Valid values are CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED. | `string` | `"UNSPECIFIED"` | no |
+| <a name="input_dns_servers"></a> [dns\_servers](#input\_dns\_servers) | (Required) DC IPs the joined instance should use for DNS resolution. | `list(string)` | n/a | yes |
+| <a name="input_document_version"></a> [document\_version](#input\_document\_version) | (Optional) SSM document version to run. Valid values are $Default, $Latest, or a numeric version string. If null, the default version is used. | `string` | `null` | no |
+| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | (Required) FQDN of the domain to join, e.g. corp.example.com. | `string` | n/a | yes |
+| <a name="input_instance_role_name"></a> [instance\_role\_name](#input\_instance\_role\_name) | (Required) Name of the EC2 IAM role to grant secretsmanager:GetSecretValue on secret\_arn and ec2:DescribeTags. | `string` | n/a | yes |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | (Optional) ARN of the KMS key used to encrypt the Secrets Manager secret. When set, grants kms:Decrypt on that key to the instance role. Required if the secret uses a customer-managed KMS key. | `string` | `null` | no |
+| <a name="input_max_concurrency"></a> [max\_concurrency](#input\_max\_concurrency) | (Optional) Maximum number or percentage of targets to run the association on simultaneously, e.g. 10 or 10%. If null, no concurrency limit is applied. | `string` | `null` | no |
+| <a name="input_max_errors"></a> [max\_errors](#input\_max\_errors) | (Optional) Maximum number or percentage of errors allowed before the association stops, e.g. 10 or 10%. If null, no error limit is applied. | `string` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Optional) Name of the SSM document and base name for the IAM inline policy. | `string` | `"ssm-domain-join"` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Optional) Creates a unique name for the IAM inline policy using this prefix instead of name. Conflicts with name for the IAM policy. If null, name is used. | `string` | `null` | no |
+| <a name="input_ou_path"></a> [ou\_path](#input\_ou\_path) | (Optional) Distinguished name of the OU to place the joined computer object in, e.g. OU=Servers,DC=corp,DC=example,DC=com. If null, the computer is placed in the default Computers container. | `string` | `null` | no |
+| <a name="input_output_location_s3_bucket_name"></a> [output\_location\_s3\_bucket\_name](#input\_output\_location\_s3\_bucket\_name) | (Optional) Name of the S3 bucket to store SSM association output. If null, output is not saved to S3. | `string` | `null` | no |
+| <a name="input_output_location_s3_key_prefix"></a> [output\_location\_s3\_key\_prefix](#input\_output\_location\_s3\_key\_prefix) | (Optional) S3 key prefix for SSM association output. If null, no key prefix is applied. | `string` | `null` | no |
+| <a name="input_output_location_s3_region"></a> [output\_location\_s3\_region](#input\_output\_location\_s3\_region) | (Optional) AWS region of the S3 bucket for SSM association output. If null, the region of the association is used. | `string` | `null` | no |
+| <a name="input_permissions"></a> [permissions](#input\_permissions) | (Optional) Additional sharing permissions for the SSM document. If null, no sharing permissions are applied. type must be Share. | <pre>object({<br/>    account_ids = string<br/>    type        = string<br/>  })</pre> | `null` | no |
+| <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | (Optional) Cron or rate expression controlling how often the association runs, e.g. rate(30 minutes) or cron(0 2 * * ? *). If null, the association runs once on instance launch. | `string` | `null` | no |
+| <a name="input_secret_arn"></a> [secret\_arn](#input\_secret\_arn) | (Required) ARN of the Secrets Manager secret holding join credentials. Secret must be JSON-shaped with username and password keys. Cross-account ARNs are supported. | `string` | n/a | yes |
+| <a name="input_sync_compliance"></a> [sync\_compliance](#input\_sync\_compliance) | (Optional) Compliance reporting mode for the association. Valid values are AUTO and MANUAL. | `string` | `"AUTO"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resources. | `map(string)` | `{}` | no |
+| <a name="input_target_type"></a> [target\_type](#input\_target\_type) | (Optional) Resource type that the SSM document can target, e.g. /AWS::EC2::Instance. If null, no target type restriction is applied. | `string` | `null` | no |
+| <a name="input_targets"></a> [targets](#input\_targets) | (Required) List of target blocks specifying which EC2 instances receive the association. Each target requires a key (e.g. tag:ad\_join) and a list of matching values. | <pre>list(object({<br/>    key    = string<br/>    values = list(string)<br/>  }))</pre> | n/a | yes |
+| <a name="input_timezone"></a> [timezone](#input\_timezone) | (Optional) Windows time zone ID to apply before joining the domain, e.g. 'Mountain Standard Time'. Full list of valid IDs: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones. Despite the 'Standard' suffix on most IDs, DST is observed automatically. If null, the time zone is not changed. | `string` | `null` | no |
+| <a name="input_version_name"></a> [version\_name](#input\_version\_name) | (Optional) Human-readable version name for the SSM document. If null, no version name is assigned. | `string` | `null` | no |
+| <a name="input_wait_for_success_timeout_seconds"></a> [wait\_for\_success\_timeout\_seconds](#input\_wait\_for\_success\_timeout\_seconds) | (Optional) Number of seconds to wait for the association to reach a success status. If null, Terraform does not wait for the association to succeed. | `number` | `null` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | ARN of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
+| <a name="output_ssm_association_id"></a> [ssm\_association\_id](#output\_ssm\_association\_id) | ID of the SSM State Manager association. |
+| <a name="output_ssm_document_arn"></a> [ssm\_document\_arn](#output\_ssm\_document\_arn) | ARN of the SSM domain join document. |
+| <a name="output_ssm_document_name"></a> [ssm\_document\_name](#output\_ssm\_document\_name) | Name of the SSM domain join document. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
