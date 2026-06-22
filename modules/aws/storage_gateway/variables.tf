@@ -140,6 +140,114 @@ variable "file_system_associations" {
 }
 
 ###########################
+# S3 File Shares
+###########################
+
+variable "s3_smb_file_shares" {
+  type = map(object({
+    location_arn             = string
+    role_arn                 = optional(string)
+    authentication           = optional(string)
+    access_based_enumeration = optional(bool)
+    admin_user_list          = optional(set(string))
+    audit_destination_arn    = optional(string)
+    bucket_region            = optional(string)
+    case_sensitivity         = optional(string)
+    default_storage_class    = optional(string)
+    file_share_name          = optional(string)
+    guess_mime_type_enabled  = optional(bool)
+    invalid_user_list        = optional(set(string))
+    kms_encrypted            = optional(bool)
+    kms_key_arn              = optional(string)
+    notification_policy      = optional(string)
+    object_acl               = optional(string)
+    oplocks_enabled          = optional(bool)
+    read_only                = optional(bool)
+    requester_pays           = optional(bool)
+    smb_acl_enabled          = optional(bool)
+    valid_user_list          = optional(set(string))
+    vpc_endpoint_dns_name    = optional(string)
+    cache_attributes = optional(object({
+      cache_stale_timeout_in_seconds = optional(number)
+    }))
+  }))
+  description = "(Optional) Map of S3 SMB file shares keyed by a logical name (used as the Name tag). Requires gateway_type FILE_S3. Per share: location_arn (the S3 bucket ARN, optionally with a /prefix, that this share exposes); role_arn (an IAM role the gateway assumes to access the bucket — defaults to the role this module creates when create_iam_role is true); authentication (ActiveDirectory or GuestAccess — ActiveDirectory requires the gateway be domain joined via smb_active_directory_settings); admin_user_list/valid_user_list/invalid_user_list (AD users or groups); notification_policy (JSON notification policy); and the usual share tunables (read_only, object_acl, default_storage_class, cache_attributes, etc.). Defaults to {}."
+  default     = {}
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.authentication == null ? true : contains(["ActiveDirectory", "GuestAccess"], share.authentication)
+    ])
+    error_message = "Each s3_smb_file_shares authentication must be null, ActiveDirectory, or GuestAccess."
+  }
+}
+
+variable "s3_nfs_file_shares" {
+  type = map(object({
+    location_arn            = string
+    client_list             = set(string)
+    role_arn                = optional(string)
+    audit_destination_arn   = optional(string)
+    bucket_region           = optional(string)
+    default_storage_class   = optional(string)
+    file_share_name         = optional(string)
+    guess_mime_type_enabled = optional(bool)
+    kms_encrypted           = optional(bool)
+    kms_key_arn             = optional(string)
+    notification_policy     = optional(string)
+    object_acl              = optional(string)
+    read_only               = optional(bool)
+    requester_pays          = optional(bool)
+    squash                  = optional(string)
+    vpc_endpoint_dns_name   = optional(string)
+    nfs_file_share_defaults = optional(object({
+      directory_mode = optional(string)
+      file_mode      = optional(string)
+      group_id       = optional(number)
+      owner_id       = optional(number)
+    }))
+    cache_attributes = optional(object({
+      cache_stale_timeout_in_seconds = optional(number)
+    }))
+  }))
+  description = "(Optional) Map of S3 NFS file shares keyed by a logical name (used as the Name tag). Requires gateway_type FILE_S3. Per share: location_arn (the S3 bucket ARN, optionally with a /prefix, that this share exposes); client_list (set of CIDRs/IPs allowed to mount the share); role_arn (an IAM role the gateway assumes to access the bucket — defaults to the role this module creates when create_iam_role is true); squash (RootSquash, NoSquash, or AllSquash); notification_policy (JSON notification policy); an optional nfs_file_share_defaults block (POSIX directory_mode/file_mode/group_id/owner_id for new objects); and the usual share tunables (read_only, object_acl, default_storage_class, cache_attributes, etc.). Defaults to {}."
+  default     = {}
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.squash == null ? true : contains(["RootSquash", "NoSquash", "AllSquash"], share.squash)
+    ])
+    error_message = "Each s3_nfs_file_shares squash must be null, RootSquash, NoSquash, or AllSquash."
+  }
+}
+
+###########################
+# IAM Role for S3 Access
+###########################
+
+variable "create_iam_role" {
+  type        = bool
+  description = "(Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3_bucket_arns must list the buckets the role may access. Ignored when role_arn is supplied. Defaults to false."
+  default     = false
+}
+
+variable "role_arn" {
+  type        = string
+  description = "(Optional) ARN of an existing IAM role for S3 file shares to assume when accessing their backing buckets. Takes precedence over create_iam_role. Used as the default role_arn for any share that does not set its own. Defaults to null."
+  default     = null
+}
+
+variable "s3_bucket_arns" {
+  type        = list(string)
+  description = "(Optional) Bucket ARNs the module-created IAM role is granted read/write access to. Required (non-empty) when create_iam_role is true; ignored otherwise. Grant the bucket root ARN (e.g. arn:aws:s3:::my-bucket) even when shares use a prefix. Defaults to []."
+  default     = []
+}
+
+variable "iam_name_prefix" {
+  type        = string
+  description = "(Optional) Name prefix for the IAM role and policy created when create_iam_role is true. A unique suffix is appended. Defaults to storage-gateway-s3-."
+  default     = "storage-gateway-s3-"
+}
+
+###########################
 # CloudWatch Log Group
 ###########################
 

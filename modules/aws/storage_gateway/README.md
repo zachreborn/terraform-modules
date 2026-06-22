@@ -17,9 +17,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">Storage Gateway (FSx File Gateway)</h3>
+<h3 align="center">Storage Gateway (File Gateway)</h3>
   <p align="center">
-    This module registers an AWS Storage Gateway file gateway and manages its cache disks and Amazon FSx for Windows File Server associations.
+    This module registers an AWS Storage Gateway file gateway and manages its cache disks, Amazon FSx for Windows File Server associations, and S3 SMB/NFS file shares (with an optional IAM role for S3 access).
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -94,6 +94,56 @@ module "storage_gateway" {
 }
 ```
 
+### S3 File Gateway with SMB and NFS shares
+
+```hcl
+module "storage_gateway" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/storage_gateway"
+
+  gateway_name       = "corp-s3-file-gateway"
+  gateway_type       = "FILE_S3"
+  gateway_timezone   = "GMT-7:00"
+  gateway_ip_address = "10.20.30.40" # or supply activation_key instead
+
+  # Domain join is only required for SMB shares using ActiveDirectory auth.
+  smb_active_directory_settings = {
+    domain_name = "corp.example.com"
+    username    = "GatewayServiceAccount"
+    password    = var.gateway_service_account_password
+  }
+
+  # Local disks presented to the gateway VM, discovered via the
+  # aws_storagegateway_local_disk data source.
+  cache_disk_ids = ["/dev/sdb"]
+
+  # Let the module create the IAM role the file shares assume to reach S3,
+  # scoped to the bucket(s) below. Set role_arn instead to bring your own.
+  create_iam_role = true
+  s3_bucket_arns  = [module.bucket.s3_bucket_arn]
+
+  s3_smb_file_shares = {
+    it-shared = {
+      location_arn   = module.bucket.s3_bucket_arn
+      authentication = "ActiveDirectory"
+      valid_user_list = ["@corp\\Domain Admins"]
+    }
+  }
+
+  s3_nfs_file_shares = {
+    backups = {
+      location_arn = "${module.bucket.s3_bucket_arn}/backups"
+      client_list  = ["10.20.0.0/16"]
+      squash       = "RootSquash"
+    }
+  }
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -107,15 +157,17 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 >
 > Exactly one of `activation_key` or `gateway_ip_address` must be supplied.
 
-- An Amazon FSx for Windows File Server file system to associate (its ARN feeds `file_system_associations[*].location_arn` — e.g. the `arn` output of the `fsx` module). FSx file system associations require `gateway_type = FILE_FSX_SMB`.
-- A domain user with access to the FSx file system for each association, and (for SMB) Active Directory join settings via `smb_active_directory_settings`.
 - One or more local disks presented to the gateway VM to serve as cache, identified via the `aws_storagegateway_local_disk` data source.
+- **For FSx file gateways (`FILE_FSX_SMB`):** an Amazon FSx for Windows File Server file system to associate (its ARN feeds `file_system_associations[*].location_arn` — e.g. the `arn` output of the `fsx` module), a domain user with access to it for each association, and Active Directory join settings via `smb_active_directory_settings`.
+- **For S3 file gateways (`FILE_S3`):** an S3 bucket to back the shares (pass its ARN as each share's `location_arn`, optionally with a `/prefix`), and an IAM role the gateway assumes to access it — either created by this module (`create_iam_role = true` with `s3_bucket_arns`) or supplied via `role_arn`. SMB shares using `ActiveDirectory` authentication additionally require the gateway be domain joined via `smb_active_directory_settings`.
 
 ## Notes / Design Decisions
 
-- **AWS-side only.** This module manages the AWS resources: gateway registration/activation, cache disk allocation, FSx file system associations, and an optional CloudWatch log group (with KMS) for gateway health logs. Deploying and activating the on-premises VM is a manual prerequisite by design.
+- **AWS-side only.** This module manages the AWS resources: gateway registration/activation, cache disk allocation, FSx file system associations, S3 SMB/NFS file shares, an optional IAM role for S3 access, and an optional CloudWatch log group (with KMS) for gateway health logs. Deploying and activating the on-premises VM is a manual prerequisite by design.
 - **File gateways only.** `gateway_type` is restricted to `FILE_FSX_SMB` and `FILE_S3`. TAPE/VTL gateway arguments (`tape_drive_type`, `medium_changer_type`) are intentionally out of scope for this module.
-- **FSx association requires FILE_FSX_SMB.** `aws_storagegateway_file_system_association` only supports FSx for Windows File Server, so set `gateway_type = FILE_FSX_SMB` when supplying `file_system_associations`. This gateway type cannot front FSx for NetApp ONTAP.
+- **FSx association requires FILE_FSX_SMB; S3 shares require FILE_S3.** `aws_storagegateway_file_system_association` only supports FSx for Windows File Server, so set `gateway_type = FILE_FSX_SMB` when supplying `file_system_associations` (this gateway type cannot front FSx for NetApp ONTAP). S3 SMB/NFS file shares require `gateway_type = FILE_S3`. The two are mutually exclusive on a single gateway.
+- **The bucket is external by design.** This module does not create the S3 bucket — pass its ARN as each share's `location_arn`. Manage the bucket (versioning, encryption, lifecycle, replication, deletion protection) with the `s3/bucket` module so the data store's lifecycle is decoupled from the gateway.
+- **IAM role by composition, with BYO override.** When `create_iam_role = true` (and `role_arn` is unset), the module composes `../iam/role` + `../iam/policy` to create a role the file shares assume, scoped to `s3_bucket_arns`. Supply `role_arn` to bring your own role instead; it becomes the default for any share that does not set its own `role_arn`.
 - **Logging by composition.** When `create_cloudwatch_log_group = true`, a log group is created via the `../cloudwatch/log_group` child module and, when `create_kms_key = true`, encrypted with a key from the `../kms` child module. Supply `cloudwatch_log_group_arn` to use an existing log group instead.
 - **Credentials in state.** `activation_key`, `smb_guest_password`, the AD service-account password, and each association password are persisted in Terraform state in plaintext. Supply them from a secret store and protect state access accordingly.
 
@@ -142,6 +194,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_cloudwatch_log_group"></a> [cloudwatch\_log\_group](#module\_cloudwatch\_log\_group) | ../cloudwatch/log_group | n/a |
+| <a name="module_iam_policy"></a> [iam\_policy](#module\_iam\_policy) | ../iam/policy | n/a |
+| <a name="module_iam_role"></a> [iam\_role](#module\_iam\_role) | ../iam/role | n/a |
 | <a name="module_kms_key"></a> [kms\_key](#module\_kms\_key) | ../kms | n/a |
 
 ## Resources
@@ -151,7 +205,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_storagegateway_cache.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/storagegateway_cache) | resource |
 | [aws_storagegateway_file_system_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/storagegateway_file_system_association) | resource |
 | [aws_storagegateway_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/storagegateway_gateway) | resource |
+| [aws_storagegateway_nfs_file_share.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/storagegateway_nfs_file_share) | resource |
+| [aws_storagegateway_smb_file_share.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/storagegateway_smb_file_share) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.s3_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
@@ -166,6 +224,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional) Name prefix for the CloudWatch log group created for gateway health logs. Defaults to /aws/storagegateway/. | `string` | `"/aws/storagegateway/"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Number of days to retain gateway log events in the CloudWatch log group. Set to 0 to retain indefinitely. Defaults to 90. | `number` | `90` | no |
 | <a name="input_create_cloudwatch_log_group"></a> [create\_cloudwatch\_log\_group](#input\_create\_cloudwatch\_log\_group) | (Optional) Determines whether this module creates a CloudWatch log group (via the cloudwatch/log\_group child module) for gateway health logs and wires it to the gateway. Ignored when cloudwatch\_log\_group\_arn is supplied. Defaults to true. | `bool` | `true` | no |
+| <a name="input_create_iam_role"></a> [create\_iam\_role](#input\_create\_iam\_role) | (Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3\_bucket\_arns must list the buckets the role may access. Ignored when role\_arn is supplied. Defaults to false. | `bool` | `false` | no |
 | <a name="input_create_kms_key"></a> [create\_kms\_key](#input\_create\_kms\_key) | (Optional) Determines whether this module creates a dedicated KMS key (via the kms child module) to encrypt the CloudWatch log group. Used only when create\_cloudwatch\_log\_group is true. Set to false to supply your own key via kms\_key\_id. Defaults to true. | `bool` | `true` | no |
 | <a name="input_file_system_associations"></a> [file\_system\_associations](#input\_file\_system\_associations) | (Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location\_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system; password is stored in state in plaintext), optional audit\_destination\_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache\_attributes block with cache\_stale\_timeout\_in\_seconds. Requires gateway\_type FILE\_FSX\_SMB. Defaults to {}. | <pre>map(object({<br/>    location_arn          = string<br/>    password              = string<br/>    username              = string<br/>    audit_destination_arn = optional(string)<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_gateway_ip_address"></a> [gateway\_ip\_address](#input\_gateway\_ip\_address) | (Optional) IP address of the gateway VM, used to fetch the activation key automatically during apply. Mutually exclusive with activation\_key; supply exactly one. The VM must be reachable from where Terraform runs. Defaults to null. | `string` | `null` | no |
@@ -173,12 +232,17 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_gateway_timezone"></a> [gateway\_timezone](#input\_gateway\_timezone) | (Optional) Time zone for the gateway, in the format GMT, GMT-hh:mm, or GMT+hh:mm (e.g. GMT-7:00). Defaults to GMT. | `string` | `"GMT"` | no |
 | <a name="input_gateway_type"></a> [gateway\_type](#input\_gateway\_type) | (Optional) Type of the gateway. This module manages file gateways, so valid values are FILE\_FSX\_SMB and FILE\_S3. Defaults to FILE\_FSX\_SMB. File system associations require FILE\_FSX\_SMB. | `string` | `"FILE_FSX_SMB"` | no |
 | <a name="input_gateway_vpc_endpoint"></a> [gateway\_vpc\_endpoint](#input\_gateway\_vpc\_endpoint) | (Optional) VPC endpoint DNS name to use for the gateway's connection to the Storage Gateway service when using a private (VPC) endpoint. Defaults to null. | `string` | `null` | no |
+| <a name="input_iam_name_prefix"></a> [iam\_name\_prefix](#input\_iam\_name\_prefix) | (Optional) Name prefix for the IAM role and policy created when create\_iam\_role is true. A unique suffix is appended. Defaults to storage-gateway-s3-. | `string` | `"storage-gateway-s3-"` | no |
 | <a name="input_kms_key_deletion_window_in_days"></a> [kms\_key\_deletion\_window\_in\_days](#input\_kms\_key\_deletion\_window\_in\_days) | (Optional) Duration in days after which the KMS key is deleted after destruction of the resource. Must be between 7 and 30 days. Defaults to 30. | `number` | `30` | no |
 | <a name="input_kms_key_description"></a> [kms\_key\_description](#input\_kms\_key\_description) | (Optional) The description applied to the KMS key created by this module. | `string` | `"KMS key used to encrypt AWS Storage Gateway CloudWatch logs."` | no |
 | <a name="input_kms_key_enable_key_rotation"></a> [kms\_key\_enable\_key\_rotation](#input\_kms\_key\_enable\_key\_rotation) | (Optional) Specifies whether automatic key rotation is enabled on the KMS key created by this module. Defaults to true. | `bool` | `true` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | (Optional) ARN of an existing KMS key used to encrypt the CloudWatch log group. Used only when create\_kms\_key is false. Defaults to null (the log group is unencrypted by a customer-managed key). | `string` | `null` | no |
 | <a name="input_kms_key_name_prefix"></a> [kms\_key\_name\_prefix](#input\_kms\_key\_name\_prefix) | (Optional) Creates a unique KMS alias beginning with the specified prefix. The alias/ prefix is added automatically if omitted. | `string` | `"storage_gateway"` | no |
 | <a name="input_maintenance_start_time"></a> [maintenance\_start\_time](#input\_maintenance\_start\_time) | (Optional) Weekly or monthly maintenance window. hour\_of\_day (0-23) and minute\_of\_hour (0-59); day\_of\_week (0-6, Sunday=0) for a weekly window or day\_of\_month (1-28) for a monthly window. Defaults to null, which lets the gateway pick a window. | <pre>object({<br/>    hour_of_day    = number<br/>    minute_of_hour = optional(number)<br/>    day_of_week    = optional(number)<br/>    day_of_month   = optional(number)<br/>  })</pre> | `null` | no |
+| <a name="input_role_arn"></a> [role\_arn](#input\_role\_arn) | (Optional) ARN of an existing IAM role for S3 file shares to assume when accessing their backing buckets. Takes precedence over create\_iam\_role. Used as the default role\_arn for any share that does not set its own. Defaults to null. | `string` | `null` | no |
+| <a name="input_s3_bucket_arns"></a> [s3\_bucket\_arns](#input\_s3\_bucket\_arns) | (Optional) Bucket ARNs the module-created IAM role is granted read/write access to. Required (non-empty) when create\_iam\_role is true; ignored otherwise. Grant the bucket root ARN (e.g. arn:aws:s3:::my-bucket) even when shares use a prefix. Defaults to []. | `list(string)` | `[]` | no |
+| <a name="input_s3_nfs_file_shares"></a> [s3\_nfs\_file\_shares](#input\_s3\_nfs\_file\_shares) | (Optional) Map of S3 NFS file shares keyed by a logical name (used as the Name tag). Requires gateway\_type FILE\_S3. Per share: location\_arn (the S3 bucket ARN, optionally with a /prefix, that this share exposes); client\_list (set of CIDRs/IPs allowed to mount the share); role\_arn (an IAM role the gateway assumes to access the bucket — defaults to the role this module creates when create\_iam\_role is true); squash (RootSquash, NoSquash, or AllSquash); notification\_policy (JSON notification policy); an optional nfs\_file\_share\_defaults block (POSIX directory\_mode/file\_mode/group\_id/owner\_id for new objects); and the usual share tunables (read\_only, object\_acl, default\_storage\_class, cache\_attributes, etc.). Defaults to {}. | <pre>map(object({<br/>    location_arn            = string<br/>    client_list             = set(string)<br/>    role_arn                = optional(string)<br/>    audit_destination_arn   = optional(string)<br/>    bucket_region           = optional(string)<br/>    default_storage_class   = optional(string)<br/>    file_share_name         = optional(string)<br/>    guess_mime_type_enabled = optional(bool)<br/>    kms_encrypted           = optional(bool)<br/>    kms_key_arn             = optional(string)<br/>    notification_policy     = optional(string)<br/>    object_acl              = optional(string)<br/>    read_only               = optional(bool)<br/>    requester_pays          = optional(bool)<br/>    squash                  = optional(string)<br/>    vpc_endpoint_dns_name   = optional(string)<br/>    nfs_file_share_defaults = optional(object({<br/>      directory_mode = optional(string)<br/>      file_mode      = optional(string)<br/>      group_id       = optional(number)<br/>      owner_id       = optional(number)<br/>    }))<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_s3_smb_file_shares"></a> [s3\_smb\_file\_shares](#input\_s3\_smb\_file\_shares) | (Optional) Map of S3 SMB file shares keyed by a logical name (used as the Name tag). Requires gateway\_type FILE\_S3. Per share: location\_arn (the S3 bucket ARN, optionally with a /prefix, that this share exposes); role\_arn (an IAM role the gateway assumes to access the bucket — defaults to the role this module creates when create\_iam\_role is true); authentication (ActiveDirectory or GuestAccess — ActiveDirectory requires the gateway be domain joined via smb\_active\_directory\_settings); admin\_user\_list/valid\_user\_list/invalid\_user\_list (AD users or groups); notification\_policy (JSON notification policy); and the usual share tunables (read\_only, object\_acl, default\_storage\_class, cache\_attributes, etc.). Defaults to {}. | <pre>map(object({<br/>    location_arn             = string<br/>    role_arn                 = optional(string)<br/>    authentication           = optional(string)<br/>    access_based_enumeration = optional(bool)<br/>    admin_user_list          = optional(set(string))<br/>    audit_destination_arn    = optional(string)<br/>    bucket_region            = optional(string)<br/>    case_sensitivity         = optional(string)<br/>    default_storage_class    = optional(string)<br/>    file_share_name          = optional(string)<br/>    guess_mime_type_enabled  = optional(bool)<br/>    invalid_user_list        = optional(set(string))<br/>    kms_encrypted            = optional(bool)<br/>    kms_key_arn              = optional(string)<br/>    notification_policy      = optional(string)<br/>    object_acl               = optional(string)<br/>    oplocks_enabled          = optional(bool)<br/>    read_only                = optional(bool)<br/>    requester_pays           = optional(bool)<br/>    smb_acl_enabled          = optional(bool)<br/>    valid_user_list          = optional(set(string))<br/>    vpc_endpoint_dns_name    = optional(string)<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_smb_active_directory_settings"></a> [smb\_active\_directory\_settings](#input\_smb\_active\_directory\_settings) | (Optional) Microsoft Active Directory join settings for SMB access. Required to associate an FSx for Windows file system on a FILE\_FSX\_SMB gateway. domain\_name, username, and password are the join credentials; domain\_controllers, organizational\_unit, and timeout\_in\_seconds are optional. The password is stored in Terraform state in plaintext. Defaults to null. | <pre>object({<br/>    domain_name         = string<br/>    password            = string<br/>    username            = string<br/>    domain_controllers  = optional(list(string))<br/>    organizational_unit = optional(string)<br/>    timeout_in_seconds  = optional(number)<br/>  })</pre> | `null` | no |
 | <a name="input_smb_file_share_visibility"></a> [smb\_file\_share\_visibility](#input\_smb\_file\_share\_visibility) | (Optional) Whether file shares on this gateway are visible when listing shares for the gateway's domain. Defaults to null, which uses the service default. | `bool` | `null` | no |
 | <a name="input_smb_guest_password"></a> [smb\_guest\_password](#input\_smb\_guest\_password) | (Optional) Guest password for guest access to SMB file shares. Stored in Terraform state in plaintext. Defaults to null. | `string` | `null` | no |
@@ -197,8 +261,17 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_gateway_id"></a> [gateway\_id](#output\_gateway\_id) | The identifier of the Storage Gateway. |
 | <a name="output_gateway_network_interface"></a> [gateway\_network\_interface](#output\_gateway\_network\_interface) | The network interfaces of the gateway. |
 | <a name="output_host_environment"></a> [host\_environment](#output\_host\_environment) | The type of hypervisor environment used by the gateway host. |
+| <a name="output_iam_policy_arn"></a> [iam\_policy\_arn](#output\_iam\_policy\_arn) | The ARN of the IAM policy created by this module, or null when none is created. |
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The ARN of the IAM role file shares assume to access S3 (module-created or caller-supplied), or null when none is resolved. |
+| <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | The name of the IAM role created by this module, or null when none is created. |
 | <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | The ARN of the KMS key used to encrypt the gateway log group, or null when none is used. |
 | <a name="output_kms_key_id"></a> [kms\_key\_id](#output\_kms\_key\_id) | The key ID of the KMS key created by this module, or null when none is created. |
+| <a name="output_nfs_file_share_arns"></a> [nfs\_file\_share\_arns](#output\_nfs\_file\_share\_arns) | Map of NFS file share logical names to their ARNs. |
+| <a name="output_nfs_file_share_ids"></a> [nfs\_file\_share\_ids](#output\_nfs\_file\_share\_ids) | Map of NFS file share logical names to their file share IDs. |
+| <a name="output_nfs_file_share_paths"></a> [nfs\_file\_share\_paths](#output\_nfs\_file\_share\_paths) | Map of NFS file share logical names to their share paths (e.g. the export path clients mount). |
+| <a name="output_smb_file_share_arns"></a> [smb\_file\_share\_arns](#output\_smb\_file\_share\_arns) | Map of SMB file share logical names to their ARNs. |
+| <a name="output_smb_file_share_ids"></a> [smb\_file\_share\_ids](#output\_smb\_file\_share\_ids) | Map of SMB file share logical names to their file share IDs. |
+| <a name="output_smb_file_share_paths"></a> [smb\_file\_share\_paths](#output\_smb\_file\_share\_paths) | Map of SMB file share logical names to their share paths (e.g. the UNC path clients mount). |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
