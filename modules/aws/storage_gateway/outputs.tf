@@ -37,6 +37,51 @@ output "file_system_association_arns" {
   value       = { for key, association in aws_storagegateway_file_system_association.this : key => association.arn }
 }
 
+output "smb_file_share_arns" {
+  description = "Map of SMB file share logical names to their ARNs."
+  value       = { for key, share in aws_storagegateway_smb_file_share.this : key => share.arn }
+}
+
+output "smb_file_share_ids" {
+  description = "Map of SMB file share logical names to their file share IDs."
+  value       = { for key, share in aws_storagegateway_smb_file_share.this : key => share.fileshare_id }
+}
+
+output "smb_file_share_paths" {
+  description = "Map of SMB file share logical names to their share paths (e.g. the UNC path clients mount)."
+  value       = { for key, share in aws_storagegateway_smb_file_share.this : key => share.path }
+}
+
+output "nfs_file_share_arns" {
+  description = "Map of NFS file share logical names to their ARNs."
+  value       = { for key, share in aws_storagegateway_nfs_file_share.this : key => share.arn }
+}
+
+output "nfs_file_share_ids" {
+  description = "Map of NFS file share logical names to their file share IDs."
+  value       = { for key, share in aws_storagegateway_nfs_file_share.this : key => share.fileshare_id }
+}
+
+output "nfs_file_share_paths" {
+  description = "Map of NFS file share logical names to their share paths (e.g. the export path clients mount)."
+  value       = { for key, share in aws_storagegateway_nfs_file_share.this : key => share.path }
+}
+
+output "iam_role_arn" {
+  description = "The ARN of the IAM role file shares assume to access S3 (module-created or caller-supplied), or null when none is resolved."
+  value       = local.role_arn
+}
+
+output "iam_role_name" {
+  description = "The name of the IAM role created by this module, or null when none is created."
+  value       = local.create_iam_role ? module.iam_role[0].name : null
+}
+
+output "iam_policy_arn" {
+  description = "The ARN of the IAM policy created by this module, or null when none is created."
+  value       = local.create_iam_role ? module.iam_policy[0].arn : null
+}
+
 output "cloudwatch_log_group_arn" {
   description = "The ARN of the CloudWatch log group used for gateway health logs, or null when none is created or supplied."
   value       = local.cloudwatch_log_group_arn

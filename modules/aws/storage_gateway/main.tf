@@ -30,6 +30,14 @@ locals {
   # Resolve the CloudWatch log group ARN wired to the gateway: a caller-supplied
   # ARN takes precedence over one created by this module.
   cloudwatch_log_group_arn = var.cloudwatch_log_group_arn != null ? var.cloudwatch_log_group_arn : (var.create_cloudwatch_log_group ? module.cloudwatch_log_group[0].arn : null)
+
+  # Whether this module creates the IAM role file shares use to reach S3. A
+  # caller-supplied role_arn always wins, so we never create one in that case.
+  create_iam_role = var.create_iam_role && var.role_arn == null
+
+  # Resolve the role ARN file shares assume to access their S3 buckets: a
+  # caller-supplied ARN takes precedence over one created by this module.
+  role_arn = var.role_arn != null ? var.role_arn : (local.create_iam_role ? module.iam_role[0].arn : null)
 }
 
 ###########################
@@ -93,6 +101,92 @@ module "cloudwatch_log_group" {
   name_prefix       = var.cloudwatch_name_prefix
   retention_in_days = var.cloudwatch_retention_in_days
   tags              = var.tags
+}
+
+###########################
+# IAM Role for S3 Access
+###########################
+#
+# S3 file shares assume an IAM role to read and write objects in their backing
+# bucket. This module can create that role (create_iam_role = true) scoped to the
+# buckets in s3_bucket_arns, or callers can bring their own by setting role_arn.
+
+data "aws_iam_policy_document" "assume_role" {
+  count = local.create_iam_role ? 1 : 0
+
+  statement {
+    sid     = "AllowStorageGatewayAssumeRole"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["storagegateway.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "s3_access" {
+  count = local.create_iam_role ? 1 : 0
+
+  statement {
+    sid    = "AllowBucketLevelActions"
+    effect = "Allow"
+    actions = [
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketLocation",
+      "s3:GetBucketVersioning",
+      "s3:ListBucket",
+      "s3:ListBucketMultipartUploads",
+      "s3:ListBucketVersions",
+    ]
+    resources = var.s3_bucket_arns
+  }
+
+  statement {
+    sid    = "AllowObjectLevelActions"
+    effect = "Allow"
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject",
+      "s3:DeleteObjectVersion",
+      "s3:GetObject",
+      "s3:GetObjectAcl",
+      "s3:GetObjectVersion",
+      "s3:ListMultipartUploadParts",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+    ]
+    resources = [for arn in var.s3_bucket_arns : "${arn}/*"]
+  }
+
+  lifecycle {
+    precondition {
+      condition     = length(var.s3_bucket_arns) > 0
+      error_message = "s3_bucket_arns must contain at least one bucket ARN when create_iam_role is true; an IAM policy cannot be created with no resources."
+    }
+  }
+}
+
+module "iam_policy" {
+  count  = local.create_iam_role ? 1 : 0
+  source = "../iam/policy"
+
+  name_prefix = var.iam_name_prefix
+  description = "Allows the S3 File Gateway to read and write objects in the buckets backing its file shares."
+  policy      = data.aws_iam_policy_document.s3_access[0].json
+  tags        = var.tags
+}
+
+module "iam_role" {
+  count  = local.create_iam_role ? 1 : 0
+  source = "../iam/role"
+
+  name_prefix        = var.iam_name_prefix
+  assume_role_policy = data.aws_iam_policy_document.assume_role[0].json
+  policy_arns        = [module.iam_policy[0].arn]
+  description        = "Assumed by AWS Storage Gateway to access the S3 buckets backing its file shares."
+  tags               = var.tags
 }
 
 ###########################
@@ -166,6 +260,111 @@ resource "aws_storagegateway_file_system_association" "this" {
     for_each = each.value.cache_attributes != null ? [each.value.cache_attributes] : []
     content {
       cache_stale_timeout_in_seconds = cache_attributes.value.cache_stale_timeout_in_seconds
+    }
+  }
+}
+
+###########################
+# S3 SMB File Shares
+###########################
+#
+# SMB file shares expose an S3 bucket (location_arn) over SMB. Requires a FILE_S3
+# gateway. ActiveDirectory authentication requires the gateway to be domain
+# joined via smb_active_directory_settings.
+
+resource "aws_storagegateway_smb_file_share" "this" {
+  for_each = var.s3_smb_file_shares
+
+  access_based_enumeration = each.value.access_based_enumeration
+  admin_user_list          = each.value.admin_user_list
+  audit_destination_arn    = each.value.audit_destination_arn
+  authentication           = each.value.authentication
+  bucket_region            = each.value.bucket_region
+  case_sensitivity         = each.value.case_sensitivity
+  default_storage_class    = each.value.default_storage_class
+  file_share_name          = each.value.file_share_name
+  gateway_arn              = aws_storagegateway_gateway.this.arn
+  guess_mime_type_enabled  = each.value.guess_mime_type_enabled
+  invalid_user_list        = each.value.invalid_user_list
+  kms_encrypted            = each.value.kms_encrypted
+  kms_key_arn              = each.value.kms_key_arn
+  location_arn             = each.value.location_arn
+  notification_policy      = each.value.notification_policy
+  object_acl               = each.value.object_acl
+  oplocks_enabled          = each.value.oplocks_enabled
+  read_only                = each.value.read_only
+  requester_pays           = each.value.requester_pays
+  role_arn                 = each.value.role_arn != null ? each.value.role_arn : local.role_arn
+  smb_acl_enabled          = each.value.smb_acl_enabled
+  tags                     = merge(tomap({ Name = each.key }), var.tags)
+  valid_user_list          = each.value.valid_user_list
+  vpc_endpoint_dns_name    = each.value.vpc_endpoint_dns_name
+
+  dynamic "cache_attributes" {
+    for_each = each.value.cache_attributes != null ? [each.value.cache_attributes] : []
+    content {
+      cache_stale_timeout_in_seconds = cache_attributes.value.cache_stale_timeout_in_seconds
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = each.value.role_arn != null || local.role_arn != null
+      error_message = "S3 SMB file share \"${each.key}\" has no IAM role to assume: set its role_arn, the module-level role_arn, or create_iam_role = true."
+    }
+  }
+}
+
+###########################
+# S3 NFS File Shares
+###########################
+#
+# NFS file shares expose an S3 bucket (location_arn) over NFS to the hosts in
+# client_list. Requires a FILE_S3 gateway.
+
+resource "aws_storagegateway_nfs_file_share" "this" {
+  for_each = var.s3_nfs_file_shares
+
+  audit_destination_arn   = each.value.audit_destination_arn
+  bucket_region           = each.value.bucket_region
+  client_list             = each.value.client_list
+  default_storage_class   = each.value.default_storage_class
+  file_share_name         = each.value.file_share_name
+  gateway_arn             = aws_storagegateway_gateway.this.arn
+  guess_mime_type_enabled = each.value.guess_mime_type_enabled
+  kms_encrypted           = each.value.kms_encrypted
+  kms_key_arn             = each.value.kms_key_arn
+  location_arn            = each.value.location_arn
+  notification_policy     = each.value.notification_policy
+  object_acl              = each.value.object_acl
+  read_only               = each.value.read_only
+  requester_pays          = each.value.requester_pays
+  role_arn                = each.value.role_arn != null ? each.value.role_arn : local.role_arn
+  squash                  = each.value.squash
+  tags                    = merge(tomap({ Name = each.key }), var.tags)
+  vpc_endpoint_dns_name   = each.value.vpc_endpoint_dns_name
+
+  dynamic "cache_attributes" {
+    for_each = each.value.cache_attributes != null ? [each.value.cache_attributes] : []
+    content {
+      cache_stale_timeout_in_seconds = cache_attributes.value.cache_stale_timeout_in_seconds
+    }
+  }
+
+  dynamic "nfs_file_share_defaults" {
+    for_each = each.value.nfs_file_share_defaults != null ? [each.value.nfs_file_share_defaults] : []
+    content {
+      directory_mode = nfs_file_share_defaults.value.directory_mode
+      file_mode      = nfs_file_share_defaults.value.file_mode
+      group_id       = nfs_file_share_defaults.value.group_id
+      owner_id       = nfs_file_share_defaults.value.owner_id
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = each.value.role_arn != null || local.role_arn != null
+      error_message = "S3 NFS file share \"${each.key}\" has no IAM role to assume: set its role_arn, the module-level role_arn, or create_iam_role = true."
     }
   }
 }
