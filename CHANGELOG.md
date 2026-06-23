@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.20.3](https://github.com/zachreborn/terraform-modules/compare/v8.20.2...v8.20.3) (2026-06-23)
+
+
+### Bug Fixes
+
+* **organizations/organization:** prefix file() paths with ${path.module}/ ([#334](https://github.com/zachreborn/terraform-modules/issues/334)) ([492f177](https://github.com/zachreborn/terraform-modules/commit/492f177c22bb8d0fccfcfff57dec44fb3fbacf5f))
+
 ## [8.20.2](https://github.com/zachreborn/terraform-modules/compare/v8.20.1...v8.20.2) (2026-06-23)
 
 
