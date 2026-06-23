@@ -1,0 +1,163 @@
+---
+name: Implementation Complete
+# ======================================================================================
+# Workflow: Implementation Complete
+# ======================================================================================
+# Triggered when a pull request is merged whose head branch follows the
+# implementation naming convention: `feat/issue-N-*` or `fix/issue-N-*`.
+#
+# What it does:
+#   1. Extracts the originating issue number from the branch name (primary)
+#      or from a "Fixes #N" / "Closes #N" line in the PR body (fallback).
+#   2. Swaps labels on the issue:
+#        Remove: implementation-in-progress, spec-approved
+#        Add:    implemented
+#   3. Posts a closing summary comment on the issue with:
+#        - A link to the merged PR
+#        - The merge commit SHA
+#        - The list of changed files (module paths)
+#        - A link to this workflow run
+#   4. Closes the issue with reason "completed" as an explicit backstop
+#      (GitHub's "Fixes #N" auto-close is relied on by the agent but is not
+#      guaranteed if the keyword is omitted or the PR was opened as a draft).
+# ======================================================================================
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  close-issue:
+    name: Close issue after implementation merge
+    runs-on: ubuntu-latest
+
+    # Only run on actual merges of branches that follow the implementation
+    # naming convention. Closed-but-not-merged PRs are ignored.
+    if: >-
+      github.event.pull_request.merged == true &&
+      (startsWith(github.event.pull_request.head.ref, 'feat/issue-') ||
+       startsWith(github.event.pull_request.head.ref, 'fix/issue-'))
+
+    steps:
+      - name: Resolve issue, swap labels, post summary, and close
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const branch = pr.head.ref;
+
+            // ── 1. Resolve issue number ──────────────────────────────────────
+            // Primary: parse from branch name (feat/issue-N-slug or fix/issue-N-slug)
+            let issueNumber = null;
+            const branchMatch = branch.match(/\/issue-(\d+)-/);
+            if (branchMatch) {
+              issueNumber = Number(branchMatch[1]);
+              core.info(`Resolved issue #${issueNumber} from branch name.`);
+            }
+
+            // Fallback: scan the PR body for "Fixes #N" or "Closes #N"
+            if (!issueNumber && pr.body) {
+              const bodyMatch = pr.body.match(/(?:Fixes|Closes|Resolves)\s+#(\d+)/i);
+              if (bodyMatch) {
+                issueNumber = Number(bodyMatch[1]);
+                core.info(`Resolved issue #${issueNumber} from PR body keyword.`);
+              }
+            }
+
+            if (!issueNumber) {
+              core.warning(
+                `Could not determine an issue number from branch "${branch}" or PR body. ` +
+                `Skipping issue cleanup.`
+              );
+              return;
+            }
+
+            // Verify the issue actually exists before doing anything.
+            let issue;
+            try {
+              ({ data: issue } = await github.rest.issues.get({
+                owner, repo, issue_number: issueNumber,
+              }));
+            } catch (e) {
+              core.warning(`Issue #${issueNumber} not found (${e.message}). Skipping.`);
+              return;
+            }
+
+            // ── 2. Swap labels ───────────────────────────────────────────────
+            // Add "implemented" first so there is never a moment with no label.
+            try {
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: issueNumber,
+                labels: ['implemented'],
+              });
+              core.info(`Added "implemented" label to #${issueNumber}.`);
+            } catch (e) {
+              // A 422 most likely means the label does not exist in the repo.
+              // Warn rather than fail so the rest of the cleanup still runs.
+              core.warning(`Failed to add "implemented" label to #${issueNumber}: ${e.message}`);
+            }
+
+            for (const label of ['implementation-in-progress', 'spec-approved']) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner, repo, issue_number: issueNumber, name: label,
+                });
+                core.info(`Removed "${label}" from #${issueNumber}.`);
+              } catch (e) {
+                if (e.status !== 404) {
+                  core.warning(`Failed to remove "${label}" from #${issueNumber}: ${e.message}`);
+                }
+                // 404 just means the label was not present — that is fine.
+              }
+            }
+
+            // ── 3. Collect changed files ─────────────────────────────────────
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: pr.number, per_page: 100,
+            });
+            const changedFiles = files.map(f => `\`${f.filename}\``).join('\n- ');
+
+            // ── 4. Post closing summary comment ──────────────────────────────
+            const sha = pr.merge_commit_sha;
+            const shortSha = sha ? sha.substring(0, 7) : 'unknown';
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const body = [
+              `## Implementation complete`,
+              ``,
+              `The implementation PR for this issue has been merged.`,
+              ``,
+              `| | |`,
+              `|---|---|`,
+              `| **Pull request** | #${pr.number} — ${pr.title} |`,
+              `| **Merge commit** | [\`${shortSha}\`](${context.serverUrl}/${owner}/${repo}/commit/${sha}) |`,
+              `| **Workflow run** | [${context.runId}](${runUrl}) |`,
+              ``,
+              `### Changed files`,
+              `- ${changedFiles}`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber, body,
+            });
+            core.info(`Posted closing summary comment on #${issueNumber}.`);
+
+            // ── 5. Close the issue ───────────────────────────────────────────
+            // Explicit close is a backstop for cases where "Fixes #N" was
+            // omitted or the PR was converted from draft after the keyword
+            // was parsed by GitHub. Skip if already closed.
+            if (issue.state === 'open') {
+              await github.rest.issues.update({
+                owner, repo, issue_number: issueNumber,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+              core.info(`Closed issue #${issueNumber} as completed.`);
+            } else {
+              core.info(`Issue #${issueNumber} is already closed; skipping close call.`);
+            }

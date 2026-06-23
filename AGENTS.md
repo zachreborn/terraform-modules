@@ -264,6 +264,7 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
 | `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
 | `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
+| `impl-complete.yml` | Implementation PR merged | Swaps labels (`implementation-in-progress` → `implemented`), posts a closing summary comment (PR, commit, changed files), and closes the issue as completed |
 
 ## Release & Tag Strategy
 
@@ -343,7 +344,8 @@ stateDiagram-v2
     spec_in_progress --> ready_for_spec: failure (label restored)
     spec_ready_for_review --> spec_approved: codeowner merges spec PR
     spec_approved --> implementation_in_progress: Implementation runs
-    implementation_in_progress --> [*]: implementation PR merged
+    implementation_in_progress --> implemented: impl-complete.yml (PR merged)
+    implemented --> [*]: issue closed as completed
 ```
 
 **Stages and the label that drives each transition**:
@@ -353,7 +355,8 @@ stateDiagram-v2
    - Complete → label `ready-for-spec` + classification comment.
 2. `ready-for-spec` → spec-generation agent runs; opens a PR under `.github/specs/issue-<N>-<slug>.md`; issue moves to `spec-in-progress` then `spec-ready-for-review`.
 3. Spec PR merged → `spec-approved.yml` flips the issue to `spec-approved`.
-4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress` and closes on PR merge.
+4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress`.
+5. Implementation PR merged → `impl-complete.yml` runs; removes `implementation-in-progress` and `spec-approved` labels, adds `implemented`, posts a closing summary comment (PR link, merge commit SHA, changed files), and closes the issue as completed.
 
 **Running CI on Oz PRs**: Spec and implementation PRs are opened by `github-actions[bot]` using the built-in `GITHUB_TOKEN`. GitHub suppresses cascading workflow runs triggered by `GITHUB_TOKEN`, so as of GitHub's 2026-06-11 change ("Bot-created pull requests can run workflows if approved") these PRs create the required checks (`Linter`, `Test OpenTofu`, `Verify - terraform-docs`, `Invisible Unicode Check`) in an **approval-required** state instead of running them automatically. A maintainer with **write access** must click **Approve workflows to run** in the PR's merge-box banner (or the Actions tab) to start them. This approval is required **per PR**, also applies to any later push the agent makes to the PR branch, and cannot be performed by the agent itself. (Before this change the only option was to manually re-trigger CI, e.g. by closing and reopening the PR.)
 
@@ -369,7 +372,7 @@ stateDiagram-v2
 - Apply the `skip-oz` label to any issue to disable all Oz workflows for it (label-triggered runs *and* `workflow_dispatch`).
 - Use `workflow_dispatch` on `spec-generation.yml` or `implementation.yml` to re-run a stage manually with an `issue_number` input. Manual dispatch still re-checks `skip-oz` and the trust gate at runtime.
 
-**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info` and `skip-oz`. The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. Note: `spec-approved.yml` does *not* use `WARP_API_KEY` (it is a plain `actions/github-script` job) and will act on merged spec PRs as soon as it lands, regardless of secret configuration.
+**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info`, `skip-oz`, and `implemented` (color `#0E8A16`). The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. `spec-approved.yml` and `impl-complete.yml` do not use `WARP_API_KEY` (they are plain `actions/github-script` jobs) and will act on merged PRs as soon as they land, regardless of secret configuration.
 
 **Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
