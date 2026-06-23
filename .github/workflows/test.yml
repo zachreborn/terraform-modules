@@ -72,7 +72,10 @@ jobs:
         uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: false
+          # On pull_request events, only lint changed files for speed.
+          # On schedule events there is no diff, so scan the full codebase
+          # to make the weekly regression run meaningful.
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'schedule' }}
           VALIDATE_BIOME_FORMAT: false
           VALIDATE_BIOME_LINT: false
           VALIDATE_JSCPD: false
