@@ -40,7 +40,7 @@ module "centralized_backup" {
 
   for_each = var.enable_organization_backup ? { "backup_policy" = "true" } : {}
 
-  content     = file("policies/enable_backup_policy.json")
+  content     = file("${path.module}/policies/enable_backup_policy.json")
   description = "Centralized AWS Backup Policy for managing backup plans across the organization."
   name        = "Root"
   type        = "BACKUP_POLICY"
@@ -70,7 +70,7 @@ module "identity_center_scp" {
 
   for_each = var.enable_identity_center_scp ? { "identity_center_scp" = "true" } : {}
 
-  content     = file("policies/deny_identity_center_instance_scp.json")
+  content     = file("${path.module}/policies/deny_identity_center_instance_scp.json")
   description = var.identity_center_scp_description
   name        = var.identity_center_scp_name
   type        = "SERVICE_CONTROL_POLICY"

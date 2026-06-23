@@ -136,22 +136,29 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 |------|--------|---------|
 | <a name="module_centralized_backup"></a> [centralized\_backup](#module\_centralized\_backup) | ../policy | n/a |
 | <a name="module_centralized_root"></a> [centralized\_root](#module\_centralized\_root) | ../../iam/organizations_features | n/a |
+| <a name="module_identity_center_scp"></a> [identity\_center\_scp](#module\_identity\_center\_scp) | ../policy | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
 | [aws_organizations_organization.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organization) | resource |
+| [aws_organizations_policy_attachment.identity_center_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_attach_identity_center_scp"></a> [attach\_identity\_center\_scp](#input\_attach\_identity\_center\_scp) | (Optional) If true, attaches the Identity Center deny SCP to the targets in identity\_center\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
 | <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br/>  "account.amazonaws.com",<br/>  "aws-artifact-account-sync.amazonaws.com",<br/>  "backup.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "health.amazonaws.com",<br/>  "sso.amazonaws.com"<br/>]</pre> | no |
+| <a name="input_enable_identity_center_scp"></a> [enable\_identity\_center\_scp](#input\_enable\_identity\_center\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies sso:CreateInstance organization-wide so member accounts cannot create account-level IAM Identity Center instances. Defaults to true. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `true` | no |
 | <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) If true, enables the organization backup policy. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enabled_features"></a> [enabled\_features](#input\_enabled\_features) | A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions. | `list(string)` | <pre>[<br/>  "RootCredentialsManagement",<br/>  "RootSessions"<br/>]</pre> | no |
 | <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | `null` | no |
 | <a name="input_feature_set"></a> [feature\_set](#input\_feature\_set) | (Optional) Specify 'ALL' (default) or 'CONSOLIDATED\_BILLING'. | `string` | `"ALL"` | no |
+| <a name="input_identity_center_scp_description"></a> [identity\_center\_scp\_description](#input\_identity\_center\_scp\_description) | (Optional) Description of the Identity Center deny SCP. | `string` | `"Denies sso:CreateInstance org-wide so member accounts cannot create account-level IAM Identity Center instances."` | no |
+| <a name="input_identity_center_scp_name"></a> [identity\_center\_scp\_name](#input\_identity\_center\_scp\_name) | (Optional) Name of the Identity Center deny SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyMemberAccountIdentityCenter"` | no |
+| <a name="input_identity_center_scp_target_ids"></a> [identity\_center\_scp\_target\_ids](#input\_identity\_center\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Identity Center deny SCP to. When null and attach\_identity\_center\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
@@ -161,6 +168,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_accounts"></a> [accounts](#output\_accounts) | List of organization accounts.All elements have these attributes: arn, email, id, name, status. |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the organization |
 | <a name="output_id"></a> [id](#output\_id) | ID of the organization |
+| <a name="output_identity_center_scp_arn"></a> [identity\_center\_scp\_arn](#output\_identity\_center\_scp\_arn) | ARN of the Identity Center deny SCP, or null when enable\_identity\_center\_scp is false. |
+| <a name="output_identity_center_scp_attachment_target_ids"></a> [identity\_center\_scp\_attachment\_target\_ids](#output\_identity\_center\_scp\_attachment\_target\_ids) | List of target IDs the Identity Center deny SCP was attached to. Empty when attachment is disabled. |
+| <a name="output_identity_center_scp_id"></a> [identity\_center\_scp\_id](#output\_identity\_center\_scp\_id) | ID of the Identity Center deny SCP, or null when enable\_identity\_center\_scp is false. |
 | <a name="output_master_account_arn"></a> [master\_account\_arn](#output\_master\_account\_arn) | ARN of the master account |
 | <a name="output_master_account_email"></a> [master\_account\_email](#output\_master\_account\_email) | Email address of the master account |
 | <a name="output_master_account_id"></a> [master\_account\_id](#output\_master\_account\_id) | ID of the master account |
