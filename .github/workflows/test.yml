@@ -2,8 +2,9 @@
 name: Test
 on:
   pull_request:
-  # Weekly regression run: catches upstream drift in linter rules, tofu
-  # version changes, and terraform-docs output format without requiring a PR.
+  # Weekly regression run: catches upstream drift in linter rules and tofu
+  # version changes without requiring a PR. terraform-docs drift is covered
+  # by the equivalent schedule in build.yml.
   schedule:
     - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
 

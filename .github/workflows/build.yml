@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+  # Weekly regression run: catches terraform-docs output format drift
+  # without requiring a PR.
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
 
 permissions:
   contents: read
