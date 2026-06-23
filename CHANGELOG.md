@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.20.2](https://github.com/zachreborn/terraform-modules/compare/v8.20.1...v8.20.2) (2026-06-23)
+
+
+### Bug Fixes
+
+* **aws_backup:** render org backup policy inline to fix file() path error ([#329](https://github.com/zachreborn/terraform-modules/issues/329)) ([0b07035](https://github.com/zachreborn/terraform-modules/commit/0b0703598e5f4704f13c8b7f7a600fda938374cd))
+
 ## [8.20.1](https://github.com/zachreborn/terraform-modules/compare/v8.20.0...v8.20.1) (2026-06-16)
 
 
