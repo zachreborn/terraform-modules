@@ -2,9 +2,10 @@
 name: Test
 on:
   pull_request:
-  push:
-    branches:
-      - main
+  # Weekly regression run: catches upstream drift in linter rules, tofu
+  # version changes, and terraform-docs output format without requiring a PR.
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
 
 permissions:
   contents: read
