@@ -88,6 +88,16 @@ jobs:
               return;
             }
 
+            // Guard: the Issues API returns pull requests too. Skip if the
+            // resolved number points to a PR rather than a plain issue to
+            // avoid accidentally labelling or closing a pull request.
+            if (issue.pull_request) {
+              core.warning(
+                `#${issueNumber} is a pull request, not an issue. Skipping cleanup.`
+              );
+              return;
+            }
+
             // ── 2. Swap labels ───────────────────────────────────────────────
             // Add "implemented" first so there is never a moment with no label.
             try {
@@ -117,14 +127,27 @@ jobs:
             }
 
             // ── 3. Collect changed files ─────────────────────────────────────
+            const MAX_FILES = 50;
             const files = await github.paginate(github.rest.pulls.listFiles, {
               owner, repo, pull_number: pr.number, per_page: 100,
             });
-            const changedFiles = files.map(f => `\`${f.filename}\``).join('\n- ');
+            let fileSection;
+            if (files.length === 0) {
+              fileSection = '_No files changed._';
+            } else {
+              const displayed = files.slice(0, MAX_FILES);
+              const overflow = files.length - displayed.length;
+              const fileList = displayed.map(f => `\`${f.filename}\``).join('\n- ');
+              fileSection = `- ${fileList}` +
+                (overflow > 0 ? `\n- _...and ${overflow} more file(s)_` : '');
+            }
 
             // ── 4. Post closing summary comment ──────────────────────────────
             const sha = pr.merge_commit_sha;
-            const shortSha = sha ? sha.substring(0, 7) : 'unknown';
+            const shortSha = sha ? sha.substring(0, 7) : null;
+            const commitCell = sha
+              ? `[\`${shortSha}\`](${context.serverUrl}/${owner}/${repo}/commit/${sha})`
+              : '_not available_';
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
             const body = [
@@ -135,11 +158,11 @@ jobs:
               `| | |`,
               `|---|---|`,
               `| **Pull request** | #${pr.number} — ${pr.title} |`,
-              `| **Merge commit** | [\`${shortSha}\`](${context.serverUrl}/${owner}/${repo}/commit/${sha}) |`,
+              `| **Merge commit** | ${commitCell} |`,
               `| **Workflow run** | [${context.runId}](${runUrl}) |`,
               ``,
               `### Changed files`,
-              `- ${changedFiles}`,
+              fileSection,
             ].join('\n');
 
             await github.rest.issues.createComment({
