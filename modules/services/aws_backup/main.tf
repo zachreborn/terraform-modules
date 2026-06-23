@@ -293,7 +293,7 @@ locals {
   # (missing ${path.module} prefix) and returned uninterpolated text.
   organization_backup_plan = jsonencode({
     plans = {
-      "${var.backup_plan_name}" = {
+      (var.backup_plan_name) = {
         regions = {
           "@@assign" = [data.aws_region.prod.name, data.aws_region.dr.name]
         }
