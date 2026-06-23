@@ -207,6 +207,12 @@ variable "enable_organization_backup" {
   type        = bool
 }
 
+variable "organization_backup_plan_content" {
+  description = "(Optional) A fully-rendered AWS organization backup policy JSON document. When null (default), the module generates the policy from the schedule/retention inputs and provider-derived account/region values."
+  default     = null
+  type        = string
+}
+
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the object."
