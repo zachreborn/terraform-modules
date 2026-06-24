@@ -18,6 +18,12 @@ terraform {
 ###########################
 # Locals
 ###########################
+locals {
+  # Effective base name for the SSM document and IAM inline policies when the
+  # caller does not supply name or name_prefix. name and name_prefix are
+  # mutually exclusive (enforced by a precondition on the SSM document).
+  name = coalesce(var.name, "ssm-domain-join")
+}
 
 ###########################
 # SSM Domain Join Document
@@ -101,14 +107,21 @@ resource "aws_ssm_document" "this" {
   })
   document_format = "JSON"
   document_type   = "Command"
-  name            = var.name
+  name            = local.name
   permissions = var.permissions != null ? {
     account_ids = var.permissions.account_ids
     type        = var.permissions.type
   } : null
-  tags         = merge(tomap({ Name = var.name }), var.tags)
+  tags         = merge(tomap({ Name = local.name }), var.tags)
   target_type  = var.target_type
   version_name = var.version_name
+
+  lifecycle {
+    precondition {
+      condition     = !(var.name != null && var.name_prefix != null)
+      error_message = "Set either name or name_prefix, not both."
+    }
+  }
 }
 
 ###########################
@@ -132,7 +145,7 @@ resource "aws_ssm_association" "this" {
   }
   schedule_expression              = var.schedule_expression
   sync_compliance                  = var.sync_compliance
-  tags                             = merge(tomap({ Name = coalesce(var.association_name, var.name) }), var.tags)
+  tags                             = merge(tomap({ Name = coalesce(var.association_name, local.name) }), var.tags)
   wait_for_success_timeout_seconds = var.wait_for_success_timeout_seconds
 
   dynamic "output_location" {
@@ -172,7 +185,7 @@ module "domain_join_log_group" {
 # IAM
 ###########################
 resource "aws_iam_role_policy" "secret_read" {
-  name        = var.name_prefix == null ? "${var.name}-secret-read" : null
+  name        = var.name_prefix == null ? "${local.name}-secret-read" : null
   name_prefix = var.name_prefix != null ? "${var.name_prefix}-secret-read" : null
   policy = jsonencode({
     Version = "2012-10-17"
@@ -199,18 +212,11 @@ resource "aws_iam_role_policy" "secret_read" {
     )
   })
   role = var.instance_role_name
-
-  lifecycle {
-    precondition {
-      condition     = !(var.name_prefix != null && var.name != "ssm-domain-join")
-      error_message = "Set either name or name_prefix for the IAM inline policies, not both."
-    }
-  }
 }
 
 resource "aws_iam_role_policy" "cloudwatch_logs" {
   count       = var.cloudwatch_log_group_name != null ? 1 : 0
-  name        = var.name_prefix == null ? "${var.name}-cloudwatch-logs" : null
+  name        = var.name_prefix == null ? "${local.name}-cloudwatch-logs" : null
   name_prefix = var.name_prefix != null ? "${var.name_prefix}-cloudwatch-logs" : null
   policy = jsonencode({
     Version = "2012-10-17"

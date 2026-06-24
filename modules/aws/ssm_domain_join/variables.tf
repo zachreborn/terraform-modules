@@ -63,10 +63,10 @@ variable "timezone" {
 ########################################
 variable "name" {
   type        = string
-  description = "(Optional) Name of the SSM document and base name for the IAM inline policy."
-  default     = "ssm-domain-join"
+  description = "(Optional) Name of the SSM document and base name for the IAM inline policies. Conflicts with name_prefix; set one or the other, not both. If null, defaults to ssm-domain-join."
+  default     = null
   validation {
-    condition     = length(var.name) > 0
+    condition     = var.name == null ? true : length(var.name) > 0
     error_message = "name must not be empty."
   }
 }
@@ -250,7 +250,7 @@ variable "instance_role_name" {
 
 variable "name_prefix" {
   type        = string
-  description = "(Optional) Creates a unique name for the IAM inline policy using this prefix instead of name. Conflicts with name for the IAM policy. If null, name is used."
+  description = "(Optional) Creates a unique name for the IAM inline policies using this prefix instead of name. Conflicts with name; set one or the other, not both. If null, name is used."
   default     = null
   validation {
     condition     = var.name_prefix == null ? true : length(var.name_prefix) > 0
