@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 670" width="1060" height="670">
+  <defs>
+    <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#0055aa"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#880088"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#006600"/>
+    </marker>
+    <marker id="arr-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#aa3300"/>
+    </marker>
+    <marker id="arr-ref" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#6c8ebf"/>
+    </marker>
+  </defs>
+  <rect width="1060" height="670" fill="white"/>
+  <rect x="30" y="40" width="360" height="570" rx="8" fill="#f5f5f5" stroke="#555555" stroke-width="2" stroke-dasharray="10 5"/>
+  <text x="210" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="14" font-weight="bold" fill="#444444">ssm_domain_join Module</text>
+  <rect x="65" y="95" width="290" height="115" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="210" y="125.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">aws_ssm_document.this</text>
+  <text x="210" y="144.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">document_type: Command  |  format: JSON</text>
+  <text x="210" y="158.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">action: aws:runPowerShellScript</text>
+  <text x="210" y="172.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">step: DomainJoin (idempotent)</text>
+  <rect x="65" y="265" width="290" height="115" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="210" y="295.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">aws_ssm_association.this</text>
+  <text x="210" y="314.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">targets: tag:ad_join = &lt;value&gt;</text>
+  <text x="210" y="328.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">parameters: DomainName, DnsServers, SecretArn</text>
+  <text x="210" y="342.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">compliance_severity: configurable</text>
+  <rect x="65" y="450" width="290" height="110" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="210" y="478.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">aws_iam_role_policy.secret_read</text>
+  <text x="210" y="497.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">Effect: Allow</text>
+  <text x="210" y="511.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">Action: secretsmanager:GetSecretValue</text>
+  <text x="210" y="525.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">Resource: var.secret_arn</text>
+  <rect x="490" y="155" width="230" height="310" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="605" y="178" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="bold" fill="#4a3200">EC2 Instance</text>
+  <text x="605" y="194" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#7a5200">tag: ad_join = &quot;corp.example.com&quot;</text>
+  <rect x="515" y="225" width="180" height="75" rx="8" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+  <text x="605" y="242.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">SSM Agent</text>
+  <text x="605" y="261.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">pre-installed on Windows AMIs</text>
+  <text x="605" y="275.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">runs commands as SYSTEM</text>
+  <rect x="515" y="355" width="180" height="85" rx="8" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+  <text x="605" y="370.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">IAM Role (instance profile)</text>
+  <text x="605" y="389.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">from ssm_role module</text>
+  <text x="605" y="403.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">AmazonEC2RoleforSSM +</text>
+  <text x="605" y="417.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">secret_read inline policy</text>
+  <rect x="820" y="175" width="190" height="110" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <text x="915" y="210.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">Secrets Manager</text>
+  <text x="915" y="229.79999999999998" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">{ &quot;username&quot;: &quot;svc-adjoin&quot;,</text>
+  <text x="915" y="243.79999999999998" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">  &quot;password&quot;: &quot;...&quot; }</text>
+  <rect x="820" y="370" width="190" height="100" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <text x="915" y="400.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#333333">Active Directory</text>
+  <text x="915" y="419.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">corp.example.com</text>
+  <text x="915" y="433.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="normal" fill="#333333">(on-prem or AWS Managed AD)</text>
+  <polyline points="210,265 210,210" fill="none" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arr-ref)" stroke-linejoin="round"/>
+  <rect x="220.0" y="231" width="56.0" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="248" y="240" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#6c8ebf">references</text>
+  <polyline points="355,346 490,346" fill="none" stroke="#0055aa" stroke-width="2" marker-end="url(#arr-blue)" stroke-linejoin="round"/>
+  <rect x="374.4" y="330" width="95.19999999999999" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="422" y="339" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#0055aa">1. targets by tag</text>
+  <polyline points="355,294 435,294 435,262 515,262" fill="none" stroke="#0055aa" stroke-width="2" marker-end="url(#arr-blue)" stroke-linejoin="round"/>
+  <rect x="336.0" y="275" width="112.0" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="392" y="284" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#0055aa">2. delivers document</text>
+  <polyline points="355,505 435,505 435,397 515,397" fill="none" stroke="#880088" stroke-width="2" marker-end="url(#arr-purple)" stroke-linejoin="round"/>
+  <rect x="322.0" y="490" width="140.0" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="392" y="499" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#880088">3. attaches inline policy</text>
+  <polyline points="605,355 605,300" fill="none" stroke="#880088" stroke-width="2" marker-end="url(#arr-purple)" stroke-linejoin="round"/>
+  <rect x="598.8" y="321" width="78.39999999999999" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="638" y="330" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#880088">4. Gives Agent</text>
+  <rect x="607.2" y="332" width="61.599999999999994" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="638" y="341" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#880088">permissions</text>
+  <polyline points="695,244 757,244 757,203 820,203" fill="none" stroke="#006600" stroke-width="2" marker-end="url(#arr-green)" stroke-linejoin="round"/>
+  <rect x="676.4" y="213" width="95.19999999999999" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="724" y="222" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#006600">5. GetSecretValue</text>
+  <polyline points="820,258 757,258 757,281 695,281" fill="none" stroke="#006600" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arr-green)" stroke-linejoin="round"/>
+  <rect x="662.4" y="263" width="123.19999999999999" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="724" y="272" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#006600">6. returns credentials</text>
+  <polyline points="695,285 760,285 760,420 820,420" fill="none" stroke="#aa3300" stroke-width="2" marker-end="url(#arr-red)" stroke-linejoin="round"/>
+  <rect x="751.0" y="351" width="84.0" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="793" y="360" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#aa3300">7. Add-Computer</text>
+  <rect x="756.6" y="362" width="72.8" height="12" fill="white" fill-opacity="0.75"/>
+  <text x="793" y="371" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="bold" fill="#aa3300">(join domain)</text>
+  <text x="820" y="512" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#333333">Legend</text>
+  <rect x="820" y="518" width="155" height="25" rx="5" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="897" y="535" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#333333">Module Resource</text>
+  <rect x="820" y="550" width="155" height="25" rx="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+  <text x="897" y="567" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#333333">EC2 / Instance Component</text>
+  <rect x="820" y="582" width="155" height="25" rx="5" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <text x="897" y="599" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" font-weight="normal" fill="#333333">External AWS Service</text>
+</svg>
