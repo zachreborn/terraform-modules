@@ -13,3 +13,15 @@ output "group_ids" {
     group.display_name => group.id
   }
 }
+
+output "group_memberships" {
+  description = "The group memberships created in the identity store, keyed by '<user_display_name>-<group_name>'"
+  value = {
+    for k, m in aws_identitystore_group_membership.this :
+    k => {
+      membership_id = m.membership_id
+      member        = m.member_id
+      group         = m.group_id
+    }
+  }
+}

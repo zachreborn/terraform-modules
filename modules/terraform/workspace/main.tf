@@ -13,12 +13,10 @@ terraform {
 ##############################
 
 resource "tfe_workspace" "this" {
-  agent_pool_id                 = var.agent_pool_id
   allow_destroy_plan            = var.allow_destroy_plan
   auto_apply                    = var.auto_apply
   assessments_enabled           = var.assessments_enabled
   description                   = var.description
-  execution_mode                = var.execution_mode
   file_triggers_enabled         = var.file_triggers_enabled
   global_remote_state           = var.global_remote_state
   name                          = var.name
@@ -38,6 +36,20 @@ resource "tfe_workspace" "this" {
     ingress_submodules = var.ingress_submodules
     oauth_token_id     = var.oauth_token_id
   }
+}
+
+##############################
+# Workspace Settings
+##############################
+# Manages execution_mode and agent_pool_id, which are deprecated on the
+# tfe_workspace resource in favor of the dedicated tfe_workspace_settings
+# resource (hashicorp/tfe >= 0.42.0). Per provider docs, agent_pool_id requires
+# execution_mode = "agent" and must be null for any other execution mode.
+
+resource "tfe_workspace_settings" "this" {
+  workspace_id   = tfe_workspace.this.id
+  execution_mode = var.execution_mode
+  agent_pool_id  = var.agent_pool_id
 }
 
 ##############################

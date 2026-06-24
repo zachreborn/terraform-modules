@@ -2,9 +2,21 @@
 # VPC
 ##########################
 variable "vpc_cidr" {
-  description = "The CIDR block for the VPC"
+  description = "The CIDR block for the VPC. Ignored when ipv4_ipam_pool_id is set, in which case the CIDR is sourced from the IPAM pool."
   type        = string
   default     = "10.11.0.0/16"
+}
+
+variable "ipv4_ipam_pool_id" {
+  description = "(Optional) The ID of an IPv4 IPAM pool to source the VPC CIDR from. When set, vpc_cidr is ignored and the CIDR is allocated from the pool using ipv4_netmask_length."
+  type        = string
+  default     = null
+}
+
+variable "ipv4_netmask_length" {
+  description = "(Optional) The netmask length of the IPv4 CIDR to allocate from the IPAM pool referenced by ipv4_ipam_pool_id. Required when ipv4_ipam_pool_id is set."
+  type        = number
+  default     = null
 }
 
 variable "enable_dns_hostnames" {
@@ -257,6 +269,94 @@ variable "flow_traffic_type" {
   validation {
     condition     = can(index(["ACCEPT", "REJECT", "ALL"], var.flow_traffic_type))
     error_message = "flow_traffic_type must be one of: ACCEPT, REJECT, ALL."
+  }
+}
+
+###########################
+# CloudWatch Internet Monitor
+###########################
+
+variable "enable_internet_monitor" {
+  description = "(Optional) A boolean flag to enable/disable the creation of a CloudWatch Internet Monitor for this VPC. Defaults false."
+  type        = bool
+  default     = false
+}
+
+variable "internet_monitor_monitor_name" {
+  description = "(Optional) The name of the Internet Monitor. Required when enable_internet_monitor is true. Maps to the monitor_name argument."
+  type        = string
+  default     = null
+}
+
+variable "internet_monitor_traffic_percentage_to_monitor" {
+  description = "(Optional) The percentage of internet-facing traffic to monitor with this monitor. Valid values are 1-100. Controls cost. Defaults 100."
+  type        = number
+  default     = 100
+  validation {
+    condition     = var.internet_monitor_traffic_percentage_to_monitor >= 1 && var.internet_monitor_traffic_percentage_to_monitor <= 100
+    error_message = "internet_monitor_traffic_percentage_to_monitor must be between 1 and 100."
+  }
+}
+
+variable "internet_monitor_max_city_networks_to_monitor" {
+  description = "(Optional) The maximum number of city-networks (location + ASN pairs) to monitor. This is a hard billing cap. Valid values are 1-500000. Defaults 100."
+  type        = number
+  default     = 100
+  validation {
+    condition     = var.internet_monitor_max_city_networks_to_monitor >= 1 && var.internet_monitor_max_city_networks_to_monitor <= 500000
+    error_message = "internet_monitor_max_city_networks_to_monitor must be between 1 and 500000."
+  }
+}
+
+variable "internet_monitor_status" {
+  description = "(Optional) The status for the monitor. Valid values: ACTIVE, INACTIVE. Defaults ACTIVE."
+  type        = string
+  default     = "ACTIVE"
+  validation {
+    condition     = can(index(["ACTIVE", "INACTIVE"], var.internet_monitor_status))
+    error_message = "internet_monitor_status must be one of: ACTIVE, INACTIVE."
+  }
+}
+
+variable "internet_monitor_availability_score_threshold" {
+  description = "(Optional) The health-event trigger threshold percentage for the availability score. Valid values are 1-100. Defaults 95."
+  type        = number
+  default     = 95
+  validation {
+    condition     = var.internet_monitor_availability_score_threshold >= 1 && var.internet_monitor_availability_score_threshold <= 100
+    error_message = "internet_monitor_availability_score_threshold must be between 1 and 100."
+  }
+}
+
+variable "internet_monitor_performance_score_threshold" {
+  description = "(Optional) The health-event trigger threshold percentage for the performance score. Valid values are 1-100. Defaults 95."
+  type        = number
+  default     = 95
+  validation {
+    condition     = var.internet_monitor_performance_score_threshold >= 1 && var.internet_monitor_performance_score_threshold <= 100
+    error_message = "internet_monitor_performance_score_threshold must be between 1 and 100."
+  }
+}
+
+variable "internet_monitor_s3_bucket_name" {
+  description = "(Optional) The name of an existing S3 bucket for publishing internet measurements beyond the top-500 city-networks. When null, S3 measurement delivery is not configured. The bucket must be supplied by the caller."
+  type        = string
+  default     = null
+}
+
+variable "internet_monitor_s3_bucket_prefix" {
+  description = "(Optional) The S3 key prefix for internet-measurements delivery."
+  type        = string
+  default     = null
+}
+
+variable "internet_monitor_s3_bucket_status" {
+  description = "(Optional) Enables (ENABLED) or disables (DISABLED) S3 internet-measurement delivery. Valid values: ENABLED, DISABLED. Defaults DISABLED."
+  type        = string
+  default     = "DISABLED"
+  validation {
+    condition     = can(index(["ENABLED", "DISABLED"], var.internet_monitor_s3_bucket_status))
+    error_message = "internet_monitor_s3_bucket_status must be one of: ENABLED, DISABLED."
   }
 }
 

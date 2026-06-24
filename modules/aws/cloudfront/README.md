@@ -88,6 +88,83 @@ module "example_com_redirect_cloudfront" {
 }
 ```
 
+### S3 Origin with Origin Access Control (OAC) Example
+
+This example creates a Cloudfront distribution that serves content from a private S3 bucket secured with an Origin Access Control (OAC). The module creates and manages the OAC: the `origin_access_controls` map key is used as the OAC name and is referenced from an origin via `origin_access_control_name`, and the module resolves it to the created OAC ID. This replaces the need to declare an `aws_cloudfront_origin_access_control` resource outside the module and pass its ID into `origins[*].origin_access_control_id`.
+
+Note: attaching the S3 bucket policy that grants this OAC access to the origin bucket is the caller's responsibility (managed by the S3 bucket module/caller) and is intentionally out of scope for this module.
+
+```
+module "s3_oac_cloudfront" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudfront"
+
+  default_cache_target_origin_id = "s3-app-data"
+  managed_cache_policy_name      = "CachingOptimized"
+
+  # The module creates and manages the OAC. The map key doubles as the OAC name.
+  origin_access_controls = {
+    s3-app-data = {
+      description                       = "OAC for the app data S3 bucket"
+      origin_access_control_origin_type = "s3"
+      signing_behavior                  = "always"
+      signing_protocol                  = "sigv4"
+    }
+  }
+
+  origins = {
+    s3-app-data = {
+      domain_name = module.app_data_bucket.bucket_regional_domain_name
+      # Reference the origin_access_controls map key; the module resolves the OAC ID.
+      origin_access_control_name = "s3-app-data"
+    }
+  }
+}
+```
+
+### Custom ACM Certificate with In-Module Validation Wait
+
+When a distribution uses a custom ACM certificate, that certificate must be in the `ISSUED` state before CloudFront can be created. Passing the raw `aws_acm_certificate` ARN creates no dependency on validation finishing, so the apply races and can fail with `InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.`
+
+This example sets `wait_for_certificate_validation = true`, which makes the module create an `aws_acm_certificate_validation` resource internally. The distribution then waits for the certificate to reach `ISSUED` before it is created, removing the race condition. The `viewer_certificate` block consumes the validated ARN automatically.
+
+**Prerequisites for this pattern:**
+
+- You create the ACM certificate and pass its ARN via `acm_certificate_arn`.
+- You create the DNS validation records (CNAMEs) in your own DNS zone. The module does **not** create DNS validation records under any option, so it works with both Route 53 and external DNS.
+- This release uses the module's default `aws` provider for the validation resource, so that provider must be configured for `us-east-1` (the region CloudFront requires for ACM certificates) when `wait_for_certificate_validation = true`. A dedicated `aws.acm` provider alias is planned for the next major version.
+
+If you do not enable the in-module wait, the alternative is to pass the `certificate_arn` from your own `aws_acm_certificate_validation` resource (not the raw `aws_acm_certificate` ARN) into `acm_certificate_arn` so CloudFront still waits for `ISSUED`.
+
+```
+module "example_com_cloudfront" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudfront"
+
+  # The module gates on validation internally, so the distribution is created
+  # only after the certificate reaches ISSUED. The caller still owns the DNS
+  # validation records (see prerequisites above).
+  acm_certificate_arn             = aws_acm_certificate.example_com.arn
+  wait_for_certificate_validation = true
+  certificate_validation_timeout  = "45m"
+
+  aliases                        = ["example.com"]
+  default_cache_target_origin_id = "s3-app-data"
+  managed_cache_policy_name      = "CachingOptimized"
+
+  origin_access_controls = {
+    s3-app-data = {
+      description = "OAC for the app data S3 bucket"
+    }
+  }
+
+  origins = {
+    s3-app-data = {
+      domain_name                = module.app_data_bucket.bucket_regional_domain_name
+      origin_access_control_name = "s3-app-data"
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

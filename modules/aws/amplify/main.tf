@@ -24,7 +24,7 @@ locals {
   notification_rule_name = "${substr(var.name, 0, 42)}-amplify-notifications"
   # Compute the EventBridge rule ARN deterministically so the SNS topic policy
   # can reference it without creating a Terraform dependency cycle.
-  notification_rule_arn = "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
+  notification_rule_arn = "arn:aws:events:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:rule/${local.notification_rule_name}"
   sns_topic_arn         = var.enable_notifications ? (var.create_sns_topic ? module.amplify_notifications_sns[0].topic_arn : var.sns_topic_arn) : null
 
   notification_subscriptions = var.enable_notifications && var.notification_emails != null ? {
@@ -115,6 +115,15 @@ resource "aws_amplify_app" "this" {
   }
 
   lifecycle {
+    # AWS re-encrypts basic_auth_credentials server-side and never returns the
+    # configured base64("user:password") value on read, producing a perpetual
+    # update-in-place diff. Ignore the attribute to keep plans converged. A
+    # genuine credential rotation must be applied out-of-band (see README).
+    # Upstream: https://github.com/hashicorp/terraform-provider-aws/issues/29200
+    ignore_changes = [
+      basic_auth_credentials,
+      auto_branch_creation_config[0].basic_auth_credentials,
+    ]
     precondition {
       condition     = !var.enable_notifications || var.create_sns_topic || var.sns_topic_arn != null
       error_message = "sns_topic_arn must be provided when enable_notifications is true and create_sns_topic is false."
@@ -147,6 +156,16 @@ resource "aws_amplify_branch" "this" {
   stage                         = each.value.stage
   tags                          = var.tags
   ttl                           = each.value.ttl
+
+  lifecycle {
+    # AWS re-encrypts basic_auth_credentials server-side and never returns the
+    # configured base64("user:password") value on read, producing a perpetual
+    # update-in-place diff. Ignore the attribute to keep plans converged. A
+    # genuine credential rotation must be applied out-of-band (see README).
+    # Branches without credentials have nothing to ignore. Upstream:
+    # https://github.com/hashicorp/terraform-provider-aws/issues/29200
+    ignore_changes = [basic_auth_credentials]
+  }
 }
 
 ###########################

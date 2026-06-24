@@ -1,5 +1,6 @@
 ---
 name: Implementation (Oz)
+run-name: "Implementation (Oz) — Issue #${{ github.event.issue.number || inputs.issue_number }}"
 on:
   issues:
     types: [labeled]
@@ -21,7 +22,7 @@ permissions:
 
 jobs:
   implement:
-    name: Implement spec with Oz
+    name: "Implement spec for Issue #${{ github.event.issue.number || inputs.issue_number }}"
     runs-on: ubuntu-latest
 
     # For labeled events, only trigger on the spec-approved label, skip if
@@ -132,58 +133,15 @@ jobs:
         with:
           warp_api_key: ${{ secrets.WARP_API_KEY }} # zizmor: ignore[secrets-outside-env]
           profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          # Canonical implementation instructions live in
+          # .warp/skills/spec-implementation/SKILL.md and are referenced via `skill:`.
+          # Pass only per-run context through `prompt:` below.
+          skill: zachreborn/terraform-modules:spec-implementation
           prompt: |
-            You are implementing an approved spec in zachreborn/terraform-modules.
-
-            ## Target issue and spec
-            Issue: #${{ steps.ctx.outputs.issue_number }}
-            Spec file (already in `main`): ${{ steps.spec.outputs.path }}
-
-            Read the spec file in full before making any changes. Treat it
-            as the source of truth for what to build.
-
-            ## Required reading
-            - `AGENTS.md` — repo conventions (four-file module layout,
-              `opentofu >= 1.6.0` / `terraform >= 1.0.0`, `aws >= 6.0.0`,
-              section header style,
-              `tags = merge(tomap({ Name = var.name }), var.tags)` pattern,
-              `count = var.enable_x ? 1 : 0` conditional pattern, lifecycle
-              ignores, tfsec suppression style).
-            - `modules/module_template/` — starting point for new modules.
-            - `.github/pull_request_template.md` — required PR body shape.
-
-            ## Implementation rules
-            - Stay within the scope defined by the spec. Do not modify
-              unrelated modules.
-            - Run `tofu fmt -recursive` before committing.
-            - Do not run `terraform-docs` locally — CI (`build.yml`) will
-              auto-inject the README block.
-            - Run `tofu -chdir=<module_path> init -backend=false` and
-              `tofu -chdir=<module_path> validate` for any module you
-              create or modify, and ensure both succeed.
-            - If you add a Checkov suppression, document the rationale in a
-              comment per the convention in `AGENTS.md`.
-
-            ## Commit and PR
-            - Branch name: `feat/issue-${{ steps.ctx.outputs.issue_number }}-<slug>`
-              for features, `fix/issue-${{ steps.ctx.outputs.issue_number }}-<slug>`
-              for bugs.
-            - Commit messages follow conventional-commit style and include
-              a Co-Authored-By line for Oz.
-            - Open the PR as **ready-for-review** (NOT a draft) so that
-              CODEOWNERS are auto-assigned via the `pull_request:
-              ready_for_review` event. If your tooling defaults to draft,
-              flip it to ready before exiting. The workflow also runs a
-              post-step that calls `gh pr ready` as a safety net.
-            - Title: per the spec. The PR body MUST fill in the existing
-              `.github/pull_request_template.md` sections (Description,
-              Issue or Ticket with `Fixes #${{ steps.ctx.outputs.issue_number }}`,
-              Type of change, Breaking Changes, TODOs).
-            - Post a comment on the originating issue with the PR URL.
-
-            Implementation PRs go through the same CI as any other PR
-            (`build.yml`, `test.yml`, `scan.yml`). Do not attempt to
-            bypass any check.
+            ## Run context
+            Issue number: #${{ steps.ctx.outputs.issue_number }}
+            Repository: ${{ github.repository }}
+            Spec file path (already on `main`): ${{ steps.spec.outputs.path }}
 
       - name: Mark implementation PR ready-for-review
         # The Oz agent action tends to open PRs as drafts when invoked from

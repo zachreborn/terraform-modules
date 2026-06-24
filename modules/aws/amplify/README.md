@@ -104,6 +104,33 @@ module "example_website" {
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
+### Rotating basic auth credentials
+
+The `basic_auth_credentials` attribute on `aws_amplify_app.this` (including its
+`auto_branch_creation_config` block) and `aws_amplify_branch.this` is wrapped in
+a `lifecycle { ignore_changes = [...] }` block. AWS re-encrypts the password
+server-side and never returns the configured `base64("username:password")` value
+on read, so without this the module reports a perpetual `~ update in-place` diff
+on every `tofu plan` / `terraform plan` even when nothing changed. This is the
+accepted workaround for the upstream provider bug
+[hashicorp/terraform-provider-aws#29200](https://github.com/hashicorp/terraform-provider-aws/issues/29200).
+
+**Caveat:** because the value is ignored after the initial create, a genuine
+credential change is **not** applied automatically. The initial value is still
+set correctly on first create; only subsequent drift is suppressed. To rotate
+the credentials, do one of the following:
+
+- Update the value directly in the AWS Amplify console, or
+- Replace the affected resource so the new value is pushed on create, e.g.
+  `tofu apply -replace='module.<name>.aws_amplify_branch.this["<branch>"]'`
+  (or the equivalent `terraform apply -replace=...`), or
+- Temporarily remove the relevant `ignore_changes` entry in `main.tf`, apply the
+  rotation, then restore it.
+
+Because `ignore_changes` only accepts a static list, the branch-level rule
+applies to every entry in `var.branches`; branches that do not set
+`basic_auth_credentials` simply have nothing to ignore and are unaffected.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- terraform-docs output will be input automatically below-->

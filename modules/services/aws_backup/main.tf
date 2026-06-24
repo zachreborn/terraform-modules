@@ -270,12 +270,115 @@ resource "aws_backup_vault_lock_configuration" "vault_disaster_recovery" {
 # AWS Backup Organization Plan
 #######################################
 
+# Data sources supply the account id and region values that the
+# organization backup policy needs. They replace the former $$account
+# placeholder and the undeclared var.aws_prod_region / var.aws_dr_region
+# references that lived in the deleted org_backup_plan.json file.
+data "aws_caller_identity" "current" {
+  provider = aws.prod_region
+}
+
+data "aws_region" "prod" {
+  provider = aws.prod_region
+}
+
+data "aws_region" "dr" {
+  provider = aws.dr_region
+}
+
+locals {
+  # Render the AWS Organizations backup policy inline so the policy is
+  # produced with real interpolation. This replaces the previous
+  # file("org_backup_plan.json") indirection, which both failed to resolve
+  # (missing ${path.module} prefix) and returned uninterpolated text.
+  organization_backup_plan = jsonencode({
+    plans = {
+      (var.backup_plan_name) = {
+        regions = {
+          "@@assign" = [data.aws_region.prod.name, data.aws_region.dr.name]
+        }
+        rules = {
+          "hourly_backup_rule" = {
+            schedule_expression     = var.hourly_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = var.vault_prod_hourly_name
+            lifecycle = {
+              delete_after_days = var.hourly_backup_retention
+            }
+          }
+          "daily_backup_rule" = {
+            schedule_expression     = var.daily_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = var.vault_prod_daily_name
+            copy_actions = {
+              "disaster_recovery_copy" = {
+                destination_backup_vault_arn = "arn:aws:backup:${data.aws_region.dr.name}:${data.aws_caller_identity.current.account_id}:backup-vault:${var.vault_disaster_recovery_name}"
+                lifecycle = {
+                  delete_after_days = var.dr_backup_retention
+                }
+              }
+            }
+            lifecycle = {
+              delete_after_days = var.daily_backup_retention
+            }
+          }
+          "monthly_backup_rule" = {
+            schedule_expression     = var.monthly_backup_schedule
+            start_window_minutes    = var.backup_plan_start_window
+            complete_window_minutes = var.backup_plan_completion_window
+            target_backup_vault     = var.vault_prod_monthly_name
+            lifecycle = {
+              delete_after_days = var.monthly_backup_retention
+            }
+          }
+        }
+        selections = {
+          "tags" = {
+            "all_resources_with_backup_tag" = {
+              iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.backup.name}"
+              resources    = ["*"]
+              not_resources = [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:s3:*"
+              ]
+              conditions = {
+                "string_equals" = {
+                  "aws:ResourceTag/backup" = ["true"]
+                }
+              }
+            }
+            "ec2_resources_with_backup_tag" = {
+              iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.backup.name}"
+              resources    = ["arn:aws:ec2:*:*:instance/*"]
+              conditions = {
+                "string_equals" = {
+                  "aws:ResourceTag/backup" = ["true"]
+                }
+              }
+            }
+          }
+        }
+        advanced_backup_settings = {
+          "ec2" = {
+            resource_type = "EC2"
+            backup_options = {
+              "WindowsVSS" = "enabled"
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
 module "organization_backup_plan" {
   source = "../../aws/organizations/delegated_resource_policy"
 
-  for_each = var.enable_organization_backup ? [true] : []
+  for_each = var.enable_organization_backup ? toset(["this"]) : toset([])
 
-  content = file("org_backup_plan.json")
+  content = coalesce(var.organization_backup_plan_content, local.organization_backup_plan)
   tags    = var.tags
 }
 

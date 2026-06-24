@@ -3,7 +3,7 @@
 ###########################
 
 variable "acm_certificate_arn" {
-  description = "(Optional) The ARN of the ACM certificate that you want to use with the distribution. This must be used if custom domain names are used. The ACM certificate must be in the us-east-1 (Virginia) region."
+  description = "(Optional) The ARN of the ACM certificate for the distribution. The certificate must be in us-east-1. IMPORTANT: pass the certificate_arn from an aws_acm_certificate_validation resource (NOT the raw aws_acm_certificate arn) so CloudFront waits for the certificate to reach ISSUED state. Alternatively set wait_for_certificate_validation = true to have the module gate on validation internally."
   type        = string
   default     = null
 }
@@ -12,6 +12,12 @@ variable "aliases" {
   description = "(Optional) Extra CNAMEs (alternate domain names), if any, for this distribution."
   type        = list(string)
   default     = null
+}
+
+variable "certificate_validation_timeout" {
+  description = "(Optional) The create timeout for the aws_acm_certificate_validation resource when wait_for_certificate_validation is true."
+  type        = string
+  default     = "45m"
 }
 
 variable "cloudfront_default_certificate" {
@@ -222,7 +228,7 @@ variable "ordered_cache_behavior" {
     cache_policy_id            = string                 # The cache policy id to attach to the cache behavior.
     compress                   = optional(bool)         # Whether you want CloudFront to automatically compress content for web requests that include Accept-Encoding: gzip in the request header.
     field_level_encryption_id  = optional(string)       # The field level encryption id to attach to the cache behavior.
-    origin_request_policy_id   = string                 # The origin request policy id to attach to the cache behavior.
+    origin_request_policy_id   = optional(string)       # The origin request policy id to attach to the cache behavior. Optional because S3-origin-with-OAC behaviors do not require an origin request policy.
     path_pattern               = string                 # The pattern (for example, images/*.jpg) that specifies which requests to apply the behavior to.
     realtime_log_config_arn    = optional(string)       # The ARN of the real-time log configuration to use for the cache behavior.
     response_headers_policy_id = optional(string)       # The response headers policy id to attach to the cache behavior.
@@ -235,14 +241,47 @@ variable "ordered_cache_behavior" {
   default = null
 }
 
+variable "origin_access_controls" {
+  description = "(Optional) Map of Origin Access Control configurations to create and manage within the module. The map key is used as the OAC name and can be referenced in the origins map via origin_access_control_name. Mutually exclusive with passing origin_access_control_id directly in origins."
+  type = map(object({
+    description                       = optional(string, "")       # A description of the Origin Access Control.
+    origin_access_control_origin_type = optional(string, "s3")     # The type of origin that this OAC is for. One of s3, mediastore, lambda, or mediapackagev2.
+    signing_behavior                  = optional(string, "always") # Specifies which requests CloudFront signs. One of always, never, or no-override.
+    signing_protocol                  = optional(string, "sigv4")  # The signing protocol of the OAC, which determines how CloudFront signs (authenticates) requests. Only sigv4 is supported.
+  }))
+  default = null
+  validation {
+    condition = var.origin_access_controls == null ? true : alltrue([
+      for k, v in var.origin_access_controls :
+      contains(["s3", "mediastore", "lambda", "mediapackagev2"], v.origin_access_control_origin_type)
+    ])
+    error_message = "Invalid value for origin_access_control_origin_type. Must be one of s3, mediastore, lambda, or mediapackagev2."
+  }
+  validation {
+    condition = var.origin_access_controls == null ? true : alltrue([
+      for k, v in var.origin_access_controls :
+      contains(["always", "never", "no-override"], v.signing_behavior)
+    ])
+    error_message = "Invalid value for signing_behavior. Must be one of always, never, or no-override."
+  }
+  validation {
+    condition = var.origin_access_controls == null ? true : alltrue([
+      for k, v in var.origin_access_controls :
+      v.signing_protocol == "sigv4"
+    ])
+    error_message = "Invalid value for signing_protocol. Must be sigv4."
+  }
+}
+
 variable "origins" {
   description = "(Required) One or more origins for this distribution (multiples allowed). The keys should be the origin ID you'd like to use for the origin."
   type = map(object({
-    connection_attempts      = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.
-    connection_timeout       = optional(number, 10) # The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
-    domain_name              = string               # The DNS domain name of the S3 bucket or the HTTP server where the content is located.
-    origin_access_control_id = optional(string)     # The origin access identity to associate with the origin.
-    origin_path              = optional(string)     # An optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
+    connection_attempts        = optional(number, 3)  # The number of times that CloudFront attempts to connect to the origin; valid values are 1, 2, or 3 attempts. Defaults to 3.
+    connection_timeout         = optional(number, 10) # The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
+    domain_name                = string               # The DNS domain name of the S3 bucket or the HTTP server where the content is located.
+    origin_access_control_id   = optional(string)     # The ID of an existing Origin Access Control to associate with the origin. Mutually exclusive with origin_access_control_name.
+    origin_access_control_name = optional(string)     # The key of an entry in var.origin_access_controls; the module resolves it to the created OAC ID. Mutually exclusive with origin_access_control_id.
+    origin_path                = optional(string)     # An optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
     custom_headers = optional(list(object({
       header_name  = string # The name of the header.
       header_value = string # The value of the header.
@@ -263,6 +302,13 @@ variable "origins" {
       origin_access_identity = string # The CloudFront origin access identity to associate with the origin.
     }))                               # The S3 origin configuration information.
   }))
+  validation {
+    condition = var.origins == null ? true : alltrue([
+      for k, v in var.origins :
+      !(v.origin_access_control_name != null && v.origin_access_control_id != null)
+    ])
+    error_message = "Each origin may set only one of origin_access_control_name or origin_access_control_id, not both."
+  }
 }
 
 variable "price_class" {
@@ -305,6 +351,16 @@ variable "staging" {
   description = "(Optional) Whether the distribution is in a staging environment. Default is false."
   type        = bool
   default     = false
+}
+
+variable "wait_for_certificate_validation" {
+  description = "(Optional) When true, the module creates an aws_acm_certificate_validation resource so the distribution waits for the certificate to reach ISSUED before creation. Requires acm_certificate_arn to be set. The module does not create DNS validation records; the caller must still create those in their own DNS zone. NOTE (this release): the validation resource uses the module's default aws provider, which must be configured for us-east-1 when this is true."
+  type        = bool
+  default     = false
+  validation {
+    condition     = var.wait_for_certificate_validation == false || var.acm_certificate_arn != null
+    error_message = "wait_for_certificate_validation = true requires acm_certificate_arn to be set."
+  }
 }
 
 variable "wait_for_deployment" {

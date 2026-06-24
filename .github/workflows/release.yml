@@ -1,9 +1,17 @@
-name: Release
+name: Release (manual fallback)
 
+# release-please (.github/workflows/release-please.yml) is the single automated
+# publisher: merging its Release PR cuts the vX.Y.Z tag and publishes the
+# GitHub Release. This workflow is kept ONLY as a manual emergency fallback for
+# hand-cut tags (e.g. if release-please is unavailable). It no longer triggers
+# on tag pushes, which guarantees exactly one publisher and no double-publish.
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Existing tag to publish a GitHub Release for (e.g. v8.16.0). The tag must already exist; create it by hand first."
+        required: true
+        type: string
 
 jobs:
   build_release:
@@ -18,8 +26,16 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag_name }}
         run: |
+          # Reject anything that is not a v-prefixed SemVer tag to avoid
+          # publishing a release for a garbage/typo ref supplied by hand.
+          if ! printf '%s' "${TAG_NAME}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::tag_name must match v<MAJOR>.<MINOR>.<PATCH> (e.g. v8.16.0); got: ${TAG_NAME}"
+            exit 1
+          fi
+          # --verify-tag ensures the tag already exists; this workflow does not
+          # create tags, it only publishes a Release for an existing one.
           gh release create "$TAG_NAME" \
             --generate-notes \
             --verify-tag

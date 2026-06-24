@@ -331,6 +331,14 @@ Spec PRs land under [`.github/specs/`](./.github/specs) and are opened **ready-f
 
 Implementation PRs are opened from branches named `feat/issue-<N>-<slug>` or `fix/issue-<N>-<slug>`, include `Fixes #<N>` in the body, and run through the standard CI (`build.yml`, `test.yml`, `scan.yml`) like any other PR. The same review and merge rules apply. Squash-and-merge is preferred.
 
+### Releases and versioning
+
+This repository uses a **single, repo-wide SemVer tag line** (`vMAJOR.MINOR.PATCH`, `v`-prefixed — e.g. `v8.16.0`), which is why you can pin any module with `?ref=vX.Y.Z`. Per-module tags are intentionally not used.
+
+Releases are **review-gated automation** driven by [`release-please`](https://github.com/googleapis/release-please) ([`release-please.yml`](./.github/workflows/release-please.yml)). On every push to `main` it computes the next version from [Conventional Commit](https://www.conventionalcommits.org/) history — `feat:` → MINOR, `fix:` → PATCH, `feat!:`/`fix!:`/`BREAKING CHANGE:` → MAJOR; other types do not release on their own — and opens/maintains a **Release PR** that owns [`CHANGELOG.md`](./CHANGELOG.md). **Merging the Release PR** is the human gate: it cuts the tag and publishes the GitHub Release. release-please is the single automated publisher; [`release.yml`](./.github/workflows/release.yml) is now a manual `workflow_dispatch` fallback for hand-cut/emergency tags.
+
+Milestones remain the forward-looking roadmap and are reconciled to the actually-cut version after each release. The full strategy (bump rules, milestone reconciliation, the one-time "Allow GitHub Actions to create and approve pull requests" repo setting, and the manual fallback) is documented in [`AGENTS.md` § Release & Tag Strategy](./AGENTS.md#release--tag-strategy).
+
 ### Contributing a PR directly (no pipeline)
 
 You are always free to skip the pipeline and submit a PR the traditional way. This is the right path for small fixes, dependency bumps, or any change where writing a spec first would be more friction than value.

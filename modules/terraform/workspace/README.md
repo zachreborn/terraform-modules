@@ -152,6 +152,7 @@ No modules.
 | [tfe_variable.tfc_aws_provider_auth](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_variable.tfc_aws_run_role_arn](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_workspace.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/workspace) | resource |
+| [tfe_workspace_settings.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/workspace_settings) | resource |
 
 ## Inputs
 
@@ -188,7 +189,9 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_execution_mode"></a> [execution\_mode](#output\_execution\_mode) | The effective execution mode of the workspace as managed by the tfe\_workspace\_settings resource. |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_workspace_settings_overwrites"></a> [workspace\_settings\_overwrites](#output\_workspace\_settings\_overwrites) | Read-only attribute indicating whether execution\_mode and agent\_pool are set explicitly on the workspace (true) or inherited from organization/project defaults (false). |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

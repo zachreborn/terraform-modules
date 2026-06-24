@@ -11,7 +11,6 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 ###########################
@@ -29,7 +28,11 @@ locals {
 ###########################
 
 resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr
+  # When ipv4_ipam_pool_id is set, the CIDR is sourced from the IPAM pool and
+  # cidr_block must be null; otherwise fall back to the static vpc_cidr.
+  cidr_block           = var.ipv4_ipam_pool_id == null ? var.vpc_cidr : null
+  ipv4_ipam_pool_id    = var.ipv4_ipam_pool_id
+  ipv4_netmask_length  = var.ipv4_netmask_length
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
   instance_tenancy     = var.instance_tenancy
@@ -52,7 +55,9 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    # Reference the VPC's resolved CIDR so IPAM-sourced VPCs (where the CIDR is
+    # not known until apply) work without requiring a separate vpc_cidr value.
+    cidr_blocks = [aws_vpc.vpc.cidr_block]
   }
 
   ingress {
@@ -60,7 +65,7 @@ resource "aws_security_group" "ssm_vpc_endpoint" {
     from_port   = 443
     to_port     = 443
     protocol    = "udp"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = [aws_vpc.vpc.cidr_block]
   }
 
   egress {
@@ -456,4 +461,45 @@ module "vpc_flow_logs" {
   flow_traffic_type               = var.flow_traffic_type
   flow_vpc_ids                    = [aws_vpc.vpc.id]
   tags                            = var.tags
+}
+
+###########################
+# CloudWatch Internet Monitor
+###########################
+
+resource "aws_internetmonitor_monitor" "this" {
+  count = var.enable_internet_monitor ? 1 : 0
+
+  monitor_name                  = var.internet_monitor_monitor_name
+  resources                     = [aws_vpc.vpc.arn]
+  status                        = var.internet_monitor_status
+  traffic_percentage_to_monitor = var.internet_monitor_traffic_percentage_to_monitor
+  max_city_networks_to_monitor  = var.internet_monitor_max_city_networks_to_monitor
+  tags                          = merge(tomap({ Name = var.name }), var.tags)
+
+  health_events_config {
+    availability_score_threshold = var.internet_monitor_availability_score_threshold
+    performance_score_threshold  = var.internet_monitor_performance_score_threshold
+  }
+
+  # Only wire S3 measurement delivery when the caller supplies a bucket name.
+  dynamic "internet_measurements_log_delivery" {
+    for_each = var.internet_monitor_s3_bucket_name != null ? [1] : []
+    content {
+      s3_config {
+        bucket_name         = var.internet_monitor_s3_bucket_name
+        bucket_prefix       = var.internet_monitor_s3_bucket_prefix
+        log_delivery_status = var.internet_monitor_s3_bucket_status
+      }
+    }
+  }
+
+  lifecycle {
+    # required_version (>= 1.0.0) predates cross-variable validation, so enforce
+    # the "monitor_name required when enabled" contract with a precondition.
+    precondition {
+      condition     = !var.enable_internet_monitor || var.internet_monitor_monitor_name != null
+      error_message = "internet_monitor_monitor_name must be set when enable_internet_monitor is true."
+    }
+  }
 }

@@ -1,0 +1,35 @@
+---
+name: Release Please
+on:
+  push:
+    branches:
+      - main
+
+# Least-privilege default; the job below elevates only what release-please
+# needs to open the Release PR and cut the tag/release.
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the vX.Y.Z tag + GitHub Release
+      pull-requests: write # open/maintain the Release PR
+      issues: write # release-please labels/comments per upstream docs
+
+    steps:
+      # Third-party action pinned by commit SHA per the zizmor supply-chain
+      # policy (same convention as actions/checkout in release.yml and
+      # warpdotdev/oz-agent-action in the Oz pipeline workflows).
+      - name: Run release-please
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # Default GITHUB_TOKEN: this makes release-please the single
+          # publisher. Tags/releases it creates with GITHUB_TOKEN do NOT
+          # trigger the tag-listening release.yml (GitHub suppresses cascading
+          # workflow runs for the default token), so there is no double-publish.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -165,6 +165,12 @@ variable "organizational_unit_ids" {
   default     = null
 }
 
+variable "stack_set_instance_region" {
+  description = "The AWS region in which to create the stack set instances. When null, the provider's configured region is used. This is useful when the StackSet control-plane region differs from the instance deployment region (for example, the StackSet is managed in us-east-1 but instances should be deployed in us-west-2). Maps to the non-deprecated stack_set_instance_region argument introduced in provider v6.0.0 (the successor to the deprecated region argument). Note: this argument is ForceNew — changing it on an existing deployment will destroy and re-create the stack instances."
+  type        = string
+  default     = null
+}
+
 ###########################
 # General Variables
 ###########################
