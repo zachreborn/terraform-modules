@@ -112,10 +112,6 @@ variable "apply_only_at_cron_interval" {
   type        = bool
   description = "(Optional) When true, the association runs only at the cron interval specified by schedule_expression and not on instance start."
   default     = false
-  validation {
-    condition     = can(regex("^(true|false)$", tostring(var.apply_only_at_cron_interval)))
-    error_message = "apply_only_at_cron_interval must be true or false."
-  }
 }
 
 variable "association_name" {
@@ -131,7 +127,7 @@ variable "association_name" {
 variable "compliance_severity" {
   type        = string
   description = "(Optional) Compliance severity reported when instances are non-compliant. Valid values are CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED."
-  default     = "UNSPECIFIED"
+  default     = "MEDIUM"
   validation {
     condition     = contains(["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNSPECIFIED"], var.compliance_severity)
     error_message = "compliance_severity must be one of: CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED."
@@ -283,6 +279,32 @@ variable "cloudwatch_log_retention_days" {
     condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_log_retention_days)
     error_message = "cloudwatch_log_retention_days must be a valid CloudWatch Logs retention period."
   }
+}
+
+variable "cloudwatch_log_group_kms_key_id" {
+  type        = string
+  description = "(Optional) ARN of the KMS key used to encrypt the CloudWatch Logs log group at rest. If null, CloudWatch Logs uses the default AWS-managed encryption."
+  default     = null
+  validation {
+    condition     = var.cloudwatch_log_group_kms_key_id == null ? true : can(regex("^arn:", var.cloudwatch_log_group_kms_key_id))
+    error_message = "cloudwatch_log_group_kms_key_id must be a valid ARN."
+  }
+}
+
+variable "cloudwatch_log_group_class" {
+  type        = string
+  description = "(Optional) Log class of the CloudWatch Logs log group. Valid values are STANDARD and INFREQUENT_ACCESS."
+  default     = "STANDARD"
+  validation {
+    condition     = contains(["STANDARD", "INFREQUENT_ACCESS"], var.cloudwatch_log_group_class)
+    error_message = "cloudwatch_log_group_class must be either STANDARD or INFREQUENT_ACCESS."
+  }
+}
+
+variable "cloudwatch_log_group_skip_destroy" {
+  type        = bool
+  description = "(Optional) When true, the CloudWatch Logs log group is retained on destroy rather than deleted."
+  default     = false
 }
 
 ########################################

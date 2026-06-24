@@ -67,9 +67,9 @@ resource "aws_ssm_document" "this" {
             "function Write-Log { param([string]$Msg); $ts = [System.DateTime]::UtcNow; Write-Output ('[{0}] {1}' -f $ts.ToString('yyyy-MM-ddTHH:mm:ssZ'), $Msg); if (-not $script:_cwlGroup) { return }; try { $e = New-Object Amazon.CloudWatchLogs.Model.InputLogEvent; $e.Message = $Msg; $e.Timestamp = $ts; Write-CWLLogEvent -LogGroupName $script:_cwlGroup -LogStreamName $script:_cwlStream -LogEvent $e } catch {} }",
             "Write-Log 'Starting domain join'",
             "Write-Log 'Configuring DNS server addresses'",
-            "Set-DnsClientServerAddress -InterfaceAlias 'Ethernet*' -ServerAddresses @('{{ DnsServers }}'.Split(','))",
+            "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.HardwareInterface } | Set-DnsClientServerAddress -ServerAddresses @('{{ DnsServers }}'.Split(','))",
             "Write-Log 'DNS configured; checking current domain membership'",
-            "if ((Get-WmiObject Win32_ComputerSystem).Domain -eq '{{ DomainName }}') { Write-Log 'Already domain joined, exiting'; exit 0 }",
+            "if ((Get-CimInstance Win32_ComputerSystem).Domain -eq '{{ DomainName }}') { Write-Log 'Already domain joined, exiting'; exit 0 }",
             "if ('{{ TimeZone }}') { Write-Log ('Setting time zone to {{ TimeZone }}'); Set-TimeZone -Id '{{ TimeZone }}' }",
             "Write-Log 'Retrieving join credentials from Secrets Manager'",
             "$sec  = (Get-SECSecretValue -SecretId '{{ SecretArn }}').SecretString | ConvertFrom-Json",
@@ -132,7 +132,7 @@ resource "aws_ssm_association" "this" {
   }
   schedule_expression              = var.schedule_expression
   sync_compliance                  = var.sync_compliance
-  tags                             = var.tags
+  tags                             = merge(tomap({ Name = coalesce(var.association_name, var.name) }), var.tags)
   wait_for_success_timeout_seconds = var.wait_for_success_timeout_seconds
 
   dynamic "output_location" {
@@ -156,11 +156,16 @@ resource "aws_ssm_association" "this" {
 ###########################
 # CloudWatch Logs
 ###########################
-resource "aws_cloudwatch_log_group" "domain_join" {
-  count             = var.cloudwatch_log_group_name != null ? 1 : 0
+module "domain_join_log_group" {
+  source = "../cloudwatch/log_group"
+  count  = var.cloudwatch_log_group_name != null ? 1 : 0
+
   name              = var.cloudwatch_log_group_name
+  kms_key_id        = var.cloudwatch_log_group_kms_key_id
+  log_group_class   = var.cloudwatch_log_group_class
   retention_in_days = var.cloudwatch_log_retention_days
-  tags              = merge(tomap({ Name = var.cloudwatch_log_group_name }), var.tags)
+  skip_destroy      = var.cloudwatch_log_group_skip_destroy
+  tags              = var.tags
 }
 
 ###########################
@@ -194,6 +199,13 @@ resource "aws_iam_role_policy" "secret_read" {
     )
   })
   role = var.instance_role_name
+
+  lifecycle {
+    precondition {
+      condition     = !(var.name_prefix != null && var.name != "ssm-domain-join")
+      error_message = "Set either name or name_prefix for the IAM inline policies, not both."
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "cloudwatch_logs" {
