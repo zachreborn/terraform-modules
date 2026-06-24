@@ -47,6 +47,8 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#architecture">Architecture</a></li>
     <li><a href="#cross-account-usage">Cross-Account Usage</a></li>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -69,7 +71,7 @@ Tag-targeted domain join using a Secrets Manager secret for credentials.
 
 ```hcl
 module "ad_join" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=v0.0.1"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=vX.Y.Z"
 
   domain_name        = "corp.example.com"
   dns_servers        = ["10.0.0.10", "10.0.0.11"]
@@ -106,7 +108,7 @@ Run the association on a schedule rather than only on instance launch.
 
 ```hcl
 module "ad_join_scheduled" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=v0.0.1"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=vX.Y.Z"
 
   domain_name        = "corp.example.com"
   dns_servers        = ["10.0.0.10", "10.0.0.11"]
@@ -185,7 +187,7 @@ Cross-account access to a Secrets Manager secret encrypted with a customer-manag
 
 ```hcl
 module "ad_join" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=v0.0.1"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ssm_domain_join?ref=vX.Y.Z"
 
   domain_name        = "corp.example.com"
   dns_servers        = ["10.0.0.10", "10.0.0.11"]
@@ -260,6 +262,31 @@ resource "aws_kms_key" "ad_join" {
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- PREREQUISITES -->
+
+## Prerequisites
+
+Before using this module, ensure the following are in place:
+
+- **Secrets Manager secret** — `secret_arn` must point to a secret whose value is JSON with `username` and `password` keys, e.g. `{"username":"CORP\\\\svc-domainjoin","password":"..."}`. These are the credentials used to join the domain.
+- **EC2 IAM role** — `instance_role_name` must be an existing IAM role attached to the target instances (typically the SSM-managed instance role). This module attaches inline policies to it; it does not create the role.
+- **SSM connectivity** — the SSM Agent must be running on the target instances and able to reach SSM/Secrets Manager endpoints (directly or via VPC endpoints).
+- **PowerShell modules on the instance** — the in-script tag lookup uses `Get-EC2Tag` (`AWS.Tools.EC2`) and, when `cloudwatch_log_group_name` is set, in-script logging uses `New-CWLLogGroup` / `Write-CWLLogEvent` (`AWS.Tools.CloudWatchLogs`). These are present on current AWS Windows AMIs but are **not** guaranteed on custom or minimal images. If `AWS.Tools.CloudWatchLogs` is absent the domain join still completes — only the in-script CloudWatch writes are skipped (the failure is caught silently); SSM still captures command output. If `AWS.Tools.EC2` is absent the tag lookup fails and the run exits non-zero.
+- **Cross-account (hub/spoke) only** — the hub-account Secrets Manager resource policy and the KMS key policy granting the spoke instance role access are **caller-managed**. See [Cross-Account Usage](#cross-account-usage).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- NOTES / DESIGN DECISIONS -->
+
+## Notes / Design Decisions
+
+- **`compliance_severity` defaults to `MEDIUM`.** A failed domain join leaves an instance unmanaged by Active Directory, which is a real operational problem, so the default produces a visible State Manager compliance signal out of the box rather than the silent `UNSPECIFIED`. Override to `HIGH`/`CRITICAL` for more aggressive alerting, or `LOW`/`UNSPECIFIED` to quiet it.
+- **IMDSv2 is used for instance metadata.** The script fetches a token via `PUT /latest/api/token` and passes it on subsequent metadata calls to read the instance ID and region. This works on instances configured for IMDSv2-required and remains compatible with IMDSv1-optional.
+- **Computer-name collision handling.** The desired name comes from the EC2 `Name` tag. The script resolves the name in DNS and, if it already exists, increments the trailing number (e.g. `SERVER01` → `SERVER02`), preserving zero-padding width. Windows NetBIOS computer names are limited to 15 characters: a base name longer than 15 characters is truncated, and if no unique name can be formed within the 15-character limit the run exits non-zero rather than joining with a colliding name.
+- **CloudWatch logging is optional and delegated.** When `cloudwatch_log_group_name` is set, the log group is created via the `modules/aws/cloudwatch/log_group` child module (not inline) so encryption-at-rest, log class, retention, and skip-destroy are all configurable and consistent with the rest of the library.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- Run the command above to regenerate the Inputs/Outputs tables after any variable changes. -->
@@ -279,13 +306,14 @@ resource "aws_kms_key" "ad_join" {
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_domain_join_log_group"></a> [domain\_join\_log\_group](#module\_domain\_join\_log\_group) | ../cloudwatch/log_group | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_cloudwatch_log_group.domain_join](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_iam_role_policy.cloudwatch_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.secret_read](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_ssm_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association) | resource |
@@ -297,9 +325,12 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_apply_only_at_cron_interval"></a> [apply\_only\_at\_cron\_interval](#input\_apply\_only\_at\_cron\_interval) | (Optional) When true, the association runs only at the cron interval specified by schedule\_expression and not on instance start. | `bool` | `false` | no |
 | <a name="input_association_name"></a> [association\_name](#input\_association\_name) | (Optional) Descriptive name for the SSM association. If null, AWS assigns a default name. | `string` | `null` | no |
+| <a name="input_cloudwatch_log_group_class"></a> [cloudwatch\_log\_group\_class](#input\_cloudwatch\_log\_group\_class) | (Optional) Log class of the CloudWatch Logs log group. Valid values are STANDARD and INFREQUENT\_ACCESS. | `string` | `"STANDARD"` | no |
+| <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | (Optional) ARN of the KMS key used to encrypt the CloudWatch Logs log group at rest. If null, CloudWatch Logs uses the default AWS-managed encryption. | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#input\_cloudwatch\_log\_group\_name) | (Optional) Name of the CloudWatch Logs log group for domain join output. If null, CloudWatch logging is disabled. | `string` | `null` | no |
+| <a name="input_cloudwatch_log_group_skip_destroy"></a> [cloudwatch\_log\_group\_skip\_destroy](#input\_cloudwatch\_log\_group\_skip\_destroy) | (Optional) When true, the CloudWatch Logs log group is retained on destroy rather than deleted. | `bool` | `false` | no |
 | <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | (Optional) Retention period in days for the CloudWatch Logs log group. Must be a valid CloudWatch retention value. | `number` | `30` | no |
-| <a name="input_compliance_severity"></a> [compliance\_severity](#input\_compliance\_severity) | (Optional) Compliance severity reported when instances are non-compliant. Valid values are CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED. | `string` | `"UNSPECIFIED"` | no |
+| <a name="input_compliance_severity"></a> [compliance\_severity](#input\_compliance\_severity) | (Optional) Compliance severity reported when instances are non-compliant. Valid values are CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED. | `string` | `"MEDIUM"` | no |
 | <a name="input_dns_servers"></a> [dns\_servers](#input\_dns\_servers) | (Required) DC IPs the joined instance should use for DNS resolution. | `list(string)` | n/a | yes |
 | <a name="input_document_version"></a> [document\_version](#input\_document\_version) | (Optional) SSM document version to run. Valid values are $Default, $Latest, or a numeric version string. If null, the default version is used. | `string` | `null` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | (Required) FQDN of the domain to join, e.g. corp.example.com. | `string` | n/a | yes |
@@ -330,6 +361,9 @@ No modules.
 |------|-------------|
 | <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | ARN of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
+| <a name="output_iam_cloudwatch_logs_policy_name"></a> [iam\_cloudwatch\_logs\_policy\_name](#output\_iam\_cloudwatch\_logs\_policy\_name) | Name of the inline IAM policy granting CloudWatch Logs write access, or null when CloudWatch logging is disabled. |
+| <a name="output_iam_secret_read_policy_name"></a> [iam\_secret\_read\_policy\_name](#output\_iam\_secret\_read\_policy\_name) | Name of the inline IAM policy granting Secrets Manager / KMS / EC2 tag read access. |
+| <a name="output_ssm_association_arn"></a> [ssm\_association\_arn](#output\_ssm\_association\_arn) | ARN of the SSM State Manager association. |
 | <a name="output_ssm_association_id"></a> [ssm\_association\_id](#output\_ssm\_association\_id) | ID of the SSM State Manager association. |
 | <a name="output_ssm_document_arn"></a> [ssm\_document\_arn](#output\_ssm\_document\_arn) | ARN of the SSM domain join document. |
 | <a name="output_ssm_document_name"></a> [ssm\_document\_name](#output\_ssm\_document\_name) | Name of the SSM domain join document. |
