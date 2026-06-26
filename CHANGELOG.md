@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.21.0](https://github.com/zachreborn/terraform-modules/compare/v8.20.3...v8.21.0) (2026-06-26)
+
+
+### Features
+
+* **datadog:** add real user monitoring (RUM) modules ([#340](https://github.com/zachreborn/terraform-modules/issues/340)) ([689ea5b](https://github.com/zachreborn/terraform-modules/commit/689ea5b285f0244897318c950805a66267ce4670))
+
 ## [8.20.3](https://github.com/zachreborn/terraform-modules/compare/v8.20.2...v8.20.3) (2026-06-23)
 
 
