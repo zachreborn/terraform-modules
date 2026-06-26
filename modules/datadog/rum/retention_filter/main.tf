@@ -2,7 +2,7 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.1.5"
+  required_version = ">= 1.3.0"
   required_providers {
     datadog = {
       source  = "DataDog/datadog"
@@ -31,4 +31,11 @@ resource "datadog_rum_retention_filters_order" "this" {
 
   application_id       = var.filter_order_application_id
   retention_filter_ids = var.filter_order_ids
+
+  lifecycle {
+    precondition {
+      condition     = var.filter_order_application_id != null && length(var.filter_order_ids) > 0
+      error_message = "filter_order_application_id and filter_order_ids must be provided (non-null and non-empty) when enable_filter_order is true."
+    }
+  }
 }

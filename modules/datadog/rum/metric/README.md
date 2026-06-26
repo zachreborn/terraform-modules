@@ -105,7 +105,7 @@ module "rum_metrics" {
 
 ## Notes / Design Decisions
 
-- **`required_version = ">= 1.1.5"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5 or later.
+- **`required_version = ">= 1.3.0"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5+, but this module uses `optional(type, default)` in variable type constraints, which requires Terraform/OpenTofu 1.3.0 or later.
 - **`name` is immutable**: The `name` field on `datadog_rum_metric` cannot be changed after creation. Renaming a metric requires destroying and recreating it.
 - **`compute.aggregation_type`**: Required when the `compute` block is specified. Use `"distribution"` for percentile metrics (which also unlocks `include_percentiles` and `path`).
 - **`group_by` is a list**: Multiple grouping dimensions can be specified as a list of objects.
@@ -119,7 +119,7 @@ module "rum_metrics" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers

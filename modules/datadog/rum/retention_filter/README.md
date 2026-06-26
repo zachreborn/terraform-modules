@@ -93,7 +93,10 @@ module "rum_retention_filters" {
 
 ### Filters with order management
 
+The filter ordering resource is a singleton per application and requires the IDs of **all** filters — including Datadog's internally created default ones. Split this into two separate module invocations: first create the filters, then reference their IDs when managing the order.
+
 ```hcl
+# Step 1 — create the custom filters
 module "rum_retention_filters" {
   source = "github.com/zachreborn/terraform-modules//modules/datadog/rum/retention_filter"
 
@@ -107,6 +110,13 @@ module "rum_retention_filters" {
       enabled        = true
     }
   }
+}
+
+# Step 2 — manage the evaluation order (separate invocation to avoid a dependency cycle)
+module "rum_filter_order" {
+  source = "github.com/zachreborn/terraform-modules//modules/datadog/rum/retention_filter"
+
+  retention_filters = {} # no new filters in this invocation
 
   enable_filter_order         = true
   filter_order_application_id = "<APPLICATION_ID>"
@@ -120,7 +130,7 @@ module "rum_retention_filters" {
 
 ## Notes / Design Decisions
 
-- **`required_version = ">= 1.1.5"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5 or later.
+- **`required_version = ">= 1.3.0"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5+, but this module uses `optional(type, default)` in variable type constraints, which requires Terraform/OpenTofu 1.3.0 or later.
 - **`datadog_rum_retention_filters_order` is a singleton**: Datadog maintains exactly one ordering resource per RUM application. Only one module instance per application should set `enable_filter_order = true`. Managing it from multiple module instances will cause conflicts.
 - **Default filters**: Datadog automatically creates internal retention filters (with IDs prefixed by `"default"`) for each RUM application. When managing filter order, `filter_order_ids` must include these default filter IDs alongside any custom ones. Use the `datadog_rum_retention_filters` data source to discover the full list of current filter IDs before constructing the order list.
 - **`sample_rate` range**: Must be between 0.1 and 100 (inclusive), supporting one decimal place.
@@ -134,7 +144,7 @@ module "rum_retention_filters" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers

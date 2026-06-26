@@ -92,7 +92,7 @@ output "web_client_token" {
 
 ## Notes / Design Decisions
 
-- **`required_version = ">= 1.1.5"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5 or later.
+- **`required_version = ">= 1.3.0"`**: The Datadog Terraform provider requires Terraform/OpenTofu 1.1.5+, but this module uses `optional(type, default)` in variable type constraints, which requires Terraform/OpenTofu 1.3.0 or later.
 - **`client_token` is sensitive**: The client token is embedded in client-side SDK initialization. All `client_token` values are grouped under the `client_tokens` output which is marked `sensitive = true`. Reference it via `nonsensitive()` only in contexts where exposure is intentional.
 - **`type` defaults to `"browser"`**: Matches the provider default. Override for mobile or cross-platform applications.
 - **`rum_event_processing_state` and `product_analytics_retention_state`**: Both default to `null`, which causes the provider to use its own defaults. Set them explicitly to control event processing and retention behavior.
@@ -105,7 +105,7 @@ output "web_client_token" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
