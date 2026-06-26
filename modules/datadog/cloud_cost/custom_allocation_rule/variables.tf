@@ -61,7 +61,7 @@ variable "enable_rule_order" {
 }
 
 variable "rule_order" {
-  description = "Ordered list of custom allocation rule IDs that determines their evaluation sequence. Used when enable_rule_order is true. Obtain IDs from this module's ids output or from other rule sources."
+  description = "Ordered list of logical rule names (keys of var.allocation_rules) that determines their evaluation sequence. Used when enable_rule_order is true. Names are resolved to rule IDs internally, so callers reference rules by their map key rather than passing IDs back in. Every name listed must exist in var.allocation_rules."
   type        = list(string)
   default     = []
 }

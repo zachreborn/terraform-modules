@@ -100,12 +100,11 @@ module "allocation_rules" {
 
 ### Multiple Rules with Managed Evaluation Order
 
-Because `rule_order` accepts IDs that are only known after the rules are created, rule
-creation and order management must be split into two separate module calls. The first
-call creates the rules; the second references the first call's `ids` output.
+`rule_order` accepts the **logical rule names** (the keys of `allocation_rules`), which the
+module resolves to rule IDs internally. Rule creation and ordering therefore live in a
+single module call — no need to pass IDs back in.
 
 ```hcl
-# Step 1 — create the allocation rules (no order management)
 module "allocation_rules" {
   source = "github.com/zachreborn/terraform-modules//modules/datadog/cloud_cost/custom_allocation_rule"
 
@@ -156,23 +155,16 @@ module "allocation_rules" {
       }
     }
   }
-}
 
-# Step 2 — manage evaluation order by referencing Step 1's IDs
-# A separate module call is required to avoid a self-referential dependency cycle.
-module "allocation_rule_order" {
-  source = "github.com/zachreborn/terraform-modules//modules/datadog/cloud_cost/custom_allocation_rule"
-
-  # No rules managed here — only ordering
-  allocation_rules  = {}
+  # Manage evaluation order by logical name — ec2_costs runs before s3_costs
   enable_rule_order = true
-  rule_order = [
-    # ec2_costs runs before s3_costs
-    module.allocation_rules.ids["ec2_costs"],
-    module.allocation_rules.ids["s3_costs"],
-  ]
+  rule_order        = ["ec2_costs", "s3_costs"]
 }
 ```
+
+> For a single YAML file that drives this module together with budgets, CUR, and CCM
+> configs, see the parent module at
+> `modules/datadog/cloud_cost`.
 
 ### Percentage-Based Allocation
 
@@ -224,10 +216,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - **`required_version >= 1.3.0`**: The two-argument `optional(<type>, <default>)` form used in this module's variables requires Terraform or OpenTofu version 1.3.0 or later. This is a language constraint, not a provider constraint.
 - **`rule_name` is immutable**: Changing `rule_name` on an existing rule forces Terraform to destroy and re-create the resource. Plan carefully before renaming rules in production.
-- **Rule evaluation order**: The `datadog_custom_allocation_rules` ordering resource (enabled via `enable_rule_order = true`) controls the order in which rules are applied. Rules are evaluated in the sequence specified by `rule_order`. Without this resource, Datadog determines order automatically.
+- **Rule evaluation order**: The `datadog_custom_allocation_rules` ordering resource (enabled via `enable_rule_order = true`) controls the order in which rules are applied. `rule_order` is a list of **logical rule names** (keys of `allocation_rules`); the module resolves them to rule IDs internally from the sibling rule resources, so creation and ordering happen in one module call with no dependency cycle. Without this resource, Datadog determines order automatically.
 - **`override_ui_defined_resources`**: When `false` (default), Datadog-UI-created rules that appear at the end of the order are preserved. When `true`, Terraform becomes the sole source of truth and any UI-created rules are deleted.
 - **`based_on_timeseries`**: An empty block that signals the strategy should use a time-series metric as the allocation basis. Set `based_on_timeseries = true` in the strategy object to render it.
-- **`allocation_rules` defaults to `{}`**: The module can be instantiated with no rules (only managing rule order) by providing an empty map and setting `enable_rule_order = true` with external rule IDs in `rule_order`.
+- **`allocation_rules` defaults to `{}`**: The module can be instantiated with no rules by providing an empty map. Every name listed in `rule_order` must exist as a key in `allocation_rules`.
 - **Valid `providernames` values**: `aws`, `azure`, `gcp`.
 - **Valid `strategy.granularity` values**: `daily`, `monthly`.
 - **Valid `strategy.method` values**: `even`, `proportional`, `proportional_timeseries`, `percent`.
@@ -269,7 +261,7 @@ No modules.
 | <a name="input_allocation_rules"></a> [allocation\_rules](#input\_allocation\_rules) | Map of custom allocation rules to create. Each key is a logical name. Note: rule\_name is immutable — changing it forces resource replacement. | <pre>map(object({<br/>    rule_name     = string<br/>    enabled       = bool<br/>    providernames = list(string)<br/>    costs_to_allocate = optional(list(object({<br/>      condition = optional(string, null)<br/>      tag       = optional(string, null)<br/>      value     = optional(string, null)<br/>      values    = optional(list(string), null)<br/>    })), [])<br/>    strategy = optional(object({<br/>      allocated_by_tag_keys        = optional(list(string), null)<br/>      evaluate_grouped_by_tag_keys = optional(list(string), null)<br/>      granularity                  = optional(string, null)<br/>      method                       = optional(string, null)<br/>      allocated_by = optional(list(object({<br/>        percentage = optional(number, null)<br/>        allocated_tags = optional(list(object({<br/>          key   = optional(string, null)<br/>          value = optional(string, null)<br/>        })), [])<br/>      })), [])<br/>      allocated_by_filters = optional(list(object({<br/>        condition = optional(string, null)<br/>        tag       = optional(string, null)<br/>        value     = optional(string, null)<br/>        values    = optional(list(string), null)<br/>      })), [])<br/>      based_on_costs = optional(list(object({<br/>        condition = optional(string, null)<br/>        tag       = optional(string, null)<br/>        value     = optional(string, null)<br/>        values    = optional(list(string), null)<br/>      })), [])<br/>      based_on_timeseries = optional(bool, null)<br/>      evaluate_grouped_by_filters = optional(list(object({<br/>        condition = optional(string, null)<br/>        tag       = optional(string, null)<br/>        value     = optional(string, null)<br/>        values    = optional(list(string), null)<br/>      })), [])<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 | <a name="input_enable_rule_order"></a> [enable\_rule\_order](#input\_enable\_rule\_order) | Whether to manage the evaluation order of custom allocation rules via the datadog\_custom\_allocation\_rules resource. Set to true to enable rule order management. | `bool` | `false` | no |
 | <a name="input_override_ui_defined_resources"></a> [override\_ui\_defined\_resources](#input\_override\_ui\_defined\_resources) | Whether to override rules created via the Datadog UI. When true, UI-defined rules not present in rule\_order will be deleted and Terraform becomes the sole source of truth. When false, UI rules appended to the end of the order are preserved (rules inserted in the middle cause a plan-time error). Default is false. | `bool` | `false` | no |
-| <a name="input_rule_order"></a> [rule\_order](#input\_rule\_order) | Ordered list of custom allocation rule IDs that determines their evaluation sequence. Used when enable\_rule\_order is true. Obtain IDs from this module's ids output or from other rule sources. | `list(string)` | `[]` | no |
+| <a name="input_rule_order"></a> [rule\_order](#input\_rule\_order) | Ordered list of logical rule names (keys of var.allocation\_rules) that determines their evaluation sequence. Used when enable\_rule\_order is true. Names are resolved to rule IDs internally, so callers reference rules by their map key rather than passing IDs back in. Every name listed must exist in var.allocation\_rules. | `list(string)` | `[]` | no |
 
 ## Outputs
 
