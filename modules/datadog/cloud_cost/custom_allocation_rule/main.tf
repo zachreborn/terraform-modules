@@ -99,6 +99,9 @@ resource "datadog_custom_allocation_rule" "this" {
 resource "datadog_custom_allocation_rules" "this" {
   count = var.enable_rule_order ? 1 : 0
 
-  rule_ids                      = var.rule_order
+  # rule_order holds logical rule names (keys of var.allocation_rules); resolve them to
+  # IDs from the sibling resources within this module. Referencing sibling resources
+  # (rather than this module's own output) avoids a self-referential dependency cycle.
+  rule_ids                      = [for name in var.rule_order : datadog_custom_allocation_rule.this[name].id]
   override_ui_defined_resources = var.override_ui_defined_resources
 }
