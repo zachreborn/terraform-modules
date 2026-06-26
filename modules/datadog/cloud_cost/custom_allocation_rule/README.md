@@ -100,7 +100,12 @@ module "allocation_rules" {
 
 ### Multiple Rules with Managed Evaluation Order
 
+Because `rule_order` accepts IDs that are only known after the rules are created, rule
+creation and order management must be split into two separate module calls. The first
+call creates the rules; the second references the first call's `ids` output.
+
 ```hcl
+# Step 1 — create the allocation rules (no order management)
 module "allocation_rules" {
   source = "github.com/zachreborn/terraform-modules//modules/datadog/cloud_cost/custom_allocation_rule"
 
@@ -151,11 +156,18 @@ module "allocation_rules" {
       }
     }
   }
+}
 
-  # Optionally manage evaluation order
+# Step 2 — manage evaluation order by referencing Step 1's IDs
+# A separate module call is required to avoid a self-referential dependency cycle.
+module "allocation_rule_order" {
+  source = "github.com/zachreborn/terraform-modules//modules/datadog/cloud_cost/custom_allocation_rule"
+
+  # No rules managed here — only ordering
+  allocation_rules  = {}
   enable_rule_order = true
   rule_order = [
-    # Reference IDs from this module's outputs — ec2_costs runs before s3_costs
+    # ec2_costs runs before s3_costs
     module.allocation_rules.ids["ec2_costs"],
     module.allocation_rules.ids["s3_costs"],
   ]
@@ -210,7 +222,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog Terraform provider requires Terraform or OpenTofu version 1.1.5 or later. This is a provider-enforced constraint.
+- **`required_version >= 1.3.0`**: The two-argument `optional(<type>, <default>)` form used in this module's variables requires Terraform or OpenTofu version 1.3.0 or later. This is a language constraint, not a provider constraint.
 - **`rule_name` is immutable**: Changing `rule_name` on an existing rule forces Terraform to destroy and re-create the resource. Plan carefully before renaming rules in production.
 - **Rule evaluation order**: The `datadog_custom_allocation_rules` ordering resource (enabled via `enable_rule_order = true`) controls the order in which rules are applied. Rules are evaluated in the sequence specified by `rule_order`. Without this resource, Datadog determines order automatically.
 - **`override_ui_defined_resources`**: When `false` (default), Datadog-UI-created rules that appear at the end of the order are preserved. When `true`, Terraform becomes the sole source of truth and any UI-created rules are deleted.
@@ -230,7 +242,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
