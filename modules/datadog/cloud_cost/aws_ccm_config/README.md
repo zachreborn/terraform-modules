@@ -114,7 +114,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog Terraform provider requires Terraform or OpenTofu version 1.1.5 or later. This is a provider-enforced constraint.
+- **`required_version >= 1.3.0`**: The two-argument `optional(<type>, <default>)` form used in this module's variables requires Terraform or OpenTofu version 1.3.0 or later. This is a language constraint, not a provider constraint.
 - **`aws_account_config_id` is a Datadog UUID**: This is the internal Datadog identifier for the AWS integration, **not** the 12-digit AWS account ID. Obtain it from `datadog_integration_aws_account.this[key].id` or the equivalent output of the `modules/datadog/integrations/aws` module.
 - **`data_export_configs` is a list**: Multiple CUR report exports can be configured per CCM config by providing multiple entries in the `data_export_configs` list.
 - **`for_each` pattern**: One CCM config per AWS account integration is typical, but the map input allows managing multiple integrations in a single module invocation.
@@ -128,7 +128,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.11.0 |
 
 ## Providers

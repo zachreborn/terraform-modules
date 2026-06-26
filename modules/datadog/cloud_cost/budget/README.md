@@ -189,7 +189,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog Terraform provider requires Terraform or OpenTofu version 1.1.5 or later. This is a provider-enforced constraint.
+- **`required_version >= 1.3.0`**: The two-argument `optional(<type>, <default>)` form used in this module's variables requires Terraform or OpenTofu version 1.3.0 or later. This is a language constraint, not a provider constraint.
 - **`budget_lines` vs `entries`**: The `budget_lines` block is the current, preferred schema. The `entries` block is **deprecated** and included for backward compatibility only. Use `budget_lines` for all new budgets.
 - **Hierarchical budgets**: Use `parent_tag_filters` + `child_tag_filters` together (never with `tag_filters`). The order of tags in the `metrics_query` (e.g., `by {team,environment}`) determines the parent/child hierarchy in the Datadog UI.
 - **`tag_filters` mutual exclusivity**: `tag_filters` cannot be used in the same `budget_line` as `parent_tag_filters` or `child_tag_filters`.
@@ -205,7 +205,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers

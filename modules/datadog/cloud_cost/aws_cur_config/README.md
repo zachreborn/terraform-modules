@@ -116,7 +116,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog Terraform provider requires Terraform or OpenTofu version 1.1.5 or later. This is a provider-enforced constraint.
+- **`required_version >= 1.3.0`**: The two-argument `optional(<type>, <default>)` form used in this module's variables requires Terraform or OpenTofu version 1.3.0 or later. This is a language constraint, not a provider constraint.
 - **`account_filters` mutual exclusivity**: Within an `account_filters` block, `excluded_accounts` and `included_accounts` are mutually exclusive. Use `excluded_accounts` when `include_new_accounts = true`, and `included_accounts` when `include_new_accounts = false`. Setting both will result in an API error.
 - **`for_each` pattern**: Multiple CUR configs (e.g., one per AWS Organization payer account) are managed with a single module invocation. The map key is a caller-defined logical name and does not need to match any AWS identifier.
 - **Read-only attributes**: `status`, `status_updated_at`, `created_at`, `updated_at`, and `error_messages` are surfaced as outputs but cannot be set as inputs — they are populated by Datadog after the configuration is created.
@@ -130,7 +130,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
