@@ -153,7 +153,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_aws_cur_configs"></a> [aws\_cur\_configs](#input\_aws\_cur\_configs) | Map of AWS Cost and Usage Report (CUR) configurations to create. Each key is a logical name for the configuration. | <pre>map(object({<br/>    account_id    = string<br/>    bucket_name   = string<br/>    report_name   = string<br/>    report_prefix = string<br/>    bucket_region = optional(string, null)<br/>    account_filters = optional(object({<br/>      include_new_accounts = optional(bool, null)<br/>      excluded_accounts    = optional(list(string), null)<br/>      included_accounts    = optional(list(string), null)<br/>    }), null)<br/>  }))</pre> | n/a | yes |
+| <a name="input_aws_cur_configs"></a> [aws\_cur\_configs](#input\_aws\_cur\_configs) | Map of AWS Cost and Usage Report (CUR) configurations to create. Each key is a logical name for the configuration. | <pre>map(object({<br/>    account_id    = string<br/>    bucket_name   = string<br/>    report_name   = string<br/>    report_prefix = string<br/>    bucket_region = optional(string, null)<br/>    account_filters = optional(object({<br/>      include_new_accounts = optional(bool, null)<br/>      excluded_accounts    = optional(list(string), null)<br/>      included_accounts    = optional(list(string), null)<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

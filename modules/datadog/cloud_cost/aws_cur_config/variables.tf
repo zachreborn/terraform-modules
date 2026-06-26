@@ -16,4 +16,5 @@ variable "aws_cur_configs" {
       included_accounts    = optional(list(string), null)
     }), null)
   }))
+  default = {}
 }

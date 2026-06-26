@@ -16,4 +16,5 @@ variable "ccm_configs" {
       })), null)
     }), null)
   }))
+  default = {}
 }
