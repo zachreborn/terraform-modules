@@ -25,12 +25,9 @@ resource "datadog_monitor_notification_rule" "this" {
   name       = each.value.name
   recipients = each.value.recipients
 
-  dynamic "filter" {
-    for_each = each.value.filter != null ? [each.value.filter] : []
-    content {
-      scope = filter.value.scope
-      tags  = filter.value.tags
-    }
+  filter {
+    scope = each.value.filter.scope
+    tags  = each.value.filter.tags
   }
 
   dynamic "conditional_recipients" {
