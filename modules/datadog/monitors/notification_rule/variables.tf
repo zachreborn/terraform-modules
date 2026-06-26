@@ -13,19 +13,19 @@ variable "notification_rules" {
     ###########################
     # Optional Fields
     ###########################
-    # recipients and conditional_recipients are mutually exclusive.
+    # Exactly one of recipients or conditional_recipients must be set.
     # Use recipients for simple routing; use conditional_recipients for conditional routing.
     recipients = optional(set(string), null)
 
     ###########################
-    # filter Block
+    # filter Block (Required)
     ###########################
     # Specifies which monitors this rule applies to.
-    # scope and tags are mutually exclusive within the filter block.
-    filter = optional(object({
+    # Exactly one of scope or tags must be set within the filter block.
+    filter = object({
       scope = optional(string, null)
       tags  = optional(set(string), null)
-    }), null)
+    })
 
     ###########################
     # conditional_recipients Block
@@ -43,8 +43,16 @@ variable "notification_rules" {
   validation {
     condition = alltrue([
       for k, v in var.notification_rules :
-      !(v.recipients != null && v.conditional_recipients != null)
+      (v.recipients != null) != (v.conditional_recipients != null)
     ])
-    error_message = "recipients and conditional_recipients are mutually exclusive. Set only one per notification rule."
+    error_message = "Exactly one of recipients or conditional_recipients must be set per notification rule."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.notification_rules :
+      (v.filter.scope != null) != (v.filter.tags != null)
+    ])
+    error_message = "Exactly one of filter.scope or filter.tags must be set per notification rule."
   }
 }
