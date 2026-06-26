@@ -151,7 +151,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_ccm_configs"></a> [ccm\_configs](#input\_ccm\_configs) | Map of Cloud Cost Management (CCM) configurations to create. Each key is a logical name. The value's aws\_account\_config\_id is the Datadog-internal UUID from the AWS integration resource (not the AWS account ID). | <pre>map(object({<br/>    aws_account_config_id = string<br/>    ccm_config = optional(object({<br/>      data_export_configs = optional(list(object({<br/>        bucket_name   = optional(string, null)<br/>        bucket_region = optional(string, null)<br/>        report_name   = optional(string, null)<br/>        report_prefix = optional(string, null)<br/>        report_type   = optional(string, null)<br/>      })), null)<br/>    }), null)<br/>  }))</pre> | n/a | yes |
+| <a name="input_ccm_configs"></a> [ccm\_configs](#input\_ccm\_configs) | Map of Cloud Cost Management (CCM) configurations to create. Each key is a logical name. The value's aws\_account\_config\_id is the Datadog-internal UUID from the AWS integration resource (not the AWS account ID). | <pre>map(object({<br/>    aws_account_config_id = string<br/>    ccm_config = optional(object({<br/>      data_export_configs = optional(list(object({<br/>        bucket_name   = optional(string, null)<br/>        bucket_region = optional(string, null)<br/>        report_name   = optional(string, null)<br/>        report_prefix = optional(string, null)<br/>        report_type   = optional(string, null)<br/>      })), null)<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

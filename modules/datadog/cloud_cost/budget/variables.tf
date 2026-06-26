@@ -33,4 +33,5 @@ variable "budgets" {
       })), [])
     })), [])
   }))
+  default = {}
 }
