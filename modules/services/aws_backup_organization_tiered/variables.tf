@@ -3,6 +3,22 @@
 ###########################
 
 variable "backup_tiers" {
+  type = map(object({
+    description              = string
+    copy_to_dr               = bool
+    vault_min_retention_days = optional(number, 30)
+    rules = list(object({
+      name                      = string
+      schedule                  = string
+      continuous                = optional(bool, false)
+      central_copy              = optional(bool, true)
+      start_window_minutes      = optional(number, 60)
+      completion_window_minutes = optional(number, 1440)
+      local_delete_after_days   = number
+      central_delete_after_days = number
+      central_cold_after_days   = optional(number, null)
+    }))
+  }))
   description = <<-EOT
     (Required) The single source of truth for the tiered backup model. A map keyed by tier
     identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each
@@ -24,22 +40,6 @@ variable "backup_tiers" {
       central_cold_after_days   - Glacier-class transition for the central copy (null = none). AWS
                                   requires central_delete_after_days >= central_cold_after_days + 90.
   EOT
-  type = map(object({
-    description              = string
-    copy_to_dr               = bool
-    vault_min_retention_days = optional(number, 30)
-    rules = list(object({
-      name                      = string
-      schedule                  = string
-      continuous                = optional(bool, false)
-      central_copy              = optional(bool, true)
-      start_window_minutes      = optional(number, 60)
-      completion_window_minutes = optional(number, 1440)
-      local_delete_after_days   = number
-      central_delete_after_days = number
-      central_cold_after_days   = optional(number, null)
-    }))
-  }))
 
   validation {
     condition = alltrue(flatten([
@@ -78,12 +78,20 @@ variable "prod_region" {
   type        = string
   description = "(Optional) The primary region in which the BACKUP_POLICY plans run in member accounts and in which the always-on central vaults are created."
   default     = "us-west-2"
+  validation {
+    condition     = can(regex("^[a-z]{2}-[a-z]+-[0-9]$", var.prod_region))
+    error_message = "prod_region must be a valid AWS region (e.g. us-west-2)."
+  }
 }
 
 variable "dr_region" {
   type        = string
   description = "(Optional) The disaster-recovery region. Central vaults are created here for tiers with copy_to_dr = true, and rules in those tiers gain a second cross-region copy_action targeting this region."
   default     = "us-east-2"
+  validation {
+    condition     = can(regex("^[a-z]{2}-[a-z]+-[0-9]$", var.dr_region))
+    error_message = "dr_region must be a valid AWS region (e.g. us-east-2)."
+  }
 }
 
 variable "policy_regions" {
@@ -190,8 +198,5 @@ variable "audit_report_s3_bucket_name" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) A map of tags to assign to all resources created by this module."
-  default = {
-    terraform = "true"
-    service   = "backups"
-  }
+  default     = {}
 }

@@ -136,6 +136,8 @@ module "tiered_backup" {
 }
 ```
 
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
 ## Notes & Design Decisions
 
 - **Single source of truth.** All cadence/retention/copy behavior lives in `backup_tiers`. Add a
@@ -223,7 +225,7 @@ module "tiered_backup" {
 | <a name="input_prod_region"></a> [prod\_region](#input\_prod\_region) | (Optional) The primary region in which the BACKUP\_POLICY plans run in member accounts and in which the always-on central vaults are created. | `string` | `"us-west-2"` | no |
 | <a name="input_staging_vault_name"></a> [staging\_vault\_name](#input\_staging\_vault\_name) | (Optional) Name of the tier-agnostic local staging vault that must pre-exist in every member account (created by the aws\_backup\_member module). Recovery points land here first, then copy\_actions ship them to the central vault(s). | `string` | `"backup-staging"` | no |
 | <a name="input_tag_key"></a> [tag\_key](#input\_tag\_key) | (Optional) The resource tag key that steers a resource into a tier. Its value must equal one of the backup\_tiers keys. | `string` | `"backup-tier"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | <pre>{<br/>  "service": "backups",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
 | <a name="input_target_ou_ids"></a> [target\_ou\_ids](#input\_target\_ou\_ids) | (Required) Organizational Unit IDs to attach the BACKUP\_POLICY to. Attach to workload OUs, never the org root, so the management account is excluded. New accounts placed in these OUs inherit the policy automatically. | `list(string)` | n/a | yes |
 
 ## Outputs
@@ -259,6 +261,15 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
 Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

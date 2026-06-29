@@ -207,8 +207,8 @@ resource "aws_backup_vault" "central_prod" {
   for_each = var.backup_tiers
   provider = aws.prod_region
 
-  name        = local.central_vault_names[each.key]
   kms_key_arn = module.central_kms_prod[each.key].arn
+  name        = local.central_vault_names[each.key]
   tags        = merge(tomap({ Name = local.central_vault_names[each.key] }), var.tags)
 }
 
@@ -236,8 +236,8 @@ resource "aws_backup_vault" "central_dr" {
   for_each = local.dr_tiers
   provider = aws.dr_region
 
-  name        = local.central_vault_names[each.key]
   kms_key_arn = module.central_kms_dr[each.key].arn
+  name        = local.central_vault_names[each.key]
   tags        = merge(tomap({ Name = local.central_vault_names[each.key] }), var.tags)
 }
 
@@ -267,10 +267,10 @@ resource "aws_backup_vault_lock_configuration" "central_dr" {
 resource "aws_organizations_policy" "tiered_backup" {
   provider = aws.prod_region
 
-  name        = var.policy_name
-  description = "Sunward tag-based tiered backup policy. Tier dimensions derived from the backup_tiers map."
-  type        = "BACKUP_POLICY"
   content     = jsonencode(local.backup_policy)
+  description = "Sunward tag-based tiered backup policy. Tier dimensions derived from the backup_tiers map."
+  name        = var.policy_name
+  type        = "BACKUP_POLICY"
   tags        = var.tags
 }
 
