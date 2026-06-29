@@ -66,9 +66,9 @@ locals {
 # the org BACKUP_POLICY then ship them cross-account to the central vaults. Disposable: no lock,
 # short retention (governed by the policy's local_delete_after_days).
 resource "aws_backup_vault" "staging" {
-  name          = var.staging_vault_name
-  kms_key_arn   = var.staging_kms_key_arn
   force_destroy = var.staging_vault_force_destroy
+  kms_key_arn   = var.staging_kms_key_arn
+  name          = var.staging_vault_name
   tags          = merge(tomap({ Name = var.staging_vault_name }), var.tags)
 }
 

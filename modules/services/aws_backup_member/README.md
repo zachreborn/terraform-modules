@@ -98,6 +98,8 @@ module "backup_member" {
 }
 ```
 
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
 ## Notes & Design Decisions
 
 - **Staging uses the AWS-managed key by default.** `staging_kms_key_arn` defaults to null
@@ -152,7 +154,7 @@ module "backup_member" {
 | <a name="input_staging_kms_key_arn"></a> [staging\_kms\_key\_arn](#input\_staging\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup) — acceptable because staging is short-lived and the durable, immutable copy lives in the CMK-encrypted central vault. | `string` | `null` | no |
 | <a name="input_staging_vault_force_destroy"></a> [staging\_vault\_force\_destroy](#input\_staging\_vault\_force\_destroy) | (Optional) Allow Terraform to delete the staging vault even if it contains recovery points. Staging is disposable, but this defaults to false to avoid accidental destruction of in-flight recovery points. | `bool` | `false` | no |
 | <a name="input_staging_vault_name"></a> [staging\_vault\_name](#input\_staging\_vault\_name) | (Optional) Name of the local, tier-agnostic staging vault. AWS Backup always writes recovery points locally first; this vault must match the staging\_vault\_name configured in the org BACKUP\_POLICY. It is disposable (short retention, no lock). | `string` | `"backup-staging"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | <pre>{<br/>  "service": "backups",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
 
 ## Outputs
 
@@ -179,6 +181,15 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
 
 Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://zacharyhill.co)
+- [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

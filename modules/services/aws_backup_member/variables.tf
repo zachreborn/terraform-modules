@@ -73,8 +73,5 @@ variable "managed_policy_arns" {
 variable "tags" {
   type        = map(string)
   description = "(Optional) A map of tags to assign to all resources created by this module."
-  default = {
-    terraform = "true"
-    service   = "backups"
-  }
+  default     = {}
 }
