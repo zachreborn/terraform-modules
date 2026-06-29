@@ -104,4 +104,11 @@ resource "datadog_custom_allocation_rules" "this" {
   # (rather than this module's own output) avoids a self-referential dependency cycle.
   rule_ids                      = [for name in var.rule_order : datadog_custom_allocation_rule.this[name].id]
   override_ui_defined_resources = var.override_ui_defined_resources
+
+  lifecycle {
+    precondition {
+      condition     = length(var.rule_order) > 0
+      error_message = "rule_order must be a non-empty list of rule names when enable_rule_order is true. Submitting an empty order (especially with override_ui_defined_resources = true) would make Terraform the source of truth for an empty rule ordering."
+    }
+  }
 }
