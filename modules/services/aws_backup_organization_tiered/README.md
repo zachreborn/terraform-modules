@@ -177,8 +177,8 @@ module "tiered_backup" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | 6.52.0 |
-| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | 6.52.0 |
+| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 6.0.0 |
+| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 6.0.0 |
 
 ## Modules
 
