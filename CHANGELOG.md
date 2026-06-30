@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.23.0](https://github.com/zachreborn/terraform-modules/compare/v8.22.0...v8.23.0) (2026-06-30)
+
+
+### Features
+
+* **ssm_domain_join:** add module for automated AD domain join via SSM ([#325](https://github.com/zachreborn/terraform-modules/issues/325)) ([adbd56c](https://github.com/zachreborn/terraform-modules/commit/adbd56c1b9483f06c826a03d246305ed75d829b8))
+
 ## [8.22.0](https://github.com/zachreborn/terraform-modules/compare/v8.21.0...v8.22.0) (2026-06-30)
 
 
