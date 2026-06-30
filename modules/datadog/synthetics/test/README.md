@@ -248,7 +248,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **`monitor_id` output**: Each Synthetics test automatically creates a Datadog monitor. The `monitor_ids` output exposes these IDs so you can reference them (e.g., to create composite monitors).
 - **Global variable deprecation**: Direct use of `{{ GLOBAL_VAR }}` in test URLs is deprecated as of provider v3.1.0. Use `config_variable` blocks with `type = "global"` and reference the variable by its local name instead.
 - **`device_ids`**: Only applicable to browser tests. Valid values include `laptop_large`, `tablet`, `mobile_small`, `chrome.laptop_large`, `firefox.laptop_large`, etc.
-- **required_version >= 1.0.0**: Follows the repo-wide convention. All modules require OpenTofu >= 1.6.0 or Terraform >= 1.0.0 — the `>= 1.0.0` constraint satisfies both, since OpenTofu 1.6.x >= 1.0.0.
+- **required_version >= 1.3.0**: The two-argument `optional(type, default)` syntax used in `variables.tf` requires Terraform >= 1.3.0 or OpenTofu >= 1.6.0 (since OpenTofu 1.6.x >= 1.3.0). This matches the version floor used by the other Datadog modules in this library (`rum`, `monitors`, `cloud_cost`).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -259,7 +259,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers

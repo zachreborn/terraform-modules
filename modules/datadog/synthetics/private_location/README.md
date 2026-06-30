@@ -116,7 +116,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Sensitive `configs` output**: The `configs` output contains installation JSON blobs that include credentials. This output is marked `sensitive = true`. Ensure your Terraform state is encrypted when using this module.
 - **`api_key` field**: The optional `api_key` field allows specifying an existing Datadog API key for generating the private location configuration. If omitted, Datadog generates an API key automatically. Because this field can contain a sensitive API key, pass it from a `sensitive` variable and ensure state encryption is enabled.
 - **`restricted_roles` deprecated**: The `metadata.restricted_roles` field is deprecated by the Datadog API. Use a `datadog_restriction_policy` resource referencing the `restriction_policy_resource_ids` output instead.
-- **required_version >= 1.0.0**: Follows the repo-wide convention. All modules require OpenTofu >= 1.6.0 or Terraform >= 1.0.0 — the `>= 1.0.0` constraint satisfies both, since OpenTofu 1.6.x >= 1.0.0.
+- **required_version >= 1.3.0**: The two-argument `optional(type, default)` syntax used in `variables.tf` requires Terraform >= 1.3.0 or OpenTofu >= 1.6.0 (since OpenTofu 1.6.x >= 1.3.0). This matches the version floor used by the other Datadog modules in this library (`rum`, `monitors`, `cloud_cost`).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -127,7 +127,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers

@@ -76,7 +76,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - **Singleton resource**: There is exactly **one** concurrency cap per Datadog organization. Only a single instance of this module should be used per Datadog org. Creating multiple instances will cause API conflicts.
-- **required_version >= 1.0.0**: Follows the repo-wide convention. All modules require OpenTofu >= 1.6.0 or Terraform >= 1.0.0 — the `>= 1.0.0` constraint satisfies both, since OpenTofu 1.6.x >= 1.0.0.
+- **required_version >= 1.3.0**: The two-argument `optional(type, default)` syntax used in `variables.tf` requires Terraform >= 1.3.0 or OpenTofu >= 1.6.0 (since OpenTofu 1.6.x >= 1.3.0). This matches the version floor used by the other Datadog modules in this library (`rum`, `monitors`, `cloud_cost`).
 - **Import**: An existing concurrency cap can be imported with `terraform import datadog_synthetics_concurrency_cap.this <name>` where `<name>` is any string you choose (Datadog does not store the resource name server-side).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -88,7 +88,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
