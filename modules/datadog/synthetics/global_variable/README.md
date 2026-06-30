@@ -161,7 +161,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **`restricted_roles` deprecated**: This field is deprecated by the Datadog API. Use a `datadog_restriction_policy` resource instead.
 - **Name format**: Global variable names must be all uppercase with underscores (e.g., `MY_VARIABLE`). Datadog enforces this constraint.
 - **`is_totp` / `is_fido`**: Setting either to `true` automatically sets `secure = true` at the API level.
-- **required_version >= 1.1.5**: The Datadog Terraform provider requires Terraform (or OpenTofu) >= 1.1.5. This module enforces that constraint via `required_version`.
+- **required_version >= 1.0.0**: Follows the repo-wide convention. All modules require OpenTofu >= 1.6.0 or Terraform >= 1.0.0 — the `>= 1.0.0` constraint satisfies both, since OpenTofu 1.6.x >= 1.0.0.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -172,7 +172,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
