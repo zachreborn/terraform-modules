@@ -84,7 +84,7 @@ module "us" {
 
 ### IP Example
 
-This example creates a named location called "HQ" which includes multiple IP addresses. This object can be used in condtional access rules.
+This example creates a named location called "HQ" which includes multiple IP addresses. This object can be used in conditional access rules.
 
 ```
 module "hq" {

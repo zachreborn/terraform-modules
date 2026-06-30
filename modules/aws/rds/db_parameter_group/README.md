@@ -28,7 +28,7 @@
 
 <h3 align="center">RDS DB Parameter Group</h3>
   <p align="center">
-    Deploys a DB paramter group in RDS
+    Deploys a DB parameter group in RDS
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />

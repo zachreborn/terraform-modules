@@ -28,7 +28,7 @@
 
 <h3 align="center">SIEM Module</h3>
   <p align="center">
-    This module sets up all of the necesarry components for the SIEM security platform.
+    This module sets up all of the necessary components for the SIEM security platform.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
