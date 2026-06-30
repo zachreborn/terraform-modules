@@ -80,3 +80,10 @@ No modules.
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | List of IDs of VPC subnets of instances |
 | <a name="output_vpc_security_group_ids"></a> [vpc\_security\_group\_ids](#output\_vpc\_security\_group\_ids) | List of associated security groups of instances, if running in non-default VPC |
 <!-- END_TF_DOCS -->
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasarus)
+- [Brad Engberg](https://github.com/bradms98)

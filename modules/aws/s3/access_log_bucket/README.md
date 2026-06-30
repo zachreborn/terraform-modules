@@ -136,3 +136,11 @@ module "my_bucket" {
 | <a name="output_bucket_id"></a> [bucket\_id](#output\_bucket\_id) | Name (ID) of the S3 access log bucket |
 | <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | Region of the S3 access log bucket |
 <!-- END_TF_DOCS -->
+
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasarus)
+- [Brad Engberg](https://github.com/bradms98)

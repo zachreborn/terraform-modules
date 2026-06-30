@@ -191,3 +191,10 @@ No modules.
 | <a name="output_vault_deployment_function_arn"></a> [vault\_deployment\_function\_arn](#output\_vault\_deployment\_function\_arn) | ARN of the Lambda function used for vault deployment |
 | <a name="output_vault_deployment_function_name"></a> [vault\_deployment\_function\_name](#output\_vault\_deployment\_function\_name) | Name of the Lambda function used for vault deployment |
 <!-- END_TF_DOCS -->
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasarus)
+- [Brad Engberg](https://github.com/bradms98)

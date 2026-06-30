@@ -248,7 +248,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* [Zachary Hill](https://zacharyhill.co)
+* [Zachary Hill](https://github.com/zachreborn)
 * [Jake Jones](https://github.com/jakeasarus)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

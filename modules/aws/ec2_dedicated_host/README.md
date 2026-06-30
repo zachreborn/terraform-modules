@@ -95,3 +95,10 @@ No modules.
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Dedicated Host. |
 | <a name="output_instance_type"></a> [instance\_type](#output\_instance\_type) | The instance type supported by the Dedicated Host. |
 <!-- END_TF_DOCS -->
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasarus)
+- [Brad Engberg](https://github.com/bradms98)

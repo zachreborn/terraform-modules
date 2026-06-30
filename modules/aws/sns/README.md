@@ -135,3 +135,11 @@ No modules.
 | <a name="output_topic_name"></a> [topic\_name](#output\_topic\_name) | The name of the SNS topic. |
 | <a name="output_topic_owner"></a> [topic\_owner](#output\_topic\_owner) | The AWS account ID of the SNS topic owner. |
 <!-- END_TF_DOCS -->
+
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasarus)
+- [Brad Engberg](https://github.com/bradms98)
