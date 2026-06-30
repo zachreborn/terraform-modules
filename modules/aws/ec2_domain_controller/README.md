@@ -35,7 +35,7 @@
 
 <h3 align="center">[Deprecated] - Application Load Balancer Module</h3>
   <p align="center">
-    This module has been deprecated in favor of using a [modules/aws/ec2_instance](/modules/aws/ec2_instance/) module and [modules/aws/dhcp_options_set](/modules/aws/dhcp_options_set/). This new strategy allows fore more flexability with dhcp options.  
+    This module has been deprecated in favor of using a [modules/aws/ec2_instance](/modules/aws/ec2_instance/) module and [modules/aws/dhcp_options_set](/modules/aws/dhcp_options_set/). This new strategy allows fore more flexibility with dhcp options.  
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -69,7 +69,7 @@
 
 ## Migration
 
-The `dhcp_options_set` module can now be utilized to create a DHCP Options Set for a VPC. This allows for the DHCP optins to be managed separately from the VPC itself, providing more flexibility and control over the DHCP options.
+The `dhcp_options_set` module can now be utilized to create a DHCP Options Set for a VPC. This allows for the DHCP options to be managed separately from the VPC itself, providing more flexibility and control over the DHCP options.
 
 Move the state of any modules utilizing `ec2_domain_controllers` to the `ec2_instance` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.
 Then move the 'dhcp_options_set' to the `dhcp_options_set` module using a `moved` block. See the following hashicorp [refactoring](https://developer.hashicorp.com/terraform/language/modules/develop/refactoring) documentation for information on how to perform this.

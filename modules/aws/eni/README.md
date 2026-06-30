@@ -109,7 +109,7 @@ No modules.
 | <a name="input_instance_id"></a> [instance\_id](#input\_instance\_id) | (Required) ID of the instance to attach to. | `string` | n/a | yes |
 | <a name="input_private_ip_list_enabled"></a> [private\_ip\_list\_enabled](#input\_private\_ip\_list\_enabled) | (Optional) Whether private\_ip\_list is allowed and controls the IPs to assign to the ENI and private\_ips and private\_ips\_count become read-only. Default false. | `string` | `"false"` | no |
 | <a name="input_private_ips"></a> [private\_ips](#input\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(any)` | `[]` | no |
-| <a name="input_private_ips_count"></a> [private\_ips\_count](#input\_private\_ips\_count) | (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private\_ips\_count, as a primary private IP will be assiged to an ENI by default. | `number` | `1` | no |
+| <a name="input_private_ips_count"></a> [private\_ips\_count](#input\_private\_ips\_count) | (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private\_ips\_count, as a primary private IP will be assigned to an ENI by default. | `number` | `1` | no |
 | <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | (Required) List of security group IDs to assign to the ENI. | `list(any)` | n/a | yes |
 | <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | (Optional) Whether to enable source destination checking for the ENI. Default true. | `bool` | `true` | no |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | (Required) Subnet ID to create the ENI in. | `string` | n/a | yes |
