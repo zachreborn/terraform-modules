@@ -142,5 +142,5 @@ module "my_bucket" {
 ## Acknowledgments
 
 - [Zachary Hill](https://github.com/zachreborn)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Jake Jones](https://github.com/jakeasaurus)
 - [Brad Engberg](https://github.com/bradms98)
