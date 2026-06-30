@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  # Manual trigger — re-run when release-please fails to parse a commit
+  # (e.g. due to nested parentheses in a squash-merge commit body).
+  workflow_dispatch: {}
 
 # Least-privilege default; the job below elevates only what release-please
 # needs to open the Release PR and cut the tag/release.
