@@ -1,0 +1,108 @@
+# Example configuration for the modules/datadog/cloud_cost parent module.
+# Consume it from your root module with:
+#
+#   module "cloud_cost" {
+#     source = "github.com/zachreborn/terraform-modules//modules/datadog/cloud_cost"
+#     config = yamldecode(file("${path.module}/cloud_cost.yaml"))
+#   }
+#
+# Every section is optional — include only the resources you need.
+
+###########################
+# AWS CUR configurations
+###########################
+aws_cur_configs:
+  primary:
+    account_id: "123456789012"
+    bucket_name: "my-cur-bucket"
+    bucket_region: "us-east-1"
+    report_name: "my-cur-report"
+    report_prefix: "cur-reports/"
+    account_filters:
+      include_new_accounts: true
+      excluded_accounts:
+        - "111111111111"
+
+###########################
+# Cloud Cost Management configs
+###########################
+# aws_account_config_id is the Datadog-internal UUID from the AWS integration,
+# NOT the 12-digit AWS account ID.
+ccm_configs:
+  production:
+    aws_account_config_id: "00000000-0000-0000-0000-000000000000"
+    ccm_config:
+      data_export_configs:
+        - report_name: "cost-and-usage-report"
+          report_prefix: "reports"
+          report_type: "CUR2.0"
+          bucket_name: "my-billing-bucket"
+          bucket_region: "us-east-1"
+
+###########################
+# Cost budgets
+###########################
+budgets:
+  env_breakdown:
+    name: "Multi-Environment AWS Budget"
+    metrics_query: "sum:aws.cost.amortized{*} by {environment}"
+    start_month: 202601
+    end_month: 202603
+    budget_lines:
+      - amounts:
+          "202601": 8000
+          "202602": 8000
+          "202603": 8000
+        tag_filters:
+          - tag_key: "environment"
+            tag_value: "production"
+      - amounts:
+          "202601": 2000
+          "202602": 2000
+          "202603": 2000
+        tag_filters:
+          - tag_key: "environment"
+            tag_value: "staging"
+
+###########################
+# Custom allocation rules + evaluation order
+###########################
+allocation_rules:
+  ec2_costs:
+    rule_name: "allocate-ec2-costs"
+    enabled: true
+    providernames:
+      - "aws"
+    costs_to_allocate:
+      - condition: "is"
+        tag: "aws_product"
+        value: "AmazonEC2"
+    strategy:
+      allocated_by_tag_keys:
+        - "team"
+      based_on_costs:
+        - condition: "is"
+          tag: "aws_product"
+          value: "AmazonEC2"
+      method: "proportional"
+      granularity: "daily"
+  s3_costs:
+    rule_name: "allocate-s3-costs"
+    enabled: true
+    providernames:
+      - "aws"
+    costs_to_allocate:
+      - condition: "is"
+        tag: "aws_product"
+        value: "AmazonS3"
+    strategy:
+      allocated_by_tag_keys:
+        - "team"
+      method: "even"
+
+# Manage evaluation order by logical rule name (resolved to IDs internally).
+enable_rule_order: true
+rule_order:
+  - ec2_costs
+  - s3_costs
+override_ui_defined_resources: false
