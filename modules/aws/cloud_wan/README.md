@@ -261,6 +261,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 * [Zachary Hill](https://github.com/zachreborn)
 * [Jake Jones](https://github.com/jakeasarus)
+* [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
