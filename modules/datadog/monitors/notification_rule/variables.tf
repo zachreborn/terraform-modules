@@ -39,6 +39,7 @@ variable "notification_rules" {
       })), null)
     }), null)
   }))
+  default = {}
 
   validation {
     condition = alltrue([

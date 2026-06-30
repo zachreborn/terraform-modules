@@ -158,6 +158,7 @@ variable "monitors" {
       })), null)
     }), null)
   }))
+  default = {}
 
   validation {
     condition = alltrue([

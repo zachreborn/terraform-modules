@@ -114,7 +114,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog provider requires Terraform/OpenTofu 1.1.5+ to support certain provider features. This is stricter than the default `>= 1.0.0` used in AWS modules.
+- **`required_version >= 1.3.0`**: This module uses the two-argument form of `optional()` (e.g. `optional(object({...}), null)`) for object-attribute defaults, which was introduced in Terraform 1.3.0 / OpenTofu 1.6.0. This is stricter than the default `>= 1.0.0` used in AWS modules and matches the other Datadog modules in this library.
 - **Only `tag` policy type**: As of the current Datadog provider version, `tag` is the only supported `policy_type`. A validation block enforces this, and the `tag_policy` block must be set whenever `policy_type = "tag"`.
 - **Enforcement scope**: Monitor config policies are org-wide. Each policy applies to all monitors in the Datadog organization. Creating multiple policies for the same tag key is allowed but may produce unexpected behavior — use one policy per tag key.
 
@@ -127,7 +127,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
@@ -150,7 +150,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_config_policies"></a> [config\_policies](#input\_config\_policies) | Map of Datadog monitor config policy configurations keyed by logical name. Each entry maps to one datadog\_monitor\_config\_policy resource. | <pre>map(object({<br/>    ###########################<br/>    # Required Fields<br/>    ###########################<br/>    policy_type = string<br/><br/>    ###########################<br/>    # tag_policy Block<br/>    ###########################<br/>    # Required when policy_type is "tag". Defines a tag enforcement policy for monitors.<br/>    tag_policy = optional(object({<br/>      tag_key          = string<br/>      tag_key_required = bool<br/>      valid_tag_values = list(string)<br/>    }), null)<br/>  }))</pre> | n/a | yes |
+| <a name="input_config_policies"></a> [config\_policies](#input\_config\_policies) | Map of Datadog monitor config policy configurations keyed by logical name. Each entry maps to one datadog\_monitor\_config\_policy resource. | <pre>map(object({<br/>    ###########################<br/>    # Required Fields<br/>    ###########################<br/>    policy_type = string<br/><br/>    ###########################<br/>    # tag_policy Block<br/>    ###########################<br/>    # Required when policy_type is "tag". Defines a tag enforcement policy for monitors.<br/>    tag_policy = optional(object({<br/>      tag_key          = string<br/>      tag_key_required = bool<br/>      valid_tag_values = list(string)<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

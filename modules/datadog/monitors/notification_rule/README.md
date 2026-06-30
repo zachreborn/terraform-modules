@@ -145,7 +145,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **`required_version >= 1.1.5`**: The Datadog provider requires Terraform/OpenTofu 1.1.5+ to support certain provider features. This is stricter than the default `>= 1.0.0` used in AWS modules.
+- **`required_version >= 1.3.0`**: This module uses the two-argument form of `optional()` (e.g. `optional(object({...}), null)`) for object-attribute defaults, which was introduced in Terraform 1.3.0 / OpenTofu 1.6.0. This is stricter than the default `>= 1.0.0` used in AWS modules and matches the other Datadog modules in this library.
 - **`filter` is required**: The Datadog provider enforces (`objectvalidator.IsRequired()`) that every notification rule must include a `filter` block. A notification rule without a filter would implicitly match all monitors, which the API disallows.
 - **`filter.scope` and `filter.tags` are mutually exclusive**: Exactly one of `scope` or `tags` must be set in the `filter` block (enforced by both the provider's `ConfigValidators` and a module validation block). `scope` accepts a boolean expression (e.g., `team:payment AND NOT env:dev`); `tags` accepts a list of `key:value` pairs with AND semantics.
 - **Exactly one of `recipients` or `conditional_recipients` must be set**: Both being present or both being absent will fail provider validation. The module validates this at plan time.
@@ -161,7 +161,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.5 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_datadog"></a> [datadog](#requirement\_datadog) | >= 4.0.0 |
 
 ## Providers
@@ -184,7 +184,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_notification_rules"></a> [notification\_rules](#input\_notification\_rules) | Map of Datadog monitor notification rule configurations keyed by logical name. Each entry maps to one datadog\_monitor\_notification\_rule resource. | <pre>map(object({<br/>    ###########################<br/>    # Required Fields<br/>    ###########################<br/>    name = string<br/><br/>    ###########################<br/>    # Optional Fields<br/>    ###########################<br/>    # Exactly one of recipients or conditional_recipients must be set.<br/>    # Use recipients for simple routing; use conditional_recipients for conditional routing.<br/>    recipients = optional(set(string), null)<br/><br/>    ###########################<br/>    # filter Block (Required)<br/>    ###########################<br/>    # Specifies which monitors this rule applies to.<br/>    # Exactly one of scope or tags must be set within the filter block.<br/>    filter = object({<br/>      scope = optional(string, null)<br/>      tags  = optional(set(string), null)<br/>    })<br/><br/>    ###########################<br/>    # conditional_recipients Block<br/>    ###########################<br/>    # Cannot be used with recipients.<br/>    conditional_recipients = optional(object({<br/>      fallback_recipients = optional(set(string), null)<br/>      conditions = optional(list(object({<br/>        scope      = string<br/>        recipients = set(string)<br/>      })), null)<br/>    }), null)<br/>  }))</pre> | n/a | yes |
+| <a name="input_notification_rules"></a> [notification\_rules](#input\_notification\_rules) | Map of Datadog monitor notification rule configurations keyed by logical name. Each entry maps to one datadog\_monitor\_notification\_rule resource. | <pre>map(object({<br/>    ###########################<br/>    # Required Fields<br/>    ###########################<br/>    name = string<br/><br/>    ###########################<br/>    # Optional Fields<br/>    ###########################<br/>    # Exactly one of recipients or conditional_recipients must be set.<br/>    # Use recipients for simple routing; use conditional_recipients for conditional routing.<br/>    recipients = optional(set(string), null)<br/><br/>    ###########################<br/>    # filter Block (Required)<br/>    ###########################<br/>    # Specifies which monitors this rule applies to.<br/>    # Exactly one of scope or tags must be set within the filter block.<br/>    filter = object({<br/>      scope = optional(string, null)<br/>      tags  = optional(set(string), null)<br/>    })<br/><br/>    ###########################<br/>    # conditional_recipients Block<br/>    ###########################<br/>    # Cannot be used with recipients.<br/>    conditional_recipients = optional(object({<br/>      fallback_recipients = optional(set(string), null)<br/>      conditions = optional(list(object({<br/>        scope      = string<br/>        recipients = set(string)<br/>      })), null)<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

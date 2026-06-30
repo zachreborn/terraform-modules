@@ -20,6 +20,7 @@ variable "config_policies" {
       valid_tag_values = list(string)
     }), null)
   }))
+  default = {}
 
   validation {
     condition = alltrue([
