@@ -114,7 +114,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Atlassian integration path**: The Datadog provider has no native Atlassian (Jira, Statuspage) resource. This generic webhook module is the recommended way to wire Datadog monitors to Atlassian services. See also `modules/datadog/integrations/opsgenie` for Atlassian's Opsgenie alerting product.
 - `encode_as` valid values: `json`, `form`. Defaults to `null` (Datadog uses JSON by default).
 - `custom_headers` and `payload` accept JSON-encoded strings. Use `jsonencode()` in the calling configuration for readability.
-- The `webhook_custom_variables` variable is marked `sensitive = true` because custom variable values may contain secrets. Custom variable names are referenced in webhook URLs/payloads as `$VARIABLE_NAME`.
+- `webhook_custom_variables` contains a sensitive field (`value`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass secret values via an environment variable (`TF_VAR_webhook_custom_variables`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files. Custom variable names are referenced in webhook URLs/payloads as `$VARIABLE_NAME`.
 
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->

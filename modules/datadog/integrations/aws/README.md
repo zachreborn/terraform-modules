@@ -185,7 +185,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - This module uses `datadog_integration_aws_account` (current) and NOT the deprecated `datadog_integration_aws` resource.
 - **Authentication**: Provide exactly one of `auth_config.aws_auth_config_role` or `auth_config.aws_auth_config_keys`. IAM role-based auth is the secure recommended default.
 - **External ID workflow**: Set `create_external_id = true` to have Datadog generate an external ID. The ID is available in `outputs.external_ids`. A new external ID **must be used within 48 hours** before it expires. After obtaining the ID, update the IAM role trust policy to include it.
-- **`aws_accounts` is `sensitive = true`** because it may contain `auth_config.aws_auth_config_keys.secret_access_key`. Outputs are also marked sensitive.
+- `aws_accounts` contains sensitive fields (`auth_config.aws_auth_config_keys.secret_access_key`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass these values via environment variables (`TF_VAR_aws_accounts`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files. The `external_ids` output is marked `sensitive = true`.
 - `aws_regions`: defaults to `include_all = true`. Set `include_only` to restrict collection to specific regions.
 - `metrics_config.namespace_filters`: if empty, Datadog defaults to excluding `["AWS/SQS", "AWS/ElasticMapReduce", "AWS/Usage"]` to reduce CloudWatch API costs.
 - `resources_config.cloud_security_posture_management_collection` requires `extended_collection = true`.

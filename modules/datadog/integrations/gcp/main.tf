@@ -28,20 +28,6 @@ resource "datadog_integration_gcp_sts" "this" {
   resource_collection_enabled           = each.value.resource_collection_enabled
   region_filter_configs                 = each.value.region_filter_configs
 
-  dynamic "metric_namespace_configs" {
-    for_each = each.value.metric_namespace_configs != null ? each.value.metric_namespace_configs : []
-    content {
-      id       = metric_namespace_configs.value.id
-      disabled = metric_namespace_configs.value.disabled
-      filters  = metric_namespace_configs.value.filters
-    }
-  }
-
-  dynamic "monitored_resource_configs" {
-    for_each = each.value.monitored_resource_configs != null ? each.value.monitored_resource_configs : []
-    content {
-      type    = monitored_resource_configs.value.type
-      filters = monitored_resource_configs.value.filters
-    }
-  }
+  metric_namespace_configs   = each.value.metric_namespace_configs
+  monitored_resource_configs = each.value.monitored_resource_configs
 }

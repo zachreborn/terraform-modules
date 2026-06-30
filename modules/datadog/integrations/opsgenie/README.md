@@ -88,7 +88,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
 - **Opsgenie is an Atlassian product.** This module provides the Atlassian alerting integration path in addition to the generic webhook module (`modules/datadog/integrations/webhook`).
-- The `service_objects` variable is marked `sensitive = true` because it contains Opsgenie API keys.
+- `service_objects` contains a sensitive field (`opsgenie_api_key`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass API keys via an environment variable (`TF_VAR_service_objects`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - The Datadog API never returns Opsgenie API keys after creation, so drift cannot be detected by Terraform. If the key changes outside Terraform, taint the resource to recreate it.
 - Valid `region` values: `us`, `eu`, `custom`. When using `custom`, `custom_url` is required.
 

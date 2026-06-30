@@ -90,7 +90,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
-- `confluent_accounts` is marked `sensitive = true` because it contains the Confluent API key and secret.
+- `confluent_accounts` contains sensitive fields (`api_key`, `api_secret`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass these values via an environment variable (`TF_VAR_confluent_accounts`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - Valid `resource_type` values: `kafka`, `connector`, `ksql`, `schema_registry`.
 - `enable_custom_metrics` defaults to `false`. When enabled, the `custom.consumer_lag_offset` metric is collected with additional tags (increases cardinality and may increase cost).
 - The `account_id` in `confluent_resources` should reference the ID output from a `confluent_accounts` entry. Use `module.<name>.confluent_account_ids["<key>"]`.

@@ -70,9 +70,9 @@ variable "aws_accounts" {
   validation {
     condition = alltrue([
       for k, v in var.aws_accounts : (
-        v.auth_config.aws_auth_config_role != null || v.auth_config.aws_auth_config_keys != null
+        (v.auth_config.aws_auth_config_role != null) != (v.auth_config.aws_auth_config_keys != null)
       )
     ])
-    error_message = "Each aws_account entry must specify either auth_config.aws_auth_config_role or auth_config.aws_auth_config_keys."
+    error_message = "Each aws_account entry must specify exactly one of auth_config.aws_auth_config_role or auth_config.aws_auth_config_keys, not both and not neither."
   }
 }

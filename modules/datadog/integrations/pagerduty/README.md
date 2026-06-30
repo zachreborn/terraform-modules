@@ -91,7 +91,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
 - The `datadog_integration_pagerduty` resource is a singleton per Datadog org — typically only one entry in `pagerduty_integrations`. Use the map pattern for consistency with the rest of the module library.
 - Service objects (`service_objects`) must be created after the integration (`pagerduty_integrations`). The provider handles ordering internally when both are in the same module, but if you create them in separate module calls, ensure the integration is applied first.
-- Both `pagerduty_integrations` and `service_objects` are marked `sensitive = true` due to the embedded API token and service key, respectively.
+- Both `pagerduty_integrations` (`api_token`) and `service_objects` (`service_key`) contain sensitive fields. Neither variable is marked `sensitive = true` (doing so would prevent `for_each` on their resources), so callers should pass these values via environment variables, Terraform Cloud/HCP sensitive variables, or a secrets manager rather than in plain-text `.tfvars` files.
 - The Datadog API never returns service keys after creation, so drift cannot be detected by Terraform. Taint the service object resource to recreate it if the key changes.
 
 <!-- terraform-docs output will be input automatically below-->

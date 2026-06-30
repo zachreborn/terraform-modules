@@ -92,7 +92,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
 - **Two resource types are managed**: `tenant_based_handles` uses the native Teams integration (requires the Teams app to be installed in Datadog), while `workflows_webhook_handles` uses Microsoft Power Automate workflows and does not require a native Teams-Datadog connection.
-- The `workflows_webhook_handles` variable is marked `sensitive = true` because the webhook URL contains an embedded secret token.
+- `workflows_webhook_handles` contains a sensitive field (`url`, which embeds a secret token). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass webhook URLs via an environment variable (`TF_VAR_workflows_webhook_handles`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - Both maps default to empty, so the module can be used for either or both handle types independently.
 
 <!-- terraform-docs output will be input automatically below-->

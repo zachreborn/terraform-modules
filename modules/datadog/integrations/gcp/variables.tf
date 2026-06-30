@@ -14,12 +14,12 @@ variable "gcp_accounts" {
     is_security_command_center_enabled    = optional(bool, false)
     resource_collection_enabled           = optional(bool)
     region_filter_configs                 = optional(set(string))
-    metric_namespace_configs = optional(list(object({
+    metric_namespace_configs = optional(set(object({
       id       = optional(string)
       disabled = optional(bool)
       filters  = optional(set(string))
     })))
-    monitored_resource_configs = optional(list(object({
+    monitored_resource_configs = optional(set(object({
       type    = optional(string)
       filters = optional(set(string))
     })))

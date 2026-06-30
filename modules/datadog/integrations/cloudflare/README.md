@@ -76,7 +76,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
-- The `cloudflare_accounts` variable is marked `sensitive = true` because it contains the Cloudflare API key. The output is also marked sensitive as a result.
+- `cloudflare_accounts` contains a sensitive field (`api_key`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass the API key via an environment variable (`TF_VAR_cloudflare_accounts`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - Valid `resources` values are: `web`, `dns`, `lb` (load balancer), `worker`. Omit to collect all available metric types.
 - When using an API key (not a token), `email` is required. API tokens do not require the `email` field.
 
@@ -110,7 +110,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_cloudflare_accounts"></a> [cloudflare\_accounts](#input\_cloudflare\_accounts) | Map of Cloudflare account integrations keyed by a logical name. The api\_key field is sensitive — mark the whole variable sensitive to prevent leakage. | <pre>map(object({<br/>    api_key   = string<br/>    name      = string<br/>    email     = optional(string)<br/>    resources = optional(set(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_cloudflare_accounts"></a> [cloudflare\_accounts](#input\_cloudflare\_accounts) | Map of Cloudflare account integrations keyed by a logical name. The api\_key field is sensitive — pass it via an environment variable (TF\_VAR\_cloudflare\_accounts), Terraform Cloud/HCP sensitive variables, or a secrets manager rather than in plain-text .tfvars files. | <pre>map(object({<br/>    api_key   = string<br/>    name      = string<br/>    email     = optional(string)<br/>    resources = optional(set(string))<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

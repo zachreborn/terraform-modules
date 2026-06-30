@@ -96,7 +96,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
-- The `azure_integrations` variable is marked `sensitive = true` because it contains the Azure client secret.
+- `azure_integrations` contains a sensitive field (`client_secret`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass the client secret via an environment variable (`TF_VAR_azure_integrations`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - `secretless_auth_enabled` is a preview feature that uses federated workload identity credentials instead of a client secret. When `true`, omit `client_secret`. The app registration must have a Datadog federated credential configured. Defaults to `false`.
 - `cspm_enabled` requires `resource_collection_enabled = true`.
 - `resource_provider_configs` allows per-namespace metrics enablement overrides. Each entry's `namespace` corresponds to an Azure resource provider namespace (e.g., `Microsoft.Compute`).

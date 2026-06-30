@@ -87,7 +87,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - `required_version = ">= 1.3.0"` — uses `optional()` with defaults inside object types, which requires Terraform/OpenTofu 1.3.0+. The Datadog provider itself mandates >= 1.1.5.
-- The `fastly_accounts` variable is marked `sensitive = true` because it contains the Fastly API key.
+- `fastly_accounts` contains a sensitive field (`api_key`). The variable is not marked `sensitive = true` (doing so would prevent `for_each` on the resource), so callers should pass the API key via an environment variable (`TF_VAR_fastly_accounts`), Terraform Cloud/HCP sensitive variables, or a secrets manager integration rather than in plain-text `.tfvars` files.
 - Two API key mechanisms are supported: `api_key` (standard) and `api_key_wo` / `api_key_wo_version` (write-only, requires Terraform 1.11+). Exactly one of `api_key` or `api_key_wo` must be set per account entry.
 - `fastly_services` are not sensitive — only the account's API key is sensitive.
 - The `account_id` in `fastly_services` should reference the ID output from a `fastly_accounts` entry. Use `module.<name>.fastly_account_ids["<key>"]`.
