@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.22.0](https://github.com/zachreborn/terraform-modules/compare/v8.21.0...v8.22.0) (2026-06-30)
+
+
+### Features
+
+* **datadog:** add integrations modules ([#344](https://github.com/zachreborn/terraform-modules/issues/344)) ([d5c3e32](https://github.com/zachreborn/terraform-modules/commit/d5c3e32d968a840a73740326a2d3600759d07ff8))
+* **datadog:** add monitors modules ([#342](https://github.com/zachreborn/terraform-modules/issues/342)) ([54e6caf](https://github.com/zachreborn/terraform-modules/commit/54e6cafca2607779e85e434de1b953868211edf3))
+* **datadog:** add synthetics modules ([#343](https://github.com/zachreborn/terraform-modules/issues/343)) ([d5d0d00](https://github.com/zachreborn/terraform-modules/commit/d5d0d00517473b078a7305ced32d8e350a198c1d))
+
 ## [8.21.0](https://github.com/zachreborn/terraform-modules/compare/v8.20.3...v8.21.0) (2026-06-26)
 
 
