@@ -38,6 +38,11 @@ locals {
   # Resolve the role ARN file shares assume to access their S3 buckets: a
   # caller-supplied ARN takes precedence over one created by this module.
   role_arn = var.role_arn != null ? var.role_arn : (local.create_iam_role ? module.iam_role[0].arn : null)
+
+  # Resolve the gateway ARN that cache disks and file shares attach to: a
+  # caller-supplied ARN (existing, externally activated gateway) takes
+  # precedence over the gateway created by this module.
+  gateway_arn = var.gateway_arn != null ? var.gateway_arn : one(aws_storagegateway_gateway.this[*].arn)
 }
 
 ###########################
@@ -194,6 +199,12 @@ module "iam_role" {
 ###########################
 
 resource "aws_storagegateway_gateway" "this" {
+  # Not created when gateway_arn supplies an existing, externally activated
+  # gateway. On-premises appliances only honor an activation for a short window
+  # after the activation key is generated, which pipeline-driven applies cannot
+  # reliably meet - activate out of band and pass the resulting ARN instead.
+  count = var.gateway_arn == null ? 1 : 0
+
   activation_key                              = var.activation_key
   average_download_rate_limit_in_bits_per_sec = var.average_download_rate_limit_in_bits_per_sec
   average_upload_rate_limit_in_bits_per_sec   = var.average_upload_rate_limit_in_bits_per_sec
@@ -229,6 +240,13 @@ resource "aws_storagegateway_gateway" "this" {
       username            = smb_active_directory_settings.value.username
     }
   }
+
+  lifecycle {
+    precondition {
+      condition     = var.activation_key != null || var.gateway_ip_address != null
+      error_message = "One of activation_key or gateway_ip_address is required when the module creates the gateway (gateway_arn is null)."
+    }
+  }
 }
 
 ###########################
@@ -239,7 +257,7 @@ resource "aws_storagegateway_cache" "this" {
   for_each = var.cache_disk_ids
 
   disk_id     = each.value
-  gateway_arn = aws_storagegateway_gateway.this.arn
+  gateway_arn = local.gateway_arn
 }
 
 ###########################
@@ -250,7 +268,7 @@ resource "aws_storagegateway_file_system_association" "this" {
   for_each = var.file_system_associations
 
   audit_destination_arn = each.value.audit_destination_arn
-  gateway_arn           = aws_storagegateway_gateway.this.arn
+  gateway_arn           = local.gateway_arn
   location_arn          = each.value.location_arn
   password              = each.value.password
   tags                  = merge(tomap({ Name = each.key }), var.tags)
@@ -283,7 +301,7 @@ resource "aws_storagegateway_smb_file_share" "this" {
   case_sensitivity         = each.value.case_sensitivity
   default_storage_class    = each.value.default_storage_class
   file_share_name          = each.value.file_share_name
-  gateway_arn              = aws_storagegateway_gateway.this.arn
+  gateway_arn              = local.gateway_arn
   guess_mime_type_enabled  = each.value.guess_mime_type_enabled
   invalid_user_list        = each.value.invalid_user_list
   kms_encrypted            = each.value.kms_encrypted
@@ -330,7 +348,7 @@ resource "aws_storagegateway_nfs_file_share" "this" {
   client_list             = each.value.client_list
   default_storage_class   = each.value.default_storage_class
   file_share_name         = each.value.file_share_name
-  gateway_arn             = aws_storagegateway_gateway.this.arn
+  gateway_arn             = local.gateway_arn
   guess_mime_type_enabled = each.value.guess_mime_type_enabled
   kms_encrypted           = each.value.kms_encrypted
   kms_key_arn             = each.value.kms_key_arn
