@@ -134,6 +134,66 @@ module "storage_gateway" {
 }
 ```
 
+#### Manual bootstrap commands (existing-gateway mode)
+
+Run steps 1-2 back to back — the appliance only honors the activation for
+about a minute after the key is generated. Fetch the key exactly once. Fill in
+the `{{placeholders}}` and paste into your console.
+
+**1. Fetch the activation key** (returned in the redirect/response; the VM
+answers on port 8080, or port 80 on some builds):
+
+PowerShell:
+
+```powershell
+(Invoke-WebRequest -UseBasicParsing -Uri "http://{{gateway_vm_ip}}:8080/?activationRegion={{region}}&vpcEndpoint={{vpc_endpoint_dns_name}}&no_activation=true" -MaximumRedirection 0 -ErrorAction SilentlyContinue).Headers.Location
+```
+
+bash/zsh:
+
+```bash
+curl -s "http://{{gateway_vm_ip}}:8080/?activationRegion={{region}}&vpcEndpoint={{vpc_endpoint_dns_name}}&no_redirect"
+```
+
+Do **not** use the appliance local console menu to generate VPC-endpoint keys —
+console-generated keys produce gateways that activate but never connect.
+
+**2. Activate** (same command on both platforms):
+
+```bash
+aws storagegateway activate-gateway \
+  --region {{region}} \
+  --activation-key {{key_from_step_1}} \
+  --gateway-name {{gateway_name}} \
+  --gateway-timezone {{timezone, e.g. GMT-7:00}} \
+  --gateway-region {{region}} \
+  --gateway-type FILE_S3
+```
+
+**3. Join the Active Directory domain** (required before Terraform can create
+ActiveDirectory-authenticated SMB shares; username is the bare sAMAccountName):
+
+```bash
+aws storagegateway join-domain \
+  --region {{region}} \
+  --gateway-arn {{gateway_arn_from_step_2}} \
+  --domain-name {{domain, e.g. corp.example.com}} \
+  --user-name {{service_account}} \
+  --password {{service_account_password}} \
+  --domain-controllers {{dc_ip_1}} {{dc_ip_2}}
+```
+
+**4. Attach the CloudWatch log group** (module output `cloudwatch_log_group_arn`):
+
+```bash
+aws storagegateway update-gateway-information \
+  --region {{region}} \
+  --gateway-arn {{gateway_arn_from_step_2}} \
+  --cloudwatch-log-group-arn {{log_group_arn}}
+```
+
+**5.** Set `gateway_arn` on the module call to the ARN from step 2 and apply.
+
 ### S3 File Gateway with SMB and NFS shares
 
 ```hcl
