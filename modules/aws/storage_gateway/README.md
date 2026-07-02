@@ -189,7 +189,7 @@ aws storagegateway join-domain \
 aws storagegateway update-gateway-information \
   --region {{region}} \
   --gateway-arn {{gateway_arn_from_step_2}} \
-  --cloudwatch-log-group-arn {{log_group_arn}}
+  --cloud-watch-log-group-arn {{log_group_arn}}
 ```
 
 **5.** Set `gateway_arn` on the module call to the ARN from step 2 and apply.
