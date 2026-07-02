@@ -229,15 +229,6 @@ resource "aws_storagegateway_gateway" "this" {
       username            = smb_active_directory_settings.value.username
     }
   }
-
-  # activation_key and gateway_ip_address are write-only bootstrap arguments: the Storage Gateway API has no method to
-  # read them back, so imported gateways always diff against the configuration and, because both force replacement, a
-  # plain plan would destroy a healthy imported gateway. Ignoring post-create changes is the provider-documented import
-  # pattern; both values are still used at create. To intentionally replace a gateway, supply a fresh activation key
-  # and use plan/apply -replace.
-  lifecycle {
-    ignore_changes = [activation_key, gateway_ip_address]
-  }
 }
 
 ###########################
