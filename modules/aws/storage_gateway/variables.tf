@@ -26,6 +26,16 @@ variable "cloudwatch_log_group_arn" {
   default     = null
 }
 
+variable "gateway_arn" {
+  type        = string
+  description = "(Optional) ARN of an existing, externally activated gateway for this module to manage cache disks and file shares on, instead of creating one. Use for on-premises appliances, which only honor an activation for a short window after the activation key is generated - too short for pipeline-driven applies - so they must be activated out of band. When set, the module creates no gateway and the gateway-level arguments (activation_key, gateway_ip_address, gateway_vpc_endpoint, gateway_timezone, smb_active_directory_settings, maintenance_start_time, rate limits, SMB settings, cloudwatch_log_group_arn wiring) are not applied; configure those on the gateway out of band. Defaults to null."
+  default     = null
+  validation {
+    condition     = var.gateway_arn == null ? true : can(regex("^arn:[^:]+:storagegateway:[^:]+:[0-9]{12}:gateway/sgw-[0-9A-F]+$", var.gateway_arn))
+    error_message = "gateway_arn must be null or a valid Storage Gateway gateway ARN (arn:<partition>:storagegateway:<region>:<account>:gateway/sgw-XXXXXXXX)."
+  }
+}
+
 variable "gateway_ip_address" {
   type        = string
   description = "(Optional) IP address of the gateway VM, used to fetch the activation key automatically during apply. Mutually exclusive with activation_key; supply exactly one. The VM must be reachable from where Terraform runs. Defaults to null."

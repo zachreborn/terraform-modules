@@ -3,28 +3,28 @@
 ###########################
 
 output "gateway_id" {
-  description = "The identifier of the Storage Gateway."
-  value       = aws_storagegateway_gateway.this.gateway_id
+  description = "The identifier of the Storage Gateway (created or caller-supplied)."
+  value       = local.gateway_arn != null ? element(split("/", local.gateway_arn), 1) : null
 }
 
 output "gateway_arn" {
-  description = "The Amazon Resource Name (ARN) of the Storage Gateway."
-  value       = aws_storagegateway_gateway.this.arn
+  description = "The Amazon Resource Name (ARN) of the Storage Gateway (created or caller-supplied)."
+  value       = local.gateway_arn
 }
 
 output "ec2_instance_id" {
-  description = "The ID of the EC2 instance backing the gateway, when the gateway runs on EC2."
-  value       = aws_storagegateway_gateway.this.ec2_instance_id
+  description = "The ID of the EC2 instance backing the gateway, when the gateway runs on EC2. Null when gateway_arn is supplied."
+  value       = one(aws_storagegateway_gateway.this[*].ec2_instance_id)
 }
 
 output "gateway_network_interface" {
-  description = "The network interfaces of the gateway."
-  value       = aws_storagegateway_gateway.this.gateway_network_interface
+  description = "The network interfaces of the gateway. Null when gateway_arn is supplied."
+  value       = one(aws_storagegateway_gateway.this[*].gateway_network_interface)
 }
 
 output "host_environment" {
-  description = "The type of hypervisor environment used by the gateway host."
-  value       = aws_storagegateway_gateway.this.host_environment
+  description = "The type of hypervisor environment used by the gateway host. Null when gateway_arn is supplied."
+  value       = one(aws_storagegateway_gateway.this[*].host_environment)
 }
 
 output "cache_disk_ids" {

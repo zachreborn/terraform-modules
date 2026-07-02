@@ -94,6 +94,46 @@ module "storage_gateway" {
 }
 ```
 
+### S3 File Gateway managing an existing, externally activated gateway
+
+On-premises appliances only honor an activation for a short window after the
+activation key is generated - too short for pipeline-driven applies - so
+activate them out of band (fetch the key via the appliance's HTTP endpoint with
+the vpcEndpoint parameter, then `aws storagegateway activate-gateway`) and pass
+the resulting gateway ARN. The module then manages cache disks and file shares
+on the existing gateway; gateway-level settings such as the domain join and
+CloudWatch log group are configured out of band (`aws storagegateway
+join-domain` / `update-gateway-information`).
+
+```hcl
+module "storage_gateway" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/storage_gateway"
+
+  gateway_name = "corp-s3-file-gateway"
+  gateway_arn  = "arn:aws:storagegateway:us-west-2:123456789012:gateway/sgw-12A3456B"
+
+  # Local disks presented to the gateway VM, discovered via
+  # `aws storagegateway list-local-disks` once the gateway is connected.
+  cache_disk_ids = ["/dev/sdb"]
+
+  create_iam_role = true
+  s3_bucket_arns  = [module.bucket.s3_bucket_arn]
+
+  s3_smb_file_shares = {
+    it-shared = {
+      location_arn    = module.bucket.s3_bucket_arn
+      authentication  = "ActiveDirectory"
+      valid_user_list = ["@corp\\Domain Admins"]
+    }
+  }
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
+  }
+}
+```
+
 ### S3 File Gateway with SMB and NFS shares
 
 ```hcl
@@ -227,6 +267,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_create_iam_role"></a> [create\_iam\_role](#input\_create\_iam\_role) | (Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3\_bucket\_arns must list the buckets the role may access. Ignored when role\_arn is supplied. Defaults to false. | `bool` | `false` | no |
 | <a name="input_create_kms_key"></a> [create\_kms\_key](#input\_create\_kms\_key) | (Optional) Determines whether this module creates a dedicated KMS key (via the kms child module) to encrypt the CloudWatch log group. Used only when create\_cloudwatch\_log\_group is true. Set to false to supply your own key via kms\_key\_id. Defaults to true. | `bool` | `true` | no |
 | <a name="input_file_system_associations"></a> [file\_system\_associations](#input\_file\_system\_associations) | (Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location\_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system; password is stored in state in plaintext), optional audit\_destination\_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache\_attributes block with cache\_stale\_timeout\_in\_seconds. Requires gateway\_type FILE\_FSX\_SMB. Defaults to {}. | <pre>map(object({<br/>    location_arn          = string<br/>    password              = string<br/>    username              = string<br/>    audit_destination_arn = optional(string)<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_gateway_arn"></a> [gateway\_arn](#input\_gateway\_arn) | (Optional) ARN of an existing, externally activated gateway for this module to manage cache disks and file shares on, instead of creating one. Use for on-premises appliances, which only honor an activation for a short window after the activation key is generated - too short for pipeline-driven applies - so they must be activated out of band. When set, the module creates no gateway and the gateway-level arguments (activation\_key, gateway\_ip\_address, gateway\_vpc\_endpoint, gateway\_timezone, smb\_active\_directory\_settings, maintenance\_start\_time, rate limits, SMB settings, cloudwatch\_log\_group\_arn wiring) are not applied; configure those on the gateway out of band. Defaults to null. | `string` | `null` | no |
 | <a name="input_gateway_ip_address"></a> [gateway\_ip\_address](#input\_gateway\_ip\_address) | (Optional) IP address of the gateway VM, used to fetch the activation key automatically during apply. Mutually exclusive with activation\_key; supply exactly one. The VM must be reachable from where Terraform runs. Defaults to null. | `string` | `null` | no |
 | <a name="input_gateway_name"></a> [gateway\_name](#input\_gateway\_name) | (Required) Name of the gateway. Also used as the Name tag. | `string` | n/a | yes |
 | <a name="input_gateway_timezone"></a> [gateway\_timezone](#input\_gateway\_timezone) | (Optional) Time zone for the gateway, in the format GMT, GMT-hh:mm, or GMT+hh:mm (e.g. GMT-7:00). Defaults to GMT. | `string` | `"GMT"` | no |
@@ -255,12 +296,12 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ----------- |
 | <a name="output_cache_disk_ids"></a> [cache\_disk\_ids](#output\_cache\_disk\_ids) | The set of local disk IDs allocated as cache storage on the gateway. |
 | <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch log group used for gateway health logs, or null when none is created or supplied. |
-| <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | The ID of the EC2 instance backing the gateway, when the gateway runs on EC2. |
+| <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | The ID of the EC2 instance backing the gateway, when the gateway runs on EC2. Null when gateway\_arn is supplied. |
 | <a name="output_file_system_association_arns"></a> [file\_system\_association\_arns](#output\_file\_system\_association\_arns) | Map of file system association logical names to their ARNs. |
-| <a name="output_gateway_arn"></a> [gateway\_arn](#output\_gateway\_arn) | The Amazon Resource Name (ARN) of the Storage Gateway. |
-| <a name="output_gateway_id"></a> [gateway\_id](#output\_gateway\_id) | The identifier of the Storage Gateway. |
-| <a name="output_gateway_network_interface"></a> [gateway\_network\_interface](#output\_gateway\_network\_interface) | The network interfaces of the gateway. |
-| <a name="output_host_environment"></a> [host\_environment](#output\_host\_environment) | The type of hypervisor environment used by the gateway host. |
+| <a name="output_gateway_arn"></a> [gateway\_arn](#output\_gateway\_arn) | The Amazon Resource Name (ARN) of the Storage Gateway (created or caller-supplied). |
+| <a name="output_gateway_id"></a> [gateway\_id](#output\_gateway\_id) | The identifier of the Storage Gateway (created or caller-supplied). |
+| <a name="output_gateway_network_interface"></a> [gateway\_network\_interface](#output\_gateway\_network\_interface) | The network interfaces of the gateway. Null when gateway\_arn is supplied. |
+| <a name="output_host_environment"></a> [host\_environment](#output\_host\_environment) | The type of hypervisor environment used by the gateway host. Null when gateway\_arn is supplied. |
 | <a name="output_iam_policy_arn"></a> [iam\_policy\_arn](#output\_iam\_policy\_arn) | The ARN of the IAM policy created by this module, or null when none is created. |
 | <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The ARN of the IAM role file shares assume to access S3 (module-created or caller-supplied), or null when none is resolved. |
 | <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | The name of the IAM role created by this module, or null when none is created. |
