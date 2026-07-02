@@ -194,6 +194,46 @@ aws storagegateway update-gateway-information \
 
 **5.** Set `gateway_arn` on the module call to the ARN from step 2 and apply.
 
+#### Manual teardown / replacement commands (existing-gateway mode)
+
+**Replacing the gateway** (host refresh, appliance wedged, etc.): an appliance
+that previously held a live registration cannot be re-activated in place —
+deploy a fresh VM from the image, run bootstrap steps 1-4 on it, then point
+`gateway_arn` at the new ARN and apply (Terraform replaces the cache
+assignment and file shares onto the new gateway). Delete the old record
+afterward (step 2 below).
+
+**Decommissioning entirely** — in this order:
+
+**1. Confirm no un-uploaded data remains** — the `CachePercentDirty` metric
+must be 0 or cached writes are lost:
+
+```bash
+aws cloudwatch get-metric-statistics \
+  --region {{region}} \
+  --namespace AWS/StorageGateway --metric-name CachePercentDirty \
+  --dimensions Name=GatewayId,Value={{gateway_id, e.g. sgw-12A3456B}} Name=GatewayName,Value={{gateway_name}} \
+  --start-time $(date -u -v-15M +%Y-%m-%dT%H:%M:%S 2>/dev/null || date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) --period 300 --statistics Average
+```
+
+**2. Remove the Terraform-managed attachments first** (delete the module call
+or its shares/cache from configuration and apply), so file shares are torn
+down cleanly while the gateway is still connected.
+
+**3. Delete the gateway record** (this does not touch the VM):
+
+```bash
+aws storagegateway delete-gateway \
+  --region {{region}} \
+  --gateway-arn {{gateway_arn}}
+```
+
+**4. Power off and delete the gateway VM** in the hypervisor. A deleted
+gateway cannot be reactivated, and the VM cannot be reused for a new gateway —
+future gateways start from a freshly deployed image.
+
+
 ### S3 File Gateway with SMB and NFS shares
 
 ```hcl
