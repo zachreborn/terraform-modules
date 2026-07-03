@@ -127,7 +127,7 @@ variable "tags" {
 
 variable "cache_disk_ids" {
   type        = set(string)
-  description = "(Optional) Set of local disk IDs (as reported by the gateway, e.g. via the aws_storagegateway_local_disk data source) to allocate as cache storage. Defaults to an empty set."
+  description = "(Optional) Set of local disk IDs (as reported by the gateway, e.g. via the aws_storagegateway_local_disk data source) to allocate as cache storage. Defaults to an empty set. Note: cache allocation is write-once (the API cannot remove or resize cache), and some hypervisors re-identify allocated disks by UUID, causing permanent replacement diffs - for externally activated gateways (gateway_arn), prefer allocating cache out of band with add-cache and leaving this empty."
   default     = []
 }
 
