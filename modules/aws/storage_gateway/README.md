@@ -192,7 +192,18 @@ aws storagegateway update-gateway-information \
   --cloud-watch-log-group-arn {{log_group_arn}}
 ```
 
-**5.** Set `gateway_arn` on the module call to the ARN from step 2 and apply.
+**5. Allocate the cache disk** (write-once — there is no API to remove or
+change cache, so allocate it during bootstrap rather than in Terraform; on
+some hypervisors the gateway re-identifies allocated disks by UUID, which
+makes a Terraform-managed cache diff forever):
+
+```bash
+aws storagegateway list-local-disks --region {{region}} --gateway-arn {{gateway_arn_from_step_2}}
+aws storagegateway add-cache --region {{region}} --gateway-arn {{gateway_arn_from_step_2}} --disk-ids {{disk_id_from_list_local_disks}}
+```
+
+**6.** Set `gateway_arn` on the module call to the ARN from step 2, leave
+`cache_disk_ids` empty, and apply.
 
 #### Manual teardown / replacement commands (existing-gateway mode)
 
@@ -359,7 +370,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_activation_key"></a> [activation\_key](#input\_activation\_key) | (Optional) Gateway activation key obtained after deploying and powering on the on-premises gateway VM. Mutually exclusive with gateway\_ip\_address; supply exactly one. Use this when you have already retrieved the activation key out of band. Stored in Terraform state in plaintext. | `string` | `null` | no |
 | <a name="input_average_download_rate_limit_in_bits_per_sec"></a> [average\_download\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_download\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average download bandwidth rate limit in bits per second. Defaults to null (no limit). | `number` | `null` | no |
 | <a name="input_average_upload_rate_limit_in_bits_per_sec"></a> [average\_upload\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_upload\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average upload bandwidth rate limit in bits per second. Defaults to null (no limit). | `number` | `null` | no |
-| <a name="input_cache_disk_ids"></a> [cache\_disk\_ids](#input\_cache\_disk\_ids) | (Optional) Set of local disk IDs (as reported by the gateway, e.g. via the aws\_storagegateway\_local\_disk data source) to allocate as cache storage. Defaults to an empty set. | `set(string)` | `[]` | no |
+| <a name="input_cache_disk_ids"></a> [cache\_disk\_ids](#input\_cache\_disk\_ids) | (Optional) Set of local disk IDs (as reported by the gateway, e.g. via the aws\_storagegateway\_local\_disk data source) to allocate as cache storage. Defaults to an empty set. Note: cache allocation is write-once (the API cannot remove or resize cache), and some hypervisors re-identify allocated disks by UUID, causing permanent replacement diffs - for externally activated gateways (gateway\_arn), prefer allocating cache out of band with add-cache and leaving this empty. | `set(string)` | `[]` | no |
 | <a name="input_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#input\_cloudwatch\_log\_group\_arn) | (Optional) ARN of an existing CloudWatch log group to use for gateway health logs. When null and create\_cloudwatch\_log\_group is true, this module creates one. Defaults to null. | `string` | `null` | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional) Name prefix for the CloudWatch log group created for gateway health logs. Defaults to /aws/storagegateway/. | `string` | `"/aws/storagegateway/"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Number of days to retain gateway log events in the CloudWatch log group. Set to 0 to retain indefinitely. Defaults to 90. | `number` | `90` | no |
