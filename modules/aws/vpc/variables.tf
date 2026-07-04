@@ -85,6 +85,42 @@ variable "azs" {
   default     = ["us-east-2a", "us-east-2b", "us-east-2c"]
 }
 
+variable "enable_private_subnet" {
+  description = "(Optional) When true, create the private subnet tier and its route tables/associations. When false, none are created and private-tier outputs return empty lists. Defaults true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_public_subnet" {
+  description = "(Optional) When true, create the public subnet tier and its route table associations. When false, none are created and public-tier outputs return empty lists. Also gates the internet gateway / NAT gateway (see notes). Defaults true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_db_subnet" {
+  description = "(Optional) When true, create the database subnet tier and its route tables/associations. When false, none are created and db-tier outputs return empty lists. Defaults true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_dmz_subnet" {
+  description = "(Optional) When true, create the DMZ subnet tier and its route tables/associations. When false, none are created. Defaults true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_mgmt_subnet" {
+  description = "(Optional) When true, create the mgmt subnet tier and its route table/routes. When false, none are created. Defaults true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_workspaces_subnet" {
+  description = "(Optional) When true, create the workspaces subnet tier and its route tables/associations. When false, none are created. Defaults true."
+  type        = bool
+  default     = true
+}
+
 variable "db_subnets_list" {
   description = "A list of database subnets inside the VPC."
   type        = list(string)

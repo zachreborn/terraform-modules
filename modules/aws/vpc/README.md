@@ -130,9 +130,58 @@ module "vpc" {
 }
 ```
 
-### Disabling Unneeded Subnets
+### Disabling Unneeded Subnet Tiers
 
-This example disabled unused subnets and associated resources. In the example we leave only the public and private subnets enabled.
+Each subnet tier can be disabled with its `enable_*_subnet` toggle (all default `true`). When a tier is disabled, none of its subnets, route tables, or route table associations are created, and the tier's outputs return an empty list. This example leaves only the public and private tiers enabled.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                     = "client_prod_vpc"
+    vpc_cidr                 = "10.11.0.0/16"
+    azs                      = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    enable_db_subnet         = false
+    enable_dmz_subnet        = false
+    enable_mgmt_subnet       = false
+    enable_workspaces_subnet = false
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+### Transit VPC Example (no private or database tiers)
+
+Some deployments (transit VPCs, public-only VPCs, etc.) do not need a private and/or database tier. Disable them with `enable_private_subnet` and `enable_db_subnet` to avoid provisioning those subnets and their route tables/associations.
+
+```hcl
+module "vpc" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+    name                     = "client_transit_vpc"
+    vpc_cidr                 = "10.11.0.0/16"
+    azs                      = ["us-east-1a", "us-east-1b", "us-east-1c"]
+    enable_private_subnet    = false
+    enable_db_subnet         = false
+    enable_dmz_subnet        = false
+    enable_mgmt_subnet       = false
+    enable_workspaces_subnet = false
+    tags = {
+        terraform   = "true"
+        created_by  = "Zachary Hill"
+        environment = "prod"
+        project     = "core_infrastructure"
+    }
+}
+```
+
+> **Note:** Do not set `enable_private_subnet = false` together with `enable_ssm_vpc_endpoints = true` or `enable_ecr_vpc_endpoints = true`. Those interface endpoints place their ENIs in the private subnets, so the module enforces a precondition that fails fast with a clear error in that combination.
+
+Subnet tiers can also be disabled by supplying an empty `*_subnets_list`, which remains supported for backward compatibility.
 
 ```hcl
 module "vpc" {
@@ -328,6 +377,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_db_subnets_list"></a> [db\_subnets\_list](#input\_db\_subnets\_list) | A list of database subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.11.0/24",<br/>  "10.11.12.0/24",<br/>  "10.11.13.0/24"<br/>]</pre> | no |
 | <a name="input_dmz_propagating_vgws"></a> [dmz\_propagating\_vgws](#input\_dmz\_propagating\_vgws) | A list of VGWs the DMZ route table should propagate. | `list(string)` | `null` | no |
 | <a name="input_dmz_subnets_list"></a> [dmz\_subnets\_list](#input\_dmz\_subnets\_list) | A list of DMZ subnets inside the VPC. | `list(string)` | <pre>[<br/>  "10.11.101.0/24",<br/>  "10.11.102.0/24",<br/>  "10.11.103.0/24"<br/>]</pre> | no |
+| <a name="input_enable_db_subnet"></a> [enable\_db\_subnet](#input\_enable\_db\_subnet) | (Optional) When true, create the database subnet tier and its route tables/associations. When false, none are created and db-tier outputs return empty lists. Defaults true. | `bool` | `true` | no |
+| <a name="input_enable_dmz_subnet"></a> [enable\_dmz\_subnet](#input\_enable\_dmz\_subnet) | (Optional) When true, create the DMZ subnet tier and its route tables/associations. When false, none are created. Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false. | `bool` | `true` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_ecr_vpc_endpoints"></a> [enable\_ecr\_vpc\_endpoints](#input\_enable\_ecr\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable ECR (Elastic Container Registry) VPC endpoints. This enables ECR API, ECR DKR, Cloudwatch Logs, and S3 endpoints. | `bool` | `false` | no |
@@ -335,9 +386,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_enable_flow_logs"></a> [enable\_flow\_logs](#input\_enable\_flow\_logs) | (Optional) A boolean flag to enable/disable the use of flow logs with the resources. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_internet_gateway"></a> [enable\_internet\_gateway](#input\_enable\_internet\_gateway) | (Optional) A boolean flag to enable/disable the use of Internet gateways. Defaults True. | `bool` | `true` | no |
 | <a name="input_enable_internet_monitor"></a> [enable\_internet\_monitor](#input\_enable\_internet\_monitor) | (Optional) A boolean flag to enable/disable the creation of a CloudWatch Internet Monitor for this VPC. Defaults false. | `bool` | `false` | no |
+| <a name="input_enable_mgmt_subnet"></a> [enable\_mgmt\_subnet](#input\_enable\_mgmt\_subnet) | (Optional) When true, create the mgmt subnet tier and its route table/routes. When false, none are created. Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
+| <a name="input_enable_private_subnet"></a> [enable\_private\_subnet](#input\_enable\_private\_subnet) | (Optional) When true, create the private subnet tier and its route tables/associations. When false, none are created and private-tier outputs return empty lists. Defaults true. | `bool` | `true` | no |
+| <a name="input_enable_public_subnet"></a> [enable\_public\_subnet](#input\_enable\_public\_subnet) | (Optional) When true, create the public subnet tier and its route table associations. When false, none are created and public-tier outputs return empty lists. Also gates the internet gateway / NAT gateway (see notes). Defaults true. | `bool` | `true` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. | `bool` | `false` | no |
 | <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. | `bool` | `false` | no |
+| <a name="input_enable_workspaces_subnet"></a> [enable\_workspaces\_subnet](#input\_enable\_workspaces\_subnet) | (Optional) When true, create the workspaces subnet tier and its route tables/associations. When false, none are created. Defaults true. | `bool` | `true` | no |
 | <a name="input_flow_deliver_cross_account_role"></a> [flow\_deliver\_cross\_account\_role](#input\_flow\_deliver\_cross\_account\_role) | (Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account. | `string` | `null` | no |
 | <a name="input_flow_log_destination_type"></a> [flow\_log\_destination\_type](#input\_flow\_log\_destination\_type) | (Optional) The type of the logging destination. Valid values: cloud-watch-logs, s3. Default: cloud-watch-logs. | `string` | `"cloud-watch-logs"` | no |
 | <a name="input_flow_log_format"></a> [flow\_log\_format](#input\_flow\_log\_format) | (Optional) The fields to include in the flow log record, in the order in which they should appear. For more information, see Flow Log Records. Default: fields are in the order that they are described in the Flow Log Records section. | `string` | `null` | no |
