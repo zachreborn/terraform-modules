@@ -110,6 +110,22 @@ To opt out entirely (no new resources, clean plan), set
 set `attach_identity_center_scp = false`. To attach the SCP to specific OUs or
 accounts instead of the organization root, set `identity_center_scp_target_ids`.
 
+### Centralized Security Services
+
+The default `aws_service_access_principals` enables AWS Organizations trusted
+access for the centralized security services this module library integrates
+with: Security Hub (both Security Hub CSPM and the unified Security Hub),
+GuardDuty, Config, IAM Access Analyzer, and Inspector. Keeping these in the
+organization module makes it the single source of truth for trusted access, so
+the delegated-administrator modules (`security_hub/organization`,
+`guardduty/organization`, `config/organization`, etc.) do not enable a principal
+out-of-band and cause perpetual drift on the next apply of this module.
+
+**Caveat:** once a service has a registered delegated administrator, AWS will not
+let you remove its principal from this list until the delegated administrator is
+deregistered. Remove the delegated-administrator resource first, then drop the
+principal.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -120,20 +136,20 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.78.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.78.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_centralized_backup"></a> [centralized\_backup](#module\_centralized\_backup) | ../policy | n/a |
 | <a name="module_centralized_root"></a> [centralized\_root](#module\_centralized\_root) | ../../iam/organizations_features | n/a |
 | <a name="module_identity_center_scp"></a> [identity\_center\_scp](#module\_identity\_center\_scp) | ../policy | n/a |
@@ -141,16 +157,16 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_organizations_organization.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organization) | resource |
 | [aws_organizations_policy_attachment.identity_center_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_attach_identity_center_scp"></a> [attach\_identity\_center\_scp](#input\_attach\_identity\_center\_scp) | (Optional) If true, attaches the Identity Center deny SCP to the targets in identity\_center\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
-| <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br/>  "account.amazonaws.com",<br/>  "aws-artifact-account-sync.amazonaws.com",<br/>  "backup.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "health.amazonaws.com",<br/>  "sso.amazonaws.com"<br/>]</pre> | no |
+| <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable trusted access (integration) with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. The default list enables the centralized security services this module library integrates with (Security Hub, GuardDuty, Config, IAM Access Analyzer, and Inspector) so that their delegated-administrator modules do not create trusted-access drift. Note: once a service has a registered delegated administrator, removing its principal from this list will fail until the delegated administrator is deregistered. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br/>  "access-analyzer.amazonaws.com",<br/>  "account.amazonaws.com",<br/>  "aws-artifact-account-sync.amazonaws.com",<br/>  "backup.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "config.amazonaws.com",<br/>  "guardduty.amazonaws.com",<br/>  "health.amazonaws.com",<br/>  "inspector2.amazonaws.com",<br/>  "securityhub.amazonaws.com",<br/>  "sso.amazonaws.com"<br/>]</pre> | no |
 | <a name="input_enable_identity_center_scp"></a> [enable\_identity\_center\_scp](#input\_enable\_identity\_center\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies sso:CreateInstance organization-wide so member accounts cannot create account-level IAM Identity Center instances. Defaults to true. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `true` | no |
 | <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) If true, enables the organization backup policy. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enabled_features"></a> [enabled\_features](#input\_enabled\_features) | A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions. | `list(string)` | <pre>[<br/>  "RootCredentialsManagement",<br/>  "RootSessions"<br/>]</pre> | no |
@@ -164,7 +180,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_accounts"></a> [accounts](#output\_accounts) | List of organization accounts.All elements have these attributes: arn, email, id, name, status. |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the organization |
 | <a name="output_id"></a> [id](#output\_id) | ID of the organization |
