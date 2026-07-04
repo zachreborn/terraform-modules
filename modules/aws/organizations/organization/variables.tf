@@ -3,14 +3,19 @@
 ############################################################
 
 variable "aws_service_access_principals" {
-  description = "(Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature_set set to ALL. For additional information, see the AWS Organizations User Guide."
+  description = "(Optional) List of AWS service principal names for which you want to enable trusted access (integration) with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature_set set to ALL. The default list enables the centralized security services this module library integrates with (Security Hub, GuardDuty, Config, IAM Access Analyzer, and Inspector) so that their delegated-administrator modules do not create trusted-access drift. Note: once a service has a registered delegated administrator, removing its principal from this list will fail until the delegated administrator is deregistered. For additional information, see the AWS Organizations User Guide."
   type        = list(string)
   default = [
+    "access-analyzer.amazonaws.com",
     "account.amazonaws.com",
     "aws-artifact-account-sync.amazonaws.com",
     "backup.amazonaws.com",
     "cloudtrail.amazonaws.com",
+    "config.amazonaws.com",
+    "guardduty.amazonaws.com",
     "health.amazonaws.com",
+    "inspector2.amazonaws.com",
+    "securityhub.amazonaws.com",
     "sso.amazonaws.com",
   ]
 }
