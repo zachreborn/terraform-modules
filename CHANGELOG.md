@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.24.0](https://github.com/zachreborn/terraform-modules/compare/v8.23.0...v8.24.0) (2026-07-04)
+
+
+### Features
+
+* **security-hub:** support AWS Security Hub 2026 changes (CSPM + unified v2) ([#352](https://github.com/zachreborn/terraform-modules/issues/352)) ([b1a4f95](https://github.com/zachreborn/terraform-modules/commit/b1a4f952e82a363880019c2691499aa1b6c76277))
+
 ## [8.23.0](https://github.com/zachreborn/terraform-modules/compare/v8.22.0...v8.23.0) (2026-06-30)
 
 
