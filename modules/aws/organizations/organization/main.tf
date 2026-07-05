@@ -90,3 +90,68 @@ resource "aws_organizations_policy_attachment" "identity_center_scp" {
     }
   }
 }
+
+###########################################################
+# Region Restriction Service Control Policy
+###########################################################
+
+locals {
+  # Condition block for the Region-deny SCP. The StringNotEquals key denies any
+  # regional action whose aws:RequestedRegion is not in allowed_regions. The
+  # ArnNotLike key is added only when exempted principal ARNs are supplied, so
+  # break-glass / execution roles are not locked out. Keys within a single
+  # Condition are AND-ed.
+  region_scp_condition = jsonencode(merge(
+    {
+      StringNotEquals = {
+        "aws:RequestedRegion" = var.allowed_regions
+      }
+    },
+    length(var.region_scp_exempted_principal_arns) > 0 ? {
+      ArnNotLike = {
+        "aws:PrincipalARN" = var.region_scp_exempted_principal_arns
+      }
+    } : {}
+  ))
+
+  # Targets the SCP is attached to. Defaults to the organization root when no
+  # explicit targets are supplied and attachment is enabled.
+  region_scp_attachment_target_ids = (
+    var.enable_region_scp && var.attach_region_scp
+    ? (
+      var.region_scp_target_ids != null
+      ? var.region_scp_target_ids
+      : [aws_organizations_organization.org.roots[0].id]
+    )
+    : []
+  )
+}
+
+module "region_scp" {
+  source = "../policy"
+
+  for_each = var.enable_region_scp ? { "region_scp" = "true" } : {}
+
+  content = templatefile("${path.module}/policies/deny_regions_scp.json", {
+    exempted_actions = var.region_scp_exempted_actions
+    condition        = local.region_scp_condition
+  })
+  description = var.region_scp_description
+  name        = var.region_scp_name
+  type        = "SERVICE_CONTROL_POLICY"
+  tags        = var.tags
+}
+
+resource "aws_organizations_policy_attachment" "region_scp" {
+  for_each = toset(local.region_scp_attachment_target_ids)
+
+  policy_id = module.region_scp["region_scp"].id
+  target_id = each.value
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_region_scp || contains(coalesce(var.enabled_policy_types, []), "SERVICE_CONTROL_POLICY")
+      error_message = "enable_region_scp is true but \"SERVICE_CONTROL_POLICY\" is not present in enabled_policy_types. Add \"SERVICE_CONTROL_POLICY\" to enabled_policy_types so the Region-deny SCP can be created and attached."
+    }
+  }
+}

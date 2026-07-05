@@ -80,6 +80,61 @@ variable "identity_center_scp_target_ids" {
 }
 
 ############################################################
+# Region Restriction Service Control Policy
+############################################################
+
+variable "enable_region_scp" {
+  description = "(Optional) If true, creates a Service Control Policy (SCP) which denies regional AWS service actions outside the Regions listed in allowed_regions (global/non-regional services are exempted via NotAction). Opt-in: defaults to false so existing callers see no change until they enable it. Requires SERVICE_CONTROL_POLICY in enabled_policy_types."
+  type        = bool
+  default     = false
+}
+
+variable "allowed_regions" {
+  description = "(Required when enable_region_scp is true) List of AWS Regions where regional service actions remain allowed (e.g. [\"us-east-1\", \"us-west-2\"]). Used as the aws:RequestedRegion StringNotEquals value in the Region-deny SCP. Consider including us-east-1 because some global features route through it. Ignored when enable_region_scp is false."
+  type        = list(string)
+  validation {
+    condition     = !var.enable_region_scp || length(var.allowed_regions) > 0
+    error_message = "allowed_regions must contain at least one Region when enable_region_scp is true."
+  }
+}
+
+variable "region_scp_name" {
+  description = "(Optional) Name of the Region-deny SCP. Used as the name of the aws_organizations_policy created via the policy module."
+  type        = string
+  default     = "DenyAccessOutsideApprovedRegions"
+}
+
+variable "region_scp_description" {
+  description = "(Optional) Description of the Region-deny SCP."
+  type        = string
+  default     = "Denies regional AWS service actions outside the approved Regions in var.allowed_regions, exempting global services."
+}
+
+variable "attach_region_scp" {
+  description = "(Optional) If true, attaches the Region-deny SCP to the targets in region_scp_target_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "region_scp_target_ids" {
+  description = "(Optional) List of organization root, OU, or account IDs to attach the Region-deny SCP to. When null and attach_region_scp is true, the SCP is attached to the organization root. Defaults to null."
+  type        = list(string)
+  default     = null
+}
+
+variable "region_scp_exempted_principal_arns" {
+  description = "(Optional) List of IAM principal ARNs (wildcards allowed, e.g. arn:aws:iam::*:role/BreakGlassRole) excluded from the Region deny via an ArnNotLike condition on aws:PrincipalARN, so break-glass / execution roles are not locked out. When empty, no ArnNotLike condition is added. Defaults to []."
+  type        = list(string)
+  default     = []
+}
+
+variable "region_scp_exempted_actions" {
+  description = "(Optional) Additional actions merged into the built-in global-service NotAction list, for callers who depend on global services not covered out of the box (e.g. [\"pricingplanmanager:*\"]). Defaults to []."
+  type        = list(string)
+  default     = []
+}
+
+############################################################
 # General Variables
 ############################################################
 
