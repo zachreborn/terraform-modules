@@ -92,6 +92,7 @@ variable "enable_region_scp" {
 variable "allowed_regions" {
   description = "(Required when enable_region_scp is true) List of AWS Regions where regional service actions remain allowed (e.g. [\"us-east-1\", \"us-west-2\"]). Used as the aws:RequestedRegion StringNotEquals value in the Region-deny SCP. Consider including us-east-1 because some global features route through it. Ignored when enable_region_scp is false."
   type        = list(string)
+  default     = []
   validation {
     condition     = !var.enable_region_scp || length(var.allowed_regions) > 0
     error_message = "allowed_regions must contain at least one Region when enable_region_scp is true."
