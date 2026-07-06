@@ -61,7 +61,7 @@ jobs:
           fi
 
       - name: Run Oz triage agent
-        uses: warpdotdev/oz-agent-action@cc32546e933acdc86dd6a9b4dd02ec956dcd8a5b # v1.0.17
+        uses: warpdotdev/oz-agent-action@8ba4e142060cca997ddf354d8c40da7511110510 # v1.0.23
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
