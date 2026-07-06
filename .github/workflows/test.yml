@@ -39,7 +39,8 @@ jobs:
         id: test
         # Runs `tofu test` in every module directory that has its own tests/ directory.
         # Modules without tests are skipped, so this scales automatically as more modules
-        # adopt native tofu test coverage.
+        # adopt native tofu test coverage. See AGENTS.md § Module Design Specifications
+        # (Native Test Coverage) for the coverage requirements this step enforces.
         run: |
           set -euo pipefail
           status=0
