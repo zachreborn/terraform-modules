@@ -107,8 +107,8 @@ run "field_defaults_are_applied" {
   }
 
   assert {
-    condition     = aws_organizations_account.this["company_ventures"].iam_user_access_to_billing == "ALLOW"
-    error_message = "iam_user_access_to_billing should default to ALLOW."
+    condition     = aws_organizations_account.this["company_ventures"].iam_user_access_to_billing == null
+    error_message = "iam_user_access_to_billing has no module-level default -- it must stay null when unset, so the AWS API can apply its own default without this module ever coercing an unmanaged value."
   }
 
   assert {
@@ -119,6 +119,25 @@ run "field_defaults_are_applied" {
   assert {
     condition     = aws_organizations_account.this["company_ventures"].close_on_deletion == false
     error_message = "close_on_deletion should default to false."
+  }
+}
+
+run "explicit_null_iam_user_access_to_billing_is_not_coerced" {
+  command = plan
+
+  variables {
+    accounts = {
+      company_ventures = {
+        email                      = "jdoe@example.com"
+        parent_id                  = "r-abcd1234"
+        iam_user_access_to_billing = null
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_organizations_account.this["company_ventures"].iam_user_access_to_billing == null
+    error_message = "An explicit null for iam_user_access_to_billing must pass through unchanged. iam_user_access_to_billing is a ForceNew attribute on aws_organizations_account, so an object-attribute default would silently replace an intentional null with a concrete value and force destroy/recreate of real accounts."
   }
 }
 

@@ -21,7 +21,15 @@ variable "accounts" {
                                      another AWS account.
       - parent_id:                  (Optional) Literal parent Root or OU ID. Conflicts with parent_key.
       - parent_key:                 (Optional) Key into var.organizational_unit_ids. Conflicts with parent_id.
-      - iam_user_access_to_billing: (Optional) ALLOW or DENY. Defaults to ALLOW.
+      - iam_user_access_to_billing: (Optional) ALLOW or DENY. No module-level default is applied -- unlike
+                                     a plain optional field, an object-attribute default would silently
+                                     replace an explicit null with a concrete value even when the caller
+                                     set null on purpose (e.g. to leave a pre-existing account's setting
+                                     untouched). Since this attribute forces replacement of the account
+                                     when changed, a coerced default could destroy and recreate real
+                                     accounts. Leave unset (or explicitly null) to let the AWS API apply
+                                     its own default (ALLOW) for new accounts, or to avoid managing this
+                                     attribute at all for existing ones.
       - role_name:                  (Optional) Name of the IAM role Organizations preconfigures in the new
                                      account. Defaults to OrganizationAccountAccessRole.
       - close_on_deletion:          (Optional) If true, a deletion event will close the account. Defaults to false.
@@ -32,7 +40,7 @@ variable "accounts" {
     email                      = string
     parent_id                  = optional(string)
     parent_key                 = optional(string)
-    iam_user_access_to_billing = optional(string, "ALLOW")
+    iam_user_access_to_billing = optional(string)
     role_name                  = optional(string, "OrganizationAccountAccessRole")
     close_on_deletion          = optional(bool, false)
     tags                       = optional(map(string), {})

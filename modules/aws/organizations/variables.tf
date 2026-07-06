@@ -69,13 +69,15 @@ variable "accounts" {
     modules/aws/organizations/account's accounts variable. organizational_unit_ids is wired
     automatically from the organizational_units created by this same module call, so there is no
     separate organizational_unit_ids input here.
+    Note: iam_user_access_to_billing has no default here either, for the same reason it has none in the
+    account submodule -- see that module's variable description for details.
   EOT
   type = map(object({
     name                       = optional(string)
     email                      = string
     parent_id                  = optional(string)
     parent_key                 = optional(string)
-    iam_user_access_to_billing = optional(string, "ALLOW")
+    iam_user_access_to_billing = optional(string)
     role_name                  = optional(string, "OrganizationAccountAccessRole")
     close_on_deletion          = optional(bool, false)
     tags                       = optional(map(string), {})
