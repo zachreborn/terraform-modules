@@ -66,6 +66,10 @@
 
 If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module together with [`modules/aws/organizations/ou`](../ou) and [`modules/aws/organizations/account`](../account), including defaulting a bare top-level OU's `parent_id` to this module's root. This module remains fully usable standalone (as shown below).
 
+Already using this module alongside `ou`/`account` and upgrading from v8? See the
+[migration guide](../MIGRATION.md) for both options: keep the three modules separate, or consolidate
+into the composed module.
+
 ### Simple Example
 
 This example creates an AWS Organization with the default settings.

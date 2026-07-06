@@ -66,6 +66,10 @@
 
 If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module and [`modules/aws/organizations/ou`](../ou) together automatically. This module remains fully usable standalone (as shown below) for partial adoption, e.g. accounts managed here attaching to OUs created by a different process.
 
+Upgrading from v8 and using this module alongside `organization`/`ou`? See the
+[migration guide](../MIGRATION.md) for both options: keep the modules separate (Path A, summarized in
+the Migration Guide below), or consolidate into the composed module (Path B).
+
 ### Flat Example
 
 This example creates two member accounts, one attached via a literal parent OU ID and one attached via `parent_key` to an OU ID supplied by the caller (e.g. sourced from `modules/aws/organizations/ou`). `name` is optional and defaults to the entry's map key, so it's omitted below; `email` has no default and is always required.

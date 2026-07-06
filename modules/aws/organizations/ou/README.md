@@ -66,6 +66,10 @@
 
 If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module and [`modules/aws/organizations/account`](../account) together automatically, including defaulting a bare top-level OU's `parent_id` to the managed Organization's root. This module remains fully usable standalone (as shown below) for partial adoption, e.g. OUs managed here with accounts vended by a different process.
 
+Upgrading from v8 and using this module alongside `organization`/`account`? See the
+[migration guide](../MIGRATION.md) for both options: keep the modules separate (Path A, summarized in
+the Migration Guide below), or consolidate into the composed module (Path B).
+
 ### Flat and Nested Example
 
 This example creates four top-level OUs and three OUs nested under `workloads`, mirroring a typical AWS Organizations layout. `name` is optional and defaults to the entry's map key, so it's omitted below; called standalone (without the composed module above), every entry must still set `parent_id` or `parent_key` explicitly, since this module has no way to default a parent on its own.

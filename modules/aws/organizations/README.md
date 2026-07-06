@@ -68,6 +68,10 @@ own for partial adoption (e.g. an Organization managed by Control Tower, with on
 this module). Use this composed module when you always want all three managed together from a single
 set of inputs, as described in each submodule's own README.
 
+Already calling `organization`, `ou`, and/or `account` directly? See [MIGRATION.md](MIGRATION.md) for
+both available paths: keep the modules separate and update to their new map-based interfaces, or
+consolidate into this composed module.
+
 ### Single YAML File Example
 
 One YAML file with `organization:`, `organizational_units:`, and `accounts:` top-level keys drives all
