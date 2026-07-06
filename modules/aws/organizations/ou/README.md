@@ -62,17 +62,175 @@
 
 ## Usage
 
-### Simple Example
+### Composed Module
 
-This example creates a new OU named 'Prod'.
+If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module and [`modules/aws/organizations/account`](../account) together automatically, including defaulting a bare top-level OU's `parent_id` to the managed Organization's root. This module remains fully usable standalone (as shown below) for partial adoption, e.g. OUs managed here with accounts vended by a different process.
+
+### Flat and Nested Example
+
+This example creates four top-level OUs and three OUs nested under `workloads`, mirroring a typical AWS Organizations layout. `name` is optional and defaults to the entry's map key, so it's omitted below; called standalone (without the composed module above), every entry must still set `parent_id` or `parent_key` explicitly, since this module has no way to default a parent on its own.
 
 ```
+module "organizational_units" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+
+  organizational_units = {
+    aws_infrastructure = {
+      parent_id = "r-n1v2"
+    }
+    cybersecurity = {
+      parent_id = "r-n1v2"
+    }
+    workloads = {
+      parent_id = "r-n1v2"
+    }
+    suspended = {
+      parent_id = "r-n1v2"
+    }
+    prod = {
+      parent_key = "workloads"
+    }
+    staging = {
+      parent_key = "workloads"
+    }
+    dev = {
+      parent_key = "workloads"
+    }
+  }
+}
+```
+
+Other resources can look up a specific OU's ID via `module.organizational_units.ids["prod"]`.
+
+### YAML File Example
+
+For larger organizations, source the map from a YAML file instead of inlining it:
+
+```yaml
+# organizational_units.yaml
+workloads:
+  parent_id: r-n1v2
+prod:
+  parent_key: workloads
+```
+
+```
+locals {
+  organizational_units = yamldecode(file("${path.module}/organizational_units.yaml"))
+}
+
+module "organizational_units" {
+  source                = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+  organizational_units  = local.organizational_units
+}
+```
+
+### Cross-Module Composition with the Account Module
+
+This module's `ids` output is designed to be passed directly into [`modules/aws/organizations/account`](../account)'s `organizational_unit_ids` input, so accounts can attach to OUs created here via a `parent_key` instead of a hardcoded ID. Both modules' inputs can be sourced from a single YAML file with `organizational_units:` and `accounts:` top-level keys — or use [`modules/aws/organizations`](..), which does this wiring for you:
+
+```yaml
+# organization_structure.yaml
+organizational_units:
+  workloads:
+    parent_id: r-n1v2
+  prod:
+    parent_key: workloads
+
+accounts:
+  company_name:
+    email: jdoe@example.com
+    parent_key: prod
+```
+
+```
+locals {
+  org_structure = yamldecode(file("${path.module}/organization_structure.yaml"))
+}
+
+module "organizational_units" {
+  source                = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+  organizational_units  = local.org_structure.organizational_units
+}
+
+module "accounts" {
+  source                   = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+  accounts                 = local.org_structure.accounts
+  organizational_unit_ids  = module.organizational_units.ids
+}
+```
+
+### Migration Guide (v8 -> v9)
+
+Version 9 replaces the single-OU `name`/`parent_id` inputs and singular `id`/`arn`/`accounts` outputs with the map-based `organizational_units` input and keyed `ids`/`arns`/`accounts` outputs described above. This is a **breaking change** (shipped as a `feat!:` commit, bumping the module's MAJOR version per this repo's release-please conventions) because:
+- The `name` and `parent_id` variables no longer exist; all configuration moves into `organizational_units` map entries.
+- The `id`, `arn`, and `accounts` outputs are now `ids`, `arns`, and `accounts` maps keyed by logical name instead of single values.
+- Within each `organizational_units` entry, `name` is optional and defaults to the entry's map key, so it can be omitted whenever it would just repeat the key.
+
+#### Step 1: Convert each module call into one map entry
+
+Each existing `module "x_ou" { name = ...; parent_id = ... }` block becomes one entry in a single `organizational_units` map. Replace any `parent_id = module.<other_ou>.id` reference with `parent_key = "<other_ou_key>"` when the parent OU is also being created by this same module call.
+
+For example, this:
+
+```
+module "workloads_ou" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+  name      = "workloads"
+  parent_id = module.company_organization.roots[0].id
+}
+
 module "prod_ou" {
   source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
   name      = "prod"
-  parent_id = "r-n1v2"
+  parent_id = module.workloads_ou.id
 }
 ```
+
+becomes:
+
+```
+module "organizational_units" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+
+  organizational_units = {
+    workloads = {
+      name      = "workloads"
+      parent_id = module.company_organization.roots[0].id
+    }
+    prod = {
+      name       = "prod"
+      parent_key = "workloads"
+    }
+  }
+}
+```
+
+#### Step 2: Move state instead of letting Terraform destroy/recreate
+
+AWS refuses to delete a non-empty OU, so a plain apply of the config above would fail: Terraform would want to destroy `module.workloads_ou.aws_organizations_organizational_unit.this` and create a new resource at a different address. Add a `moved` block per existing OU to your **consumer** configuration (not this module) so Terraform reconciles state instead:
+
+```
+moved {
+  from = module.workloads_ou.aws_organizations_organizational_unit.this
+  to   = module.organizational_units.aws_organizations_organizational_unit.level_0["workloads"]
+}
+
+moved {
+  from = module.prod_ou.aws_organizations_organizational_unit.this
+  to   = module.organizational_units.aws_organizations_organizational_unit.level_1["prod"]
+}
+```
+
+The destination resource name depends on how deeply nested the OU is: entries with a literal `parent_id` land in `level_0`, entries whose `parent_key` points at a `level_0` entry land in `level_1`, and so on up to `level_3`. `moved` blocks work across module-instance boundaries like this; this pattern is already used in downstream consumers (e.g. this repo's reference consumer keeps a `moved.tf` for module renames).
+
+#### Step 3: Update downstream references
+
+| Old reference | New reference |
+|---|---|
+| `module.workloads_ou.id` | `module.organizational_units.ids["workloads"]` |
+| `module.workloads_ou.arn` | `module.organizational_units.arns["workloads"]` |
+| `module.workloads_ou.accounts` | `module.organizational_units.accounts["workloads"]` |
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -84,14 +242,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -101,24 +259,26 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
-| [aws_organizations_organizational_unit.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
+| ---- | ---- |
+| [aws_organizations_organizational_unit.level_0](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
+| [aws_organizations_organizational_unit.level_1](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
+| [aws_organizations_organizational_unit.level_2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
+| [aws_organizations_organizational_unit.level_3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organizational_unit) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | (Required) The name of the Organizational Unit. | `string` | n/a | yes |
-| <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id) | (Required) The unique identifier (ID) of the parent root or organizational unit (OU) that you want to create the OU in. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_organizational_units"></a> [organizational\_units](#input\_organizational\_units) | (Required) Map of Organizational Units to create, keyed by a caller-chosen logical name (e.g. "workloads").<br/>A bare entry (e.g. `workloads:` with no value in YAML, which decodes to null) is accepted and treated as<br/>an entry with no fields set; this is only useful when the map is being resolved by a caller (such as the<br/>modules/aws/organizations composed module) that fills in a parent\_id before passing the map here, since<br/>this module itself always requires an explicit parent (see below).<br/>Each entry must set exactly one of:<br/>  - parent\_id:  A literal parent Root ID (e.g. "r-abcd") or an externally-managed OU ID. Use this for<br/>                top-level entries whose parent is not itself created by this module call.<br/>  - parent\_key: The map key of another entry in this same variable that is this OU's parent. Use this<br/>                for OUs nested under an OU also being created by this module call (e.g. an entry named<br/>                "prod" can set parent\_key = "workloads" to nest under the "workloads" entry).<br/>Nesting via parent\_key is supported up to 4 levels deep (i.e. an entry's parent\_key chain may pass<br/>through at most 3 other entries before reaching an entry that sets a literal parent\_id). AWS<br/>Organizations itself supports up to 5 levels of OUs below the root; entries that would resolve deeper<br/>than the 4 levels supported here will fail the precondition on the module's `ids` output.<br/>Fields:<br/>  - name:       (Optional) The name of the Organizational Unit. Defaults to the entry's map key when unset.<br/>  - parent\_id:  (Optional) Literal parent Root or OU ID. Conflicts with parent\_key.<br/>  - parent\_key: (Optional) Key of another entry in this map that is this OU's parent. Conflicts with parent\_id.<br/>  - tags:       (Optional) Additional tags for this OU, merged with var.tags. | <pre>map(object({<br/>    name       = optional(string)<br/>    parent_id  = optional(string)<br/>    parent_key = optional(string)<br/>    tags       = optional(map(string), {})<br/>  }))</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to every Organizational Unit, merged with each entry's optional per-OU tags. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| <a name="output_accounts"></a> [accounts](#output\_accounts) | The list of accounts in the Organizational Unit. |
-| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the Organizational Unit. |
-| <a name="output_id"></a> [id](#output\_id) | The ID of the Organizational Unit. |
+| ---- | ----------- |
+| <a name="output_accounts"></a> [accounts](#output\_accounts) | Map of the list of accounts in each Organizational Unit, keyed by the same keys as var.organizational\_units. |
+| <a name="output_arns"></a> [arns](#output\_arns) | Map of Organizational Unit ARNs, keyed by the same keys as var.organizational\_units. |
+| <a name="output_ids"></a> [ids](#output\_ids) | Map of Organizational Unit IDs, keyed by the same keys as var.organizational\_units. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

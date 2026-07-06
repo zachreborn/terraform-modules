@@ -62,6 +62,10 @@
 
 ## Usage
 
+### Composed Module
+
+If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module together with [`modules/aws/organizations/ou`](../ou) and [`modules/aws/organizations/account`](../account), including defaulting a bare top-level OU's `parent_id` to this module's root. This module remains fully usable standalone (as shown below).
+
 ### Simple Example
 
 This example creates an AWS Organization with the default settings.
