@@ -2,9 +2,11 @@
 name: Test
 on:
   pull_request:
-  push:
-    branches:
-      - main
+  # Weekly regression run: catches upstream drift in linter rules and tofu
+  # version changes without requiring a PR. terraform-docs drift is covered
+  # by the equivalent schedule in build.yml.
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
 
 permissions:
   contents: read
@@ -18,10 +20,10 @@ jobs:
 
     steps:
       - name: OpenTofu - Setup OpenTofu
-        uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4 # v2.0.1
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
 
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
@@ -33,6 +35,23 @@ jobs:
         id: fmt
         run: tofu fmt -check -diff -recursive
 
+      - name: OpenTofu test
+        id: test
+        # Runs `tofu test` in every module directory that has its own tests/ directory.
+        # Modules without tests are skipped, so this scales automatically as more modules
+        # adopt native tofu test coverage. See AGENTS.md § Module Design Specifications
+        # (Native Test Coverage) for the coverage requirements this step enforces.
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r -d '' dir; do
+            module_dir="$(dirname "$dir")"
+            echo "::group::tofu test - ${module_dir}"
+            (cd "${module_dir}" && tofu init -backend=false && tofu test) || status=1
+            echo "::endgroup::"
+          done < <(find modules -type d -name tests -print0)
+          exit "${status}"
+
   test_unicode:
     name: Invisible Unicode Check
     runs-on: ubuntu-latest
@@ -41,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
@@ -58,7 +77,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           # Full git history is needed to get a proper
           # list of changed files within `super-linter`
@@ -67,10 +86,13 @@ jobs:
 
       # Run Linter against code base
       - name: Run linter against all changed files
-        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8
+        uses: super-linter/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: false
+          # On pull_request events, only lint changed files for speed.
+          # On schedule events there is no diff, so scan the full codebase
+          # to make the weekly regression run meaningful.
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'schedule' }}
           VALIDATE_BIOME_FORMAT: false
           VALIDATE_BIOME_LINT: false
           VALIDATE_JSCPD: false

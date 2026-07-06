@@ -136,3 +136,10 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the Athena workgroup. |
 | <a name="output_id"></a> [id](#output\_id) | The name of the Athena workgroup, which serves as its ID. |
 <!-- END_TF_DOCS -->
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)

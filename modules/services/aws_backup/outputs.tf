@@ -13,3 +13,8 @@ output "vault_monthly_arn" {
 output "vault_disaster_recovery_arn" {
   value = aws_backup_vault.vault_disaster_recovery.arn
 }
+
+output "organization_backup_plan_policy_id" {
+  description = "The id of the AWS Organizations resource policy created for the organization backup plan, or null when enable_organization_backup is false."
+  value       = try(module.organization_backup_plan["this"].id, null)
+}

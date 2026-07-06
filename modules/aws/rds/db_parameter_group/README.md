@@ -28,7 +28,7 @@
 
 <h3 align="center">RDS DB Parameter Group</h3>
   <p align="center">
-    Deploys a DB paramter group in RDS
+    Deploys a DB parameter group in RDS
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -147,8 +147,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

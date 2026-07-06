@@ -30,3 +30,10 @@ The Lambda function handles automated deployment of backup vaults across organiz
 - Creating IAM roles for AWS Backup service
 - Deploying backup vaults (production and DR) to each account
 - Configuring vault policies and lock settings
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)

@@ -35,9 +35,13 @@ Read the spec file in full before making any changes.
 - `AGENTS.md` — repo conventions: four-file module layout,
   `opentofu >= 1.6.0` / `terraform >= 1.0.0`, `aws >= 6.0.0`, section header
   style, `tags = merge(tomap({ Name = var.name }), var.tags)` pattern,
-  `count = var.enable_x ? 1 : 0` conditional pattern, lifecycle ignores, and
-  tfsec suppression style.
-- `modules/module_template/` — the starting point for new modules.
+  `count = var.enable_x ? 1 : 0` conditional pattern, lifecycle ignores,
+  tfsec suppression style, and the Native Test Coverage requirement (§ 6 of
+  Module Design Specifications).
+- `modules/module_template/` — the starting point for new modules, including
+  its `tests/` scaffolding.
+- `modules/aws/organizations/tests/` — a worked example of the `mock_provider`
+  / `run` / `expect_failures` test conventions.
 - `.github/pull_request_template.md` — the required PR body shape.
 
 ## Implementation rules
@@ -55,6 +59,32 @@ Read the spec file in full before making any changes.
 - If you add a Checkov suppression, document the rationale in a comment per the
   convention in `AGENTS.md`.
 
+## Testing requirements
+
+Every module you create or significantly modify must ship (or extend) a
+`tests/` directory of native OpenTofu tests implementing the spec's § 8
+Testing plan in full. At minimum, cover:
+
+- A valid-baseline `run` block proving a normal plan succeeds.
+- One `expect_failures` case per variable `validation { ... }` rule.
+- One case per conditional/`count`/`for_each` branch (each side of the toggle).
+- Assertions on every meaningful output.
+- Wiring assertions between this module and any submodules it calls, for
+  wrapper/composition modules.
+
+Use `mock_provider` / `mock_resource` blocks so tests run offline, with no real
+cloud credentials or backend. Run `tofu -chdir=<module_path> init -backend=false`
+followed by `tofu -chdir=<module_path> test` and confirm every case passes
+before opening the PR.
+
+**Never weaken a test to make it pass.** Do not narrow an `assert` condition,
+delete or skip a `run` block, loosen an `expect_failures` case, or mock away
+the exact behavior under test merely to turn a failing test green. A failing
+test is a signal that something is wrong with the module code you just wrote —
+find and fix the root cause there. Only change the test itself if its logic is
+demonstrably incorrect, and even then, make it more correct, not weaker.
+Re-run `tofu test` until every case passes for the right reason.
+
 ## Commit and PR
 
 - Branch name: `feat/issue-<issue_number>-<slug>` for features, or
@@ -70,10 +100,12 @@ Read the spec file in full before making any changes.
   (with `Fixes #<issue_number>`), Type of change, Breaking Changes, and TODOs.
 - Post a comment on the originating issue with the PR URL.
 
-Before marking the PR ready, walk the implementation rules above and every
-required PR-template section one item at a time and confirm each is satisfied.
-Do not stop at the first gap or leave a template section blank. An incomplete
-change fails CI or review and forces another round, so complete every item now.
+Before marking the PR ready, walk the implementation rules above, the Testing
+requirements, and every required PR-template section one item at a time and
+confirm each is satisfied. Do not stop at the first gap or leave a template
+section blank, and do not let a weakened test count as satisfying the Testing
+requirements. An incomplete change fails CI or review and forces another
+round, so complete every item now.
 
 ## CI expectations
 
