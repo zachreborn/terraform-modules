@@ -27,3 +27,10 @@ No inputs.
 
 No outputs.
 <!-- END_TF_DOCS -->
+<!-- ACKNOWLEDGMENTS -->
+
+## Acknowledgments
+
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)

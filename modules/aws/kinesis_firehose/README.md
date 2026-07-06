@@ -28,7 +28,7 @@
 
 <h3 align="center">Kinesis Firehose Module</h3>
   <p align="center">
-    This module sets up each componenet required to build a Kinesis Firehose stream that will deliver to a dedicated S3 bucket. By default this module will be set up to work without any changes to variables. The result of this module creates a unique S3 bucket with a prefix of 'kinesis-firehose-', an IAM policy and IAM role which can be used with to deliver logs or data to that S3 bucket.
+    This module sets up each component required to build a Kinesis Firehose stream that will deliver to a dedicated S3 bucket. By default this module will be set up to work without any changes to variables. The result of this module creates a unique S3 bucket with a prefix of 'kinesis-firehose-', an IAM policy and IAM role which can be used with to deliver logs or data to that S3 bucket.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -170,8 +170,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

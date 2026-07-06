@@ -1,0 +1,128 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="ssm_domain_join Architecture" id="ssm-domain-join-arch">
+    <mxGraphModel dx="1197" dy="696" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== MODULE CONTAINER ===== -->
+        <mxCell id="10" value="&lt;b&gt;ssm_domain_join Module&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#333333;fontSize=14;verticalAlign=top;dashed=1;dashPattern=8 4;strokeWidth=2;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="30" y="40" width="360" height="570" as="geometry" />
+        </mxCell>
+
+        <!-- aws_ssm_document -->
+        <mxCell id="11" value="&lt;b&gt;aws_ssm_document.this&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;document_type: Command&lt;br/&gt;document_format: JSON&lt;br/&gt;action: aws:runPowerShellScript&lt;br/&gt;step: DomainJoin (idempotent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="65" y="95" width="290" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- aws_ssm_association -->
+        <mxCell id="12" value="&lt;b&gt;aws_ssm_association.this&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;targets: tag:ad_join = &amp;lt;value&amp;gt;&lt;br/&gt;parameters: DomainName, DnsServers,&lt;br/&gt;SecretArn&lt;br/&gt;compliance_severity: configurable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="65" y="265" width="290" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- aws_iam_role_policy -->
+        <mxCell id="13" value="&lt;b&gt;aws_iam_role_policy.secret_read&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Effect: Allow&lt;br/&gt;Action: secretsmanager:GetSecretValue&lt;br/&gt;Resource: var.secret_arn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="65" y="450" width="290" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- references: association → document (straight up, within module) -->
+        <mxCell id="14" value="references" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=10;fontStyle=2;strokeColor=#6c8ebf;" edge="1" source="12" target="11" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== EC2 INSTANCE CONTAINER ===== -->
+        <mxCell id="20" value="&lt;b&gt;EC2 Instance&lt;/b&gt;&lt;br/&gt;&lt;font style=&apos;font-size:10px;&apos;&gt;tag: ad_join = corp.example.com&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;verticalAlign=top;strokeWidth=2;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="490" y="155" width="230" height="310" as="geometry" />
+        </mxCell>
+
+        <!-- SSM Agent -->
+        <mxCell id="21" value="&lt;b&gt;SSM Agent&lt;/b&gt;&lt;br/&gt;&lt;font style=&apos;font-size:10px;&apos;&gt;pre-installed on Windows AMIs&lt;br/&gt;runs commands as SYSTEM&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="515" y="225" width="180" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- IAM Role -->
+        <mxCell id="22" value="&lt;b&gt;IAM Role&lt;/b&gt; (instance profile)&lt;br/&gt;&lt;font style=&apos;font-size:10px;&apos;&gt;from ssm_role module&lt;br/&gt;AmazonEC2RoleforSSM +&lt;br/&gt;secret_read inline policy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="515" y="355" width="180" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- ===== EXTERNAL SERVICES ===== -->
+        <!-- Secrets Manager -->
+        <mxCell id="30" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font style=&apos;font-size:10px;&apos;&gt;{ &quot;username&quot;: &quot;svc-adjoin&quot;,&lt;br/&gt;&amp;nbsp;&amp;nbsp;&quot;password&quot;: &quot;...&quot; }&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="820" y="175" width="190" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Active Directory -->
+        <mxCell id="31" value="&lt;b&gt;Active Directory&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font style=&apos;font-size:10px;&apos;&gt;corp.example.com&lt;br/&gt;(on-prem or AWS Managed AD)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="820" y="370" width="190" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ===== EDGES ===== -->
+
+        <!-- 1. Association targets EC2 by tag — exits RIGHT at exitY=0.7, straight to EC2 left -->
+        <mxCell id="40" value="1. targets by tag" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.62;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#0055aa;fontColor=#0055aa;strokeWidth=2;" edge="1" source="12" target="20" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 2. Association delivers document to SSM Agent — exits RIGHT at exitY=0.25, bends up -->
+        <mxCell id="41" value="2. delivers document" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#0055aa;fontColor=#0055aa;strokeWidth=2;" edge="1" source="12" target="21" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="435" y="294" />
+              <mxPoint x="435" y="262" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 3. IAM policy attaches to IAM Role — exits RIGHT, bends up via x=435 gap -->
+        <mxCell id="42" value="3. attaches inline policy" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#880088;fontColor=#880088;strokeWidth=2;" edge="1" source="13" target="22" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="435" y="505" />
+              <mxPoint x="435" y="397" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 4. IAM Role grants SSM Agent permission to read secret — exits TOP of IAM Role, enters BOTTOM of SSM Agent -->
+        <mxCell id="46" value="4. Gives Agent permissions" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#880088;fontColor=#880088;strokeWidth=2;" edge="1" source="22" target="21" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 5. SSM Agent → Secrets Manager (GetSecretValue) — top lane, straight right -->
+        <mxCell id="43" value="5. GetSecretValue" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#006600;fontColor=#006600;strokeWidth=2;" edge="1" source="21" target="30" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 6. Secrets Manager → SSM Agent (returns credentials, dashed) — bottom lane, straight left -->
+        <mxCell id="44" value="6. returns credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;fontSize=10;fontStyle=0;strokeColor=#006600;fontColor=#006600;dashed=1;strokeWidth=1;" edge="1" source="30" target="21" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 7. SSM Agent → Active Directory (Add-Computer) — exits RIGHT, bends down via x=760 -->
+        <mxCell id="45" value="7. Add-Computer (join domain)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeColor=#aa3300;fontColor=#aa3300;strokeWidth=2;" edge="1" source="21" target="31" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="288" />
+              <mxPoint x="760" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===== LEGEND ===== -->
+        <mxCell id="50" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="500" width="190" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="51" value="Module Resource" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="820" y="530" width="155" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="52" value="EC2 / Instance Component" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="820" y="566" width="155" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="53" value="External AWS Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="820" y="602" width="155" height="28" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

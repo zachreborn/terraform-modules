@@ -2,42 +2,73 @@
 # AWS Organization Account
 ############################################################
 
-variable "name" {
-  description = "(Required) A friendly name for the member account."
-  type        = string
+variable "accounts" {
+  description = <<-EOT
+    (Required) Map of AWS Organization member accounts to create, keyed by a caller-chosen logical name
+    (e.g. "company_name").
+    Each entry must set exactly one of:
+      - parent_id:  A literal parent Root or Organizational Unit ID.
+      - parent_key: A key into var.organizational_unit_ids (e.g. the `ids` output of
+                    modules/aws/organizations/ou) identifying the OU this account should be attached to.
+    Bare/null entries (e.g. an empty `foo:` in YAML) are not supported here, unlike
+    modules/aws/organizations/ou — there is no reasonable default for email, so every entry must at minimum
+    set email.
+    Fields:
+      - name:                       (Optional) A friendly name for the member account. Defaults to the
+                                     entry's map key when unset.
+      - email:                      (Required) The email address of the owner to assign to the new member
+                                     account. This email address must not already be associated with
+                                     another AWS account.
+      - parent_id:                  (Optional) Literal parent Root or OU ID. Conflicts with parent_key.
+      - parent_key:                 (Optional) Key into var.organizational_unit_ids. Conflicts with parent_id.
+      - iam_user_access_to_billing: (Optional) ALLOW or DENY. No module-level default is applied -- unlike
+                                     a plain optional field, an object-attribute default would silently
+                                     replace an explicit null with a concrete value even when the caller
+                                     set null on purpose (e.g. to leave a pre-existing account's setting
+                                     untouched). Since this attribute forces replacement of the account
+                                     when changed, a coerced default could destroy and recreate real
+                                     accounts. Leave unset (or explicitly null) to let the AWS API apply
+                                     its own default (ALLOW) for new accounts, or to avoid managing this
+                                     attribute at all for existing ones.
+      - role_name:                  (Optional) Name of the IAM role Organizations preconfigures in the new
+                                     account. Defaults to OrganizationAccountAccessRole.
+      - close_on_deletion:          (Optional) If true, a deletion event will close the account. Defaults to false.
+      - tags:                       (Optional) Additional tags for this account, merged with var.tags.
+  EOT
+  type = map(object({
+    name                       = optional(string)
+    email                      = string
+    parent_id                  = optional(string)
+    parent_key                 = optional(string)
+    iam_user_access_to_billing = optional(string)
+    role_name                  = optional(string, "OrganizationAccountAccessRole")
+    close_on_deletion          = optional(bool, false)
+    tags                       = optional(map(string), {})
+  }))
+
+  validation {
+    condition = alltrue([
+      for k, v in var.accounts : v != null
+    ])
+    error_message = "Each accounts entry must be an object that sets at least email; bare/null entries are not supported since there is no reasonable default account email."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.accounts : v != null ? (v.parent_id != null) != (v.parent_key != null) : true
+    ])
+    error_message = "Each accounts entry must set exactly one of parent_id or parent_key."
+  }
 }
 
-variable "email" {
-  description = "(Required) The email address of the owner to assign to the new member account. This email address must not already be associated with another AWS account."
-  type        = string
-}
-
-variable "iam_user_access_to_billing" {
-  description = "(Optional) If set to ALLOW, the new account enables IAM users to access account billing information if they have the required permissions. If set to DENY, then only the root user of the new account can access account billing information."
-  type        = string
-  default     = "ALLOW"
-}
-
-variable "parent_id" {
-  description = "(Optional) Parent Organizational Unit ID or Root ID for the account. Defaults to the Organization default Root ID. A configuration must be present for this argument to perform drift detection."
-  type        = string
-  default     = null
-}
-
-variable "role_name" {
-  description = "(Optional) The name of an IAM role that Organizations automatically preconfigures in the new member account. This role trusts the master account, allowing users in the master account to assume the role, as permitted by the master account administrator. The role has administrator permissions in the new member account. The Organizations API provides no method for reading this information after account creation, so Terraform cannot perform drift detection on its value and will always show a difference for a configured value after import unless ignore_changes is used."
-  type        = string
-  default     = "OrganizationAccountAccessRole"
-}
-
-variable "close_on_deletion" {
-  description = "(Optional) If true, a deletion event will close the account. Otherwise, it will only remove from the organization."
-  type        = bool
-  default     = false
+variable "organizational_unit_ids" {
+  description = "(Optional) Map of Organizational Unit IDs keyed by logical name, e.g. the `ids` output of modules/aws/organizations/ou. Referenced by each accounts entry's parent_key."
+  type        = map(string)
+  default     = {}
 }
 
 variable "tags" {
-  description = "(Optional) Key-value map of resource tags. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level."
+  description = "(Optional) Key-value map of resource tags applied to every account, merged with each entry's optional per-account tags. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level."
   type        = map(any)
   default     = {}
 }

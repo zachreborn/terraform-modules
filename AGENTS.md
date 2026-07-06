@@ -113,6 +113,7 @@ Every module follows the same four-file layout (use `modules/module_template/` a
 - `variables.tf` — Input variable declarations
 - `outputs.tf` — Output value declarations
 - `README.md` — Usage examples + auto-generated `terraform-docs` block
+- `tests/` — Native OpenTofu test files (`*.tftest.hcl`); see [Module Design Specifications § 6. Native Test Coverage](#6-native-test-coverage)
 
 ## Module Design Specifications
 
@@ -222,6 +223,22 @@ audit-logs:
 
 Modules that manage a single, standalone resource by design (e.g., a VPC — typically one per account/region) do not need map inputs but should be documented as such.
 
+### 6. Native Test Coverage
+
+Every new module, and every significantly updated module, **must ship a `tests/` directory** of native OpenTofu tests (`*.tftest.hcl`, run via `tofu test`). `modules/module_template/tests/` is pre-populated with the scaffolding and comments described below — start there rather than from a blank file.
+
+Full coverage means the test suite includes, at minimum:
+
+- One `run` block proving a **valid baseline** plans successfully.
+- One `run` block per distinct way each `validation { ... }` block in `variables.tf` can fail, asserted with `expect_failures = [var.x]` (see `modules/aws/organizations/account/tests/validation.tftest.hcl` for the pattern).
+- One `run` block per **conditional branch** — every `count = var.enable_x ? 1 : 0` / `for_each` toggle needs a case exercising each side of the condition.
+- Assertions on every **meaningful output**, not just that it is non-null.
+- For wrapper/composition modules (§ 2, Module Composition): **wiring tests** proving that values are correctly passed between the parent module and the child modules it calls (see `modules/aws/organizations/tests/wiring.tftest.hcl`).
+
+Tests must run **offline** — use `mock_provider` / `mock_resource` blocks so `tofu test` never requires real cloud credentials or a real backend. `tofu init -backend=false && tofu test`, run from the module's own directory, must pass with no manual setup.
+
+**Never weaken a test to make it pass.** Do not narrow an `assert` condition, delete or skip a `run` block, loosen an `expect_failures` case, or mock away the exact behavior under test merely to turn a failing test green. A failing test is a signal that something is wrong — find and fix the root cause in the module's `.tf` code. Only change the test itself if the test's logic is demonstrably incorrect (e.g., it asserts the wrong expected value), and even then, fix the assertion to be *correct*, not weaker. Re-run `tofu test` until every case passes for the right reason.
+
 ## Code Conventions
 
 **Tool version requirements**: All modules require `opentofu >= 1.6.0` **or** `terraform >= 1.0.0` (the `required_version = ">= 1.0.0"` constraint in each module's `terraform {}` block satisfies both, since OpenTofu 1.6.x ≥ 1.0.0). For AWS modules, `aws >= 6.0.0` is also required.
@@ -256,7 +273,7 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `build.yml` | PR or push → main | Regenerates `terraform-docs` in a sandbox and fails the build if the committed docs are out of date (read-only — no auto-commit) |
-| `test.yml` | PR or push → main | Checks `tofu fmt` compliance + invisible-Unicode check + super-linter |
+| `test.yml` | PR or push → main | Checks `tofu fmt` compliance, runs `tofu test` in every module's `tests/` directory, checks for invisible Unicode, and runs super-linter |
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release-please.yml` | Push → main | Maintains the Release PR + `CHANGELOG.md` from Conventional Commits; merging the Release PR cuts the `vX.Y.Z` tag and publishes the GitHub Release (the single automated publisher) |
 | `release.yml` | Manual (`workflow_dispatch`) | Emergency/manual fallback only — publishes a GitHub Release for an **already-existing** `vX.Y.Z` tag; no longer triggers on tag pushes |
@@ -264,6 +281,7 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
 | `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
 | `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
+| `impl-complete.yml` | Implementation PR merged | Swaps labels (`implementation-in-progress` → `implemented`), posts a closing summary comment (PR, commit, changed files), and closes the issue as completed |
 
 ## Release & Tag Strategy
 
@@ -343,7 +361,8 @@ stateDiagram-v2
     spec_in_progress --> ready_for_spec: failure (label restored)
     spec_ready_for_review --> spec_approved: codeowner merges spec PR
     spec_approved --> implementation_in_progress: Implementation runs
-    implementation_in_progress --> [*]: implementation PR merged
+    implementation_in_progress --> implemented: impl-complete.yml (PR merged)
+    implemented --> [*]: issue closed as completed
 ```
 
 **Stages and the label that drives each transition**:
@@ -353,7 +372,8 @@ stateDiagram-v2
    - Complete → label `ready-for-spec` + classification comment.
 2. `ready-for-spec` → spec-generation agent runs; opens a PR under `.github/specs/issue-<N>-<slug>.md`; issue moves to `spec-in-progress` then `spec-ready-for-review`.
 3. Spec PR merged → `spec-approved.yml` flips the issue to `spec-approved`.
-4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress` and closes on PR merge.
+4. `spec-approved` → implementation agent runs; opens an implementation PR with `Fixes #<N>`; issue moves to `implementation-in-progress`.
+5. Implementation PR merged → `impl-complete.yml` runs; removes `implementation-in-progress` and `spec-approved` labels, adds `implemented`, posts a closing summary comment (PR link, merge commit SHA, changed files), and closes the issue as completed.
 
 **Running CI on Oz PRs**: Spec and implementation PRs are opened by `github-actions[bot]` using the built-in `GITHUB_TOKEN`. GitHub suppresses cascading workflow runs triggered by `GITHUB_TOKEN`, so as of GitHub's 2026-06-11 change ("Bot-created pull requests can run workflows if approved") these PRs create the required checks (`Linter`, `Test OpenTofu`, `Verify - terraform-docs`, `Invisible Unicode Check`) in an **approval-required** state instead of running them automatically. A maintainer with **write access** must click **Approve workflows to run** in the PR's merge-box banner (or the Actions tab) to start them. This approval is required **per PR**, also applies to any later push the agent makes to the PR branch, and cannot be performed by the agent itself. (Before this change the only option was to manually re-trigger CI, e.g. by closing and reopening the PR.)
 
@@ -369,7 +389,7 @@ stateDiagram-v2
 - Apply the `skip-oz` label to any issue to disable all Oz workflows for it (label-triggered runs *and* `workflow_dispatch`).
 - Use `workflow_dispatch` on `spec-generation.yml` or `implementation.yml` to re-run a stage manually with an `issue_number` input. Manual dispatch still re-checks `skip-oz` and the trust gate at runtime.
 
-**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info` and `skip-oz`. The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. Note: `spec-approved.yml` does *not* use `WARP_API_KEY` (it is a plain `actions/github-script` job) and will act on merged spec PRs as soon as it lands, regardless of secret configuration.
+**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info`, `skip-oz`, and `implemented` (color `#0E8A16`). The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. `spec-approved.yml` and `impl-complete.yml` do not use `WARP_API_KEY` (they are plain `actions/github-script` jobs) and will act on merged PRs as soon as they land, regardless of secret configuration.
 
 **Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
@@ -388,7 +408,8 @@ This is a **module library** — security enforcement is the caller's responsibi
 ## Creating a New Module
 
 1. **Consult provider documentation first.** Before writing any code, look up the target resource in the provider's GitHub source and registry docs (see [Provider Documentation Sources](#provider-documentation-sources)). Note every argument, its type, constraints, and whether it is required or optional — this is your checklist for `variables.tf` and `outputs.tf`.
-2. Copy `modules/module_template/` to the appropriate provider subdirectory.
+2. Copy `modules/module_template/` to the appropriate provider subdirectory (this brings along the `tests/` scaffolding described in [Module Design Specifications § 6. Native Test Coverage](#6-native-test-coverage)).
 3. Implement resources in `main.tf`, declare variables in `variables.tf`, and expose outputs in `outputs.tf`.
-4. Update `README.md` — make sure the `<!-- BEGIN_TF_DOCS --> … <!-- END_TF_DOCS -->` markers exist; their contents will be regenerated by `terraform-docs` (run locally via pre-commit or by hand — CI verifies but does not auto-commit).
-5. Run `pre-commit run --all-files` (or, manually, `tofu fmt -recursive` followed by `terraform-docs markdown table --output-file README.md --output-mode inject <module_path>` for the new module) before committing so the `Build` and `Test` jobs pass on the first push.
+4. Write the module's `tests/*.tftest.hcl` per § 6 (valid baseline, one case per validation rule, one case per conditional branch, output assertions, wiring tests for wrapper modules), then run `tofu -chdir=<module_path> init -backend=false` and `tofu -chdir=<module_path> test` until every case passes. If a test fails, fix the root cause in the module code (or the test's logic, if the test itself is wrong) — never weaken the assertion just to get a pass.
+5. Update `README.md` — make sure the `<!-- BEGIN_TF_DOCS --> … <!-- END_TF_DOCS -->` markers exist; their contents will be regenerated by `terraform-docs` (run locally via pre-commit or by hand — CI verifies but does not auto-commit).
+6. Run `pre-commit run --all-files` (or, manually, `tofu fmt -recursive` followed by `terraform-docs markdown table --output-file README.md --output-mode inject <module_path>` for the new module) before committing so the `Build` and `Test` jobs pass on the first push.

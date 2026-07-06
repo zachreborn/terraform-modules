@@ -62,7 +62,7 @@ A **feature** must include all of:
 2. Motivation / problem being solved.
 3. High-level proposed inputs and outputs.
 4. Breaking-change assessment (yes/no + scope).
-5. Acceptance criteria for "done."
+5. Acceptance criteria for "done" — stated as verifiable, testable conditions (this repo requires every module to ship native `tofu test` coverage, so acceptance criteria should be written in terms an implementer can turn directly into test cases).
 
 Check the standards exhaustively: walk the numbered list for the chosen
 classification one item at a time and record every item that is absent or
