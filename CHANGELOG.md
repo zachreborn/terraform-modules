@@ -1,5 +1,16 @@
 # Changelog
 
+## [9.0.0](https://github.com/zachreborn/terraform-modules/compare/v8.25.0...v9.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362))
+
+### Features
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362)) ([84d0e55](https://github.com/zachreborn/terraform-modules/commit/84d0e55b7669143813d652774e33704f679b9809))
+
 ## [8.25.0](https://github.com/zachreborn/terraform-modules/compare/v8.24.0...v8.25.0) (2026-07-06)
 
 
