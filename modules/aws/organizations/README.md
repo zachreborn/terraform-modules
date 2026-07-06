@@ -173,6 +173,158 @@ module "organizations" {
 }
 ```
 
+### Full Example (All Options)
+
+A "kitchen sink" reference showing every field available across `organization`, `organizational_units`,
+and `accounts` in one YAML file. Most fields have sensible defaults and don't need to be set explicitly
+— see the simpler examples above for the common case. This example intentionally sets every field so
+you can see the full shape each submodule accepts; cross-reference field meanings in
+[`organization/README.md`](organization/README.md), [`ou/README.md`](ou/README.md), and
+[`account/README.md`](account/README.md).
+
+```yaml
+# organization_structure.yaml
+organization:
+  aws_service_access_principals:
+    - access-analyzer.amazonaws.com
+    - account.amazonaws.com
+    - aws-artifact-account-sync.amazonaws.com
+    - backup.amazonaws.com
+    - cloudtrail.amazonaws.com
+    - config.amazonaws.com
+    - guardduty.amazonaws.com
+    - health.amazonaws.com
+    - inspector2.amazonaws.com
+    - securityhub.amazonaws.com
+    - sso.amazonaws.com
+  enabled_policy_types:
+    - SERVICE_CONTROL_POLICY
+    - TAG_POLICY
+    - BACKUP_POLICY
+  feature_set: ALL
+  enabled_features:
+    - RootCredentialsManagement
+    - RootSessions
+  enable_identity_center_scp: true
+  identity_center_scp_name: DenyMemberAccountIdentityCenter
+  identity_center_scp_description: Denies sso:CreateInstance org-wide so member accounts cannot create account-level IAM Identity Center instances.
+  attach_identity_center_scp: true
+  identity_center_scp_target_ids:
+    - r-n1v2
+  enable_region_scp: true
+  allowed_regions:
+    - us-east-1
+    - us-west-2
+  region_scp_name: DenyAccessOutsideApprovedRegions
+  region_scp_description: Denies regional AWS service actions outside the approved Regions, exempting global services.
+  attach_region_scp: true
+  region_scp_target_ids:
+    - r-n1v2
+  region_scp_exempted_principal_arns:
+    - arn:aws:iam::*:role/AWSControlTowerExecution
+    - arn:aws:iam::*:role/OrganizationAccountAccessRole
+  region_scp_exempted_actions:
+    - pricingplanmanager:*
+  enable_organization_backup: true
+  tags:
+    terraform: "true"
+    managed_by: platform-team
+
+organizational_units:
+  aws_infrastructure:
+    name: aws_infrastructure
+    parent_id: r-n1v2
+    tags:
+      purpose: infrastructure
+  cybersecurity:
+    name: cybersecurity
+    parent_id: r-n1v2
+  workloads:
+    name: workloads
+    parent_id: r-n1v2
+  suspended:
+    name: suspended
+    parent_id: r-n1v2
+  prod:
+    name: prod
+    parent_key: workloads
+    tags:
+      environment: prod
+  staging:
+    name: staging
+    parent_key: workloads
+    tags:
+      environment: staging
+  dev:
+    name: dev
+    parent_key: workloads
+    tags:
+      environment: dev
+
+accounts:
+  company_organization:
+    name: company.organization
+    email: jdoe+organization@example.com
+    parent_key: aws_infrastructure
+    iam_user_access_to_billing: ALLOW
+    role_name: OrganizationAccountAccessRole
+    close_on_deletion: false
+    tags:
+      purpose: management
+  company_security:
+    name: company.security
+    email: jdoe+security@example.com
+    parent_key: cybersecurity
+    iam_user_access_to_billing: DENY
+  company_ventures:
+    name: company.ventures
+    email: jdoe@company.ventures
+    parent_key: prod
+    close_on_deletion: true
+    tags:
+      environment: prod
+      purpose: consulting-business
+```
+
+```
+locals {
+  org_structure = yamldecode(file("${path.module}/organization_structure.yaml"))
+}
+
+module "organizations" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations"
+
+  organization          = try(local.org_structure.organization, null)
+  organizational_units  = local.org_structure.organizational_units
+  accounts              = local.org_structure.accounts
+
+  # Module-wide default tags, merged with each organizational_units/accounts entry's own tags.
+  tags = {
+    terraform = "true"
+  }
+}
+```
+
+### Testing
+
+This module, [`ou`](ou), and [`account`](account) each have native OpenTofu tests under their own
+`tests/` directory, using `mock_provider "aws"` so they run without real AWS credentials, cost, or
+cloud side effects. Run them per module:
+
+```sh
+tofu -chdir=modules/aws/organizations/ou init -backend=false
+tofu -chdir=modules/aws/organizations/ou test
+
+tofu -chdir=modules/aws/organizations/account init -backend=false
+tofu -chdir=modules/aws/organizations/account test
+
+tofu -chdir=modules/aws/organizations init -backend=false
+tofu -chdir=modules/aws/organizations test
+```
+
+CI runs the same commands automatically for every module directory that has a `tests/` directory (see
+`.github/workflows/test.yml`), so new test files are picked up with no additional wiring.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -222,7 +374,7 @@ No resources.
 | <a name="output_organization"></a> [organization](#output\_organization) | Full set of organization submodule outputs (id, arn, roots, master\_account\_id, SCP ids/arns, etc.), or null when var.organization was not set. |
 | <a name="output_organizational_unit_accounts"></a> [organizational\_unit\_accounts](#output\_organizational\_unit\_accounts) | Map of the list of accounts in each Organizational Unit, keyed by the same keys as var.organizational\_units. |
 | <a name="output_organizational_unit_arns"></a> [organizational\_unit\_arns](#output\_organizational\_unit\_arns) | Map of Organizational Unit ARNs, keyed by the same keys as var.organizational\_units. |
-| <a name="output_organizational_unit_ids"></a> [organizational\_unit\_ids](#output\_organizational\_unit\_ids) | Map of Organizational Unit IDs, keyed by the same keys as var.organizational\_units. |
+| <a name="output_organizational_unit_ids"></a> [organizational\_unit\_ids](#output\_organizational\_unit\_ids) | Map of Organizational Unit IDs, keyed by the same keys as var.organizational\_units. If an entry has neither parent\_id nor parent\_key and cannot default to an Organization root (var.organization not set), the nested ou module's own validation fails with a message explaining the fix. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -35,6 +35,22 @@ jobs:
         id: fmt
         run: tofu fmt -check -diff -recursive
 
+      - name: OpenTofu test
+        id: test
+        # Runs `tofu test` in every module directory that has its own tests/ directory.
+        # Modules without tests are skipped, so this scales automatically as more modules
+        # adopt native tofu test coverage.
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r -d '' dir; do
+            module_dir="$(dirname "$dir")"
+            echo "::group::tofu test - ${module_dir}"
+            (cd "${module_dir}" && tofu init -backend=false && tofu test) || status=1
+            echo "::endgroup::"
+          done < <(find modules -type d -name tests -print0)
+          exit "${status}"
+
   test_unicode:
     name: Invisible Unicode Check
     runs-on: ubuntu-latest

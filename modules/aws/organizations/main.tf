@@ -14,11 +14,17 @@ terraform {
 
 locals {
   # Normalize bare/null organizational_units entries (YAML `workloads:` decodes to null, not {}) into
-  # empty objects so their optional attributes can be inspected below. coalesce() converting a null
-  # value to the literal {} causes Terraform to apply the object type's own optional-attribute defaults
-  # to that {}; direct attribute access on a null value would instead error.
+  # empty objects so their optional attributes can be inspected below. A plain conditional is used
+  # instead of coalesce(), since coalesce() requires every argument to share the exact same static
+  # type, and the declared object type (with its optional attributes) is not the same static type as
+  # a bare `{}` literal.
   organizational_units_normalized = {
-    for k, v in var.organizational_units : k => coalesce(v, {})
+    for k, v in var.organizational_units : k => v != null ? v : {
+      name       = null
+      parent_id  = null
+      parent_key = null
+      tags       = {}
+    }
   }
 
   # The managed Organization's default root ID, if var.organization was set.

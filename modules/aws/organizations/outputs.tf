@@ -12,15 +12,8 @@ output "organization" {
 ############################################################
 
 output "organizational_unit_ids" {
-  description = "Map of Organizational Unit IDs, keyed by the same keys as var.organizational_units."
+  description = "Map of Organizational Unit IDs, keyed by the same keys as var.organizational_units. If an entry has neither parent_id nor parent_key and cannot default to an Organization root (var.organization not set), the nested ou module's own validation fails with a message explaining the fix."
   value       = module.organizational_units.ids
-
-  precondition {
-    condition = alltrue([
-      for k, v in local.organizational_units_resolved : (v.parent_id != null) != (v.parent_key != null)
-    ])
-    error_message = "One or more organizational_units entries have neither parent_id nor parent_key and could not default to an Organization root. Set var.organization so a root ID can be injected, or set parent_id/parent_key explicitly on the affected entries."
-  }
 }
 
 output "organizational_unit_arns" {
