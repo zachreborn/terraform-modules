@@ -18,7 +18,7 @@ resource "aws_organizations_account" "this" {
   name                       = coalesce(each.value.name, each.key)
   email                      = each.value.email
   iam_user_access_to_billing = each.value.iam_user_access_to_billing
-  parent_id                  = each.value.parent_key != null ? var.organizational_unit_ids[each.value.parent_key] : each.value.parent_id
+  parent_id                  = each.value.parent_key != null ? lookup(var.organizational_unit_ids, each.value.parent_key, null) : each.value.parent_id
   role_name                  = each.value.role_name
   close_on_deletion          = each.value.close_on_deletion
   tags                       = merge(var.tags, each.value.tags)

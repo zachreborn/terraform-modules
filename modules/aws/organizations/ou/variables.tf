@@ -1,10 +1,12 @@
 variable "organizational_units" {
   description = <<-EOT
     (Required) Map of Organizational Units to create, keyed by a caller-chosen logical name (e.g. "workloads").
-    A bare entry (e.g. `workloads:` with no value in YAML, which decodes to null) is accepted and treated as
-    an entry with no fields set; this is only useful when the map is being resolved by a caller (such as the
-    modules/aws/organizations composed module) that fills in a parent_id before passing the map here, since
-    this module itself always requires an explicit parent (see below).
+    A bare entry (e.g. `workloads:` with no value in YAML, which decodes to null) is a valid value for this
+    map's element type, but this module's own validation always rejects it, since a null entry has neither
+    parent_id nor parent_key set (see below). Bare entries are only useful as an authoring convenience for a
+    caller (such as the modules/aws/organizations composed module) that resolves each entry into a concrete
+    object -- typically injecting a default parent_id -- before passing the map to this module; by the time
+    this module validates organizational_units, no entry may still be null.
     Each entry must set exactly one of:
       - parent_id:  A literal parent Root ID (e.g. "r-abcd") or an externally-managed OU ID. Use this for
                     top-level entries whose parent is not itself created by this module call.
@@ -32,7 +34,7 @@ variable "organizational_units" {
     condition = alltrue([
       for k, v in var.organizational_units : v != null ? (v.parent_id != null) != (v.parent_key != null) : false
     ])
-    error_message = "Each organizational_units entry must set exactly one of parent_id or parent_key. A bare/null entry (no parent_id or parent_key) is only valid when resolved by a caller that injects a default parent_id, such as the modules/aws/organizations composed module."
+    error_message = "Each organizational_units entry must set exactly one of parent_id or parent_key; a bare/null entry has neither. Set parent_id or parent_key explicitly, or use the modules/aws/organizations composed module (with organization set), which resolves bare top-level entries to the managed Organization's root before this validation runs."
   }
 
   validation {
