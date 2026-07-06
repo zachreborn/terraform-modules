@@ -40,6 +40,10 @@ variable "daily_automatic_backup_start_time" {
   type        = string
   description = "(Optional) The preferred time (in HH:MM format) to take daily automatic backups, in the UTC time zone. Defaults to 23:59."
   default     = "23:59"
+  validation {
+    condition     = can(regex("^([01][0-9]|2[0-3]):[0-5][0-9]$", var.daily_automatic_backup_start_time))
+    error_message = "The value of daily_automatic_backup_start_time must be in HH:MM 24-hour format (for example, 23:59)."
+  }
 }
 
 variable "deployment_type" {
@@ -49,6 +53,19 @@ variable "deployment_type" {
   validation {
     condition     = contains(["MULTI_AZ_1", "SINGLE_AZ_1", "SINGLE_AZ_2"], var.deployment_type)
     error_message = "The value of deployment_type must be one of MULTI_AZ_1, SINGLE_AZ_1, or SINGLE_AZ_2."
+  }
+}
+
+variable "disk_iops_configuration" {
+  type = object({
+    iops = optional(number)
+    mode = optional(string, "AUTOMATIC")
+  })
+  description = "(Optional) Configures the SSD IOPS provisioning for the file system. mode is AUTOMATIC (Amazon FSx automatically sizes and includes the IOPS, and does not bill separately for them) or USER_PROVISIONED (you set iops and are billed for the provisioned amount). iops is the total provisioned SSD IOPS and is only used when mode is USER_PROVISIONED. If null, Amazon FSx applies the AUTOMATIC default."
+  default     = null
+  validation {
+    condition     = var.disk_iops_configuration == null ? true : contains(["AUTOMATIC", "USER_PROVISIONED"], var.disk_iops_configuration.mode)
+    error_message = "The value of disk_iops_configuration.mode must be either AUTOMATIC or USER_PROVISIONED."
   }
 }
 
@@ -120,6 +137,10 @@ variable "weekly_maintenance_start_time" {
   type        = string
   description = "(Optional) The preferred start time (in d:HH:MM format) to perform weekly maintenance, in the UTC time zone. Defaults to 1:01:00."
   default     = "1:01:00"
+  validation {
+    condition     = can(regex("^[1-7]:([01][0-9]|2[0-3]):[0-5][0-9]$", var.weekly_maintenance_start_time))
+    error_message = "The value of weekly_maintenance_start_time must be in d:HH:MM format where d is 1-7 (for example, 1:01:00)."
+  }
 }
 
 ###########################

@@ -140,6 +140,14 @@ resource "aws_fsx_windows_file_system" "this" {
     }
   }
 
+  dynamic "disk_iops_configuration" {
+    for_each = var.disk_iops_configuration != null ? [var.disk_iops_configuration] : []
+    content {
+      iops = disk_iops_configuration.value.iops
+      mode = disk_iops_configuration.value.mode
+    }
+  }
+
   dynamic "self_managed_active_directory" {
     for_each = var.self_managed_active_directory != null ? [var.self_managed_active_directory] : []
     content {
