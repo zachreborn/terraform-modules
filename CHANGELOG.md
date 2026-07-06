@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.25.0](https://github.com/zachreborn/terraform-modules/compare/v8.24.0...v8.25.0) (2026-07-06)
+
+
+### Features
+
+* **organizations:** add opt-in Region-restriction SCP to organization module ([#360](https://github.com/zachreborn/terraform-modules/issues/360)) ([55f2f25](https://github.com/zachreborn/terraform-modules/commit/55f2f252500855a7308a387b8e7d2437e425e784))
+
 ## [8.24.0](https://github.com/zachreborn/terraform-modules/compare/v8.23.0...v8.24.0) (2026-07-04)
 
 
