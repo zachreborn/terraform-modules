@@ -48,7 +48,7 @@ run "self_managed_ad_baseline_plans_successfully" {
       dns_ips     = ["10.0.0.111", "10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password    = "super-secret-password"
+      password    = "testpass"
     }
   }
 
@@ -111,7 +111,7 @@ run "self_managed_ad_with_password_wo_plans_successfully" {
       dns_ips             = ["10.0.0.111"]
       domain_name         = "corp.example.com"
       username            = "FSxServiceAccount"
-      password_wo         = "super-secret-password"
+      password_wo         = "testpass"
       password_wo_version = 1
     }
   }

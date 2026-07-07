@@ -229,8 +229,8 @@ run "rejects_self_managed_ad_with_both_password_and_password_wo" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password    = "super-secret-password"
-      password_wo = "another-secret-password"
+      password    = "testpass"
+      password_wo = "testpass2"
     }
   }
 
@@ -245,7 +245,7 @@ run "rejects_self_managed_ad_password_wo_without_version" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password_wo = "super-secret-password"
+      password_wo = "testpass"
     }
   }
 
@@ -261,7 +261,7 @@ run "rejects_both_active_directory_options_set" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password    = "super-secret-password"
+      password    = "testpass"
     }
   }
 
