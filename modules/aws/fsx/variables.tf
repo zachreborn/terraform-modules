@@ -61,12 +61,22 @@ variable "disk_iops_configuration" {
     iops = optional(number)
     mode = optional(string, "AUTOMATIC")
   })
-  description = "(Optional) Configures the SSD IOPS provisioning for the file system. mode is AUTOMATIC (Amazon FSx automatically sizes and includes the IOPS, and does not bill separately for them) or USER_PROVISIONED (you set iops and are billed for the provisioned amount). iops is the total provisioned SSD IOPS and is only used when mode is USER_PROVISIONED. If null, Amazon FSx applies the AUTOMATIC default."
+  description = "(Optional) Configures the SSD IOPS provisioning for the file system. mode is AUTOMATIC (Amazon FSx automatically sizes and includes the IOPS, and does not bill separately for them) or USER_PROVISIONED (you set iops and are billed for the provisioned amount). iops is the total provisioned SSD IOPS and is required when mode is USER_PROVISIONED. If null, Amazon FSx applies the AUTOMATIC default."
   default     = null
   validation {
     condition     = var.disk_iops_configuration == null ? true : contains(["AUTOMATIC", "USER_PROVISIONED"], var.disk_iops_configuration.mode)
     error_message = "The value of disk_iops_configuration.mode must be either AUTOMATIC or USER_PROVISIONED."
   }
+  validation {
+    condition     = var.disk_iops_configuration == null ? true : (var.disk_iops_configuration.mode != "USER_PROVISIONED" || var.disk_iops_configuration.iops != null)
+    error_message = "disk_iops_configuration.iops is required when disk_iops_configuration.mode is USER_PROVISIONED."
+  }
+}
+
+variable "final_backup_tags" {
+  type        = map(string)
+  description = "(Optional) A map of tags to apply to the file system's final backup. Only applied when skip_final_backup is false."
+  default     = null
 }
 
 variable "name" {
@@ -125,11 +135,11 @@ variable "tags" {
 
 variable "throughput_capacity" {
   type        = number
-  description = "(Optional) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of 8 and maximum of 2048. Defaults to 32."
+  description = "(Optional) Throughput (megabytes per second) of the file system, in power of 2 increments. Minimum of 8 and maximum of 2048. Defaults to 32."
   default     = 32
   validation {
-    condition     = var.throughput_capacity >= 8 && var.throughput_capacity <= 2048
-    error_message = "The value of throughput_capacity must be between 8 and 2048 MB/s."
+    condition     = var.throughput_capacity >= 8 && var.throughput_capacity <= 2048 && var.throughput_capacity == pow(2, floor(log(var.throughput_capacity, 2)))
+    error_message = "The value of throughput_capacity must be a power of 2 between 8 and 2048 MB/s (for example, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)."
   }
 }
 
@@ -151,13 +161,37 @@ variable "self_managed_active_directory" {
   type = object({
     dns_ips                                = list(string)
     domain_name                            = string
-    password                               = string
-    username                               = string
+    domain_join_service_account_secret     = optional(string)
     file_system_administrators_group       = optional(string, "Domain Admins")
     organizational_unit_distinguished_name = optional(string)
+    password                               = optional(string)
+    password_wo                            = optional(string)
+    password_wo_version                    = optional(number)
+    username                               = optional(string)
   })
-  description = "(Optional) Configuration block for joining the file system to a self-managed Active Directory. Conflicts with active_directory_id. dns_ips is a list of up to two DNS server/domain controller IPs; domain_name is the fully qualified domain name; username/password are the service account credentials FSx uses to join the domain; file_system_administrators_group defaults to Domain Admins; organizational_unit_distinguished_name is the OU the file system joins (e.g. OU=FSx,DC=example,DC=com). Note: the password is persisted in Terraform state in plaintext — supply it from a secret store and protect state access accordingly."
+  description = "(Optional) Configuration block for joining the file system to a self-managed Active Directory. Conflicts with active_directory_id. dns_ips is a list of up to two DNS server/domain controller IPs; domain_name is the fully qualified domain name; file_system_administrators_group defaults to Domain Admins; organizational_unit_distinguished_name is the OU the file system joins (e.g. OU=FSx,DC=example,DC=com). Supply exactly one credential method: domain_join_service_account_secret (the ARN of a Secrets Manager secret containing the service account credentials — the state-safe option), or username together with exactly one of password (persisted in Terraform state in plaintext — supply it from a secret store and protect state access accordingly) or password_wo (a write-only argument that is never persisted to state; requires password_wo_version, and bump that version to rotate the password)."
   default     = null
+
+  validation {
+    condition = var.self_managed_active_directory == null ? true : (
+      var.self_managed_active_directory.domain_join_service_account_secret != null ? (
+        var.self_managed_active_directory.username == null &&
+        var.self_managed_active_directory.password == null &&
+        var.self_managed_active_directory.password_wo == null
+        ) : (
+        var.self_managed_active_directory.username != null &&
+        (
+          (var.self_managed_active_directory.password != null) != (var.self_managed_active_directory.password_wo != null)
+        )
+      )
+    )
+    error_message = "self_managed_active_directory must supply exactly one credential method: domain_join_service_account_secret by itself, or username together with exactly one of password or password_wo."
+  }
+
+  validation {
+    condition     = var.self_managed_active_directory == null ? true : (var.self_managed_active_directory.password_wo == null || var.self_managed_active_directory.password_wo_version != null)
+    error_message = "self_managed_active_directory.password_wo_version is required when password_wo is set."
+  }
 }
 
 ###########################
@@ -172,7 +206,7 @@ variable "create_kms_key" {
 
 variable "kms_key_id" {
   type        = string
-  description = "(Optional) ARN of an existing KMS key used to encrypt the file system and audit logs. Used only when create_kms_key is false."
+  description = "(Optional) ARN of an existing KMS key used to encrypt the file system and audit logs. Required when create_kms_key is false."
   default     = null
 }
 

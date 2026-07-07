@@ -40,7 +40,12 @@ module "kms_key" {
   description             = var.kms_key_description
   enable_key_rotation     = var.kms_key_enable_key_rotation
   name_prefix             = var.kms_key_name_prefix
-  tags                    = var.tags
+  tags                    = merge(tomap({ Name = "${var.name}-kms" }), var.tags)
+  # Matches the ../transfer_family composition pattern: FSx does not require a
+  # service-principal statement to use the key. FSx creates its own KMS grants
+  # on your behalf using the kms:CreateGrant permission delegated to the caller
+  # via the account-root statement below, so only the "Enable IAM User
+  # Permissions" and CloudWatch Logs statements are needed here.
   policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
@@ -51,23 +56,6 @@ module "kms_key" {
           "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         },
         "Action"   = "kms:*",
-        "Resource" = "*"
-      },
-      {
-        "Sid"    = "Allow Amazon FSx to use the key",
-        "Effect" = "Allow",
-        "Principal" = {
-          "Service" = "fsx.${data.aws_region.current.region}.amazonaws.com"
-        },
-        "Action" = [
-          "kms:CreateGrant",
-          "kms:Decrypt*",
-          "kms:DescribeKey",
-          "kms:Encrypt*",
-          "kms:GenerateDataKey*",
-          "kms:ListGrants",
-          "kms:ReEncrypt*"
-        ],
         "Resource" = "*"
       },
       {
@@ -105,7 +93,7 @@ module "audit_log_group" {
   kms_key_id        = local.kms_key_arn
   name_prefix       = var.cloudwatch_name_prefix
   retention_in_days = var.cloudwatch_retention_in_days
-  tags              = var.tags
+  tags              = merge(tomap({ Name = "${var.name}-audit-logs" }), var.tags)
 }
 
 ###########################
@@ -120,6 +108,7 @@ resource "aws_fsx_windows_file_system" "this" {
   copy_tags_to_backups              = var.copy_tags_to_backups
   daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
   deployment_type                   = var.deployment_type
+  final_backup_tags                 = var.final_backup_tags
   kms_key_id                        = local.kms_key_arn
   preferred_subnet_id               = var.preferred_subnet_id
   security_group_ids                = var.security_group_ids
@@ -153,10 +142,40 @@ resource "aws_fsx_windows_file_system" "this" {
     content {
       dns_ips                                = self_managed_active_directory.value.dns_ips
       domain_name                            = self_managed_active_directory.value.domain_name
+      domain_join_service_account_secret     = self_managed_active_directory.value.domain_join_service_account_secret
       file_system_administrators_group       = self_managed_active_directory.value.file_system_administrators_group
       organizational_unit_distinguished_name = self_managed_active_directory.value.organizational_unit_distinguished_name
       password                               = self_managed_active_directory.value.password
+      password_wo                            = self_managed_active_directory.value.password_wo
+      password_wo_version                    = self_managed_active_directory.value.password_wo_version
       username                               = self_managed_active_directory.value.username
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = (var.active_directory_id != null) != (var.self_managed_active_directory != null)
+      error_message = "Exactly one of active_directory_id or self_managed_active_directory must be set."
+    }
+
+    precondition {
+      condition     = var.create_kms_key || var.kms_key_id != null
+      error_message = "kms_key_id is required when create_kms_key is false."
+    }
+
+    precondition {
+      condition     = var.storage_type != "HDD" || var.storage_capacity >= 2000
+      error_message = "storage_capacity must be at least 2000 GiB when storage_type is HDD."
+    }
+
+    precondition {
+      condition     = var.deployment_type != "MULTI_AZ_1" || (length(var.subnet_ids) == 2 && var.preferred_subnet_id != null)
+      error_message = "MULTI_AZ_1 deployment_type requires exactly two subnet_ids and preferred_subnet_id to be set."
+    }
+
+    precondition {
+      condition     = var.deployment_type == "MULTI_AZ_1" || length(var.subnet_ids) == 1
+      error_message = "SINGLE_AZ deployment types require exactly one subnet_id."
     }
   }
 }
