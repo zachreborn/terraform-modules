@@ -229,8 +229,8 @@ run "rejects_self_managed_ad_with_both_password_and_password_wo" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password    = "testpass"
-      password_wo = "testpass2"
+      password    = "testpass"  # gitleaks:allow
+      password_wo = "testpass2" # gitleaks:allow
     }
   }
 
@@ -245,7 +245,7 @@ run "rejects_self_managed_ad_password_wo_without_version" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password_wo = "testpass"
+      password_wo = "testpass" # gitleaks:allow
     }
   }
 
@@ -261,7 +261,7 @@ run "rejects_both_active_directory_options_set" {
       dns_ips     = ["10.0.0.111"]
       domain_name = "corp.example.com"
       username    = "FSxServiceAccount"
-      password    = "testpass"
+      password    = "testpass" # gitleaks:allow
     }
   }
 
