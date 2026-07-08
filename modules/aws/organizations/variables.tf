@@ -86,6 +86,25 @@ variable "accounts" {
 }
 
 ############################################################
+# CloudTrail Delegated Administrator
+############################################################
+
+variable "cloudtrail_delegated_admin_account_id" {
+  description = <<-EOT
+    (Optional) An AWS Organizations member account ID to register as the CloudTrail delegated
+    administrator, passed through to the cloudtrail_delegated_admin submodule
+    (modules/aws/organizations/cloudtrail_delegated_admin). Leave unset (the default, null) to skip
+    delegated administrator registration -- this module then manages no
+    aws_cloudtrail_organization_delegated_admin_account resource. Registration must be applied from
+    the organization's management account and requires cloudtrail.amazonaws.com trusted access to
+    already be enabled in Organizations (enabled by default via the organization submodule's
+    aws_service_access_principals).
+  EOT
+  type        = string
+  default     = null
+}
+
+############################################################
 # General Variables
 ############################################################
 

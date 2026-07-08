@@ -277,6 +277,16 @@ variable "is_organization_trail" {
   }
 }
 
+variable "organization_management_account_id" {
+  type        = string
+  description = "(Optional) Explicit override for the AWS Organizations management account ID that owns this organization trail (only used when is_organization_trail is true). AWS always records an organization trail as owned by the management account, even when it is created from a delegated administrator account, so the trail ARN referenced in the S3 bucket policy and KMS key policy resource-policy conditions must use the management account ID. This is normally unnecessary: when left at its default (null), the management account ID is automatically discovered via the aws_organizations_organization data source, which works correctly whether this module is applied from the management account or from a delegated administrator account. Set this only to override that automatic discovery in unusual environments."
+  default     = null
+  validation {
+    condition     = var.organization_management_account_id == null || can(regex("^[0-9]{12}$", var.organization_management_account_id))
+    error_message = "The value must be a 12-digit AWS account ID."
+  }
+}
+
 variable "enable_log_file_validation" {
   type        = bool
   description = "Enabled log file validation to all logs sent to S3"

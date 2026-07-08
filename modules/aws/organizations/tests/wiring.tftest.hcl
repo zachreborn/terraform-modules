@@ -17,6 +17,12 @@ mock_provider "aws" {
       ]
     }
   }
+
+  mock_resource "aws_cloudtrail_organization_delegated_admin_account" {
+    defaults = {
+      arn = "arn:aws:organizations::123456789012:account/o-abcd1234/222222222222"
+    }
+  }
 }
 
 run "bare_top_level_ou_defaults_to_organization_root_when_org_managed" {
@@ -62,6 +68,37 @@ run "account_wiring_uses_internal_organizational_unit_ids" {
   assert {
     condition     = output.account_ids["company_ventures"] != null
     error_message = "Account should resolve its OU parent via the wrapper's internal wiring."
+  }
+}
+
+run "cloudtrail_delegated_admin_registration_uses_internal_wiring" {
+  command = plan
+
+  variables {
+    organization = {
+      enable_identity_center_scp = false
+    }
+    cloudtrail_delegated_admin_account_id = "222222222222"
+  }
+
+  assert {
+    condition     = output.cloudtrail_delegated_admin_account_id == "222222222222"
+    error_message = "Delegated administrator registration should resolve via the wrapper's internal wiring when cloudtrail_delegated_admin_account_id is set."
+  }
+}
+
+run "cloudtrail_delegated_admin_registration_skipped_when_unset" {
+  command = plan
+
+  variables {
+    organization = {
+      enable_identity_center_scp = false
+    }
+  }
+
+  assert {
+    condition     = output.cloudtrail_delegated_admin_account_id == null
+    error_message = "Delegated administrator registration should be skipped, and its output null, when cloudtrail_delegated_admin_account_id is unset."
   }
 }
 

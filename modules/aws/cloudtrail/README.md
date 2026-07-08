@@ -104,6 +104,39 @@ module "org_cloudtrail" {
 }
 ```
 
+### Delegated Administrator Organization CloudTrail Example
+
+As a best practice, organization trails should be created and managed from a dedicated delegated administrator account (e.g. an Audit/Security Tooling account) rather than the management account. See the [organizations/cloudtrail_delegated_admin](../organizations/cloudtrail_delegated_admin) module for registering the delegated administrator; that registration must be applied first, from the management account.
+
+AWS always records an organization trail as owned by the **management account**, even when a delegated administrator creates it, so the S3 bucket policy and KMS key policy must reference the management account's trail ARN rather than the delegated administrator's own account ID -- otherwise trail creation fails with `InsufficientS3BucketPolicyException`. The module handles this automatically: it discovers the management account ID via the `aws_organizations_organization` data source, which AWS Organizations allows any account in the organization to query. No manual input is required.
+
+_Provider configuration for a delegated administrator (e.g. Audit/Security Tooling) account_
+
+```hcl
+provider "aws" {
+  alias  = "cloudtrail_delegate_account"
+  region = var.aws_prod_region
+}
+```
+
+_Cloudtrail configuration for a delegated administrator account_
+
+```hcl
+module "org_cloudtrail" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudtrail"
+
+  providers = {
+    aws = aws.cloudtrail_delegate_account
+  }
+
+  name                     = "organization"
+  enable_s3_bucket_logging = false
+  is_organization_trail    = true
+}
+```
+
+If you need to override the auto-detected management account ID (e.g. in an unusual environment), set `organization_management_account_id` explicitly.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -114,15 +147,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.53.0 |
 
 ## Modules
 
@@ -131,7 +164,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudtrail.cloudtrail](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail) | resource |
 | [aws_cloudwatch_log_group.cloudtrail](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_iam_policy.cloudtrail](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -153,7 +186,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_bucket_key_enabled"></a> [bucket\_key\_enabled](#input\_bucket\_key\_enabled) | (Optional) Whether or not to use Amazon S3 Bucket Keys for SSE-KMS. | `bool` | `true` | no |
 | <a name="input_bucket_lifecycle_expiration_days"></a> [bucket\_lifecycle\_expiration\_days](#input\_bucket\_lifecycle\_expiration\_days) | (Optional) The lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer. | `number` | `365` | no |
 | <a name="input_bucket_lifecycle_rule_id"></a> [bucket\_lifecycle\_rule\_id](#input\_bucket\_lifecycle\_rule\_id) | (Required) Unique identifier for the rule. The value cannot be longer than 255 characters. | `string` | `"365_day_delete"` | no |
@@ -181,6 +214,7 @@ No modules.
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
 | <a name="input_mfa_delete"></a> [mfa\_delete](#input\_mfa\_delete) | (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: Enabled or Disabled. | `string` | `"Disabled"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the trail | `string` | `"cloudtrail"` | no |
+| <a name="input_organization_management_account_id"></a> [organization\_management\_account\_id](#input\_organization\_management\_account\_id) | (Optional) Explicit override for the AWS Organizations management account ID that owns this organization trail (only used when is\_organization\_trail is true). AWS always records an organization trail as owned by the management account, even when it is created from a delegated administrator account, so the trail ARN referenced in the S3 bucket policy and KMS key policy resource-policy conditions must use the management account ID. This is normally unnecessary: when left at its default (null), the management account ID is automatically discovered via the aws\_organizations\_organization data source, which works correctly whether this module is applied from the management account or from a delegated administrator account. Set this only to override that automatic discovery in unusual environments. | `string` | `null` | no |
 | <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | (Required) The server-side encryption algorithm to use. Valid values are AES256 and aws:kms | `string` | `"aws:kms"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `null` | no |
 | <a name="input_target_bucket"></a> [target\_bucket](#input\_target\_bucket) | (Optional) The name of the bucket that will receive the logs. Required if logging of the S3 bucket is set to true. | `string` | `null` | no |
@@ -190,7 +224,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cloudtrail_arn"></a> [cloudtrail\_arn](#output\_cloudtrail\_arn) | n/a |
 | <a name="output_cloudtrail_home_region"></a> [cloudtrail\_home\_region](#output\_cloudtrail\_home\_region) | n/a |
 | <a name="output_cloudtrail_id"></a> [cloudtrail\_id](#output\_cloudtrail\_id) | n/a |

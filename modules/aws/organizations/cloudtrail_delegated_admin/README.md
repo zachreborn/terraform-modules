@@ -26,9 +26,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">AWS Organization Delegated Admins Module</h3>
+<h3 align="center">AWS CloudTrail Delegated Administrator Module</h3>
   <p align="center">
-    This module generates and manages AWS organization delegated administrators. This delegates administrative functionality of a service to an account within an organization. This module takes a map of AWS account IDs and the service principal name to associate with the account. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services_list.html) for more information.
+    This module registers an AWS Organizations member account as the CloudTrail delegated administrator, using the CloudTrail-native <code>aws_cloudtrail_organization_delegated_admin_account</code> resource. Registering through this resource (rather than the generic <a href="../delegated_admin">delegated_admin</a> module) also creates the <code>AWSServiceRoleForCloudTrail</code> and <code>AWSServiceRoleForCloudTrailEventContext</code> service-linked roles, which registration through the AWS Organizations API alone does not create. Must be applied from the organization's management account.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,25 +62,27 @@
 
 ## Usage
 
+### Prerequisites
+
+- The AWS Organization must have all features enabled.
+- `cloudtrail.amazonaws.com` trusted access must be enabled in AWS Organizations (the [organization](../organization) submodule enables this by default via `aws_service_access_principals`).
+- This module must be applied using a provider configured for the organization's **management account**.
+
 ### Simple Example
 
-This example delegates administrative functionality of a service to an account.
+This example registers a member account (e.g. an Audit/Security Tooling account) as the CloudTrail delegated administrator.
 
-```
-module "organization" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+```hcl
+module "cloudtrail_delegated_admin" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/cloudtrail_delegated_admin"
 
-    delegated_admins = {
-        "123456789012" = "service-abbreviation.amazonaws.com",
-        (module.prod_network.id) = "networkmanager.amazonaws.com"
-    }
+  account_id = "222222222222"
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+Once registered, apply the [cloudtrail](../../cloudtrail) module in the delegated administrator account with `is_organization_trail = true` and `organization_management_account_id` set to the management account ID. See that module's README for the full example.
 
-> [!NOTE]
-> For CloudTrail specifically, prefer the dedicated [cloudtrail_delegated_admin](../cloudtrail_delegated_admin) module instead of registering `cloudtrail.amazonaws.com` through this module. Registering via the AWS Organizations API (as this module does) does not create the `AWSServiceRoleForCloudTrail` / `AWSServiceRoleForCloudTrailEventContext` service-linked roles; the CloudTrail-native resource used by `cloudtrail_delegated_admin` does.
+_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -98,7 +100,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.53.0 |
 
 ## Modules
 
@@ -108,17 +110,23 @@ No modules.
 
 | Name | Type |
 | ---- | ---- |
-| [aws_organizations_delegated_administrator.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_delegated_administrator) | resource |
+| [aws_cloudtrail_organization_delegated_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail_organization_delegated_admin_account) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Required) Map where the keys are AWS account IDs and the values are lists of service principal names to associate with the account. This allows multiple service principals per account. | `map(list(string))` | n/a | yes |
+| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | (Required) An AWS Organizations member account ID to designate as the CloudTrail delegated administrator. Must be called from the organization's management account. Registering via this CloudTrail-native resource (rather than the generic modules/aws/organizations/delegated\_admin module) also creates the AWSServiceRoleForCloudTrail and AWSServiceRoleForCloudTrailEventContext service-linked roles, which registration through the Organizations API alone does not create. | `string` | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_account_id"></a> [account\_id](#output\_account\_id) | The AWS account ID registered as the CloudTrail delegated administrator. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the delegated administrator's account. |
+| <a name="output_email"></a> [email](#output\_email) | The email address associated with the delegated administrator's account. |
+| <a name="output_name"></a> [name](#output\_name) | The friendly name of the delegated administrator's account. |
+| <a name="output_service_principal"></a> [service\_principal](#output\_service\_principal) | The AWS CloudTrail service principal name. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
