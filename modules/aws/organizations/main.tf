@@ -91,3 +91,19 @@ module "accounts" {
   organizational_unit_ids = module.organizational_units.ids
   tags                    = var.tags
 }
+
+###########################
+# CloudTrail Delegated Administrator
+###########################
+
+module "cloudtrail_delegated_admin" {
+  source = "./cloudtrail_delegated_admin"
+
+  for_each = var.cloudtrail_delegated_admin_account_id != null ? { this = var.cloudtrail_delegated_admin_account_id } : {}
+
+  account_id = each.value
+
+  # Registering a delegated administrator requires cloudtrail.amazonaws.com trusted access to
+  # already be enabled in Organizations, which the organization submodule manages.
+  depends_on = [module.organization]
+}

@@ -19,6 +19,24 @@ data "aws_organizations_organization" "current" {}
 # Locals
 ############################
 
+locals {
+  # The account ID that owns the trail. AWS always records organization trails as owned by the
+  # organization's management account, even when the trail is created from a delegated administrator
+  # account -- so for organization trails, the trail ARN used in resource-policy conditions below must
+  # use the management account ID rather than the caller's own account ID. The management account ID
+  # is auto-detected via data.aws_organizations_organization.current.master_account_id, which AWS
+  # Organizations' DescribeOrganization API (and therefore this data source) always returns regardless
+  # of which account in the organization makes the call -- so this works whether the module is applied
+  # from the management account itself or from a delegated administrator account, with no manual input
+  # required. var.organization_management_account_id remains available as an explicit override for
+  # edge cases where auto-detection is undesirable. Non-organization trails are always owned by the
+  # caller's own account, so is_organization_trail gates which behavior applies.
+  trail_owner_account_id = var.is_organization_trail ? coalesce(var.organization_management_account_id, data.aws_organizations_organization.current.master_account_id) : data.aws_caller_identity.current.account_id
+
+  # ARN of the trail as CloudTrail itself reports it (always under the trail-owner/management account),
+  # used for every aws:SourceArn / kms:EncryptionContext:aws:cloudtrail:arn condition below.
+  trail_arn = "arn:aws:cloudtrail:${data.aws_region.current.region}:${local.trail_owner_account_id}:trail/${var.name}"
+}
 
 ###########################
 # KMS Encryption Key
@@ -57,11 +75,11 @@ resource "aws_kms_key" "cloudtrail" {
         "Condition" = {
           "StringLike" = {
             "kms:EncryptionContext:aws:cloudtrail:arn" : [
-              "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+              "arn:aws:cloudtrail:*:${local.trail_owner_account_id}:trail/*"
             ]
           },
           "StringEquals" = {
-            "aws:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+            "aws:SourceArn" = local.trail_arn
           }
         }
       },
@@ -113,7 +131,7 @@ resource "aws_kms_key" "cloudtrail" {
           },
           "StringLike" = {
             "kms:EncryptionContext:aws:cloudtrail:arn" = [
-              "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+              "arn:aws:cloudtrail:*:${local.trail_owner_account_id}:trail/*"
             ]
           }
         }
@@ -135,7 +153,7 @@ resource "aws_kms_key" "cloudtrail" {
           },
           "StringLike" = {
             "kms:EncryptionContext:aws:cloudtrail:arn" = [
-              "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+              "arn:aws:cloudtrail:*:${local.trail_owner_account_id}:trail/*"
             ]
           }
         }
@@ -293,7 +311,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Resource" = aws_s3_bucket.cloudtrail_s3_bucket.arn,
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}"
+            "AWS:SourceArn" = local.trail_arn
           }
         }
       },
@@ -306,10 +324,10 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Action" = [
           "s3:PutObject",
         ],
-        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${local.trail_owner_account_id}/*",
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "AWS:SourceArn" = local.trail_arn,
             "s3:x-amz-acl"  = "bucket-owner-full-control"
           }
         }
@@ -326,7 +344,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
         "Resource" = "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_organizations_organization.current.id}/*",
         "Condition" = {
           "StringEquals" = {
-            "AWS:SourceArn" = "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/${var.name}",
+            "AWS:SourceArn" = local.trail_arn,
             "s3:x-amz-acl"  = "bucket-owner-full-control"
           }
         }

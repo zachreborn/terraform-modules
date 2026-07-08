@@ -183,6 +183,17 @@ Examples of the composition pattern:
 | `aws/ec2_instance` (with instance profile) | `aws_iam_role` / `aws_iam_instance_profile` | `modules/aws/iam/role` |
 | `aws/rds` (with metric alarms) | `aws_cloudwatch_metric_alarm` | `modules/aws/cloudwatch/alarm` |
 
+### Service-Specific Delegated Administrator Registration
+
+AWS Organizations exposes a generic `aws_organizations_delegated_administrator` resource (the `RegisterDelegatedAdministrator` API) that can register any service principal as a delegated administrator, and [`modules/aws/organizations/delegated_admin`](./modules/aws/organizations/delegated_admin) wraps it for that general case. However, some AWS services expose their **own** delegated-administrator registration resource with side effects the generic Organizations call does not trigger — so the generic module is not always the right choice, even though registration appears to succeed either way.
+
+CloudTrail is the concrete example that surfaced this: registering `cloudtrail.amazonaws.com` via the generic `aws_organizations_delegated_administrator` resource succeeds, but does **not** create the `AWSServiceRoleForCloudTrail` / `AWSServiceRoleForCloudTrailEventContext` service-linked roles that CloudTrail needs to manage organization trails from the delegated account. Only a call to CloudTrail's own delegated-administrator API — `aws_cloudtrail_organization_delegated_admin_account` — creates both roles automatically. This is documented behavior, not an assumption:
+
+- AWS CloudTrail User Guide — [Organization delegated administrator](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-delegated-administrator.html)
+- AWS Organizations User Guide — [AWS CloudTrail and AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudtrail.html)
+
+Because of this, [`modules/aws/organizations/cloudtrail_delegated_admin`](./modules/aws/organizations/cloudtrail_delegated_admin) wraps CloudTrail's own resource instead of routing through the generic module. **Before adding delegated-administrator support for a new service, check whether the AWS provider exposes a service-specific `aws_<service>_organization_delegated_admin_account`-style resource** before defaulting to the generic `delegated_admin` module — if one exists, prefer a small dedicated module (following this same pattern) so any service-specific side effects (service-linked roles or otherwise) are not silently skipped.
+
 ### Secure and Well-Architected Defaults
 
 Out-of-the-box defaults reflect the **AWS Well-Architected Framework** and **CIS AWS Foundations Benchmark**:

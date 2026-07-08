@@ -44,3 +44,17 @@ output "account_tags_all" {
   description = "Map of the resolved tags for each account, keyed by the same keys as var.accounts."
   value       = module.accounts.tags_all
 }
+
+############################################################
+# CloudTrail Delegated Administrator
+############################################################
+
+output "cloudtrail_delegated_admin_account_id" {
+  description = "The AWS account ID registered as the CloudTrail delegated administrator, or null when var.cloudtrail_delegated_admin_account_id was not set."
+  value       = try(module.cloudtrail_delegated_admin["this"].account_id, null)
+}
+
+output "cloudtrail_delegated_admin_arn" {
+  description = "The ARN of the CloudTrail delegated administrator's account, or null when var.cloudtrail_delegated_admin_account_id was not set."
+  value       = try(module.cloudtrail_delegated_admin["this"].arn, null)
+}
