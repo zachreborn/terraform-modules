@@ -62,15 +62,161 @@
 
 ## Usage
 
-```
-module "account_prod_infrastructure" {
-    source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+### Composed Module
 
-    name      = "account_prod_infrastructure"
-    email     = "aws_environments+account@example.com"
-    parent_id = var.account_parent_id
+If you need the Organization itself, its OUs, and its member accounts all managed together from one YAML file, use [`modules/aws/organizations`](..) instead of calling this module directly — it wires this module and [`modules/aws/organizations/ou`](../ou) together automatically. This module remains fully usable standalone (as shown below) for partial adoption, e.g. accounts managed here attaching to OUs created by a different process.
+
+Upgrading from v8 and using this module alongside `organization`/`ou`? See the
+[migration guide](../MIGRATION.md) for both options: keep the modules separate (Path A, summarized in
+the Migration Guide below), or consolidate into the composed module (Path B).
+
+### Flat Example
+
+This example creates two member accounts, one attached via a literal parent OU ID and one attached via `parent_key` to an OU ID supplied by the caller (e.g. sourced from `modules/aws/organizations/ou`). `name` is optional and defaults to the entry's map key, so it's omitted below; `email` has no default and is always required.
+
+```
+module "accounts" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+
+  organizational_unit_ids = {
+    workloads = "ou-abcd-11111111"
+  }
+
+  accounts = {
+    account_prod_infrastructure = {
+      email     = "aws_environments+account@example.com"
+      parent_id = var.account_parent_id
+    }
+    company_name = {
+      email      = "jdoe@example.com"
+      parent_key = "workloads"
+    }
+  }
 }
 ```
+
+Other resources can look up a specific account's ID via `module.accounts.ids["company_name"]`.
+
+### YAML File Example
+
+For larger organizations, source the map from a YAML file instead of inlining it:
+
+```yaml
+# accounts.yaml
+company_name:
+  name: company_name
+  email: jdoe@example.com
+  parent_key: workloads
+```
+
+```
+locals {
+  accounts = yamldecode(file("${path.module}/accounts.yaml"))
+}
+
+module "accounts" {
+  source                   = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+  accounts                 = local.accounts
+  organizational_unit_ids  = { workloads = "ou-abcd-11111111" }
+}
+```
+
+### Cross-Module Composition with the OU Module
+
+This module's `organizational_unit_ids` input is designed to accept [`modules/aws/organizations/ou`](../ou)'s `ids` output directly, so accounts can attach to OUs via `parent_key` instead of a hardcoded ID. Both modules' inputs can be sourced from a single YAML file with `organizational_units:` and `accounts:` top-level keys:
+
+```yaml
+# organization_structure.yaml
+organizational_units:
+  workloads:
+    name: workloads
+    parent_id: r-n1v2
+
+accounts:
+  company_name:
+    name: company_name
+    email: jdoe@example.com
+    parent_key: workloads
+```
+
+```
+locals {
+  org_structure = yamldecode(file("${path.module}/organization_structure.yaml"))
+}
+
+module "organizational_units" {
+  source                = "github.com/zachreborn/terraform-modules//modules/aws/organizations/ou"
+  organizational_units  = local.org_structure.organizational_units
+}
+
+module "accounts" {
+  source                   = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+  accounts                 = local.org_structure.accounts
+  organizational_unit_ids  = module.organizational_units.ids
+}
+```
+
+### Migration Guide (v8 -> v9)
+
+Version 9 replaces the single-account `name`/`email`/`parent_id` inputs and singular `id`/`arn`/`tags_all` outputs with the map-based `accounts` input and keyed `ids`/`arns`/`tags_all` outputs described above. This ships alongside the equivalent [OU module](../ou) breaking change as a single `feat!:` commit (MAJOR version bump) per this repo's release-please conventions, because:
+- The `name`, `email`, and `parent_id` variables no longer exist; all configuration moves into `accounts` map entries.
+- The `id`, `arn`, and `tags_all` outputs are now `ids`, `arns`, and `tags_all` maps keyed by logical name instead of single values.
+- A new `organizational_unit_ids` input was added to let `parent_key` resolve against the OU module's `ids` output.
+- Within each `accounts` entry, `name` is optional and defaults to the entry's map key, so it can be omitted whenever it would just repeat the key; `email` remains required, since there is no reasonable default.
+
+#### Step 1: Convert each module call into one map entry
+
+Each existing `module "x_account" { name = ...; email = ...; parent_id = ... }` block becomes one entry in a single `accounts` map. Replace any `parent_id = module.<ou>.id` reference with `parent_key = "<ou_key>"` and pass that OU module's `ids` output as `organizational_unit_ids`.
+
+For example, this:
+
+```
+module "company_name" {
+  source    = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+  name      = "company_name"
+  email     = "jdoe@example.com"
+  parent_id = module.prod_ou.id
+}
+```
+
+becomes:
+
+```
+module "accounts" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/account"
+
+  organizational_unit_ids = module.organizational_units.ids
+
+  accounts = {
+    company_name = {
+      name       = "company_name"
+      email      = "jdoe@example.com"
+      parent_key = "prod"
+    }
+  }
+}
+```
+
+#### Step 2: Move state instead of letting Terraform destroy/recreate
+
+AWS refuses to delete a member account still in the organization, so a plain apply of the config above would fail: Terraform would want to destroy `module.company_name.aws_organizations_account.account` and create a new resource at a different address. Add a `moved` block per existing account to your **consumer** configuration (not this module) so Terraform reconciles state instead:
+
+```
+moved {
+  from = module.company_name.aws_organizations_account.account
+  to   = module.accounts.aws_organizations_account.this["company_name"]
+}
+```
+
+This pattern is already used in downstream consumers (e.g. this repo's reference consumer keeps a `moved.tf` for module renames).
+
+#### Step 3: Update downstream references
+
+| Old reference | New reference |
+|---|---|
+| `module.company_name.id` | `module.accounts.ids["company_name"]` |
+| `module.company_name.arn` | `module.accounts.arns["company_name"]` |
+| `module.company_name.tags_all` | `module.accounts.tags_all["company_name"]` |
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -82,15 +228,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.53.0 |
 
 ## Modules
 
@@ -99,28 +245,24 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
-| [aws_organizations_account.account](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account) | resource |
+| ---- | ---- |
+| [aws_organizations_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_close_on_deletion"></a> [close\_on\_deletion](#input\_close\_on\_deletion) | (Optional) If true, a deletion event will close the account. Otherwise, it will only remove from the organization. | `bool` | `false` | no |
-| <a name="input_email"></a> [email](#input\_email) | (Required) The email address of the owner to assign to the new member account. This email address must not already be associated with another AWS account. | `string` | n/a | yes |
-| <a name="input_iam_user_access_to_billing"></a> [iam\_user\_access\_to\_billing](#input\_iam\_user\_access\_to\_billing) | (Optional) If set to ALLOW, the new account enables IAM users to access account billing information if they have the required permissions. If set to DENY, then only the root user of the new account can access account billing information. | `string` | `"ALLOW"` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Required) A friendly name for the member account. | `string` | n/a | yes |
-| <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id) | (Optional) Parent Organizational Unit ID or Root ID for the account. Defaults to the Organization default Root ID. A configuration must be present for this argument to perform drift detection. | `string` | `null` | no |
-| <a name="input_role_name"></a> [role\_name](#input\_role\_name) | (Optional) The name of an IAM role that Organizations automatically preconfigures in the new member account. This role trusts the master account, allowing users in the master account to assume the role, as permitted by the master account administrator. The role has administrator permissions in the new member account. The Organizations API provides no method for reading this information after account creation, so Terraform cannot perform drift detection on its value and will always show a difference for a configured value after import unless ignore\_changes is used. | `string` | `"OrganizationAccountAccessRole"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | `{}` | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_accounts"></a> [accounts](#input\_accounts) | (Required) Map of AWS Organization member accounts to create, keyed by a caller-chosen logical name<br/>(e.g. "company\_name").<br/>Each entry must set exactly one of:<br/>  - parent\_id:  A literal parent Root or Organizational Unit ID.<br/>  - parent\_key: A key into var.organizational\_unit\_ids (e.g. the `ids` output of<br/>                modules/aws/organizations/ou) identifying the OU this account should be attached to.<br/>Bare/null entries (e.g. an empty `foo:` in YAML) are not supported here, unlike<br/>modules/aws/organizations/ou — there is no reasonable default for email, so every entry must at minimum<br/>set email.<br/>Fields:<br/>  - name:                       (Optional) A friendly name for the member account. Defaults to the<br/>                                 entry's map key when unset.<br/>  - email:                      (Required) The email address of the owner to assign to the new member<br/>                                 account. This email address must not already be associated with<br/>                                 another AWS account.<br/>  - parent\_id:                  (Optional) Literal parent Root or OU ID. Conflicts with parent\_key.<br/>  - parent\_key:                 (Optional) Key into var.organizational\_unit\_ids. Conflicts with parent\_id.<br/>  - iam\_user\_access\_to\_billing: (Optional) ALLOW or DENY. No module-level default is applied -- unlike<br/>                                 a plain optional field, an object-attribute default would silently<br/>                                 replace an explicit null with a concrete value even when the caller<br/>                                 set null on purpose (e.g. to leave a pre-existing account's setting<br/>                                 untouched). Since this attribute forces replacement of the account<br/>                                 when changed, a coerced default could destroy and recreate real<br/>                                 accounts. Leave unset (or explicitly null) to let the AWS API apply<br/>                                 its own default (ALLOW) for new accounts, or to avoid managing this<br/>                                 attribute at all for existing ones.<br/>  - role\_name:                  (Optional) Name of the IAM role Organizations preconfigures in the new<br/>                                 account. Defaults to OrganizationAccountAccessRole.<br/>  - close\_on\_deletion:          (Optional) If true, a deletion event will close the account. Defaults to false.<br/>  - tags:                       (Optional) Additional tags for this account, merged with var.tags. | <pre>map(object({<br/>    name                       = optional(string)<br/>    email                      = string<br/>    parent_id                  = optional(string)<br/>    parent_key                 = optional(string)<br/>    iam_user_access_to_billing = optional(string)<br/>    role_name                  = optional(string, "OrganizationAccountAccessRole")<br/>    close_on_deletion          = optional(bool, false)<br/>    tags                       = optional(map(string), {})<br/>  }))</pre> | n/a | yes |
+| <a name="input_organizational_unit_ids"></a> [organizational\_unit\_ids](#input\_organizational\_unit\_ids) | (Optional) Map of Organizational Unit IDs keyed by logical name, e.g. the `ids` output of modules/aws/organizations/ou. Referenced by each accounts entry's parent\_key. | `map(string)` | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags applied to every account, merged with each entry's optional per-account tags. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | n/a |
+| ---- | ----------- |
+| <a name="output_arns"></a> [arns](#output\_arns) | Map of AWS Organization account ARNs, keyed by the same keys as var.accounts. |
+| <a name="output_ids"></a> [ids](#output\_ids) | Map of AWS Organization account IDs, keyed by the same keys as var.accounts. |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | Map of the resolved tags for each account, keyed by the same keys as var.accounts. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
@@ -145,8 +287,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

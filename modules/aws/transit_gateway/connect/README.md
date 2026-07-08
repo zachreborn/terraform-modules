@@ -130,7 +130,7 @@ No modules.
 | <a name="input_transit_gateway_default_route_table_association"></a> [transit\_gateway\_default\_route\_table\_association](#input\_transit\_gateway\_default\_route\_table\_association) | (Optional) Boolean whether the Connect should be associated with the EC2 transit gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
 | <a name="input_transit_gateway_default_route_table_propagation"></a> [transit\_gateway\_default\_route\_table\_propagation](#input\_transit\_gateway\_default\_route\_table\_propagation) | (Optional) Boolean whether the Connect should propagate routes with the EC2 transit gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
 | <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of EC2 transit gateway. | `string` | n/a | yes |
-| <a name="input_transport_attachment_id"></a> [transport\_attachment\_id](#input\_transport\_attachment\_id) | (Required) The underlaying transit gateway VPC attachment ID. | `string` | n/a | yes |
+| <a name="input_transport_attachment_id"></a> [transport\_attachment\_id](#input\_transport\_attachment\_id) | (Required) The underlying transit gateway VPC attachment ID. | `string` | n/a | yes |
 
 ## Outputs
 
@@ -168,8 +168,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

@@ -28,7 +28,7 @@
 
 <h3 align="center">Flow Logs Module</h3>
   <p align="center">
-    This module sets up each componenet required to capture Flow Logs with the parameters specified. By default this module will be set up to work without any changes to variables other than the flow log capture source. The result of this module creates a unique cloudwatch log group with a prefix of 'flow_logs', an IAM policy and IAM role which can be used with ENI flow logs to deliver logs to that cloudwatch log group. One of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, or flow_vpc_ids must be provided.
+    This module sets up each component required to capture Flow Logs with the parameters specified. By default this module will be set up to work without any changes to variables other than the flow log capture source. The result of this module creates a unique cloudwatch log group with a prefix of 'flow_logs', an IAM policy and IAM role which can be used with ENI flow logs to deliver logs to that cloudwatch log group. One of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, or flow_vpc_ids must be provided.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -252,8 +252,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

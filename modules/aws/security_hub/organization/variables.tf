@@ -1,10 +1,10 @@
 ############################################################
-# AWS Security Hub Account Variables
+# AWS Security Hub CSPM Account Variables
 ############################################################
 
 variable "enable_default_standards" {
   type        = bool
-  description = "(Optional) Whether to enable the security standards that Security Hub has designated as automatically enabled including: AWS Foundational Security Best Practices v1.0.0 and CIS AWS Foundations Benchmark v1.2.0. Defaults to true."
+  description = "(Optional) Whether to enable the security standards that Security Hub CSPM has designated as automatically enabled including: AWS Foundational Security Best Practices v1.0.0 and CIS AWS Foundations Benchmark v1.2.0. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("^(true|false)$", var.enable_default_standards))
@@ -13,12 +13,12 @@ variable "enable_default_standards" {
 }
 
 ############################################################
-# AWS Security Hub Organization Admin Variables
+# AWS Security Hub CSPM Delegated Administrator Variables
 ############################################################
 
 variable "admin_account_id" {
   type        = string
-  description = "(Required) The 12-digit identifier of the AWS account designated as the Security Hub administrator account."
+  description = "(Required) The 12-digit identifier of the AWS account designated as the Security Hub CSPM delegated administrator account. Per AWS, delegating CSPM to a non-management account also designates it as the delegated administrator for the unified AWS Security Hub."
   validation {
     condition     = can(regex("^\\d{12}$", var.admin_account_id))
     error_message = "The value must be a 12-digit identifier."
@@ -26,12 +26,12 @@ variable "admin_account_id" {
 }
 
 ############################################################
-# AWS Security Hub Organization Admin Variables
+# AWS Security Hub CSPM Organization Configuration Variables
 ############################################################
 
 variable "auto_enable" {
   type        = bool
-  description = "(Required) Whether to automatically enable Security Hub for new accounts in the organization. Defaults to true."
+  description = "(Optional) Whether to automatically enable Security Hub CSPM for new accounts in the organization. Only applies to LOCAL configuration; when configuration_type is CENTRAL this is forced to false. Defaults to true."
   default     = true
   validation {
     condition     = can(regex("^(true|false)$", var.auto_enable))
@@ -41,7 +41,7 @@ variable "auto_enable" {
 
 variable "auto_enable_standards" {
   type        = string
-  description = "(Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to DEFAULT, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to NONE."
+  description = "(Optional) Whether to automatically enable Security Hub CSPM default standards for new member accounts in the organization. Valid values are DEFAULT and NONE. Only applies to LOCAL configuration; when configuration_type is CENTRAL this is forced to NONE. Defaults to DEFAULT."
   default     = "DEFAULT"
   validation {
     condition     = can(regex("^(DEFAULT|NONE)$", var.auto_enable_standards))
@@ -49,13 +49,36 @@ variable "auto_enable_standards" {
   }
 }
 
+variable "configuration_type" {
+  type        = string
+  description = "(Optional) Whether the organization uses LOCAL or CENTRAL configuration. LOCAL (default) preserves the historical behavior where each account/Region is configured independently and auto_enable applies. CENTRAL enables configuration policies (see configuration_policies), requires a finding aggregator, and forces auto_enable to false and auto_enable_standards to NONE. Valid values: LOCAL, CENTRAL."
+  default     = "LOCAL"
+  validation {
+    condition     = contains(["LOCAL", "CENTRAL"], var.configuration_type)
+    error_message = "The value must be LOCAL or CENTRAL."
+  }
+}
+
+variable "configuration_policies" {
+  type = map(object({
+    description                  = optional(string)
+    service_enabled              = optional(bool, true)
+    enabled_standard_arns        = optional(list(string), [])
+    enabled_control_identifiers  = optional(list(string), [])
+    disabled_control_identifiers = optional(list(string), [])
+    target_ids                   = optional(list(string), [])
+  }))
+  description = "(Optional) Map of Security Hub CSPM central configuration policies keyed by policy name. Only used when configuration_type is CENTRAL. Per policy: service_enabled toggles Security Hub CSPM on/off for associated targets; enabled_standard_arns lists the standard ARNs to enable; provide either enabled_control_identifiers or disabled_control_identifiers (mutually exclusive - a non-empty enabled_control_identifiers takes precedence); target_ids is the list of organization root, OU, or account IDs to associate with the policy. Defaults to an empty map (no policies)."
+  default     = {}
+}
+
 ############################################################
-# AWS Security Hub Finding Aggregator Variables
+# AWS Security Hub CSPM Finding Aggregator Variables
 ############################################################
 
 variable "linking_mode" {
   type        = string
-  description = "(Optional) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are ALL_REGIONS, ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS. When ALL_REGIONS or ALL_REGIONS_EXCEPT_SPECIFIED are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them."
+  description = "(Optional) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are ALL_REGIONS, ALL_REGIONS_EXCEPT_SPECIFIED or SPECIFIED_REGIONS. When ALL_REGIONS or ALL_REGIONS_EXCEPT_SPECIFIED are used, Security Hub CSPM will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them."
   default     = "ALL_REGIONS"
   validation {
     condition     = can(regex("^(ALL_REGIONS|ALL_REGIONS_EXCEPT_SPECIFIED|SPECIFIED_REGIONS)$", var.linking_mode))

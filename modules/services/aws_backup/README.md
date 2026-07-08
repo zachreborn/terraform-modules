@@ -129,6 +129,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_kms_alias.prod_alias](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.dr_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_kms_key.prod_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_region.dr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [aws_region.prod](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -161,6 +164,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_monthly_backup_retention"></a> [monthly\_backup\_retention](#input\_monthly\_backup\_retention) | (Required) The daily backup plan retention in days. By default this is 365 days. | `number` | `365` | no |
 | <a name="input_monthly_backup_schedule"></a> [monthly\_backup\_schedule](#input\_monthly\_backup\_schedule) | (Required) The monthly backup plan schedule in cron format. By default this is set to run on the first day of every month at 9:20 AM UTC. | `string` | `"cron(20 9 1 * ? *)"` | no |
 | <a name="input_opt_in_to_archive_for_supported_resources"></a> [opt\_in\_to\_archive\_for\_supported\_resources](#input\_opt\_in\_to\_archive\_for\_supported\_resources) | (Optional) Whether to opt in to archive for supported resources. | `bool` | `false` | no |
+| <a name="input_organization_backup_plan_content"></a> [organization\_backup\_plan\_content](#input\_organization\_backup\_plan\_content) | (Optional) A fully-rendered AWS organization backup policy JSON document. When null (default), the module generates the policy from the schedule/retention inputs and provider-derived account/region values. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the object. | `map(any)` | <pre>{<br/>  "aws_backup": "true",<br/>  "created_by": "<YOUR_NAME>",<br/>  "environment": "prod",<br/>  "priority": "critical",<br/>  "service": "backups",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_vault_disaster_recovery_name"></a> [vault\_disaster\_recovery\_name](#input\_vault\_disaster\_recovery\_name) | value | `string` | `"vault_disaster_recovery"` | no |
 | <a name="input_vault_prod_daily_name"></a> [vault\_prod\_daily\_name](#input\_vault\_prod\_daily\_name) | value | `string` | `"vault_prod_daily"` | no |
@@ -171,6 +175,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Description |
 |------|-------------|
+| <a name="output_organization_backup_plan_policy_id"></a> [organization\_backup\_plan\_policy\_id](#output\_organization\_backup\_plan\_policy\_id) | The id of the AWS Organizations resource policy created for the organization backup plan, or null when enable\_organization\_backup is false. |
 | <a name="output_vault_daily_arn"></a> [vault\_daily\_arn](#output\_vault\_daily\_arn) | n/a |
 | <a name="output_vault_disaster_recovery_arn"></a> [vault\_disaster\_recovery\_arn](#output\_vault\_disaster\_recovery\_arn) | n/a |
 | <a name="output_vault_hourly_arn"></a> [vault\_hourly\_arn](#output\_vault\_hourly\_arn) | n/a |
@@ -199,8 +204,9 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 
 ## Acknowledgments
 
-- [Zachary Hill](https://zacharyhill.co)
-- [Jake Jones](https://github.com/jakeasarus)
+- [Zachary Hill](https://github.com/zachreborn)
+- [Jake Jones](https://github.com/jakeasaurus)
+- [Brad Engberg](https://github.com/bradms98)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

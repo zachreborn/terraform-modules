@@ -1,5 +1,67 @@
 # Changelog
 
+## [9.0.0](https://github.com/zachreborn/terraform-modules/compare/v8.25.0...v9.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362))
+
+### Features
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362)) ([84d0e55](https://github.com/zachreborn/terraform-modules/commit/84d0e55b7669143813d652774e33704f679b9809))
+
+## [8.25.0](https://github.com/zachreborn/terraform-modules/compare/v8.24.0...v8.25.0) (2026-07-06)
+
+
+### Features
+
+* **organizations:** add opt-in Region-restriction SCP to organization module ([#360](https://github.com/zachreborn/terraform-modules/issues/360)) ([55f2f25](https://github.com/zachreborn/terraform-modules/commit/55f2f252500855a7308a387b8e7d2437e425e784))
+
+## [8.24.0](https://github.com/zachreborn/terraform-modules/compare/v8.23.0...v8.24.0) (2026-07-04)
+
+
+### Features
+
+* **security-hub:** support AWS Security Hub 2026 changes (CSPM + unified v2) ([#352](https://github.com/zachreborn/terraform-modules/issues/352)) ([b1a4f95](https://github.com/zachreborn/terraform-modules/commit/b1a4f952e82a363880019c2691499aa1b6c76277))
+
+## [8.23.0](https://github.com/zachreborn/terraform-modules/compare/v8.22.0...v8.23.0) (2026-06-30)
+
+
+### Features
+
+* **ssm_domain_join:** add module for automated AD domain join via SSM ([#325](https://github.com/zachreborn/terraform-modules/issues/325)) ([adbd56c](https://github.com/zachreborn/terraform-modules/commit/adbd56c1b9483f06c826a03d246305ed75d829b8))
+
+## [8.22.0](https://github.com/zachreborn/terraform-modules/compare/v8.21.0...v8.22.0) (2026-06-30)
+
+
+### Features
+
+* **datadog:** add integrations modules ([#344](https://github.com/zachreborn/terraform-modules/issues/344)) ([d5c3e32](https://github.com/zachreborn/terraform-modules/commit/d5c3e32d968a840a73740326a2d3600759d07ff8))
+* **datadog:** add monitors modules ([#342](https://github.com/zachreborn/terraform-modules/issues/342)) ([54e6caf](https://github.com/zachreborn/terraform-modules/commit/54e6cafca2607779e85e434de1b953868211edf3))
+* **datadog:** add synthetics modules ([#343](https://github.com/zachreborn/terraform-modules/issues/343)) ([d5d0d00](https://github.com/zachreborn/terraform-modules/commit/d5d0d00517473b078a7305ced32d8e350a198c1d))
+
+## [8.21.0](https://github.com/zachreborn/terraform-modules/compare/v8.20.3...v8.21.0) (2026-06-26)
+
+
+### Features
+
+* **datadog:** add real user monitoring (RUM) modules ([#340](https://github.com/zachreborn/terraform-modules/issues/340)) ([689ea5b](https://github.com/zachreborn/terraform-modules/commit/689ea5b285f0244897318c950805a66267ce4670))
+
+## [8.20.3](https://github.com/zachreborn/terraform-modules/compare/v8.20.2...v8.20.3) (2026-06-23)
+
+
+### Bug Fixes
+
+* **organizations/organization:** prefix file() paths with ${path.module}/ ([#334](https://github.com/zachreborn/terraform-modules/issues/334)) ([492f177](https://github.com/zachreborn/terraform-modules/commit/492f177c22bb8d0fccfcfff57dec44fb3fbacf5f))
+
+## [8.20.2](https://github.com/zachreborn/terraform-modules/compare/v8.20.1...v8.20.2) (2026-06-23)
+
+
+### Bug Fixes
+
+* **aws_backup:** render org backup policy inline to fix file() path error ([#329](https://github.com/zachreborn/terraform-modules/issues/329)) ([0b07035](https://github.com/zachreborn/terraform-modules/commit/0b0703598e5f4704f13c8b7f7a600fda938374cd))
+
 ## [8.20.1](https://github.com/zachreborn/terraform-modules/compare/v8.20.0...v8.20.1) (2026-06-16)
 
 

@@ -54,3 +54,22 @@ output "identity_center_scp_attachment_target_ids" {
   description = "List of target IDs the Identity Center deny SCP was attached to. Empty when attachment is disabled."
   value       = [for attachment in aws_organizations_policy_attachment.identity_center_scp : attachment.target_id]
 }
+
+############################################################
+# Region Restriction Service Control Policy
+############################################################
+
+output "region_scp_id" {
+  description = "ID of the Region-deny SCP, or null when enable_region_scp is false."
+  value       = try(module.region_scp["region_scp"].id, null)
+}
+
+output "region_scp_arn" {
+  description = "ARN of the Region-deny SCP, or null when enable_region_scp is false."
+  value       = try(module.region_scp["region_scp"].arn, null)
+}
+
+output "region_scp_attachment_target_ids" {
+  description = "List of target IDs the Region-deny SCP was attached to. Empty when attachment or creation is disabled."
+  value       = [for attachment in aws_organizations_policy_attachment.region_scp : attachment.target_id]
+}

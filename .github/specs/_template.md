@@ -41,10 +41,19 @@ Will the auto-generated `<!-- BEGIN_TF_DOCS -->` block change for any
 module? If yes, which.
 
 ## 8. Testing
-- `terraform -chdir=<path> init -backend=false && terraform -chdir=<path> validate`
-- `terraform fmt -check -diff -recursive`
+- `tofu -chdir=<path> init -backend=false && tofu -chdir=<path> validate`
+- `tofu fmt -check -diff -recursive`
 - `checkov -d <path>` (locally; CI runs on schedule)
-- Any module-specific test plan.
+- Native `tofu test` plan (required — see `AGENTS.md` § Module Design
+  Specifications § 6, Native Test Coverage). List the `tests/*.tftest.hcl`
+  cases the implementation must add:
+  - Valid-baseline `run` block (proves a normal plan succeeds).
+  - One `expect_failures` case per variable `validation { ... }` rule.
+  - One case per conditional/`count`/`for_each` branch.
+  - Assertions on every meaningful output.
+  - Wiring assertions between this module and any submodules it calls, if applicable.
+  Do not propose weakened assertions, mocked-away behavior, or skipped cases as
+  a way to make tests pass — every case must exercise real module behavior.
 
 ## 9. Open questions
 Bullet list. Each one should be resolvable before merge.
