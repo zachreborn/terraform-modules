@@ -16,6 +16,10 @@ variable "daily_automatic_backup_start_time" {
   type        = string
   description = "(Optional) The preferred time (in HH:MM format) to take daily automatic backups, in the UTC time zone. Requires automatic_backup_retention_days to be greater than 0. Defaults to 23:59."
   default     = "23:59"
+  validation {
+    condition     = can(regex("^([01][0-9]|2[0-3]):[0-5][0-9]$", var.daily_automatic_backup_start_time))
+    error_message = "The value of daily_automatic_backup_start_time must be in HH:MM 24-hour format (for example, 23:59)."
+  }
 }
 
 variable "deployment_type" {
@@ -39,6 +43,10 @@ variable "disk_iops_configuration" {
     condition     = var.disk_iops_configuration == null ? true : contains(["AUTOMATIC", "USER_PROVISIONED"], var.disk_iops_configuration.mode)
     error_message = "The value of disk_iops_configuration.mode must be either AUTOMATIC or USER_PROVISIONED."
   }
+  validation {
+    condition     = var.disk_iops_configuration == null ? true : (var.disk_iops_configuration.mode != "USER_PROVISIONED" || var.disk_iops_configuration.iops != null)
+    error_message = "disk_iops_configuration.iops is required when disk_iops_configuration.mode is USER_PROVISIONED."
+  }
 }
 
 variable "endpoint_ip_address_range" {
@@ -57,6 +65,10 @@ variable "ha_pairs" {
   type        = number
   description = "(Optional) The number of high-availability (HA) pairs for the file system. Valid values are 1 through 12. Only Gen 2 SINGLE_AZ deployments support more than 1. Defaults to null, which lets the provider apply its default of 1."
   default     = null
+  validation {
+    condition     = var.ha_pairs == null ? true : (var.ha_pairs >= 1 && var.ha_pairs <= 12)
+    error_message = "The value of ha_pairs must be between 1 and 12."
+  }
 }
 
 variable "name" {
@@ -66,8 +78,7 @@ variable "name" {
 
 variable "preferred_subnet_id" {
   type        = string
-  description = "(Optional) The subnet in which the preferred file server is located. Required for MULTI_AZ deployment types. Defaults to null."
-  default     = null
+  description = "(Required) The subnet in which the preferred file server is located. Must be one of the subnets listed in subnet_ids."
 }
 
 variable "route_table_ids" {
@@ -114,20 +125,32 @@ variable "tags" {
 
 variable "throughput_capacity" {
   type        = number
-  description = "(Optional) The sustained throughput (MB/s) of the file system. Valid values depend on deployment type (e.g. 128, 256, 512, 1024, 2048, 4096). Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
+  description = "(Optional) The sustained throughput (MB/s) of the file system. Valid values are 128, 256, 512, 1024, 2048, and 4096. Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
   default     = null
+  validation {
+    condition     = var.throughput_capacity == null ? true : contains([128, 256, 512, 1024, 2048, 4096], var.throughput_capacity)
+    error_message = "The value of throughput_capacity must be one of 128, 256, 512, 1024, 2048, or 4096 MB/s."
+  }
 }
 
 variable "throughput_capacity_per_ha_pair" {
   type        = number
-  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required for Gen 2 deployment types and when ha_pairs is greater than 1. Conflicts with throughput_capacity; set exactly one. Defaults to null."
+  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required for Gen 2 deployment types and when ha_pairs is greater than 1. Valid values are 128, 256, 512, 1024, 2048, 3072, 4096, and 6144. Conflicts with throughput_capacity; set exactly one. Defaults to null."
   default     = null
+  validation {
+    condition     = var.throughput_capacity_per_ha_pair == null ? true : contains([128, 256, 512, 1024, 2048, 3072, 4096, 6144], var.throughput_capacity_per_ha_pair)
+    error_message = "The value of throughput_capacity_per_ha_pair must be one of 128, 256, 512, 1024, 2048, 3072, 4096, or 6144 MB/s."
+  }
 }
 
 variable "weekly_maintenance_start_time" {
   type        = string
   description = "(Optional) The preferred start time (in d:HH:MM format) to perform weekly maintenance, in the UTC time zone. Defaults to 1:01:00."
   default     = "1:01:00"
+  validation {
+    condition     = can(regex("^[1-7]:([01][0-9]|2[0-3]):[0-5][0-9]$", var.weekly_maintenance_start_time))
+    error_message = "The value of weekly_maintenance_start_time must be in d:HH:MM format where d is 1-7 (for example, 1:01:00)."
+  }
 }
 
 ###########################
@@ -168,20 +191,52 @@ variable "volumes" {
     name                                 = optional(string)
     storage_virtual_machine_key          = string
     junction_path                        = optional(string)
-    size_in_megabytes                    = number
+    size_in_megabytes                    = optional(number)
+    size_in_bytes                        = optional(string)
     security_style                       = optional(string, "NTFS")
     snapshot_policy                      = optional(string)
     storage_efficiency_enabled           = optional(bool, true)
     ontap_volume_type                    = optional(string, "RW")
+    volume_style                         = optional(string)
+    volume_type                          = optional(string)
     skip_final_backup                    = optional(bool, false)
     copy_tags_to_backups                 = optional(bool, false)
     bypass_snaplock_enterprise_retention = optional(bool, false)
+    final_backup_tags                    = optional(map(string))
     tiering_policy = optional(object({
       name           = string
       cooling_period = optional(number)
     }))
+    aggregate_configuration = optional(object({
+      aggregates                 = optional(list(string))
+      constituents_per_aggregate = optional(number)
+    }))
+    snaplock_configuration = optional(object({
+      snaplock_type              = string
+      audit_log_volume           = optional(bool)
+      privileged_delete          = optional(string)
+      volume_append_mode_enabled = optional(bool)
+      autocommit_period = optional(object({
+        type  = string
+        value = optional(number)
+      }))
+      retention_period = optional(object({
+        default_retention = optional(object({
+          type  = string
+          value = optional(number)
+        }))
+        maximum_retention = optional(object({
+          type  = string
+          value = optional(number)
+        }))
+        minimum_retention = optional(object({
+          type  = string
+          value = optional(number)
+        }))
+      }))
+    }))
   }))
-  description = "(Optional) Map of ONTAP volumes to create, keyed by a logical name. Per volume: name (defaults to the map key), storage_virtual_machine_key (the key of the SVM in storage_virtual_machines this volume belongs to), junction_path (SMB/NFS mount path, e.g. /sales), size_in_megabytes, security_style (UNIX, NTFS, or MIXED — defaults to NTFS), snapshot_policy, storage_efficiency_enabled (dedup/compression, defaults to true), ontap_volume_type (RW or DP, defaults to RW), and an optional tiering_policy block (name one of SNAPSHOT_ONLY, AUTO, ALL, NONE; cooling_period in days). Defaults to {}."
+  description = "(Optional) Map of ONTAP volumes to create, keyed by a logical name. Per volume: name (defaults to the map key), storage_virtual_machine_key (the key of the SVM in storage_virtual_machines this volume belongs to), junction_path (SMB/NFS mount path, e.g. /sales), and exactly one of size_in_megabytes (FlexVol) or size_in_bytes (FlexGroup, a string). Additional tunables: security_style (UNIX, NTFS, or MIXED — defaults to NTFS), snapshot_policy, storage_efficiency_enabled (dedup/compression, defaults to true), ontap_volume_type (RW or DP, defaults to RW), volume_style (FLEXVOL or FLEXGROUP), volume_type, skip_final_backup/copy_tags_to_backups/final_backup_tags, and bypass_snaplock_enterprise_retention. Optional blocks: tiering_policy (name one of SNAPSHOT_ONLY, AUTO, ALL, NONE; cooling_period in days); aggregate_configuration (aggregates and constituents_per_aggregate, for FlexGroup); and snaplock_configuration for WORM (snaplock_type COMPLIANCE or ENTERPRISE, plus optional privileged_delete, audit_log_volume, volume_append_mode_enabled, autocommit_period, and retention_period with default/maximum/minimum_retention type+value pairs). Defaults to {}."
   default     = {}
   validation {
     condition     = alltrue([for vol in values(var.volumes) : contains(["UNIX", "NTFS", "MIXED"], vol.security_style)])
@@ -194,6 +249,22 @@ variable "volumes" {
   validation {
     condition     = alltrue([for vol in values(var.volumes) : vol.tiering_policy == null ? true : contains(["SNAPSHOT_ONLY", "AUTO", "ALL", "NONE"], vol.tiering_policy.name)])
     error_message = "Each volumes tiering_policy name must be one of SNAPSHOT_ONLY, AUTO, ALL, or NONE."
+  }
+  validation {
+    condition     = alltrue([for vol in values(var.volumes) : (vol.size_in_megabytes != null) != (vol.size_in_bytes != null)])
+    error_message = "Each volume must set exactly one of size_in_megabytes or size_in_bytes."
+  }
+  validation {
+    condition     = alltrue([for vol in values(var.volumes) : vol.volume_style == null ? true : contains(["FLEXVOL", "FLEXGROUP"], vol.volume_style)])
+    error_message = "Each volumes volume_style must be either FLEXVOL or FLEXGROUP."
+  }
+  validation {
+    condition     = alltrue([for vol in values(var.volumes) : vol.snaplock_configuration == null ? true : contains(["COMPLIANCE", "ENTERPRISE"], vol.snaplock_configuration.snaplock_type)])
+    error_message = "Each volumes snaplock_configuration snaplock_type must be either COMPLIANCE or ENTERPRISE."
+  }
+  validation {
+    condition     = alltrue([for vol in values(var.volumes) : (vol.snaplock_configuration == null || vol.snaplock_configuration.privileged_delete == null) ? true : contains(["DISABLED", "ENABLED", "PERMANENTLY_DISABLED"], vol.snaplock_configuration.privileged_delete)])
+    error_message = "Each volumes snaplock_configuration privileged_delete must be one of DISABLED, ENABLED, or PERMANENTLY_DISABLED."
   }
 }
 
@@ -209,7 +280,7 @@ variable "create_kms_key" {
 
 variable "kms_key_id" {
   type        = string
-  description = "(Optional) ARN of an existing KMS key used to encrypt the file system. Used only when create_kms_key is false."
+  description = "(Optional) ARN of an existing KMS key used to encrypt the file system. Required when create_kms_key is false."
   default     = null
 }
 
