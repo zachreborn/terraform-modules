@@ -1,5 +1,16 @@
 # Changelog
 
+## [10.0.0](https://github.com/zachreborn/terraform-modules/compare/v9.0.0...v10.0.0) (2026-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **fsx:** modernize FSx for Windows File Server module ([#366](https://github.com/zachreborn/terraform-modules/issues/366))
+
+### Features
+
+* **fsx:** modernize FSx for Windows File Server module ([#366](https://github.com/zachreborn/terraform-modules/issues/366)) ([fe8566a](https://github.com/zachreborn/terraform-modules/commit/fe8566aae95e816ac86798d10f3c9d3976dd58a8))
+
 ## [9.0.0](https://github.com/zachreborn/terraform-modules/compare/v8.25.0...v9.0.0) (2026-07-06)
 
 
