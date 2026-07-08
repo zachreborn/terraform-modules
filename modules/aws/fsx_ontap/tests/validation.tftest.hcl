@@ -56,19 +56,19 @@ run "valid_baseline_does_not_fail" {
 # ---- Variable validation failures ----
 
 run "rejects_invalid_automatic_backup_retention_days" {
-  command   = plan
+  command = plan
   variables { automatic_backup_retention_days = 91 }
   expect_failures = [var.automatic_backup_retention_days]
 }
 
 run "rejects_invalid_daily_automatic_backup_start_time" {
-  command   = plan
+  command = plan
   variables { daily_automatic_backup_start_time = "25:00" }
   expect_failures = [var.daily_automatic_backup_start_time]
 }
 
 run "rejects_invalid_deployment_type" {
-  command   = plan
+  command = plan
   variables { deployment_type = "TRIPLE_AZ_1" }
   expect_failures = [var.deployment_type]
 }
@@ -94,25 +94,25 @@ run "rejects_user_provisioned_disk_iops_without_iops" {
 }
 
 run "rejects_invalid_ha_pairs" {
-  command   = plan
+  command = plan
   variables { ha_pairs = 13 }
   expect_failures = [var.ha_pairs]
 }
 
 run "rejects_invalid_storage_capacity" {
-  command   = plan
+  command = plan
   variables { storage_capacity = 512 }
   expect_failures = [var.storage_capacity]
 }
 
 run "rejects_invalid_storage_type" {
-  command   = plan
+  command = plan
   variables { storage_type = "HDD" }
   expect_failures = [var.storage_type]
 }
 
 run "rejects_invalid_throughput_capacity" {
-  command   = plan
+  command = plan
   variables { throughput_capacity = 100 }
   expect_failures = [var.throughput_capacity]
 }
@@ -127,13 +127,13 @@ run "rejects_invalid_throughput_capacity_per_ha_pair" {
 }
 
 run "rejects_invalid_weekly_maintenance_start_time" {
-  command   = plan
+  command = plan
   variables { weekly_maintenance_start_time = "8:99:00" }
   expect_failures = [var.weekly_maintenance_start_time]
 }
 
 run "rejects_invalid_kms_key_deletion_window_in_days" {
-  command   = plan
+  command = plan
   variables { kms_key_deletion_window_in_days = 6 }
   expect_failures = [var.kms_key_deletion_window_in_days]
 }
