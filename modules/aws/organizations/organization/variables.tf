@@ -22,9 +22,9 @@ variable "aws_service_access_principals" {
 }
 
 variable "enabled_policy_types" {
-  description = "(Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature_set set to ALL. For additional information about valid policy types (e.g., AISERVICES_OPT_OUT_POLICY, BACKUP_POLICY, SERVICE_CONTROL_POLICY, and TAG_POLICY), see the AWS Organizations API Reference."
+  description = "(Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature_set set to ALL. Defaults to [\"SERVICE_CONTROL_POLICY\"] so the SCPs this module enables by default (Identity Center deny, Leave Organization deny, Root Access Key Creation deny) work out of the box without callers needing to set this explicitly. Override with a list that includes \"SERVICE_CONTROL_POLICY\" if you also need other policy types (e.g. [\"SERVICE_CONTROL_POLICY\", \"TAG_POLICY\"]), or set enable_identity_center_scp/enable_leave_organization_scp/enable_root_access_key_scp to false and this to [] if you don't want SCP support enabled at all. For additional information about valid policy types (e.g., AISERVICES_OPT_OUT_POLICY, BACKUP_POLICY, SERVICE_CONTROL_POLICY, and TAG_POLICY), see the AWS Organizations API Reference."
   type        = list(string)
-  default     = null
+  default     = ["SERVICE_CONTROL_POLICY"]
 }
 
 variable "feature_set" {

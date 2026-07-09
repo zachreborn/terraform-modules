@@ -72,7 +72,10 @@ into the composed module.
 
 ### Simple Example
 
-This example creates an AWS Organization with the default settings.
+This example creates an AWS Organization with the default settings, including
+`enabled_policy_types` defaulting to `["SERVICE_CONTROL_POLICY"]` so the SCPs
+enabled by default below (Identity Center deny, Leave Organization deny, Root
+Access Key Creation deny) work out of the box.
 
 ```
 module "organization" {
@@ -84,9 +87,13 @@ module "organization" {
         "cloudtrail.amazonaws.com",
         "sso.amazonaws.com",
     ]
-    enabled_policy_types          = ["TAG_POLICY"]
 }
 ```
+
+If you override `enabled_policy_types` yourself (for example to add
+`TAG_POLICY`), make sure `"SERVICE_CONTROL_POLICY"` stays in the list unless
+you've also disabled the default SCPs (see below), since an explicit override
+replaces the default entirely rather than merging with it.
 
 ### Identity Center Service Control Policy
 
@@ -96,15 +103,17 @@ prevents member (child) accounts from creating their own account-level IAM
 Identity Center (AWS SSO) instances, keeping Identity Center management
 centralized in the management account / delegated administrator.
 
-**Prerequisite:** SCP support must be enabled on the organization. Include
-`"SERVICE_CONTROL_POLICY"` in `enabled_policy_types`, otherwise the apply fails
-with a precondition error. The organization `feature_set` must be `ALL`.
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
 
 ```
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     # The following are the defaults and may be omitted.
@@ -134,9 +143,11 @@ enabled you must supply a non-empty `allowed_regions`.
 
 **Prerequisites and cautions:**
 
-- SCP support must be enabled on the organization: include
-  `"SERVICE_CONTROL_POLICY"` in `enabled_policy_types` (and `feature_set` must be
-  `ALL`), otherwise the apply fails with a precondition error.
+- SCP support must be enabled on the organization: `enabled_policy_types`
+  defaults to `["SERVICE_CONTROL_POLICY"]`, so this works out of the box. If you
+  override `enabled_policy_types`, keep `"SERVICE_CONTROL_POLICY"` in the list
+  (and `feature_set` must be `ALL`), otherwise the apply fails with a
+  precondition error.
 - SCPs **never apply to the organization management (payer) account**, so the
   management account is not restricted by this policy regardless of attachment.
 - `us-east-1` is commonly required even for non-primary workloads because some
@@ -152,7 +163,7 @@ enabled you must supply a non-empty `allowed_regions`.
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     enable_region_scp = true
@@ -184,15 +195,17 @@ member accounts from removing themselves from the organization, which would
 otherwise let them escape every other guardrail (SCPs, centralized logging,
 delegated administration) enforced by this module.
 
-**Prerequisite:** SCP support must be enabled on the organization. Include
-`"SERVICE_CONTROL_POLICY"` in `enabled_policy_types`, otherwise the apply fails
-with a precondition error. The organization `feature_set` must be `ALL`.
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
 
 ```
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     # The following are the defaults and may be omitted.
@@ -217,15 +230,17 @@ the highest-risk credentials in an AWS account, mirroring AWS Control Tower's
 strongly-recommended "Disallow Creation of Access Keys for the Root User"
 control.
 
-**Prerequisite:** SCP support must be enabled on the organization. Include
-`"SERVICE_CONTROL_POLICY"` in `enabled_policy_types`, otherwise the apply fails
-with a precondition error. The organization `feature_set` must be `ALL`.
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
 
 ```
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     # The following are the defaults and may be omitted.
@@ -428,7 +443,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_enable_root_actions_scp"></a> [enable\_root\_actions\_scp](#input\_enable\_root\_actions\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies all actions taken by the account root user in member accounts, except the actions in root\_actions\_scp\_exempted\_actions. Opt-in: defaults to false because an overly narrow exemption list can lock out legitimate root-only recovery flows; test in a non-production OU before wider rollout. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `false` | no |
 | <a name="input_enable_security_services_scp"></a> [enable\_security\_services\_scp](#input\_enable\_security\_services\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies actions that stop, disable, or delete CloudTrail, AWS Config, GuardDuty, and Security Hub in member accounts. Opt-in: defaults to false so existing callers see no change until they enable it, and so delegated-administrator/audit roles can be exempted first via security\_services\_scp\_exempted\_principal\_arns. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `false` | no |
 | <a name="input_enabled_features"></a> [enabled\_features](#input\_enabled\_features) | A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions. | `list(string)` | <pre>[<br/>  "RootCredentialsManagement",<br/>  "RootSessions"<br/>]</pre> | no |
-| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | `null` | no |
+| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. Defaults to ["SERVICE\_CONTROL\_POLICY"] so the SCPs this module enables by default (Identity Center deny, Leave Organization deny, Root Access Key Creation deny) work out of the box without callers needing to set this explicitly. Override with a list that includes "SERVICE\_CONTROL\_POLICY" if you also need other policy types (e.g. ["SERVICE\_CONTROL\_POLICY", "TAG\_POLICY"]), or set enable\_identity\_center\_scp/enable\_leave\_organization\_scp/enable\_root\_access\_key\_scp to false and this to [] if you don't want SCP support enabled at all. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | <pre>[<br/>  "SERVICE_CONTROL_POLICY"<br/>]</pre> | no |
 | <a name="input_feature_set"></a> [feature\_set](#input\_feature\_set) | (Optional) Specify 'ALL' (default) or 'CONSOLIDATED\_BILLING'. | `string` | `"ALL"` | no |
 | <a name="input_identity_center_scp_description"></a> [identity\_center\_scp\_description](#input\_identity\_center\_scp\_description) | (Optional) Description of the Identity Center deny SCP. | `string` | `"Denies sso:CreateInstance org-wide so member accounts cannot create account-level IAM Identity Center instances."` | no |
 | <a name="input_identity_center_scp_name"></a> [identity\_center\_scp\_name](#input\_identity\_center\_scp\_name) | (Optional) Name of the Identity Center deny SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyMemberAccountIdentityCenter"` | no |

@@ -13,8 +13,17 @@ mock_provider "aws" {
   }
 }
 
-variables {
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+############################################################
+# enabled_policy_types default
+############################################################
+
+run "enabled_policy_types_defaults_to_service_control_policy" {
+  command = plan
+
+  assert {
+    condition     = tolist(aws_organizations_organization.org.enabled_policy_types) == tolist(["SERVICE_CONTROL_POLICY"])
+    error_message = "enabled_policy_types should default to [\"SERVICE_CONTROL_POLICY\"] so the SCPs enabled by default work out of the box without callers needing to set this explicitly."
+  }
 }
 
 ############################################################
