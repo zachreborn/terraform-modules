@@ -24,7 +24,9 @@ run "bare_top_level_ou_defaults_to_organization_root_when_org_managed" {
 
   variables {
     organization = {
-      enable_identity_center_scp = false
+      enable_identity_center_scp    = false
+      enable_leave_organization_scp = false
+      enable_root_access_key_scp    = false
     }
     organizational_units = {
       workloads = {}
@@ -46,7 +48,9 @@ run "account_wiring_uses_internal_organizational_unit_ids" {
 
   variables {
     organization = {
-      enable_identity_center_scp = false
+      enable_identity_center_scp    = false
+      enable_leave_organization_scp = false
+      enable_root_access_key_scp    = false
     }
     organizational_units = {
       workloads = {}
