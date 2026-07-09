@@ -16,7 +16,6 @@ terraform {
 ###########################
 
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 ###########################
 # Locals
@@ -57,8 +56,15 @@ module "kms_key" {
   enable_key_rotation = true
   tags                = merge(var.tags, each.value.tags)
 
-  # Scopes key usage to Secrets Manager requests only, per AWS's documented best
-  # practice for customer managed Secrets Manager encryption keys.
+  # Delegates key management/usage entirely to IAM policies in this account, matching the
+  # standard "Enable IAM User Permissions" statement AWS applies by default. A second
+  # statement scoping this same root principal to Secrets Manager via a kms:ViaService
+  # condition would be a no-op: KMS key policies are additive-only, so the unconditional
+  # kms:* grant to root below already permits every action the conditional statement would
+  # allow, and there is no implicit deny to narrow. To genuinely restrict a caller to using
+  # this key only through Secrets Manager, add a kms:ViaService condition to that caller's
+  # own IAM policy (see the Consuming Secrets Safely section in README.md), not to this key
+  # policy's root statement.
   policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
@@ -70,26 +76,6 @@ module "kms_key" {
         },
         "Action"   = "kms:*",
         "Resource" = "*"
-      },
-      {
-        "Sid"    = "AllowSecretsManagerUseOfKey",
-        "Effect" = "Allow",
-        "Principal" = {
-          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" = [
-          "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:Encrypt",
-          "kms:GenerateDataKey*",
-          "kms:ReEncrypt*"
-        ],
-        "Resource" = "*",
-        "Condition" = {
-          "StringEquals" = {
-            "kms:ViaService" = "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
-          }
-        }
       }
     ]
   })
