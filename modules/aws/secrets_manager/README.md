@@ -40,6 +40,7 @@
     <li><a href="#prerequisites">Prerequisites</a></li>
     <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
     <li><a href="#secret-payload-management">Secret Payload Management</a></li>
+    <li><a href="#consuming-secrets-safely">Consuming Secrets Safely</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -215,6 +216,145 @@ secret:
 Once a secret's rotation is handled by an AWS-provided Lambda rotation template
 (`enable_rotation`), AWS owns the value's lifecycle after the first rotation regardless of which
 option above was used to seed it.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Consuming Secrets Safely
+
+Creating the secret is only half of the pattern. The safe consumption model is:
+
+- Terraform/OpenTofu outputs and remote state should pass **secret ARNs/names only**, never secret
+  payloads.
+- Application runtimes should retrieve the value directly from Secrets Manager at startup or request
+  time using their own IAM role.
+- IAM permissions should be scoped to the specific secret ARNs the workload needs, plus the matching
+  KMS decrypt permission when a customer-managed key is used.
+- Prefer a VPC interface endpoint for `com.amazonaws.<region>.secretsmanager` when workloads run in
+  private subnets.
+- Do **not** use `data "aws_secretsmanager_secret_version"` in Terraform/OpenTofu just to feed
+  another resource. That reintroduces the plaintext value into state.
+
+### RDS database credentials
+
+For database master credentials, prefer AWS-managed Secrets Manager integration on the database
+resource itself (`manage_master_user_password`) when supported. If you have an application credential
+stored by this module, give the application only the secret ARN and permission to read it at runtime.
+
+For AWS-native database access through RDS Proxy, Terraform/OpenTofu can wire the secret ARN without
+reading the password:
+
+```hcl
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    app_db_credentials = {
+      description = "Application database user credentials"
+    }
+  }
+}
+
+resource "aws_db_proxy" "app" {
+  name                   = "app-db-proxy"
+  engine_family          = "POSTGRESQL"
+  role_arn               = aws_iam_role.rds_proxy.arn
+  vpc_security_group_ids = [aws_security_group.rds_proxy.id]
+  vpc_subnet_ids         = var.private_subnet_ids
+
+  auth {
+    auth_scheme = "SECRETS"
+    iam_auth    = "DISABLED"
+    secret_arn  = module.secrets_manager.arns["app_db_credentials"]
+  }
+}
+```
+
+The RDS Proxy role needs `secretsmanager:GetSecretValue` for the specific secret and `kms:Decrypt`
+for the key if the secret uses a customer-managed KMS key.
+
+### Lambda API key or token
+
+For Lambda, store only the secret ARN/name in an environment variable. The function retrieves the
+secret at runtime using the Lambda execution role (or the AWS Parameters and Secrets Lambda
+Extension if you want local caching and fewer SDK calls):
+
+```hcl
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    payments_api_key = {
+      description = "Payments provider API key"
+    }
+  }
+}
+
+resource "aws_lambda_function" "payments" {
+  function_name = "payments-handler"
+  role          = aws_iam_role.payments_lambda.arn
+  # ...
+
+  environment {
+    variables = {
+      PAYMENTS_API_KEY_SECRET_ARN = module.secrets_manager.arns["payments_api_key"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "payments_lambda_secrets" {
+  role = aws_iam_role.payments_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = module.secrets_manager.arns["payments_api_key"]
+    }]
+  })
+}
+```
+
+Application code should read `PAYMENTS_API_KEY_SECRET_ARN`, call Secrets Manager, cache the value in
+memory for a short duration, and avoid logging the returned payload.
+
+### General API key for a non-cloud-native application
+
+For applications that are not Lambda/ECS/EKS-native (for example, software on EC2, a packaged vendor
+appliance, or an on-premises service), keep the same shape: configuration contains only the secret
+ARN, and the runtime obtains AWS credentials via a short-lived identity mechanism.
+
+Recommended identity options:
+
+- EC2: instance profile role scoped to the exact secret ARN.
+- ECS or containerized app: task role scoped to the exact secret ARN.
+- On-premises or third-party host: IAM Roles Anywhere or another short-lived credential broker,
+  scoped to the exact secret ARN.
+
+Example IAM policy attached to the runtime role:
+
+```hcl
+resource "aws_iam_role_policy" "app_read_api_key" {
+  role = aws_iam_role.app_runtime.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+      ]
+      Resource = module.secrets_manager.arns["vendor_api_key"]
+    }]
+  })
+}
+```
+
+In deployment tooling, pass the ARN as a config value such as `VENDOR_API_KEY_SECRET_ARN`, not the
+API key itself. The application entrypoint or startup code retrieves the secret from Secrets Manager
+using the runtime role, writes it only to process memory (not a local file), and refreshes it on a
+bounded interval if rotation is enabled.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
