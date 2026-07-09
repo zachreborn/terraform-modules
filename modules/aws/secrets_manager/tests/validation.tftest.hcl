@@ -93,6 +93,21 @@ run "rejects_rotation_with_both_schedule_fields" {
   expect_failures = [var.secrets]
 }
 
+run "rejects_rotation_with_neither_schedule_field" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {
+        enable_rotation     = true
+        rotation_lambda_arn = "arn:aws:lambda:us-east-1:123456789012:function:rotate"
+      }
+    }
+  }
+
+  expect_failures = [var.secrets]
+}
+
 run "rejects_manage_resource_policy_without_resource_policy" {
   command = plan
 
