@@ -365,11 +365,13 @@ locals {
     "config:DeleteDeliveryChannel",
     "config:StopConfigurationRecorder",
     "guardduty:DeleteDetector",
+    "guardduty:DisassociateFromAdministratorAccount",
     "guardduty:DisassociateFromMasterAccount",
     "guardduty:StopMonitoringMembers",
     "guardduty:UpdateDetector",
     "securityhub:DeleteMembers",
     "securityhub:DisableSecurityHub",
+    "securityhub:DisassociateFromAdministratorAccount",
     "securityhub:DisassociateFromMasterAccount",
     "securityhub:DisassociateMembers",
   ]

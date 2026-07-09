@@ -173,6 +173,40 @@ run "security_services_scp_requires_service_control_policy_type" {
   ]
 }
 
+run "security_services_scp_exempted_principal_arns_adds_arnnotlike_condition" {
+  command = plan
+
+  variables {
+    enable_security_services_scp = true
+    security_services_scp_exempted_principal_arns = [
+      "arn:aws:iam::*:role/DelegatedSecurityAdminRole",
+    ]
+  }
+
+  assert {
+    condition     = strcontains(local.security_services_scp_content, "ArnNotLike")
+    error_message = "The generated policy content should include an ArnNotLike condition when security_services_scp_exempted_principal_arns is non-empty."
+  }
+
+  assert {
+    condition     = strcontains(local.security_services_scp_content, "arn:aws:iam::*:role/DelegatedSecurityAdminRole")
+    error_message = "The generated policy content should include the supplied exempted principal ARN."
+  }
+}
+
+run "security_services_scp_no_exempted_principal_arns_omits_arnnotlike_condition" {
+  command = plan
+
+  variables {
+    enable_security_services_scp = true
+  }
+
+  assert {
+    condition     = !strcontains(local.security_services_scp_content, "ArnNotLike")
+    error_message = "The generated policy content should not include an ArnNotLike condition when no exempted principal ARNs are supplied."
+  }
+}
+
 ############################################################
 # Deny Root User Actions Service Control Policy
 ############################################################
@@ -218,4 +252,23 @@ run "root_actions_scp_requires_service_control_policy_type" {
   expect_failures = [
     aws_organizations_policy_attachment.root_actions_scp,
   ]
+}
+
+run "root_actions_scp_exempted_actions_merges_into_not_action" {
+  command = plan
+
+  variables {
+    enable_root_actions_scp           = true
+    root_actions_scp_exempted_actions = ["support:CreateCase"]
+  }
+
+  assert {
+    condition     = strcontains(local.root_actions_scp_content, "support:CreateCase")
+    error_message = "The generated policy's NotAction list should include caller-supplied root_actions_scp_exempted_actions entries."
+  }
+
+  assert {
+    condition     = strcontains(local.root_actions_scp_content, "s3:PutBucketPolicy")
+    error_message = "The generated policy's NotAction list should still include the built-in exemptions when caller-supplied actions are merged in."
+  }
 }

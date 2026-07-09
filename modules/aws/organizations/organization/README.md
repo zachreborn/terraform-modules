@@ -362,6 +362,24 @@ legitimate action in a **member** account and you need immediate relief:
    users, including whatever role runs your Terraform pipeline, are never
    denied by it, so step 3 remains available even while the SCP is enforced.
 
+### SCP Quota Considerations
+
+AWS Organizations limits each root, OU, or account to **5 directly attached
+SCPs**, and the always-present AWS-managed `FullAWSAccess` policy counts
+toward that total -- this quota is a hard limit that requires a Service Quotas
+increase to raise. With this module's defaults, the organization root already
+has 4 of 5 slots used: `FullAWSAccess` plus the three opt-out SCPs
+(`identity_center_scp`, `leave_organization_scp`, `root_access_key_scp`).
+Enabling exactly one of the opt-in SCPs (`region_scp`, `security_services_scp`,
+or `root_actions_scp`) against the same target fills the last slot; enabling
+more than one of them against the same target exceeds the quota and the
+attachment fails.
+
+If you need more than one opt-in SCP alongside the defaults, attach some of
+them to specific OUs or accounts instead of the organization root using each
+SCP's `*_scp_target_ids` input -- SCPs attached at different levels of the
+hierarchy don't share the same 5-policy budget.
+
 ### Centralized Security Services
 
 The default `aws_service_access_principals` enables AWS Organizations trusted
