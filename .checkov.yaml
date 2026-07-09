@@ -116,6 +116,9 @@ skip-check:
   - CKV_AWS_189 # MFA delete - exposed as mfa_delete variable
   - CKV_AWS_300 # Lifecycle abort incomplete multipart upload - caller lifecycle configuration
 
+  # Secrets Manager
+  - CKV_AWS_304 # Rotation within 90 days - exposed as rotation_automatically_after_days/rotation_schedule_expression variables; caller controls the rotation cadence
+
   # Transfer Server
   - CKV_AWS_380 # Security policy version - exposed as security_policy_name variable
 
