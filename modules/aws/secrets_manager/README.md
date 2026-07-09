@@ -174,7 +174,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - **One module call, many secrets.** All inputs are keyed maps (`secrets`, `secret_values`) so a single module call can manage any number of secrets, following this repo's scalable-input convention.
-- **KMS by composition.** A dedicated customer-managed key is only created when `create_kms_key = true`, via the `../kms` child module -- never inline. The generated key policy scopes usage to Secrets Manager requests in the current Region via the `kms:ViaService` condition key, per AWS's documented best practice. When `create_kms_key = false` and `kms_key_id` is unset, Secrets Manager falls back to the AWS managed key `aws/secretsmanager`.
+- **KMS by composition.** A dedicated customer-managed key is only created when `create_kms_key = true`, via the `../kms` child module -- never inline. The generated key policy is the standard "Enable IAM User Permissions" statement, which delegates all access control to IAM policies in the account; it does not itself restrict usage to Secrets Manager, since KMS key policies are additive-only and a root-principal statement can't be meaningfully narrowed by a second, more specific statement on that same principal. To restrict a specific caller to using the key only through Secrets Manager, add a `kms:ViaService` condition to *that caller's* IAM policy (see [Consuming Secrets Safely](#consuming-secrets-safely)), not to the key policy. When `create_kms_key = false` and `kms_key_id` is unset, Secrets Manager falls back to the AWS managed key `aws/secretsmanager`.
 - **Metadata and value are separate inputs.** `secrets` manages secret metadata (name, KMS, rotation, policy, replication) and is not sensitive. `secret_values` manages the actual secret value and is marked `sensitive = true` as a whole, mirroring the provider's own split between `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version`. An entry in `secret_values` with no matching key in `secrets` is ignored rather than erroring, and a `secrets` entry with no matching `secret_values` entry simply has no version created (useful when the value is set out-of-band).
 - **`policy` vs. `manage_resource_policy`.** Both ultimately manage the same underlying secret resource policy attribute, so setting both for the same secret is rejected by variable validation. Use `policy` for a simple inline policy, or `manage_resource_policy` + `resource_policy` when you also need `block_public_policy`.
 - **Secure defaults.** `recovery_window_in_days` defaults to 30 (not immediate deletion), and `block_public_policy` defaults to `true` whenever a standalone resource policy is managed.
@@ -228,7 +228,10 @@ Creating the secret is only half of the pattern. The safe consumption model is:
 - Application runtimes should retrieve the value directly from Secrets Manager at startup or request
   time using their own IAM role.
 - IAM permissions should be scoped to the specific secret ARNs the workload needs, plus the matching
-  KMS decrypt permission when a customer-managed key is used.
+  KMS decrypt permission when a customer-managed key is used. This module's composed KMS key policy
+  only delegates to IAM (see [Notes / Design Decisions](#notes--design-decisions)) -- if you want to
+  restrict a caller to using the key exclusively through Secrets Manager, add a `kms:ViaService`
+  condition to *that caller's* IAM policy, as shown in the examples below.
 - Prefer a VPC interface endpoint for `com.amazonaws.<region>.secretsmanager` when workloads run in
   private subnets.
 - Do **not** use `data "aws_secretsmanager_secret_version"` in Terraform/OpenTofu just to feed
@@ -269,8 +272,33 @@ resource "aws_db_proxy" "app" {
 }
 ```
 
-The RDS Proxy role needs `secretsmanager:GetSecretValue` for the specific secret and `kms:Decrypt`
-for the key if the secret uses a customer-managed KMS key.
+The RDS Proxy role needs `secretsmanager:GetSecretValue` for the specific secret and, if the secret
+uses a customer-managed KMS key, `kms:Decrypt` on that key -- ideally conditioned on `kms:ViaService`
+so the role can only use the key through Secrets Manager:
+
+```hcl
+data "aws_iam_policy_document" "rds_proxy_secret_access" {
+  statement {
+    sid       = "ReadDbCredentialsSecret"
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [module.secrets_manager.arns["app_db_credentials"]]
+  }
+
+  statement {
+    sid       = "DecryptViaSecretsManagerOnly"
+    effect    = "Allow"
+    actions   = ["kms:Decrypt"]
+    resources = [module.secrets_manager.kms_key_arns["app_db_credentials"]]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["secretsmanager.${data.aws_region.current.region}.amazonaws.com"]
+    }
+  }
+}
+```
 
 ### Lambda API key or token
 
@@ -316,7 +344,10 @@ resource "aws_iam_role_policy" "payments_lambda_secrets" {
 ```
 
 Application code should read `PAYMENTS_API_KEY_SECRET_ARN`, call Secrets Manager, cache the value in
-memory for a short duration, and avoid logging the returned payload.
+memory for a short duration, and avoid logging the returned payload. If the secret uses a
+customer-managed KMS key, grant `kms:Decrypt` on `module.secrets_manager.kms_key_arns["payments_api_key"]`
+conditioned on `kms:ViaService = "secretsmanager.<region>.amazonaws.com"` so the Lambda role can't use
+the key for anything other than reading this secret.
 
 ### General API key for a non-cloud-native application
 
@@ -339,17 +370,33 @@ resource "aws_iam_role_policy" "app_read_api_key" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue"
-      ]
-      Resource = module.secrets_manager.arns["vendor_api_key"]
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = module.secrets_manager.arns["vendor_api_key"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = module.secrets_manager.kms_key_arns["vendor_api_key"]
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
+          }
+        }
+      }
+    ]
   })
 }
 ```
+
+The second statement is only needed when the secret uses a customer-managed KMS key
+(`create_kms_key = true` or `kms_key_id` set); omit it when relying on the default
+`aws/secretsmanager` managed key.
 
 In deployment tooling, pass the ARN as a config value such as `VENDOR_API_KEY_SECRET_ARN`, not the
 API key itself. The application entrypoint or startup code retrieves the secret from Secrets Manager
@@ -389,7 +436,6 @@ bounded interval if rotation is enabled.
 | [aws_secretsmanager_secret_rotation.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_rotation) | resource |
 | [aws_secretsmanager_secret_version.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
