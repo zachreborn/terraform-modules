@@ -72,7 +72,10 @@ into the composed module.
 
 ### Simple Example
 
-This example creates an AWS Organization with the default settings.
+This example creates an AWS Organization with the default settings, including
+`enabled_policy_types` defaulting to `["SERVICE_CONTROL_POLICY"]` so the SCPs
+enabled by default below (Identity Center deny, Leave Organization deny, Root
+Access Key Creation deny) work out of the box.
 
 ```
 module "organization" {
@@ -84,9 +87,13 @@ module "organization" {
         "cloudtrail.amazonaws.com",
         "sso.amazonaws.com",
     ]
-    enabled_policy_types          = ["TAG_POLICY"]
 }
 ```
+
+If you override `enabled_policy_types` yourself (for example to add
+`TAG_POLICY`), make sure `"SERVICE_CONTROL_POLICY"` stays in the list unless
+you've also disabled the default SCPs (see below), since an explicit override
+replaces the default entirely rather than merging with it.
 
 ### Identity Center Service Control Policy
 
@@ -96,15 +103,17 @@ prevents member (child) accounts from creating their own account-level IAM
 Identity Center (AWS SSO) instances, keeping Identity Center management
 centralized in the management account / delegated administrator.
 
-**Prerequisite:** SCP support must be enabled on the organization. Include
-`"SERVICE_CONTROL_POLICY"` in `enabled_policy_types`, otherwise the apply fails
-with a precondition error. The organization `feature_set` must be `ALL`.
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
 
 ```
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     # The following are the defaults and may be omitted.
@@ -134,9 +143,11 @@ enabled you must supply a non-empty `allowed_regions`.
 
 **Prerequisites and cautions:**
 
-- SCP support must be enabled on the organization: include
-  `"SERVICE_CONTROL_POLICY"` in `enabled_policy_types` (and `feature_set` must be
-  `ALL`), otherwise the apply fails with a precondition error.
+- SCP support must be enabled on the organization: `enabled_policy_types`
+  defaults to `["SERVICE_CONTROL_POLICY"]`, so this works out of the box. If you
+  override `enabled_policy_types`, keep `"SERVICE_CONTROL_POLICY"` in the list
+  (and `feature_set` must be `ALL`), otherwise the apply fails with a
+  precondition error.
 - SCPs **never apply to the organization management (payer) account**, so the
   management account is not restricted by this policy regardless of attachment.
 - `us-east-1` is commonly required even for non-primary workloads because some
@@ -152,7 +163,7 @@ enabled you must supply a non-empty `allowed_regions`.
 module "organization" {
     source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
 
-    # Required so the SCP can be created and attached.
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
     enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
 
     enable_region_scp = true
@@ -175,6 +186,199 @@ module "organization" {
 To create the policy without enforcing it, set `attach_region_scp = false`. To
 leave the feature off entirely (default), omit `enable_region_scp` or set it to
 `false`.
+
+### Deny Leave Organization Service Control Policy
+
+By default this module creates and attaches a Service Control Policy (SCP) to the
+organization root which denies `organizations:LeaveOrganization`. This prevents
+member accounts from removing themselves from the organization, which would
+otherwise let them escape every other guardrail (SCPs, centralized logging,
+delegated administration) enforced by this module.
+
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
+    enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+
+    # The following are the defaults and may be omitted.
+    enable_leave_organization_scp = true
+    attach_leave_organization_scp = true
+}
+```
+
+To opt out entirely (no new resources, clean plan), set
+`enable_leave_organization_scp = false`. To create the policy without enforcing
+it, set `attach_leave_organization_scp = false`. To attach the SCP to specific
+OUs or accounts instead of the organization root, set
+`leave_organization_scp_target_ids`.
+
+### Deny Root Access Key Creation Service Control Policy
+
+By default this module creates and attaches a Service Control Policy (SCP) to the
+organization root which denies `iam:CreateAccessKey` for the account root user
+(matched via `aws:PrincipalArn` `StringLike` `arn:aws:iam::*:root`). This
+prevents member accounts from minting long-lived root user access keys, one of
+the highest-risk credentials in an AWS account, mirroring AWS Control Tower's
+strongly-recommended "Disallow Creation of Access Keys for the Root User"
+control.
+
+**Prerequisite:** SCP support must be enabled on the organization --
+`enabled_policy_types` defaults to `["SERVICE_CONTROL_POLICY"]` so this works
+out of the box. If you override `enabled_policy_types`, keep
+`"SERVICE_CONTROL_POLICY"` in the list or the apply fails with a precondition
+error. The organization `feature_set` must be `ALL`.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+
+    # Optional: add TAG_POLICY on top of the default SERVICE_CONTROL_POLICY.
+    enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+
+    # The following are the defaults and may be omitted.
+    enable_root_access_key_scp = true
+    attach_root_access_key_scp = true
+}
+```
+
+To opt out entirely (no new resources, clean plan), set
+`enable_root_access_key_scp = false`. To create the policy without enforcing it,
+set `attach_root_access_key_scp = false`. To attach the SCP to specific OUs or
+accounts instead of the organization root, set `root_access_key_scp_target_ids`.
+
+### Deny Security Service Tampering Service Control Policy
+
+This module can optionally create and attach a Service Control Policy (SCP) that
+denies the actions used to stop, disable, or delete the centralized security
+services this module already integrates via `aws_service_access_principals`:
+CloudTrail, AWS Config, GuardDuty, and Security Hub.
+
+This feature is **opt-in** (`enable_security_services_scp` defaults to `false`)
+because a delegated administrator or audit automation role may legitimately need
+to manage these services, and should be exempted first via
+`security_services_scp_exempted_principal_arns` before this SCP is attached
+broadly.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+
+    # Required so the SCP can be created and attached.
+    enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+
+    enable_security_services_scp = true
+
+    # Optional: exempt delegated-administrator / break-glass roles from the deny.
+    security_services_scp_exempted_principal_arns = [
+        "arn:aws:iam::*:role/DelegatedSecurityAdminRole",
+        "arn:aws:iam::*:role/AWSControlTowerExecution",
+    ]
+}
+```
+
+To create the policy without enforcing it, set
+`attach_security_services_scp = false`. To leave the feature off entirely
+(default), omit `enable_security_services_scp` or set it to `false`.
+
+### Deny Root User Actions Service Control Policy
+
+This module can optionally create and attach a Service Control Policy (SCP) that
+denies all actions taken by the account root user in member accounts, except a
+built-in allowlist covering the AWS-documented tasks that require root user
+credentials (S3 bucket-policy and MFA Delete recovery, SQS queue-policy
+recovery, billing/Support-plan changes, and EC2 Reserved Instance Marketplace
+seller registration -- see [Tasks that require root user
+credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-tasks.html)).
+The deny **does not** apply to short-lived, task-scoped root sessions created
+via AWS's centralized root access feature (`sts:AssumeRoot` from the management
+account or a delegated administrator) -- those are matched with the
+`aws:AssumedRoot` condition key and are already scoped by their own AWS managed
+task policy, so centralized root credential management and S3/SQS policy-unlock
+sessions keep working.
+
+This feature is **opt-in** (`enable_root_actions_scp` defaults to `false`)
+because the built-in allowlist deliberately does **not** exempt broad `iam:*`
+actions for the "restore IAM user permissions if the only administrator is
+locked out" scenario -- exempting that would defeat the purpose of the SCP.
+Add IAM actions to `root_actions_scp_exempted_actions` yourself if you want that
+break-glass path and accept the reduced guarantee.
+
+```
+module "organization" {
+    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/organization"
+
+    # Required so the SCP can be created and attached.
+    enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+
+    enable_root_actions_scp = true
+
+    # Optional: allow additional root-only actions beyond the built-in list.
+    root_actions_scp_exempted_actions = ["support:*"]
+}
+```
+
+To create the policy without enforcing it, set `attach_root_actions_scp = false`.
+To leave the feature off entirely (default), omit `enable_root_actions_scp` or
+set it to `false`. Roll this out via a Sandbox / non-production OU and confirm
+your break-glass and centralized-root-access workflows first, consistent with
+the rollout guidance for the Region-restriction SCP above.
+
+#### Break Glass Procedures
+
+**SCPs never apply to the organization management account**, regardless of
+which targets they're attached to. This is an AWS platform guarantee, not
+something this module controls, so the management account's root user and IAM
+principals always retain full access as a last resort.
+
+If any SCP created by this module (this one or another) is blocking a
+legitimate action in a **member** account and you need immediate relief:
+
+1. **Centralized root access (fastest, no drift).** The Deny Root User Actions
+   SCP's condition exempts `aws:AssumedRoot`, so task-scoped root sessions
+   started with `aws sts assume-root` from the management account or a
+   delegated administrator bypass the deny entirely and require no policy
+   changes. This only works if centralized root access has already been
+   enabled in the organization.
+2. **Detach or update the SCP directly (immediate, causes drift).** An admin in
+   the management account can run `aws organizations detach-policy` or
+   `update-policy` right now, via the console or CLI, independent of Terraform.
+   Follow up promptly with a matching code change (step 3) -- otherwise the
+   next `tofu apply` recreates/reattaches the policy exactly as defined in
+   code.
+3. **Disable via Terraform (durable fix).** Set the relevant `enable_*_scp`
+   variable to `false` (removes the policy) or `attach_*_scp` to `false`
+   (keeps the policy defined but detaches it), then apply. This is the
+   long-term, drift-free fix and should always follow an emergency detach.
+4. **Non-root IAM principals are unaffected.** The Deny Root User Actions
+   SCP's condition matches only the account root user ARN -- IAM roles and
+   users, including whatever role runs your Terraform pipeline, are never
+   denied by it, so step 3 remains available even while the SCP is enforced.
+
+### SCP Quota Considerations
+
+AWS Organizations limits each root, OU, or account to **5 directly attached
+SCPs**, and the always-present AWS-managed `FullAWSAccess` policy counts
+toward that total -- this quota is a hard limit that requires a Service Quotas
+increase to raise. With this module's defaults, the organization root already
+has 4 of 5 slots used: `FullAWSAccess` plus the three opt-out SCPs
+(`identity_center_scp`, `leave_organization_scp`, `root_access_key_scp`).
+Enabling exactly one of the opt-in SCPs (`region_scp`, `security_services_scp`,
+or `root_actions_scp`) against the same target fills the last slot; enabling
+more than one of them against the same target exceeds the quota and the
+attachment fails.
+
+If you need more than one opt-in SCP alongside the defaults, attach some of
+them to specific OUs or accounts instead of the organization root using each
+SCP's `*_scp_target_ids` input -- SCPs attached at different levels of the
+hierarchy don't share the same 5-policy budget.
 
 ### Centralized Security Services
 
@@ -219,7 +423,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="module_centralized_backup"></a> [centralized\_backup](#module\_centralized\_backup) | ../policy | n/a |
 | <a name="module_centralized_root"></a> [centralized\_root](#module\_centralized\_root) | ../../iam/organizations_features | n/a |
 | <a name="module_identity_center_scp"></a> [identity\_center\_scp](#module\_identity\_center\_scp) | ../policy | n/a |
+| <a name="module_leave_organization_scp"></a> [leave\_organization\_scp](#module\_leave\_organization\_scp) | ../policy | n/a |
 | <a name="module_region_scp"></a> [region\_scp](#module\_region\_scp) | ../policy | n/a |
+| <a name="module_root_access_key_scp"></a> [root\_access\_key\_scp](#module\_root\_access\_key\_scp) | ../policy | n/a |
+| <a name="module_root_actions_scp"></a> [root\_actions\_scp](#module\_root\_actions\_scp) | ../policy | n/a |
+| <a name="module_security_services_scp"></a> [security\_services\_scp](#module\_security\_services\_scp) | ../policy | n/a |
 
 ## Resources
 
@@ -227,7 +435,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ---- |
 | [aws_organizations_organization.org](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_organization) | resource |
 | [aws_organizations_policy_attachment.identity_center_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
+| [aws_organizations_policy_attachment.leave_organization_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
 | [aws_organizations_policy_attachment.region_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
+| [aws_organizations_policy_attachment.root_access_key_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
+| [aws_organizations_policy_attachment.root_actions_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
+| [aws_organizations_policy_attachment.security_services_scp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) | resource |
 
 ## Inputs
 
@@ -235,22 +447,44 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_allowed_regions"></a> [allowed\_regions](#input\_allowed\_regions) | (Required when enable\_region\_scp is true) List of AWS Regions where regional service actions remain allowed (e.g. ["us-east-1", "us-west-2"]). Used as the aws:RequestedRegion StringNotEquals value in the Region-deny SCP. Consider including us-east-1 because some global features route through it. Ignored when enable\_region\_scp is false. | `list(string)` | `[]` | no |
 | <a name="input_attach_identity_center_scp"></a> [attach\_identity\_center\_scp](#input\_attach\_identity\_center\_scp) | (Optional) If true, attaches the Identity Center deny SCP to the targets in identity\_center\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
+| <a name="input_attach_leave_organization_scp"></a> [attach\_leave\_organization\_scp](#input\_attach\_leave\_organization\_scp) | (Optional) If true, attaches the Deny Leave Organization SCP to the targets in leave\_organization\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
 | <a name="input_attach_region_scp"></a> [attach\_region\_scp](#input\_attach\_region\_scp) | (Optional) If true, attaches the Region-deny SCP to the targets in region\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
+| <a name="input_attach_root_access_key_scp"></a> [attach\_root\_access\_key\_scp](#input\_attach\_root\_access\_key\_scp) | (Optional) If true, attaches the Deny Root Access Key Creation SCP to the targets in root\_access\_key\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
+| <a name="input_attach_root_actions_scp"></a> [attach\_root\_actions\_scp](#input\_attach\_root\_actions\_scp) | (Optional) If true, attaches the Deny Root User Actions SCP to the targets in root\_actions\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
+| <a name="input_attach_security_services_scp"></a> [attach\_security\_services\_scp](#input\_attach\_security\_services\_scp) | (Optional) If true, attaches the Deny Security Service Tampering SCP to the targets in security\_services\_scp\_target\_ids (defaulting to the organization root). When false, the policy is created but not attached. Defaults to true. | `bool` | `true` | no |
 | <a name="input_aws_service_access_principals"></a> [aws\_service\_access\_principals](#input\_aws\_service\_access\_principals) | (Optional) List of AWS service principal names for which you want to enable trusted access (integration) with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have feature\_set set to ALL. The default list enables the centralized security services this module library integrates with (Security Hub, GuardDuty, Config, IAM Access Analyzer, and Inspector) so that their delegated-administrator modules do not create trusted-access drift. Note: once a service has a registered delegated administrator, removing its principal from this list will fail until the delegated administrator is deregistered. For additional information, see the AWS Organizations User Guide. | `list(string)` | <pre>[<br/>  "access-analyzer.amazonaws.com",<br/>  "account.amazonaws.com",<br/>  "aws-artifact-account-sync.amazonaws.com",<br/>  "backup.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "config.amazonaws.com",<br/>  "guardduty.amazonaws.com",<br/>  "health.amazonaws.com",<br/>  "inspector2.amazonaws.com",<br/>  "securityhub.amazonaws.com",<br/>  "sso.amazonaws.com"<br/>]</pre> | no |
 | <a name="input_enable_identity_center_scp"></a> [enable\_identity\_center\_scp](#input\_enable\_identity\_center\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies sso:CreateInstance organization-wide so member accounts cannot create account-level IAM Identity Center instances. Defaults to true. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `true` | no |
+| <a name="input_enable_leave_organization_scp"></a> [enable\_leave\_organization\_scp](#input\_enable\_leave\_organization\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies organizations:LeaveOrganization organization-wide so member accounts cannot remove themselves from the organization. Defaults to true. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `true` | no |
 | <a name="input_enable_organization_backup"></a> [enable\_organization\_backup](#input\_enable\_organization\_backup) | (Optional) If true, enables the organization backup policy. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enable_region_scp"></a> [enable\_region\_scp](#input\_enable\_region\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies regional AWS service actions outside the Regions listed in allowed\_regions (global/non-regional services are exempted via NotAction). Opt-in: defaults to false so existing callers see no change until they enable it. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `false` | no |
+| <a name="input_enable_root_access_key_scp"></a> [enable\_root\_access\_key\_scp](#input\_enable\_root\_access\_key\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies iam:CreateAccessKey for the account root user organization-wide, preventing creation of long-lived root user access keys in member accounts. Defaults to true. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `true` | no |
+| <a name="input_enable_root_actions_scp"></a> [enable\_root\_actions\_scp](#input\_enable\_root\_actions\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies all actions taken by the account root user in member accounts, except the actions in root\_actions\_scp\_exempted\_actions. Opt-in: defaults to false because an overly narrow exemption list can lock out legitimate root-only recovery flows; test in a non-production OU before wider rollout. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `false` | no |
+| <a name="input_enable_security_services_scp"></a> [enable\_security\_services\_scp](#input\_enable\_security\_services\_scp) | (Optional) If true, creates a Service Control Policy (SCP) which denies actions that stop, disable, or delete CloudTrail, AWS Config, GuardDuty, and Security Hub in member accounts. Opt-in: defaults to false so existing callers see no change until they enable it, and so delegated-administrator/audit roles can be exempted first via security\_services\_scp\_exempted\_principal\_arns. Requires SERVICE\_CONTROL\_POLICY in enabled\_policy\_types. | `bool` | `false` | no |
 | <a name="input_enabled_features"></a> [enabled\_features](#input\_enabled\_features) | A list of IAM organization features which will be enabled. Valid values are RootCredentialsManagement and RootSessions. | `list(string)` | <pre>[<br/>  "RootCredentialsManagement",<br/>  "RootSessions"<br/>]</pre> | no |
-| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | `null` | no |
+| <a name="input_enabled_policy_types"></a> [enabled\_policy\_types](#input\_enabled\_policy\_types) | (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have feature\_set set to ALL. Defaults to ["SERVICE\_CONTROL\_POLICY"] so the SCPs this module enables by default (Identity Center deny, Leave Organization deny, Root Access Key Creation deny) work out of the box without callers needing to set this explicitly. Override with a list that includes "SERVICE\_CONTROL\_POLICY" if you also need other policy types (e.g. ["SERVICE\_CONTROL\_POLICY", "TAG\_POLICY"]), or set enable\_identity\_center\_scp/enable\_leave\_organization\_scp/enable\_root\_access\_key\_scp to false and this to [] if you don't want SCP support enabled at all. For additional information about valid policy types (e.g., AISERVICES\_OPT\_OUT\_POLICY, BACKUP\_POLICY, SERVICE\_CONTROL\_POLICY, and TAG\_POLICY), see the AWS Organizations API Reference. | `list(string)` | <pre>[<br/>  "SERVICE_CONTROL_POLICY"<br/>]</pre> | no |
 | <a name="input_feature_set"></a> [feature\_set](#input\_feature\_set) | (Optional) Specify 'ALL' (default) or 'CONSOLIDATED\_BILLING'. | `string` | `"ALL"` | no |
 | <a name="input_identity_center_scp_description"></a> [identity\_center\_scp\_description](#input\_identity\_center\_scp\_description) | (Optional) Description of the Identity Center deny SCP. | `string` | `"Denies sso:CreateInstance org-wide so member accounts cannot create account-level IAM Identity Center instances."` | no |
 | <a name="input_identity_center_scp_name"></a> [identity\_center\_scp\_name](#input\_identity\_center\_scp\_name) | (Optional) Name of the Identity Center deny SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyMemberAccountIdentityCenter"` | no |
 | <a name="input_identity_center_scp_target_ids"></a> [identity\_center\_scp\_target\_ids](#input\_identity\_center\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Identity Center deny SCP to. When null and attach\_identity\_center\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
+| <a name="input_leave_organization_scp_description"></a> [leave\_organization\_scp\_description](#input\_leave\_organization\_scp\_description) | (Optional) Description of the Deny Leave Organization SCP. | `string` | `"Denies organizations:LeaveOrganization org-wide so member accounts cannot remove themselves from the organization."` | no |
+| <a name="input_leave_organization_scp_name"></a> [leave\_organization\_scp\_name](#input\_leave\_organization\_scp\_name) | (Optional) Name of the Deny Leave Organization SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyLeaveOrganization"` | no |
+| <a name="input_leave_organization_scp_target_ids"></a> [leave\_organization\_scp\_target\_ids](#input\_leave\_organization\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Deny Leave Organization SCP to. When null and attach\_leave\_organization\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
 | <a name="input_region_scp_description"></a> [region\_scp\_description](#input\_region\_scp\_description) | (Optional) Description of the Region-deny SCP. | `string` | `"Denies regional AWS service actions outside the approved Regions in var.allowed_regions, exempting global services."` | no |
 | <a name="input_region_scp_exempted_actions"></a> [region\_scp\_exempted\_actions](#input\_region\_scp\_exempted\_actions) | (Optional) Additional actions merged into the built-in global-service NotAction list, for callers who depend on global services not covered out of the box (e.g. ["pricingplanmanager:*"]). Defaults to []. | `list(string)` | `[]` | no |
 | <a name="input_region_scp_exempted_principal_arns"></a> [region\_scp\_exempted\_principal\_arns](#input\_region\_scp\_exempted\_principal\_arns) | (Optional) List of IAM principal ARNs (wildcards allowed, e.g. arn:aws:iam::*:role/BreakGlassRole) excluded from the Region deny via an ArnNotLike condition on aws:PrincipalARN, so break-glass / execution roles are not locked out. When empty, no ArnNotLike condition is added. Defaults to []. | `list(string)` | `[]` | no |
 | <a name="input_region_scp_name"></a> [region\_scp\_name](#input\_region\_scp\_name) | (Optional) Name of the Region-deny SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyAccessOutsideApprovedRegions"` | no |
 | <a name="input_region_scp_target_ids"></a> [region\_scp\_target\_ids](#input\_region\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Region-deny SCP to. When null and attach\_region\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
+| <a name="input_root_access_key_scp_description"></a> [root\_access\_key\_scp\_description](#input\_root\_access\_key\_scp\_description) | (Optional) Description of the Deny Root Access Key Creation SCP. | `string` | `"Denies iam:CreateAccessKey for the account root user org-wide so member accounts cannot create long-lived root user access keys."` | no |
+| <a name="input_root_access_key_scp_name"></a> [root\_access\_key\_scp\_name](#input\_root\_access\_key\_scp\_name) | (Optional) Name of the Deny Root Access Key Creation SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyRootAccessKeyCreation"` | no |
+| <a name="input_root_access_key_scp_target_ids"></a> [root\_access\_key\_scp\_target\_ids](#input\_root\_access\_key\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Deny Root Access Key Creation SCP to. When null and attach\_root\_access\_key\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
+| <a name="input_root_actions_scp_description"></a> [root\_actions\_scp\_description](#input\_root\_actions\_scp\_description) | (Optional) Description of the Deny Root User Actions SCP. | `string` | `"Denies all actions taken by the account root user in member accounts, except the built-in and caller-supplied exempted actions."` | no |
+| <a name="input_root_actions_scp_exempted_actions"></a> [root\_actions\_scp\_exempted\_actions](#input\_root\_actions\_scp\_exempted\_actions) | (Optional) Additional actions merged into the built-in NotAction allowlist so legitimate root-only actions are not denied. The built-in list already covers the AWS-documented tasks that require root user credentials and are not exempted via the aws:AssumedRoot condition (S3 bucket-policy and MFA Delete recovery, SQS queue-policy recovery, billing/Support-plan changes, and EC2 Reserved Instance Marketplace seller registration). It deliberately does NOT exempt broad iam:* actions for the 'restore IAM user permissions if locked out' scenario -- add iam actions here yourself if you want that break-glass path. Defaults to []. | `list(string)` | `[]` | no |
+| <a name="input_root_actions_scp_name"></a> [root\_actions\_scp\_name](#input\_root\_actions\_scp\_name) | (Optional) Name of the Deny Root User Actions SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenyRootUserActions"` | no |
+| <a name="input_root_actions_scp_target_ids"></a> [root\_actions\_scp\_target\_ids](#input\_root\_actions\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Deny Root User Actions SCP to. When null and attach\_root\_actions\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
+| <a name="input_security_services_scp_description"></a> [security\_services\_scp\_description](#input\_security\_services\_scp\_description) | (Optional) Description of the Deny Security Service Tampering SCP. | `string` | `"Denies actions that stop, disable, or delete CloudTrail, AWS Config, GuardDuty, and Security Hub in member accounts."` | no |
+| <a name="input_security_services_scp_exempted_principal_arns"></a> [security\_services\_scp\_exempted\_principal\_arns](#input\_security\_services\_scp\_exempted\_principal\_arns) | (Optional) List of IAM principal ARNs (wildcards allowed, e.g. arn:aws:iam::*:role/DelegatedSecurityAdminRole) excluded from the deny via an ArnNotLike condition on aws:PrincipalARN, so delegated-administrator, break-glass, or automation roles that legitimately manage these security services are not locked out. When empty, no ArnNotLike condition is added. Defaults to []. | `list(string)` | `[]` | no |
+| <a name="input_security_services_scp_name"></a> [security\_services\_scp\_name](#input\_security\_services\_scp\_name) | (Optional) Name of the Deny Security Service Tampering SCP. Used as the name of the aws\_organizations\_policy created via the policy module. | `string` | `"DenySecurityServiceTampering"` | no |
+| <a name="input_security_services_scp_target_ids"></a> [security\_services\_scp\_target\_ids](#input\_security\_services\_scp\_target\_ids) | (Optional) List of organization root, OU, or account IDs to attach the Deny Security Service Tampering SCP to. When null and attach\_security\_services\_scp is true, the SCP is attached to the organization root. Defaults to null. | `list(string)` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the AWS Organization. Tags are key-value pairs that help organize and manage resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
@@ -263,13 +497,25 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_identity_center_scp_arn"></a> [identity\_center\_scp\_arn](#output\_identity\_center\_scp\_arn) | ARN of the Identity Center deny SCP, or null when enable\_identity\_center\_scp is false. |
 | <a name="output_identity_center_scp_attachment_target_ids"></a> [identity\_center\_scp\_attachment\_target\_ids](#output\_identity\_center\_scp\_attachment\_target\_ids) | List of target IDs the Identity Center deny SCP was attached to. Empty when attachment is disabled. |
 | <a name="output_identity_center_scp_id"></a> [identity\_center\_scp\_id](#output\_identity\_center\_scp\_id) | ID of the Identity Center deny SCP, or null when enable\_identity\_center\_scp is false. |
+| <a name="output_leave_organization_scp_arn"></a> [leave\_organization\_scp\_arn](#output\_leave\_organization\_scp\_arn) | ARN of the Deny Leave Organization SCP, or null when enable\_leave\_organization\_scp is false. |
+| <a name="output_leave_organization_scp_attachment_target_ids"></a> [leave\_organization\_scp\_attachment\_target\_ids](#output\_leave\_organization\_scp\_attachment\_target\_ids) | List of target IDs the Deny Leave Organization SCP was attached to. Empty when attachment is disabled. |
+| <a name="output_leave_organization_scp_id"></a> [leave\_organization\_scp\_id](#output\_leave\_organization\_scp\_id) | ID of the Deny Leave Organization SCP, or null when enable\_leave\_organization\_scp is false. |
 | <a name="output_master_account_arn"></a> [master\_account\_arn](#output\_master\_account\_arn) | ARN of the master account |
 | <a name="output_master_account_email"></a> [master\_account\_email](#output\_master\_account\_email) | Email address of the master account |
 | <a name="output_master_account_id"></a> [master\_account\_id](#output\_master\_account\_id) | ID of the master account |
 | <a name="output_region_scp_arn"></a> [region\_scp\_arn](#output\_region\_scp\_arn) | ARN of the Region-deny SCP, or null when enable\_region\_scp is false. |
 | <a name="output_region_scp_attachment_target_ids"></a> [region\_scp\_attachment\_target\_ids](#output\_region\_scp\_attachment\_target\_ids) | List of target IDs the Region-deny SCP was attached to. Empty when attachment or creation is disabled. |
 | <a name="output_region_scp_id"></a> [region\_scp\_id](#output\_region\_scp\_id) | ID of the Region-deny SCP, or null when enable\_region\_scp is false. |
+| <a name="output_root_access_key_scp_arn"></a> [root\_access\_key\_scp\_arn](#output\_root\_access\_key\_scp\_arn) | ARN of the Deny Root Access Key Creation SCP, or null when enable\_root\_access\_key\_scp is false. |
+| <a name="output_root_access_key_scp_attachment_target_ids"></a> [root\_access\_key\_scp\_attachment\_target\_ids](#output\_root\_access\_key\_scp\_attachment\_target\_ids) | List of target IDs the Deny Root Access Key Creation SCP was attached to. Empty when attachment is disabled. |
+| <a name="output_root_access_key_scp_id"></a> [root\_access\_key\_scp\_id](#output\_root\_access\_key\_scp\_id) | ID of the Deny Root Access Key Creation SCP, or null when enable\_root\_access\_key\_scp is false. |
+| <a name="output_root_actions_scp_arn"></a> [root\_actions\_scp\_arn](#output\_root\_actions\_scp\_arn) | ARN of the Deny Root User Actions SCP, or null when enable\_root\_actions\_scp is false. |
+| <a name="output_root_actions_scp_attachment_target_ids"></a> [root\_actions\_scp\_attachment\_target\_ids](#output\_root\_actions\_scp\_attachment\_target\_ids) | List of target IDs the Deny Root User Actions SCP was attached to. Empty when attachment or creation is disabled. |
+| <a name="output_root_actions_scp_id"></a> [root\_actions\_scp\_id](#output\_root\_actions\_scp\_id) | ID of the Deny Root User Actions SCP, or null when enable\_root\_actions\_scp is false. |
 | <a name="output_roots"></a> [roots](#output\_roots) | List of organization roots.All elements have these attributes: arn, id, name, policy\_types. |
+| <a name="output_security_services_scp_arn"></a> [security\_services\_scp\_arn](#output\_security\_services\_scp\_arn) | ARN of the Deny Security Service Tampering SCP, or null when enable\_security\_services\_scp is false. |
+| <a name="output_security_services_scp_attachment_target_ids"></a> [security\_services\_scp\_attachment\_target\_ids](#output\_security\_services\_scp\_attachment\_target\_ids) | List of target IDs the Deny Security Service Tampering SCP was attached to. Empty when attachment or creation is disabled. |
+| <a name="output_security_services_scp_id"></a> [security\_services\_scp\_id](#output\_security\_services\_scp\_id) | ID of the Deny Security Service Tampering SCP, or null when enable\_security\_services\_scp is false. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

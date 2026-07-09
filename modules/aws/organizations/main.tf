@@ -48,25 +48,47 @@ module "organization" {
 
   for_each = var.organization != null ? { this = var.organization } : {}
 
-  aws_service_access_principals      = each.value.aws_service_access_principals
-  enabled_policy_types               = each.value.enabled_policy_types
-  feature_set                        = each.value.feature_set
-  enabled_features                   = each.value.enabled_features
-  enable_identity_center_scp         = each.value.enable_identity_center_scp
-  identity_center_scp_name           = each.value.identity_center_scp_name
-  identity_center_scp_description    = each.value.identity_center_scp_description
-  attach_identity_center_scp         = each.value.attach_identity_center_scp
-  identity_center_scp_target_ids     = each.value.identity_center_scp_target_ids
-  enable_region_scp                  = each.value.enable_region_scp
-  allowed_regions                    = each.value.allowed_regions
-  region_scp_name                    = each.value.region_scp_name
-  region_scp_description             = each.value.region_scp_description
-  attach_region_scp                  = each.value.attach_region_scp
-  region_scp_target_ids              = each.value.region_scp_target_ids
-  region_scp_exempted_principal_arns = each.value.region_scp_exempted_principal_arns
-  region_scp_exempted_actions        = each.value.region_scp_exempted_actions
-  enable_organization_backup         = each.value.enable_organization_backup
-  tags                               = each.value.tags
+  allowed_regions                               = each.value.allowed_regions
+  attach_identity_center_scp                    = each.value.attach_identity_center_scp
+  attach_leave_organization_scp                 = each.value.attach_leave_organization_scp
+  attach_region_scp                             = each.value.attach_region_scp
+  attach_root_access_key_scp                    = each.value.attach_root_access_key_scp
+  attach_root_actions_scp                       = each.value.attach_root_actions_scp
+  attach_security_services_scp                  = each.value.attach_security_services_scp
+  aws_service_access_principals                 = each.value.aws_service_access_principals
+  enable_identity_center_scp                    = each.value.enable_identity_center_scp
+  enable_leave_organization_scp                 = each.value.enable_leave_organization_scp
+  enable_organization_backup                    = each.value.enable_organization_backup
+  enable_region_scp                             = each.value.enable_region_scp
+  enable_root_access_key_scp                    = each.value.enable_root_access_key_scp
+  enable_root_actions_scp                       = each.value.enable_root_actions_scp
+  enable_security_services_scp                  = each.value.enable_security_services_scp
+  enabled_features                              = each.value.enabled_features
+  enabled_policy_types                          = each.value.enabled_policy_types
+  feature_set                                   = each.value.feature_set
+  identity_center_scp_description               = each.value.identity_center_scp_description
+  identity_center_scp_name                      = each.value.identity_center_scp_name
+  identity_center_scp_target_ids                = each.value.identity_center_scp_target_ids
+  leave_organization_scp_description            = each.value.leave_organization_scp_description
+  leave_organization_scp_name                   = each.value.leave_organization_scp_name
+  leave_organization_scp_target_ids             = each.value.leave_organization_scp_target_ids
+  region_scp_description                        = each.value.region_scp_description
+  region_scp_exempted_actions                   = each.value.region_scp_exempted_actions
+  region_scp_exempted_principal_arns            = each.value.region_scp_exempted_principal_arns
+  region_scp_name                               = each.value.region_scp_name
+  region_scp_target_ids                         = each.value.region_scp_target_ids
+  root_access_key_scp_description               = each.value.root_access_key_scp_description
+  root_access_key_scp_name                      = each.value.root_access_key_scp_name
+  root_access_key_scp_target_ids                = each.value.root_access_key_scp_target_ids
+  root_actions_scp_description                  = each.value.root_actions_scp_description
+  root_actions_scp_exempted_actions             = each.value.root_actions_scp_exempted_actions
+  root_actions_scp_name                         = each.value.root_actions_scp_name
+  root_actions_scp_target_ids                   = each.value.root_actions_scp_target_ids
+  security_services_scp_description             = each.value.security_services_scp_description
+  security_services_scp_exempted_principal_arns = each.value.security_services_scp_exempted_principal_arns
+  security_services_scp_name                    = each.value.security_services_scp_name
+  security_services_scp_target_ids              = each.value.security_services_scp_target_ids
+  tags                                          = each.value.tags
 }
 
 ###########################
