@@ -73,8 +73,8 @@ module "identity_center_scp" {
   content     = file("${path.module}/policies/deny_identity_center_instance_scp.json")
   description = var.identity_center_scp_description
   name        = var.identity_center_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "identity_center_scp" {
@@ -243,8 +243,8 @@ module "region_scp" {
   content     = local.region_scp_content
   description = var.region_scp_description
   name        = var.region_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "region_scp" {
@@ -287,8 +287,8 @@ module "leave_organization_scp" {
   content     = file("${path.module}/policies/deny_leave_organization_scp.json")
   description = var.leave_organization_scp_description
   name        = var.leave_organization_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "leave_organization_scp" {
@@ -331,8 +331,8 @@ module "root_access_key_scp" {
   content     = file("${path.module}/policies/deny_root_access_key_creation_scp.json")
   description = var.root_access_key_scp_description
   name        = var.root_access_key_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "root_access_key_scp" {
@@ -421,8 +421,8 @@ module "security_services_scp" {
   content     = local.security_services_scp_content
   description = var.security_services_scp_description
   name        = var.security_services_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "security_services_scp" {
@@ -521,8 +521,8 @@ module "root_actions_scp" {
   content     = local.root_actions_scp_content
   description = var.root_actions_scp_description
   name        = var.root_actions_scp_name
-  type        = "SERVICE_CONTROL_POLICY"
   tags        = var.tags
+  type        = "SERVICE_CONTROL_POLICY"
 }
 
 resource "aws_organizations_policy_attachment" "root_actions_scp" {
