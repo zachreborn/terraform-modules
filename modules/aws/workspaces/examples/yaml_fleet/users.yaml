@@ -1,0 +1,27 @@
+# Scalable desktop-fleet pattern: instead of hand-writing one YAML object per desktop (impractical at
+# hundreds or thousands of users), each group here lists only the handful of things a batch of users
+# share -- which directory and which bundle -- plus a flat list of usernames. main.tf expands this into
+# the full `workspaces` map the module needs via a nested for-expression.
+#
+# The `usernames` list is exactly the kind of data you'd generate from an HR export or a directory dump
+# (one username per line), so growing a group from tens to thousands of users only means growing this
+# list -- it never requires hand-authoring more HCL, and it never requires touching any module code.
+# For a real fleet, generate/maintain this list with whatever process already produces your user roster
+# (e.g. a scheduled export into this file, or a small script that queries the directory directly).
+groups:
+  - directory_key: corp_ad
+    bundle_name: "Value with Windows 10 (English)"
+    usernames:
+      - jdoe
+      - asmith
+      - bwayne
+      - ckent
+      - dprince
+
+  - directory_key: corp_saml
+    bundle_name: "Amazon Linux 2"
+    usernames:
+      - egordon
+      - fcastle
+      - ggrayson
+      - hpym
