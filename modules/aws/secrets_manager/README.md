@@ -460,7 +460,7 @@ bounded interval if rotation is enabled.
 
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -496,7 +496,7 @@ Project Link: [https://github.com/zachreborn/terraform-modules](https://github.c
 [issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
 [issues-url]: https://github.com/zachreborn/terraform-modules/issues
 [license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
+[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
 [product-screenshot]: /images/screenshot.webp
