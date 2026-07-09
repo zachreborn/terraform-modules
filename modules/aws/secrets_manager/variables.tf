@@ -148,6 +148,15 @@ variable "secret_values" {
       - secret_string:            (Optional) Text data to store. Exactly one of secret_string, secret_string_wo,
                                    or secret_binary is required per entry.
       - secret_string_wo:         (Optional) Write-only text data to store. Requires Terraform/OpenTofu >= 1.11.
+                                   This variable is sensitive but not ephemeral, so an ephemeral value (e.g. from
+                                   an ephemeral "random_password" resource) cannot be passed into it -- OpenTofu/
+                                   Terraform rejects ephemeral values at any module boundary whose receiving
+                                   variable is not itself declared ephemeral. To use a caller-generated ephemeral
+                                   value with secret_string_wo, create the aws_secretsmanager_secret_version
+                                   resource directly at the caller root instead (using this module only for the
+                                   secret's metadata) so the ephemeral value never crosses a module boundary. See
+                                   the "Zero-state secret value via ephemeral write-only argument" example in
+                                   README.md.
       - secret_string_wo_version: (Optional) Increment to trigger an update when secret_string_wo changes.
       - secret_binary:            (Optional) Base64-encoded binary data to store.
       - version_stages:           (Optional) List of staging labels to attach to this version.
