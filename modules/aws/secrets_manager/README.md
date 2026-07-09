@@ -39,6 +39,7 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#prerequisites">Prerequisites</a></li>
     <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
+    <li><a href="#secret-payload-management">Secret Payload Management</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -106,6 +107,34 @@ module "secrets_manager" {
 }
 ```
 
+### Zero-state secret value via ephemeral write-only argument
+
+Requires OpenTofu or Terraform >= 1.11 and `hashicorp/random` >= 3.7.0. The generated password
+never appears in the plan, state, or Scalr/CI run output -- see
+[Secret Payload Management](#secret-payload-management) below for the full decision tree.
+
+```hcl
+ephemeral "random_password" "app_token" {
+  length  = 32
+  special = false
+}
+
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    internal_service_token = {}
+  }
+
+  secret_values = {
+    internal_service_token = {
+      secret_string_wo         = ephemeral.random_password.app_token.result
+      secret_string_wo_version = 1 # bump only when you intend to rotate the value
+    }
+  }
+}
+```
+
 ### Standalone resource policy with public-access blocking
 
 ```hcl
@@ -148,6 +177,44 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Metadata and value are separate inputs.** `secrets` manages secret metadata (name, KMS, rotation, policy, replication) and is not sensitive. `secret_values` manages the actual secret value and is marked `sensitive = true` as a whole, mirroring the provider's own split between `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version`. An entry in `secret_values` with no matching key in `secrets` is ignored rather than erroring, and a `secrets` entry with no matching `secret_values` entry simply has no version created (useful when the value is set out-of-band).
 - **`policy` vs. `manage_resource_policy`.** Both ultimately manage the same underlying secret resource policy attribute, so setting both for the same secret is rejected by variable validation. Use `policy` for a simple inline policy, or `manage_resource_policy` + `resource_policy` when you also need `block_public_policy`.
 - **Secure defaults.** `recovery_window_in_days` defaults to 30 (not immediate deletion), and `block_public_policy` defaults to `true` whenever a standalone resource policy is managed.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Secret Payload Management
+
+How you populate `secret_values` matters more for your security posture than any setting on this
+module. Never commit a real secret value in a `.tf`/`.tfvars`/YAML file, and avoid storing
+application secret payloads as plain CI/CD platform variables (for example, Scalr workspace
+variables) -- neither approach gives you per-secret audit trails, rotation, or least-privilege
+access the way Secrets Manager itself does. Instead, pick the first option below that fits the
+secret:
+
+1. **Let AWS own the value entirely (best).** For credentials AWS can manage end-to-end, such as
+   an RDS/Aurora master password, use the database resource's own `manage_master_user_password`
+   feature instead of `secret_values`. Terraform/OpenTofu and your CI/CD platform never see the
+   plaintext.
+2. **Ephemeral value + write-only argument (best for values Terraform must generate).** On
+   OpenTofu/Terraform >= 1.11 with `hashicorp/random` >= 3.7.0, generate the value with an
+   `ephemeral "random_password"` resource and pass it to `secret_values[*].secret_string_wo` /
+   `secret_string_wo_version` (see the usage example above). The value is never written to the
+   plan or state file. For multi-field secrets (e.g. a username/password pair), combine several
+   ephemeral values in a `local` before calling `jsonencode()` on it -- the resulting local is
+   automatically treated as ephemeral too, so OpenTofu blocks it from leaking into any
+   non-write-only argument or a root output.
+3. **Out-of-band population (for human-supplied secrets, e.g. third-party API keys).** Create the
+   `secrets` entry with no matching `secret_values` entry -- this produces an empty secret
+   container with no sensitive content in the diff or commit history. Populate the value once,
+   out-of-band, with `aws secretsmanager put-secret-value`, authorized by a narrowly scoped IAM
+   policy (ideally temporary SSO credentials) restricted to that one secret's ARN. This never
+   touches Git, Terraform state, or CI/CD platform variables.
+4. **`secret_string` (acceptable, not ideal).** A plain `secret_string` is the simplest option but
+   is persisted to Terraform/OpenTofu state in plaintext. Only use this for low-sensitivity values,
+   and pair it with state encryption (OpenTofu's native `encryption` block, or your remote backend's
+   encryption-at-rest) plus tightly scoped read access to that state.
+
+Once a secret's rotation is handled by an AWS-provided Lambda rotation template
+(`enable_rotation`), AWS owns the value's lifecycle after the first rotation regardless of which
+option above was used to seed it.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

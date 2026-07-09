@@ -121,6 +121,27 @@ run "creates_secret_version_when_value_provided" {
   }
 }
 
+run "creates_secret_version_using_write_only_argument" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values = {
+      database_credentials = {
+        secret_string_wo         = "placeholder"
+        secret_string_wo_version = 1
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_version.this) == 1
+    error_message = "Expected exactly one secret version to be planned when using secret_string_wo."
+  }
+}
+
 run "ignores_secret_values_entry_without_matching_secret" {
   command = plan
 
