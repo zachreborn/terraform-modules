@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.1.0](https://github.com/zachreborn/terraform-modules/compare/v10.0.0...v10.1.0) (2026-07-09)
+
+
+### Features
+
+* **organizations:** add four new SCPs to the organization module ([#371](https://github.com/zachreborn/terraform-modules/issues/371)) ([2a53032](https://github.com/zachreborn/terraform-modules/commit/2a530327293ae97de724bd76e96fd8d39fbd77c8))
+
 ## [10.0.0](https://github.com/zachreborn/terraform-modules/compare/v9.0.0...v10.0.0) (2026-07-08)
 
 
