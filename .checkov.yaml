@@ -2,6 +2,14 @@
 # This file is used to configure checkov scan behavior and to suppress or skip checks
 # For more information about the configuration file, please visit https://www.checkov.io/2.0/docs/configuration/config_file/
 ---
+# Native OpenTofu/Terraform test fixtures (tests/*.tftest.hcl) are never applied and often contain
+# obviously fake secret-like literals (e.g. a placeholder "secret_string" value) purely to exercise
+# module logic offline. Checkov's secrets scanner (CKV_SECRET_*) flags short strings assigned to a
+# secret-sounding key regardless of actual content/entropy, producing persistent false positives
+# with no security value since these fixtures never contain real credentials.
+skip-path:
+  - "tests/"
+
 skip-check:
   # Skip check for https://docs.prismacloud.io/en/enterprise-edition/policy-reference/supply-chain-policies/terraform-policies/ensure-terraform-module-sources-use-git-url-with-commit-hash-revision
   # We want to utilize human readable tagging despite the minor security risk
