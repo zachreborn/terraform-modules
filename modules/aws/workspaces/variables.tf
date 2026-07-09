@@ -26,12 +26,13 @@ variable "enable_self_service_access" {
 
 variable "directories" {
   description = <<-EOT
-    (Optional) Map of WorkSpaces directories to register, keyed by a caller-chosen logical name. Identical
-    shape to modules/aws/workspaces/directory's own directories variable, with one addition: ip_group_keys.
-    ip_group_keys is a list of keys into var.ip_groups, resolved through this module's own wiring into
-    literal IP group IDs and merged with any literal ip_group_ids also supplied -- this lets a single
-    tofu apply of this module create IP groups and a directory that references them together.
-    See modules/aws/workspaces/directory's README for the full field reference.
+    (Optional) Map of WorkSpaces directories to register, identical shape to modules/aws/workspaces/directory's
+    own directories variable, including ip_group_keys: a list of keys into var.ip_groups, resolved through
+    this module's own wiring (ip_group_id_lookup, wired to the ip_groups submodule's ids output) into literal
+    IP group IDs and merged with any literal ip_group_ids also supplied -- this lets a single tofu apply of
+    this module create IP groups and a directory that references them together. An invalid key surfaces as
+    an error on the directory submodule's own precondition; see that module's README for the full field
+    reference.
   EOT
   type = map(object({
     directory_id                    = optional(string)
@@ -90,15 +91,6 @@ variable "directories" {
     tags = optional(map(string), {})
   }))
   default = {}
-
-  validation {
-    condition = alltrue([
-      for k, v in var.directories : alltrue([
-        for ip_group_key in v.ip_group_keys : contains(keys(var.ip_groups), ip_group_key)
-      ])
-    ])
-    error_message = "Each directories entry's ip_group_keys must reference existing keys in var.ip_groups."
-  }
 }
 
 ############################################################
@@ -138,14 +130,13 @@ variable "connection_aliases" {
 
 variable "workspaces" {
   description = <<-EOT
-    (Optional) Map of WorkSpaces desktops to create, keyed by a caller-chosen logical name (e.g. a username).
-    Identical shape to modules/aws/workspaces/workspace's own workspaces variable, with one difference:
-    directory_id is optional here, and each entry must set exactly one of directory_id or directory_key.
-    directory_key is a key into var.directories, resolved through this module's own wiring into a literal
-    directory ID -- this lets a single tofu apply of this module create a directory and the desktops that
-    attach to it together. Entries that instead target an already-existing, externally-managed directory
-    should keep using the literal directory_id field.
-    See modules/aws/workspaces/workspace's README for the full field reference.
+    (Optional) Map of WorkSpaces desktops to create, identical shape to modules/aws/workspaces/workspace's
+    own workspaces variable, including directory_key: a key into var.directories, resolved through this
+    module's own wiring (directory_id_lookup, wired to the directories submodule's ids output) into a
+    literal directory ID -- this lets a single tofu apply of this module create a directory and the desktops
+    that attach to it together. Entries that instead target an already-existing, externally-managed directory
+    should keep using the literal directory_id field. An invalid directory_key surfaces as an error on the
+    workspace submodule's own precondition; see that module's README for the full field reference.
   EOT
   type = map(object({
     directory_id  = optional(string)
@@ -170,27 +161,6 @@ variable "workspaces" {
     tags = optional(map(string), {})
   }))
   default = {}
-
-  validation {
-    condition = alltrue([
-      for k, v in var.workspaces : (v.directory_id != null) != (v.directory_key != null)
-    ])
-    error_message = "Each workspaces entry must set exactly one of directory_id or directory_key."
-  }
-
-  validation {
-    condition = alltrue([
-      for k, v in var.workspaces : v.directory_key == null || contains(keys(var.directories), v.directory_key)
-    ])
-    error_message = "Each workspaces entry's directory_key must reference an existing key in var.directories."
-  }
-
-  validation {
-    condition = alltrue([
-      for k, v in var.workspaces : (v.bundle_id != null) != (v.bundle_name != null)
-    ])
-    error_message = "Each workspaces entry must set exactly one of bundle_id or bundle_name."
-  }
 }
 
 variable "enable_default_kms_key" {

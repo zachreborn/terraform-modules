@@ -15,6 +15,8 @@ variable "directories" {
       - ip_group_ids:                     (Optional) IDs of WorkSpaces IP access control groups to associate,
                                            e.g. the `ids` output of modules/aws/workspaces/ip_group. Defaults
                                            to [].
+      - ip_group_keys:                    (Optional) Keys into var.ip_group_id_lookup, resolved into literal
+                                           IP group IDs and merged with ip_group_ids above. Defaults to [].
       - tenancy:                          (Optional) DEDICATED or SHARED.
       - workspace_directory_name:         (Required when workspace_type = POOLS) Name of the directory.
       - workspace_directory_description:  (Required when workspace_type = POOLS) Description of the directory.
@@ -54,6 +56,7 @@ variable "directories" {
     workspace_type                  = optional(string, "PERSONAL")
     subnet_ids                      = optional(list(string))
     ip_group_ids                    = optional(list(string), [])
+    ip_group_keys                   = optional(list(string), [])
     tenancy                         = optional(string)
     workspace_directory_name        = optional(string)
     workspace_directory_description = optional(string)
@@ -161,6 +164,12 @@ variable "directories" {
     ])
     error_message = "Each directories entry with workspace_type = POOLS can only set workspace_creation_properties.default_ou when active_directory_config is also set (AWS rejects default_ou otherwise)."
   }
+}
+
+variable "ip_group_id_lookup" {
+  description = "(Optional) Map of WorkSpaces IP access control group IDs keyed by logical name, e.g. the `ids` output of modules/aws/workspaces/ip_group. Referenced by each directories entry's ip_group_keys."
+  type        = map(string)
+  default     = {}
 }
 
 variable "tags" {

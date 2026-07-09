@@ -9,32 +9,6 @@ terraform {
 }
 
 ###########################
-# Locals
-###########################
-
-locals {
-  # Resolve each directories entry's ip_group_ids by merging any literal IDs with IDs looked up from
-  # ip_group_keys (keys into var.ip_groups, resolved through the ip_groups child module's own ids output).
-  # This mirrors the parent_id/parent_key pattern used by modules/aws/organizations/account.
-  directories_resolved = {
-    for k, v in var.directories : k => merge(v, {
-      ip_group_ids = distinct(concat(
-        v.ip_group_ids,
-        [for ip_group_key in v.ip_group_keys : module.ip_groups.ids[ip_group_key]]
-      ))
-    })
-  }
-
-  # Resolve each workspaces entry's directory_id from directory_key (a key into var.directories, resolved
-  # through the directory child module's own ids output) when a literal directory_id was not supplied.
-  workspaces_resolved = {
-    for k, v in var.workspaces : k => merge(v, {
-      directory_id = v.directory_key != null ? module.directories.ids[v.directory_key] : v.directory_id
-    })
-  }
-}
-
-###########################
 # Service Role
 ###########################
 
@@ -66,8 +40,9 @@ module "ip_groups" {
 module "directories" {
   source = "./directory"
 
-  directories = local.directories_resolved
-  tags        = var.tags
+  directories        = var.directories
+  ip_group_id_lookup = module.ip_groups.ids
+  tags               = var.tags
 }
 
 ###########################
@@ -88,7 +63,8 @@ module "connection_aliases" {
 module "workspaces" {
   source = "./workspace"
 
-  workspaces             = local.workspaces_resolved
+  workspaces             = var.workspaces
+  directory_id_lookup    = module.directories.ids
   enable_default_kms_key = var.enable_default_kms_key
   kms_key_alias          = var.kms_key_alias
   tags                   = var.tags

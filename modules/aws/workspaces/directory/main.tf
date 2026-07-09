@@ -25,6 +25,19 @@ locals {
       user_enabled_as_local_administrator = v.workspace_type == "POOLS" ? false : v.workspace_creation_properties.user_enabled_as_local_administrator
     })
   }
+
+  # Merge each entry's literal ip_group_ids with IDs looked up from ip_group_keys via var.ip_group_id_lookup.
+  # Uses lookup() (returns null for a missing key) rather than direct indexing, so an invalid key surfaces
+  # through the resource's own precondition below with a clear error message instead of a raw "Invalid index"
+  # evaluation error -- referencing var.ip_group_id_lookup (a different variable from var.directories) inside
+  # a variable validation block isn't supported on Terraform < 1.9 / OpenTofu < 1.9, so this check must live
+  # here instead. See modules/aws/organizations/account/main.tf for the same pattern applied to parent_key.
+  resolved_ip_group_ids = {
+    for k, v in var.directories : k => distinct(concat(
+      v.ip_group_ids,
+      [for ip_group_key in v.ip_group_keys : lookup(var.ip_group_id_lookup, ip_group_key, null)]
+    ))
+  }
 }
 
 ###########################
@@ -35,7 +48,7 @@ resource "aws_workspaces_directory" "this" {
   for_each = var.directories
 
   directory_id                    = each.value.directory_id
-  ip_group_ids                    = each.value.ip_group_ids
+  ip_group_ids                    = local.resolved_ip_group_ids[each.key]
   subnet_ids                      = each.value.subnet_ids
   tags                            = merge(var.tags, each.value.tags)
   tenancy                         = each.value.tenancy
@@ -43,6 +56,13 @@ resource "aws_workspaces_directory" "this" {
   workspace_directory_name        = each.value.workspace_directory_name
   workspace_directory_description = each.value.workspace_directory_description
   user_identity_type              = each.value.user_identity_type
+
+  lifecycle {
+    precondition {
+      condition     = alltrue([for ip_group_key in each.value.ip_group_keys : contains(keys(var.ip_group_id_lookup), ip_group_key)])
+      error_message = "One or more ip_group_keys for directories entry \"${each.key}\" was not found in var.ip_group_id_lookup. Pass the ip_group module's `ids` output through as ip_group_id_lookup."
+    }
+  }
 
   dynamic "active_directory_config" {
     for_each = each.value.active_directory_config != null ? [each.value.active_directory_config] : []

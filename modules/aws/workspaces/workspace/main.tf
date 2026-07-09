@@ -36,6 +36,17 @@ locals {
     for k, v in var.workspaces : v.volume_encryption_key == null
   ])
 
+  # Resolve each entry's directory_id from directory_key via var.directory_id_lookup when a literal
+  # directory_id was not supplied. Uses lookup() (returns null for a missing key) rather than direct
+  # indexing, so an invalid key surfaces through the resource's own precondition below with a clear error
+  # message instead of a raw "Invalid index" evaluation error -- referencing var.directory_id_lookup (a
+  # different variable from var.workspaces) inside a variable validation block isn't supported on
+  # Terraform < 1.9 / OpenTofu < 1.9, so this check must live here instead. See
+  # modules/aws/organizations/account/main.tf for the same pattern applied to parent_key.
+  resolved_directory_ids = {
+    for k, v in var.workspaces : k => v.directory_key != null ? lookup(var.directory_id_lookup, v.directory_key, null) : v.directory_id
+  }
+
   resolved_bundle_ids = {
     for k, v in var.workspaces : k => coalesce(
       v.bundle_id,
@@ -126,13 +137,20 @@ module "default_kms_key" {
 resource "aws_workspaces_workspace" "this" {
   for_each = var.workspaces
 
-  directory_id                   = each.value.directory_id
+  directory_id                   = local.resolved_directory_ids[each.key]
   bundle_id                      = local.resolved_bundle_ids[each.key]
   user_name                      = each.value.user_name
   root_volume_encryption_enabled = each.value.root_volume_encryption_enabled
   user_volume_encryption_enabled = each.value.user_volume_encryption_enabled
   volume_encryption_key          = local.resolved_volume_encryption_keys[each.key]
   tags                           = merge(var.tags, each.value.tags)
+
+  lifecycle {
+    precondition {
+      condition     = each.value.directory_key == null || contains(keys(var.directory_id_lookup), each.value.directory_key)
+      error_message = "directory_key \"${coalesce(each.value.directory_key, "(none)")}\" for workspaces entry \"${each.key}\" was not found in var.directory_id_lookup. Pass the directory module's `ids` output through as directory_id_lookup."
+    }
+  }
 
   workspace_properties {
     compute_type_name                         = each.value.workspace_properties.compute_type_name

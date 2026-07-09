@@ -1,13 +1,17 @@
 variable "workspaces" {
   description = <<-EOT
     (Optional) Map of WorkSpaces desktops to create, keyed by a caller-chosen logical name (e.g. a username).
-    Each entry must set directory_id and user_name, and exactly one of bundle_id or bundle_name to select the
-    WorkSpaces bundle -- this is how a given desktop is provisioned as Windows vs. Linux, since the bundle
-    determines the operating system. When bundle_id is unset, it is resolved via an aws_workspaces_bundle data
-    source lookup using bundle_name/bundle_owner.
+    Each entry must set user_name, exactly one of directory_id or directory_key, and exactly one of bundle_id
+    or bundle_name to select the WorkSpaces bundle -- this is how a given desktop is provisioned as Windows
+    vs. Linux, since the bundle determines the operating system. When bundle_id is unset, it is resolved via
+    an aws_workspaces_bundle data source lookup using bundle_name/bundle_owner. When directory_id is unset,
+    it is resolved via directory_key, a key into var.directory_id_lookup.
     Fields:
-      - directory_id:                   (Required) ID of the WorkSpaces directory this desktop belongs to,
-                                         e.g. the `ids` output of modules/aws/workspaces/directory.
+      - directory_id:                   (Optional) ID of the WorkSpaces directory this desktop belongs to,
+                                         e.g. the `ids` output of modules/aws/workspaces/directory. Each entry
+                                         must set exactly one of directory_id or directory_key.
+      - directory_key:                  (Optional) Key into var.directory_id_lookup, resolved into a literal
+                                         directory_id. Conflicts with directory_id.
       - user_name:                      (Required) Username of the directory user this desktop is assigned
                                          to. Must already exist in the directory.
       - bundle_id:                      (Optional) ID of the WorkSpaces bundle. Conflicts with bundle_name.
@@ -15,7 +19,8 @@ variable "workspaces" {
                                          Linux bundle name for a Linux desktop, or a Windows 10/11 bundle name
                                          for a Windows desktop). Conflicts with bundle_id.
       - bundle_owner:                   (Optional) Owner of the bundle referenced by bundle_name. Defaults to
-                                         "AMAZON"; leave unset to look up a caller-owned custom bundle instead.
+                                         "AMAZON", which resolves an Amazon-provided bundle. Set this to your
+                                         own AWS account ID instead to resolve a caller-owned custom bundle.
       - root_volume_encryption_enabled: (Optional) Whether the root volume is encrypted. Defaults to true.
       - user_volume_encryption_enabled: (Optional) Whether the user volume is encrypted. Defaults to true.
       - volume_encryption_key:          (Optional) ARN of the KMS key used to encrypt this desktop's volumes.
@@ -32,11 +37,12 @@ variable "workspaces" {
       - user_volume_size_gib:                      (Optional) Defaults to 50.
   EOT
   type = map(object({
-    directory_id = string
-    user_name    = string
-    bundle_id    = optional(string)
-    bundle_name  = optional(string)
-    bundle_owner = optional(string, "AMAZON")
+    directory_id  = optional(string)
+    directory_key = optional(string)
+    user_name     = string
+    bundle_id     = optional(string)
+    bundle_name   = optional(string)
+    bundle_owner  = optional(string, "AMAZON")
 
     root_volume_encryption_enabled = optional(bool, true)
     user_volume_encryption_enabled = optional(bool, true)
@@ -56,6 +62,13 @@ variable "workspaces" {
 
   validation {
     condition = alltrue([
+      for k, v in var.workspaces : (v.directory_id != null) != (v.directory_key != null)
+    ])
+    error_message = "Each workspaces entry must set exactly one of directory_id or directory_key."
+  }
+
+  validation {
+    condition = alltrue([
       for k, v in var.workspaces : (v.bundle_id != null) != (v.bundle_name != null)
     ])
     error_message = "Each workspaces entry must set exactly one of bundle_id or bundle_name."
@@ -68,6 +81,12 @@ variable "workspaces" {
     ])
     error_message = "Each workspaces entry's workspace_properties.running_mode must be AUTO_STOP or ALWAYS_ON."
   }
+}
+
+variable "directory_id_lookup" {
+  description = "(Optional) Map of WorkSpaces directory IDs keyed by logical name, e.g. the `ids` output of modules/aws/workspaces/directory. Referenced by each workspaces entry's directory_key."
+  type        = map(string)
+  default     = {}
 }
 
 variable "enable_default_kms_key" {

@@ -54,6 +54,80 @@ run "valid_baseline_with_bundle_name_does_not_fail" {
   }
 }
 
+run "rejects_entry_with_both_directory_id_and_directory_key" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_id  = "d-1234567890"
+        directory_key = "corp"
+        user_name     = "jdoe"
+        bundle_id     = "wsb-bh8rsxt14"
+      }
+    }
+  }
+
+  expect_failures = [var.workspaces]
+}
+
+run "rejects_entry_with_neither_directory_id_nor_directory_key" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        user_name = "jdoe"
+        bundle_id = "wsb-bh8rsxt14"
+      }
+    }
+  }
+
+  expect_failures = [var.workspaces]
+}
+
+run "rejects_invalid_directory_key_reference" {
+  command = plan
+
+  variables {
+    enable_default_kms_key = false
+    workspaces = {
+      jdoe = {
+        directory_key         = "does_not_exist"
+        user_name             = "jdoe"
+        bundle_id             = "wsb-bh8rsxt14"
+        volume_encryption_key = "arn:aws:kms:us-east-1:123456789012:key/example"
+      }
+    }
+  }
+
+  expect_failures = [aws_workspaces_workspace.this]
+}
+
+run "resolves_valid_directory_key_via_directory_id_lookup" {
+  command = plan
+
+  variables {
+    enable_default_kms_key = false
+    directory_id_lookup = {
+      corp = "d-1234567890"
+    }
+    workspaces = {
+      jdoe = {
+        directory_key         = "corp"
+        user_name             = "jdoe"
+        bundle_id             = "wsb-bh8rsxt14"
+        volume_encryption_key = "arn:aws:kms:us-east-1:123456789012:key/example"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_workspaces_workspace.this["jdoe"].directory_id == "d-1234567890"
+    error_message = "directory_key should resolve to the looked-up directory_id."
+  }
+}
+
 run "rejects_entry_with_both_bundle_id_and_bundle_name" {
   command = plan
 

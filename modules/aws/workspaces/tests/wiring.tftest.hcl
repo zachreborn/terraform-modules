@@ -158,74 +158,12 @@ run "literal_directory_id_still_works_without_directory_key" {
   }
 }
 
-run "rejects_workspaces_entry_with_both_directory_id_and_directory_key" {
-  command = plan
-
-  variables {
-    directories = {
-      corp = {
-        directory_id = "d-1234567890"
-      }
-    }
-    workspaces = {
-      jdoe = {
-        directory_id  = "d-0000000000"
-        directory_key = "corp"
-        user_name     = "jdoe"
-        bundle_id     = "wsb-bh8rsxt14"
-      }
-    }
-  }
-
-  expect_failures = [var.workspaces]
-}
-
-run "rejects_workspaces_entry_with_neither_directory_id_nor_directory_key" {
-  command = plan
-
-  variables {
-    workspaces = {
-      jdoe = {
-        user_name = "jdoe"
-        bundle_id = "wsb-bh8rsxt14"
-      }
-    }
-  }
-
-  expect_failures = [var.workspaces]
-}
-
-run "rejects_invalid_directory_key_reference" {
-  command = plan
-
-  variables {
-    workspaces = {
-      jdoe = {
-        directory_key = "does_not_exist"
-        user_name     = "jdoe"
-        bundle_id     = "wsb-bh8rsxt14"
-      }
-    }
-  }
-
-  expect_failures = [var.workspaces]
-}
-
-run "rejects_invalid_ip_group_key_reference" {
-  command = plan
-
-  variables {
-    directories = {
-      corp = {
-        directory_id  = "d-1234567890"
-        ip_group_keys = ["does_not_exist"]
-      }
-    }
-  }
-
-  expect_failures = [var.directories]
-}
-
+# Note: entries with both/neither of directory_id and directory_key, an invalid directory_key, and an
+# invalid ip_group_keys entry are all rejected by the workspace/directory submodules' own variable
+# validation and resource preconditions (see modules/aws/workspaces/workspace/tests/validation.tftest.hcl
+# and modules/aws/workspaces/directory/tests/validation.tftest.hcl). They aren't re-tested here because
+# those failures happen inside the nested submodules, which isn't a checkable object expect_failures can
+# reference from this wrapper's tests.
 run "full_kitchen_sink_example_plans_successfully" {
   command = plan
 

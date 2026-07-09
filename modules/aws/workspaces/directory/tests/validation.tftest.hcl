@@ -154,6 +154,42 @@ run "rejects_pools_default_ou_without_active_directory_config" {
   expect_failures = [var.directories]
 }
 
+run "rejects_invalid_ip_group_key_reference" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id  = "d-1234567890"
+        ip_group_keys = ["does_not_exist"]
+      }
+    }
+  }
+
+  expect_failures = [aws_workspaces_directory.this]
+}
+
+run "resolves_valid_ip_group_key_via_ip_group_id_lookup" {
+  command = plan
+
+  variables {
+    ip_group_id_lookup = {
+      corporate_offices = "wsipg-488lrtl3k"
+    }
+    directories = {
+      corp = {
+        directory_id  = "d-1234567890"
+        ip_group_keys = ["corporate_offices"]
+      }
+    }
+  }
+
+  assert {
+    condition     = contains(aws_workspaces_directory.this["corp"].ip_group_ids, "wsipg-488lrtl3k")
+    error_message = "ip_group_keys should resolve to the looked-up IP group ID."
+  }
+}
+
 run "allows_pools_default_ou_with_active_directory_config" {
   command = plan
 
