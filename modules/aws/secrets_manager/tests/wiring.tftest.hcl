@@ -74,6 +74,26 @@ run "creates_secret_without_optional_resources" {
     condition     = length(module.kms_key) == 0
     error_message = "Expected no composed KMS keys without create_kms_key."
   }
+
+  assert {
+    condition     = output.arns["database_credentials"] != null
+    error_message = "Expected the arns output to include the planned secret."
+  }
+
+  assert {
+    condition     = output.ids["database_credentials"] != null
+    error_message = "Expected the ids output to include the planned secret."
+  }
+
+  assert {
+    condition     = length(output.rotation_enabled) == 0
+    error_message = "Expected the rotation_enabled output to be empty without enable_rotation."
+  }
+
+  assert {
+    condition     = length(output.kms_key_arns) == 0
+    error_message = "Expected the kms_key_arns output to be empty without create_kms_key."
+  }
 }
 
 run "creates_secret_version_when_value_provided" {
@@ -93,6 +113,11 @@ run "creates_secret_version_when_value_provided" {
   assert {
     condition     = length(aws_secretsmanager_secret_version.this) == 1
     error_message = "Expected exactly one secret version to be planned."
+  }
+
+  assert {
+    condition     = output.version_ids["database_credentials"] != null
+    error_message = "Expected the version_ids output to include the planned secret version."
   }
 }
 
@@ -136,6 +161,11 @@ run "composes_kms_key_and_wires_arn_into_secret" {
     condition     = aws_secretsmanager_secret.this["database_credentials"].kms_key_id == module.kms_key["database_credentials"].arn
     error_message = "Expected the secret to use the composed KMS key's ARN."
   }
+
+  assert {
+    condition     = output.kms_key_arns["database_credentials"] == module.kms_key["database_credentials"].arn
+    error_message = "Expected the kms_key_arns output to expose the composed KMS key's ARN."
+  }
 }
 
 run "creates_rotation_resource_when_enabled" {
@@ -154,6 +184,11 @@ run "creates_rotation_resource_when_enabled" {
   assert {
     condition     = length(aws_secretsmanager_secret_rotation.this) == 1
     error_message = "Expected exactly one rotation resource to be planned."
+  }
+
+  assert {
+    condition     = output.rotation_enabled["database_credentials"] == true
+    error_message = "Expected the rotation_enabled output to report true for the rotated secret."
   }
 }
 
