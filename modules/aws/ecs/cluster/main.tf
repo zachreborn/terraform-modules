@@ -74,16 +74,26 @@ locals {
   kms_key_arn = var.create_kms_key ? module.kms[0].arn : var.kms_key_arn
 
   # Effective KMS key ARN for Fargate managed (ephemeral) storage encryption.
-  # Defaults to the created CMK when one is created.
-  managed_storage_kms_key_arn = coalesce(
-    var.managed_storage_kms_key_arn,
-    var.create_kms_key ? module.kms[0].arn : null,
+  # Defaults to the created CMK when one is created. Deliberately not a
+  # `coalesce()` call: coalesce() errors if every argument is null, but null is
+  # a legitimate outcome here (create_kms_key = false with no BYO
+  # managed_storage_kms_key_arn just means managed storage isn't encrypted
+  # with a CMK) -- the managed_storage_configuration dynamic block below
+  # already expects and handles that null case.
+  managed_storage_kms_key_arn = (
+    var.managed_storage_kms_key_arn != null
+    ? var.managed_storage_kms_key_arn
+    : (var.create_kms_key ? module.kms[0].arn : null)
   )
 
-  # Effective exec-command CloudWatch log group name.
-  cloud_watch_log_group_name = var.create_cloud_watch_log_group ? module.log_group[0].name : var.cloud_watch_log_group_name
-
   create_log_group = var.enable_execute_command_logging && var.create_cloud_watch_log_group
+
+  # Effective exec-command CloudWatch log group name. Must gate on
+  # `local.create_log_group` (not `var.create_cloud_watch_log_group` alone),
+  # since that's the actual condition the log_group module's `count` uses --
+  # disabling enable_execute_command_logging also skips creating the module
+  # even when create_cloud_watch_log_group defaults to true.
+  cloud_watch_log_group_name = local.create_log_group ? module.log_group[0].name : var.cloud_watch_log_group_name
 }
 
 ###########################
