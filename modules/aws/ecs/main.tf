@@ -41,6 +41,25 @@ locals {
 }
 
 ###########################
+# Input Validation
+###########################
+
+# This module declares no aws_* resources of its own, so there is nothing to
+# attach a lifecycle precondition to directly. Terraform's variable
+# `validation` blocks cannot cross-reference another variable until Terraform
+# 1.9 (this repo's modules declare `required_version = ">= 1.0.0"`), so this
+# built-in, provider-less resource exists solely to carry the precondition
+# that enforces `namespace` / `existing_namespace_arn` mutual exclusivity.
+resource "terraform_data" "validate_namespace_inputs" {
+  lifecycle {
+    precondition {
+      condition     = !(var.namespace != null && var.existing_namespace_arn != null)
+      error_message = "namespace and existing_namespace_arn are mutually exclusive. Set at most one."
+    }
+  }
+}
+
+###########################
 # Namespace (composition)
 ###########################
 

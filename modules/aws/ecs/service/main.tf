@@ -197,6 +197,18 @@ resource "aws_ecs_service" "this" {
   }
 
   tags = merge(tomap({ Name = var.name }), var.tags)
+
+  # launch_type and capacity_provider_strategy are mutually exclusive per the
+  # AWS API. Terraform's variable `validation` blocks cannot cross-reference
+  # another variable until Terraform 1.9 (this repo's modules declare
+  # `required_version = ">= 1.0.0"`), so this constraint is enforced here via a
+  # resource-level precondition instead.
+  lifecycle {
+    precondition {
+      condition     = !(var.launch_type != null && length(var.capacity_provider_strategy) > 0)
+      error_message = "launch_type and capacity_provider_strategy are mutually exclusive. Set at most one."
+    }
+  }
 }
 
 ###########################
@@ -367,5 +379,12 @@ resource "aws_ecs_service" "ignore_desired_count" {
 
   lifecycle {
     ignore_changes = [desired_count]
+
+    # See the matching precondition on aws_ecs_service.this above for why this
+    # is a resource-level precondition rather than a variable validation block.
+    precondition {
+      condition     = !(var.launch_type != null && length(var.capacity_provider_strategy) > 0)
+      error_message = "launch_type and capacity_provider_strategy are mutually exclusive. Set at most one."
+    }
   }
 }
