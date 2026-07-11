@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.3.0: several input object types (volumes, runtime_platform, etc.)
+  # use optional() attributes (stable since Terraform 1.3 / OpenTofu 1.6).
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -38,8 +40,12 @@ locals {
   task_role_arn      = var.create_task_role ? module.task_role[0].arn : var.task_role_arn
 
   # Attach the optional least-privilege inline policy (created via the iam/policy
-  # module) to the task role when supplied.
-  task_role_policy_arns = var.task_role_policy_json != null ? [module.task_role_policy[0].arn] : []
+  # module) to the task role when supplied. Must gate on the same condition as
+  # the task_role_policy module's own count (create_task_role AND
+  # task_role_policy_json != null) -- checking task_role_policy_json alone
+  # indexes module.task_role_policy[0] even when create_task_role = false and
+  # that module was never created.
+  task_role_policy_arns = (var.create_task_role && var.task_role_policy_json != null) ? [module.task_role_policy[0].arn] : []
 }
 
 ###########################
@@ -181,5 +187,17 @@ resource "aws_ecs_task_definition" "this" {
     }
   }
 
+  enable_fault_injection = var.enable_fault_injection
+
   tags = merge(tomap({ Name = var.family }), var.tags)
+
+  # task_role_policy_json only applies to the task role this module creates.
+  # Supplying it while create_task_role = false is a configuration error --
+  # reject it explicitly rather than silently ignoring the caller's intent.
+  lifecycle {
+    precondition {
+      condition     = var.create_task_role || var.task_role_policy_json == null
+      error_message = "task_role_policy_json requires create_task_role = true (it configures the task role this module creates)."
+    }
+  }
 }

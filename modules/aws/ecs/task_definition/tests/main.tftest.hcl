@@ -107,3 +107,34 @@ run "least_privilege_task_role_policy_is_attached" {
     error_message = "Expected the task role to still be created when a least-privilege policy is supplied."
   }
 }
+
+run "task_role_policy_json_requires_create_task_role" {
+  command = plan
+
+  variables {
+    create_task_role = false
+    task_role_arn    = "arn:aws:iam::123456789012:role/existing-task-role"
+    task_role_policy_json = jsonencode({
+      Version   = "2012-10-17"
+      Statement = []
+    })
+  }
+
+  expect_failures = [
+    aws_ecs_task_definition.this,
+  ]
+}
+
+run "enable_fault_injection_is_wired_through" {
+  command = plan
+
+  variables {
+    enable_fault_injection = true
+    network_mode           = "awsvpc"
+  }
+
+  assert {
+    condition     = aws_ecs_task_definition.this.enable_fault_injection == true
+    error_message = "Expected enable_fault_injection to be passed through to the resource."
+  }
+}

@@ -129,6 +129,12 @@ variable "track_latest" {
   default     = null
 }
 
+variable "enable_fault_injection" {
+  description = "(Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Only works with tasks using the awsvpc or host network modes; not available on Windows. Defaults to false."
+  type        = bool
+  default     = false
+}
+
 ###########################
 # Execution Role Variables
 ###########################
