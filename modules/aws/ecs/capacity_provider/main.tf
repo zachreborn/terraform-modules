@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.3.0: managed_scaling's object type uses optional() attributes
+  # (stable since Terraform 1.3 / OpenTofu 1.6).
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

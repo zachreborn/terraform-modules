@@ -121,20 +121,20 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_execution_role"></a> [execution\_role](#module\_execution\_role) | ../../iam/role | n/a |
 | <a name="module_task_role"></a> [task\_role](#module\_task\_role) | ../../iam/role | n/a |
 | <a name="module_task_role_policy"></a> [task\_role\_policy](#module\_task\_role\_policy) | ../../iam/policy | n/a |
@@ -142,18 +142,19 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ecs_task_definition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_container_definitions"></a> [container\_definitions](#input\_container\_definitions) | (Required) A JSON-encoded string of container definitions. This is supplied by the caller; the module does not author container definitions. | `string` | n/a | yes |
 | <a name="input_cpu"></a> [cpu](#input\_cpu) | (Optional) Number of CPU units used by the task, as a string. Required for Fargate. | `string` | `null` | no |
 | <a name="input_create_execution_role"></a> [create\_execution\_role](#input\_create\_execution\_role) | (Optional) Whether to create an ECS task execution role (via modules/aws/iam/role). Defaults to true. | `bool` | `true` | no |
 | <a name="input_create_task_role"></a> [create\_task\_role](#input\_create\_task\_role) | (Optional) Whether to create a separate ECS task role (via modules/aws/iam/role). Defaults to true for least-privilege separation from the execution role. | `bool` | `true` | no |
+| <a name="input_enable_fault_injection"></a> [enable\_fault\_injection](#input\_enable\_fault\_injection) | (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Only works with tasks using the awsvpc or host network modes; not available on Windows. Defaults to false. | `bool` | `false` | no |
 | <a name="input_ephemeral_storage_size_in_gib"></a> [ephemeral\_storage\_size\_in\_gib](#input\_ephemeral\_storage\_size\_in\_gib) | (Optional) The total amount, in GiB, of ephemeral storage to set for the task (21-200). When null, the provider default applies. | `number` | `null` | no |
 | <a name="input_execution_role_arn"></a> [execution\_role\_arn](#input\_execution\_role\_arn) | (Optional) ARN of an existing task execution role. Used when `create_execution_role = false`. | `string` | `null` | no |
 | <a name="input_execution_role_managed_policy_arns"></a> [execution\_role\_managed\_policy\_arns](#input\_execution\_role\_managed\_policy\_arns) | (Optional) Managed policy ARNs to attach to the created execution role. Defaults to the AWS-managed AmazonECSTaskExecutionRolePolicy. | `list(string)` | <pre>[<br/>  "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"<br/>]</pre> | no |
@@ -176,7 +177,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The full ARN of the task definition (including revision). |
 | <a name="output_arn_without_revision"></a> [arn\_without\_revision](#output\_arn\_without\_revision) | The ARN of the task definition without the revision number. |
 | <a name="output_execution_role_arn"></a> [execution\_role\_arn](#output\_execution\_role\_arn) | The ARN of the task execution role (created or passed through). |

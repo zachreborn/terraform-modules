@@ -202,18 +202,20 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
-No providers.
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_capacity_provider"></a> [capacity\_provider](#module\_capacity\_provider) | ./capacity_provider | n/a |
 | <a name="module_cluster"></a> [cluster](#module\_cluster) | ./cluster | n/a |
 | <a name="module_namespace"></a> [namespace](#module\_namespace) | ./namespace | n/a |
@@ -222,12 +224,14 @@ No providers.
 
 ## Resources
 
-No resources.
+| Name | Type |
+| ---- | ---- |
+| [terraform_data.validate_namespace_inputs](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_capacity_providers"></a> [capacity\_providers](#input\_capacity\_providers) | (Optional) Map of EC2 capacity providers keyed by logical name (each mirrors the `capacity_provider` submodule). Created provider names are merged into the cluster's provider list. | `map(any)` | `{}` | no |
 | <a name="input_cluster"></a> [cluster](#input\_cluster) | (Required) Cluster configuration object. Mirrors the `cluster` submodule variables (`name`, `container_insights`, `capacity_providers`, `default_capacity_provider_strategy`, execute-command logging toggles, etc.). At minimum, `name` is required. | `any` | n/a | yes |
 | <a name="input_existing_namespace_arn"></a> [existing\_namespace\_arn](#input\_existing\_namespace\_arn) | (Optional) Reference an existing Cloud Map namespace ARN instead of creating one. Mutually exclusive with `namespace`. | `string` | `null` | no |
@@ -239,7 +243,7 @@ No resources.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cloud_watch_log_group_name"></a> [cloud\_watch\_log\_group\_name](#output\_cloud\_watch\_log\_group\_name) | The name of the exec-command CloudWatch log group created by the cluster submodule, when created. |
 | <a name="output_cluster_arn"></a> [cluster\_arn](#output\_cluster\_arn) | The ARN that identifies the ECS cluster. |
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | The ID (ARN) of the ECS cluster. |

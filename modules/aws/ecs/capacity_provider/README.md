@@ -103,15 +103,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
 
 ## Modules
 
@@ -120,24 +120,24 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ecs_capacity_provider.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_capacity_provider) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_auto_scaling_group_arn"></a> [auto\_scaling\_group\_arn](#input\_auto\_scaling\_group\_arn) | (Required) The ARN of the existing EC2 Auto Scaling group to back the capacity provider. | `string` | n/a | yes |
 | <a name="input_managed_draining"></a> [managed\_draining](#input\_managed\_draining) | (Optional) Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are ENABLED and DISABLED. | `string` | `"ENABLED"` | no |
 | <a name="input_managed_scaling"></a> [managed\_scaling](#input\_managed\_scaling) | (Optional) Configuration block defining the parameters of the Auto Scaling group capacity provider's managed scaling. | <pre>object({<br/>    status                    = optional(string, "ENABLED")<br/>    target_capacity           = optional(number, 100)<br/>    minimum_scaling_step_size = optional(number)<br/>    maximum_scaling_step_size = optional(number)<br/>    instance_warmup_period    = optional(number)<br/>  })</pre> | `{}` | no |
-| <a name="input_managed_termination_protection"></a> [managed\_termination\_protection](#input\_managed\_termination\_protection) | (Optional) Enables or disables container-aware termination of instances in the Auto Scaling group when scale-in happens. Valid values are ENABLED and DISABLED. | `string` | `"ENABLED"` | no |
+| <a name="input_managed_termination_protection"></a> [managed\_termination\_protection](#input\_managed\_termination\_protection) | (Optional) Enables or disables container-aware termination of instances in the Auto Scaling group when scale-in happens. Valid values are ENABLED and DISABLED. Defaults to ENABLED (AWS's own recommended secure default), but this requires managed\_scaling to also be enabled (default) AND the target Auto Scaling group itself to already have instance scale-in protection (new\_instances\_protected\_from\_scale\_in) enabled -- this module does not create or manage that Auto Scaling group, so set this to DISABLED if the supplied ASG does not have that protection configured. | `string` | `"ENABLED"` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the capacity provider. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the capacity provider. A `Name` tag is merged automatically. | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN that identifies the capacity provider. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the capacity provider. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the capacity provider. |

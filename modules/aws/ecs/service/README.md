@@ -128,33 +128,33 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_security_group"></a> [security\_group](#module\_security\_group) | ../../security_group | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ecs_service.ignore_desired_count](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
 | [aws_ecs_service.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | (Optional) Whether the task's elastic network interface receives a public IP address. Defaults to false for a secure posture. | `bool` | `false` | no |
 | <a name="input_availability_zone_rebalancing"></a> [availability\_zone\_rebalancing](#input\_availability\_zone\_rebalancing) | (Optional) Whether to use Availability Zone rebalancing. Valid values are `ENABLED` and `DISABLED`. | `string` | `null` | no |
 | <a name="input_capacity_provider_strategy"></a> [capacity\_provider\_strategy](#input\_capacity\_provider\_strategy) | (Optional) Capacity provider strategy to use for the service. Mutually exclusive with `launch_type`. | <pre>list(object({<br/>    capacity_provider = string<br/>    base              = optional(number)<br/>    weight            = optional(number)<br/>  }))</pre> | `[]` | no |
@@ -172,6 +172,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_force_delete"></a> [force\_delete](#input\_force\_delete) | (Optional) Whether to allow Terraform to delete the service even if it was not scaled down to zero tasks. | `bool` | `null` | no |
 | <a name="input_force_new_deployment"></a> [force\_new\_deployment](#input\_force\_new\_deployment) | (Optional) Whether to force a new task deployment of the service. Defaults to false. | `bool` | `false` | no |
 | <a name="input_health_check_grace_period_seconds"></a> [health\_check\_grace\_period\_seconds](#input\_health\_check\_grace\_period\_seconds) | (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown. | `number` | `null` | no |
+| <a name="input_iam_role"></a> [iam\_role](#input\_iam\_role) | (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. Required if using a load balancer with a task definition that does not use the awsvpc network mode (i.e. when subnet\_ids is null); do not set when using awsvpc network mode. | `string` | `null` | no |
 | <a name="input_ignore_desired_count"></a> [ignore\_desired\_count](#input\_ignore\_desired\_count) | (Optional) When true, a lifecycle ignore\_changes on `desired_count` is applied so external autoscaling does not fight Terraform. Defaults to false. | `bool` | `false` | no |
 | <a name="input_launch_type"></a> [launch\_type](#input\_launch\_type) | (Optional) Launch type on which to run the service. Mutually exclusive with `capacity_provider_strategy`. | `string` | `null` | no |
 | <a name="input_load_balancers"></a> [load\_balancers](#input\_load\_balancers) | (Optional) Load balancer configuration blocks. Supply target group ARNs from the existing modules/aws/alb or modules/aws/lb modules. | <pre>list(object({<br/>    target_group_arn = optional(string)<br/>    elb_name         = optional(string)<br/>    container_name   = string<br/>    container_port   = number<br/>  }))</pre> | `[]` | no |
@@ -184,17 +185,17 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (Optional) Security groups associated with the task or service. If `create_security_group` is true, the created group's ID is appended to this list. | `list(string)` | `[]` | no |
 | <a name="input_service_connect_configuration"></a> [service\_connect\_configuration](#input\_service\_connect\_configuration) | (Optional) ECS Service Connect configuration. `namespace` is the Cloud Map namespace ARN (see modules/aws/ecs/namespace). | <pre>object({<br/>    enabled   = optional(bool, true)<br/>    namespace = optional(string)<br/>    log_configuration = optional(object({<br/>      log_driver = string<br/>      options    = optional(map(string))<br/>      secret_option = optional(list(object({<br/>        name       = string<br/>        value_from = string<br/>      })), [])<br/>    }))<br/>    service = optional(list(object({<br/>      port_name             = string<br/>      discovery_name        = optional(string)<br/>      ingress_port_override = optional(number)<br/>      client_alias = optional(object({<br/>        port     = number<br/>        dns_name = optional(string)<br/>      }))<br/>      timeout = optional(object({<br/>        idle_timeout_seconds        = optional(number)<br/>        per_request_timeout_seconds = optional(number)<br/>      }))<br/>      tls = optional(object({<br/>        kms_key  = optional(string)<br/>        role_arn = optional(string)<br/>        issuer_cert_authority = object({<br/>          aws_pca_authority_arn = string<br/>        })<br/>      }))<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_service_registries"></a> [service\_registries](#input\_service\_registries) | (Optional) Service discovery registries for the service (service\_registries block). | <pre>object({<br/>    registry_arn   = string<br/>    port           = optional(number)<br/>    container_name = optional(string)<br/>    container_port = optional(number)<br/>  })</pre> | `null` | no |
-| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) Subnets associated with the task or service (network\_configuration.subnets). | `list(string)` | n/a | yes |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Optional) Subnets associated with the task or service (network\_configuration.subnets). Required when the task definition uses the awsvpc network mode; omit (leave null) for task definitions using bridge, host, or none network modes, since AWS rejects network\_configuration for those. When set, this module renders network\_configuration; when null, it omits the block entirely. | `list(string)` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the service and the security group created via composition. A `Name` tag is merged automatically. | `map(string)` | `{}` | no |
 | <a name="input_task_definition_arn"></a> [task\_definition\_arn](#input\_task\_definition\_arn) | (Required) The family and revision (family:revision) or full ARN of the task definition to run. | `string` | n/a | yes |
 | <a name="input_triggers"></a> [triggers](#input\_triggers) | (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (forced new deployment). | `map(string)` | `{}` | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) VPC ID used when `create_security_group = true`. | `string` | `null` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Optional) VPC ID used when `create_security_group = true`. Required in that case. | `string` | `null` | no |
 | <a name="input_wait_for_steady_state"></a> [wait\_for\_steady\_state](#input\_wait\_for\_steady\_state) | (Optional) Whether Terraform should wait for the service to reach a steady state before continuing. Defaults to false. | `bool` | `false` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cluster"></a> [cluster](#output\_cluster) | The ARN of the cluster the service runs on. |
 | <a name="output_desired_count"></a> [desired\_count](#output\_desired\_count) | The number of instances of the task definition the service maintains. |
 | <a name="output_id"></a> [id](#output\_id) | The ARN that identifies the ECS service. |

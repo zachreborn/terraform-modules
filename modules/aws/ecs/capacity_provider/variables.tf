@@ -19,7 +19,7 @@ variable "managed_draining" {
 }
 
 variable "managed_termination_protection" {
-  description = "(Optional) Enables or disables container-aware termination of instances in the Auto Scaling group when scale-in happens. Valid values are ENABLED and DISABLED."
+  description = "(Optional) Enables or disables container-aware termination of instances in the Auto Scaling group when scale-in happens. Valid values are ENABLED and DISABLED. Defaults to ENABLED (AWS's own recommended secure default), but this requires managed_scaling to also be enabled (default) AND the target Auto Scaling group itself to already have instance scale-in protection (new_instances_protected_from_scale_in) enabled -- this module does not create or manage that Auto Scaling group, so set this to DISABLED if the supplied ASG does not have that protection configured."
   type        = string
   default     = "ENABLED"
 }
