@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.3.0: default_capacity_provider_strategy's object type uses optional()
+  # attributes (stable since Terraform 1.3 / OpenTofu 1.6).
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -61,6 +63,83 @@ data "aws_iam_policy_document" "kms" {
     principals {
       type        = "Service"
       identifiers = ["logs.${data.aws_region.current.region}.amazonaws.com"]
+    }
+  }
+
+  # This CMK is also assigned to managed_storage_configuration's
+  # fargate_ephemeral_storage_kms_key_id by default (see local.managed_storage_kms_key_arn).
+  # AWS requires these exact grants for the fargate.amazonaws.com service
+  # principal, scoped to this cluster via the encryption context, or Fargate
+  # tasks fail to launch with encrypted ephemeral storage. See:
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-create-storage-key.html
+  dynamic "statement" {
+    for_each = var.managed_storage_kms_key_arn == null ? [1] : []
+    content {
+      sid    = "AllowFargateGenerateDataKey"
+      effect = "Allow"
+      actions = [
+        "kms:GenerateDataKeyWithoutPlaintext",
+      ]
+      resources = ["*"]
+      principals {
+        type        = "Service"
+        identifiers = ["fargate.amazonaws.com"]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "kms:EncryptionContext:aws:ecs:clusterAccount"
+        values   = [data.aws_caller_identity.current.account_id]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "kms:EncryptionContext:aws:ecs:clusterName"
+        values   = [var.name]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.managed_storage_kms_key_arn == null ? [1] : []
+    content {
+      sid    = "AllowFargateCreateGrant"
+      effect = "Allow"
+      actions = [
+        "kms:CreateGrant",
+      ]
+      resources = ["*"]
+      principals {
+        type        = "Service"
+        identifiers = ["fargate.amazonaws.com"]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "kms:EncryptionContext:aws:ecs:clusterAccount"
+        values   = [data.aws_caller_identity.current.account_id]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "kms:EncryptionContext:aws:ecs:clusterName"
+        values   = [var.name]
+      }
+      condition {
+        test     = "ForAllValues:StringEquals"
+        variable = "kms:GrantOperations"
+        values   = ["Decrypt"]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.managed_storage_kms_key_arn == null ? [1] : []
+    content {
+      sid       = "AllowFargateDescribeKey"
+      effect    = "Allow"
+      actions   = ["kms:DescribeKey"]
+      resources = ["*"]
+      principals {
+        type        = "Service"
+        identifiers = ["fargate.amazonaws.com"]
+      }
     }
   }
 }

@@ -27,6 +27,16 @@ run "fargate_defaults_plan_succeeds" {
     condition     = output.cloud_watch_log_group_name != null
     error_message = "Expected the exec-command CloudWatch log group to be created by default."
   }
+
+  assert {
+    condition     = anytrue([for s in data.aws_iam_policy_document.kms[0].statement : s.sid == "AllowFargateGenerateDataKey"])
+    error_message = "Expected the KMS key policy to grant fargate.amazonaws.com the GenerateDataKeyWithoutPlaintext permission needed for Fargate ephemeral storage encryption when this CMK is the default managed-storage key."
+  }
+
+  assert {
+    condition     = anytrue([for s in data.aws_iam_policy_document.kms[0].statement : s.sid == "AllowFargateCreateGrant"])
+    error_message = "Expected the KMS key policy to grant fargate.amazonaws.com the CreateGrant permission needed for Fargate ephemeral storage encryption."
+  }
 }
 
 run "bring_your_own_kms_key_does_not_create_one" {
