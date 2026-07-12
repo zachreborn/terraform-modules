@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.0](https://github.com/zachreborn/terraform-modules/compare/v10.1.0...v10.2.0) (2026-07-12)
+
+
+### Features
+
+* **ecs:** add AWS ECS module family ([#295](https://github.com/zachreborn/terraform-modules/issues/295)) ([3a90693](https://github.com/zachreborn/terraform-modules/commit/3a90693429b03dd87129907cd35df9ec05457409))
+
 ## [10.1.0](https://github.com/zachreborn/terraform-modules/compare/v10.0.0...v10.1.0) (2026-07-09)
 
 
