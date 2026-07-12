@@ -2,7 +2,10 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.4.0: terraform_data (used below to carry the namespace /
+  # existing_namespace_arn mutual-exclusivity precondition) was introduced in
+  # Terraform 1.4 / OpenTofu 1.6.
+  required_version = ">= 1.4.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -95,6 +98,12 @@ module "capacity_provider" {
 module "cluster" {
   source = "./cluster"
 
+  # Container Insights is exposed as the cluster.container_insights key
+  # (default "enabled") and forwarded through this any-typed `cluster`
+  # object; Checkov cannot resolve the effective value through the try()
+  # default in this calling context even though it defaults to enabled.
+  # checkov:skip=CKV_AWS_65:Container Insights defaults to "enabled"; Checkov cannot resolve the try() default through this any-typed cluster object.
+
   name                          = var.cluster.name
   container_insights            = try(var.cluster.container_insights, "enabled")
   additional_settings           = try(var.cluster.additional_settings, [])
@@ -180,10 +189,17 @@ module "service" {
   load_balancers     = try(each.value.load_balancers, [])
   service_registries = try(each.value.service_registries, null)
 
-  # Auto-inject the resolved namespace ARN into the Service Connect configuration
-  # unless the caller explicitly set one.
+  # Auto-inject the resolved namespace ARN into the Service Connect
+  # configuration unless the caller explicitly set one. Only merge the
+  # default in when a namespace actually exists (local.namespace_arn !=
+  # null); otherwise pass the caller's config through unmodified rather than
+  # synthesizing a { enabled = true, namespace = null } object that AWS would
+  # likely reject as an explicitly-enabled Service Connect config with no
+  # namespace anywhere to fall back to.
   service_connect_configuration = try(
-    merge({ enabled = true, namespace = local.namespace_arn }, each.value.service_connect_configuration),
+    local.namespace_arn != null
+    ? merge({ enabled = true, namespace = local.namespace_arn }, each.value.service_connect_configuration)
+    : each.value.service_connect_configuration,
     local.namespace_arn != null ? { enabled = true, namespace = local.namespace_arn } : null,
   )
 
