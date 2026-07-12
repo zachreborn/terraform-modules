@@ -106,3 +106,59 @@ run "launch_type_and_capacity_provider_strategy_are_mutually_exclusive" {
     aws_ecs_service.this,
   ]
 }
+
+run "create_security_group_without_vpc_id_fails_fast" {
+  command = plan
+
+  variables {
+    create_security_group = true
+  }
+
+  expect_failures = [
+    aws_ecs_service.this,
+  ]
+}
+
+run "daemon_scheduling_strategy_omits_desired_count_and_max_percent" {
+  command = plan
+
+  variables {
+    scheduling_strategy = "DAEMON"
+  }
+
+  assert {
+    condition     = aws_ecs_service.this[0].desired_count == null
+    error_message = "Expected desired_count to be omitted for DAEMON scheduling strategy."
+  }
+
+  assert {
+    condition     = aws_ecs_service.this[0].deployment_maximum_percent == null
+    error_message = "Expected deployment_maximum_percent to be omitted for DAEMON scheduling strategy."
+  }
+}
+
+run "omitting_subnet_ids_omits_network_configuration" {
+  command = plan
+
+  variables {
+    subnet_ids = null
+  }
+
+  assert {
+    condition     = length(aws_ecs_service.this[0].network_configuration) == 0
+    error_message = "Expected network_configuration to be omitted entirely when subnet_ids is null (bridge/host/none network mode)."
+  }
+}
+
+run "code_deploy_controller_omits_deployment_circuit_breaker" {
+  command = plan
+
+  variables {
+    deployment_controller_type = "CODE_DEPLOY"
+  }
+
+  assert {
+    condition     = length(aws_ecs_service.this[0].deployment_circuit_breaker) == 0
+    error_message = "Expected deployment_circuit_breaker to be omitted for the CODE_DEPLOY controller, even though enable_deployment_circuit_breaker defaults to true."
+  }
+}

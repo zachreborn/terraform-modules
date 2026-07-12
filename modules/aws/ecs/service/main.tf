@@ -2,7 +2,11 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.3.0: input object types (load_balancers, service_connect_configuration,
+  # etc.) use optional() attributes; the mutual-exclusivity lifecycle
+  # preconditions below only need >= 1.2.0, so 1.3.0 is the binding floor
+  # (stable since Terraform 1.3 / OpenTofu 1.6).
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -19,6 +23,18 @@ locals {
   # When a security group is created via composition, append its ID to any
   # caller-supplied security group IDs.
   security_group_ids = var.create_security_group ? concat(var.security_group_ids, [module.security_group[0].id]) : var.security_group_ids
+
+  is_daemon = var.scheduling_strategy == "DAEMON"
+
+  # AWS rejects desired_count and deployment_maximum_percent for DAEMON
+  # services -- both must be omitted (null), not just left at a default.
+  desired_count              = local.is_daemon ? null : var.desired_count
+  deployment_maximum_percent = local.is_daemon ? null : var.deployment_maximum_percent
+
+  # network_configuration is only valid for awsvpc network mode; render it
+  # only when the caller supplied subnet_ids (bridge/host/none-mode task
+  # definitions -- valid for EC2-backed services -- must omit it entirely).
+  render_network_configuration = var.subnet_ids != null
 }
 
 ###########################
@@ -45,12 +61,12 @@ resource "aws_ecs_service" "this" {
   name                               = var.name
   cluster                            = var.cluster_arn
   task_definition                    = var.task_definition_arn
-  desired_count                      = var.desired_count
+  desired_count                      = local.desired_count
   launch_type                        = var.launch_type
   platform_version                   = var.platform_version
   scheduling_strategy                = var.scheduling_strategy
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
-  deployment_maximum_percent         = var.deployment_maximum_percent
+  deployment_maximum_percent         = local.deployment_maximum_percent
   enable_ecs_managed_tags            = var.enable_ecs_managed_tags
   propagate_tags                     = var.propagate_tags
   enable_execute_command             = var.enable_execute_command
@@ -60,11 +76,15 @@ resource "aws_ecs_service" "this" {
   force_delete                       = var.force_delete
   availability_zone_rebalancing      = var.availability_zone_rebalancing
   triggers                           = var.triggers
+  iam_role                           = var.iam_role
 
-  network_configuration {
-    subnets          = var.subnet_ids
-    security_groups  = local.security_group_ids
-    assign_public_ip = var.assign_public_ip
+  dynamic "network_configuration" {
+    for_each = local.render_network_configuration ? [1] : []
+    content {
+      subnets          = var.subnet_ids
+      security_groups  = local.security_group_ids
+      assign_public_ip = var.assign_public_ip
+    }
   }
 
   dynamic "capacity_provider_strategy" {
@@ -156,8 +176,10 @@ resource "aws_ecs_service" "this" {
     }
   }
 
+  # AWS only accepts the deployment circuit breaker for the default ECS
+  # rolling-update controller -- CODE_DEPLOY and EXTERNAL reject this block.
   dynamic "deployment_circuit_breaker" {
-    for_each = var.enable_deployment_circuit_breaker ? [1] : []
+    for_each = (var.enable_deployment_circuit_breaker && (var.deployment_controller_type == null || var.deployment_controller_type == "ECS")) ? [1] : []
     content {
       enable   = true
       rollback = var.deployment_circuit_breaker_rollback
@@ -198,15 +220,22 @@ resource "aws_ecs_service" "this" {
 
   tags = merge(tomap({ Name = var.name }), var.tags)
 
-  # launch_type and capacity_provider_strategy are mutually exclusive per the
-  # AWS API. Terraform's variable `validation` blocks cannot cross-reference
-  # another variable until Terraform 1.9 (this repo's modules declare
-  # `required_version = ">= 1.0.0"`), so this constraint is enforced here via a
-  # resource-level precondition instead.
   lifecycle {
+    # launch_type and capacity_provider_strategy are mutually exclusive per
+    # the AWS API. Terraform's variable `validation` blocks cannot
+    # cross-reference another variable until Terraform 1.9 (this repo's
+    # modules declare `required_version = ">= 1.0.0"`), so this constraint is
+    # enforced here via a resource-level precondition instead.
     precondition {
       condition     = !(var.launch_type != null && length(var.capacity_provider_strategy) > 0)
       error_message = "launch_type and capacity_provider_strategy are mutually exclusive. Set at most one."
+    }
+
+    # modules/aws/security_group requires vpc_id; failing fast here gives a
+    # clearer error than the downstream module's own validation would.
+    precondition {
+      condition     = !var.create_security_group || var.vpc_id != null
+      error_message = "vpc_id is required when create_security_group is true."
     }
   }
 }
@@ -224,12 +253,12 @@ resource "aws_ecs_service" "ignore_desired_count" {
   name                               = var.name
   cluster                            = var.cluster_arn
   task_definition                    = var.task_definition_arn
-  desired_count                      = var.desired_count
+  desired_count                      = local.desired_count
   launch_type                        = var.launch_type
   platform_version                   = var.platform_version
   scheduling_strategy                = var.scheduling_strategy
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
-  deployment_maximum_percent         = var.deployment_maximum_percent
+  deployment_maximum_percent         = local.deployment_maximum_percent
   enable_ecs_managed_tags            = var.enable_ecs_managed_tags
   propagate_tags                     = var.propagate_tags
   enable_execute_command             = var.enable_execute_command
@@ -239,11 +268,15 @@ resource "aws_ecs_service" "ignore_desired_count" {
   force_delete                       = var.force_delete
   availability_zone_rebalancing      = var.availability_zone_rebalancing
   triggers                           = var.triggers
+  iam_role                           = var.iam_role
 
-  network_configuration {
-    subnets          = var.subnet_ids
-    security_groups  = local.security_group_ids
-    assign_public_ip = var.assign_public_ip
+  dynamic "network_configuration" {
+    for_each = local.render_network_configuration ? [1] : []
+    content {
+      subnets          = var.subnet_ids
+      security_groups  = local.security_group_ids
+      assign_public_ip = var.assign_public_ip
+    }
   }
 
   dynamic "capacity_provider_strategy" {
@@ -335,8 +368,10 @@ resource "aws_ecs_service" "ignore_desired_count" {
     }
   }
 
+  # AWS only accepts the deployment circuit breaker for the default ECS
+  # rolling-update controller -- CODE_DEPLOY and EXTERNAL reject this block.
   dynamic "deployment_circuit_breaker" {
-    for_each = var.enable_deployment_circuit_breaker ? [1] : []
+    for_each = (var.enable_deployment_circuit_breaker && (var.deployment_controller_type == null || var.deployment_controller_type == "ECS")) ? [1] : []
     content {
       enable   = true
       rollback = var.deployment_circuit_breaker_rollback
@@ -380,11 +415,17 @@ resource "aws_ecs_service" "ignore_desired_count" {
   lifecycle {
     ignore_changes = [desired_count]
 
-    # See the matching precondition on aws_ecs_service.this above for why this
-    # is a resource-level precondition rather than a variable validation block.
+    # See the matching preconditions on aws_ecs_service.this above for why
+    # these are resource-level preconditions rather than variable validation
+    # blocks.
     precondition {
       condition     = !(var.launch_type != null && length(var.capacity_provider_strategy) > 0)
       error_message = "launch_type and capacity_provider_strategy are mutually exclusive. Set at most one."
+    }
+
+    precondition {
+      condition     = !var.create_security_group || var.vpc_id != null
+      error_message = "vpc_id is required when create_security_group is true."
     }
   }
 }

@@ -56,8 +56,9 @@ variable "scheduling_strategy" {
 ###########################
 
 variable "subnet_ids" {
-  description = "(Required) Subnets associated with the task or service (network_configuration.subnets)."
+  description = "(Optional) Subnets associated with the task or service (network_configuration.subnets). Required when the task definition uses the awsvpc network mode; omit (leave null) for task definitions using bridge, host, or none network modes, since AWS rejects network_configuration for those. When set, this module renders network_configuration; when null, it omits the block entirely."
   type        = list(string)
+  default     = null
 }
 
 variable "security_group_ids" {
@@ -79,7 +80,13 @@ variable "create_security_group" {
 }
 
 variable "vpc_id" {
-  description = "(Optional) VPC ID used when `create_security_group = true`."
+  description = "(Optional) VPC ID used when `create_security_group = true`. Required in that case."
+  type        = string
+  default     = null
+}
+
+variable "iam_role" {
+  description = "(Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. Required if using a load balancer with a task definition that does not use the awsvpc network mode (i.e. when subnet_ids is null); do not set when using awsvpc network mode."
   type        = string
   default     = null
 }
