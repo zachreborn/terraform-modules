@@ -108,3 +108,43 @@ run "records_longer_than_255_characters_are_split" {
     error_message = "A 300-character record should have an escaped-quote pair inserted immediately after the first 255 characters (per the AWS TXT-record chunking workaround), with the remaining 45 characters appended unchanged."
   }
 }
+
+# BUG (tracked in https://github.com/zachreborn/terraform-modules/issues/394): the
+# `replace(record, "/(.{255})/", "$1\"\"")` splitting regex in locals.records matches an
+# exact multiple of 255 characters and appends a trailing, unnecessary "" separator even
+# though there is no remaining content after it to separate from. The module's own comment
+# says records are only split when "longer than 255 characters", so a record of exactly 255
+# (or exactly 510, etc.) characters should arguably pass through with no trailing separator
+# at all. These two runs pin the CURRENT (buggy) behavior so the suite documents reality --
+# do not treat them as a specification. Update both runs when issue #394 is fixed.
+run "records_of_exactly_255_characters_get_an_unwanted_trailing_separator" {
+  command = plan
+
+  variables {
+    zone_id = "Z1234567890EXAMPLE"
+    name    = "www.example.com"
+    type    = "TXT"
+    records = [join("", [for i in range(255) : "a"])]
+  }
+
+  assert {
+    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\""
+    error_message = "Known bug (#394): an exactly-255-character record currently gets a superfluous trailing \"\" separator appended, even though nothing follows it to split off."
+  }
+}
+
+run "records_of_exactly_510_characters_get_an_unwanted_trailing_separator" {
+  command = plan
+
+  variables {
+    zone_id = "Z1234567890EXAMPLE"
+    name    = "www.example.com"
+    type    = "TXT"
+    records = [join("", [for i in range(510) : "a"])]
+  }
+
+  assert {
+    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\"${join("", [for i in range(255) : "a"])}\"\""
+    error_message = "Known bug (#394): an exactly-510-character record currently gets a superfluous trailing \"\" separator appended after the second 255-character chunk, even though nothing follows it to split off."
+  }
+}
