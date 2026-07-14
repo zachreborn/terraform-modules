@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.2.4](https://github.com/zachreborn/terraform-modules/compare/v10.2.3...v10.2.4) (2026-07-14)
+
+
+### Bug Fixes
+
+* **vpc:** gate NAT routes and public association on local.enable_igw ([#415](https://github.com/zachreborn/terraform-modules/issues/415)) ([6b4d1ce](https://github.com/zachreborn/terraform-modules/commit/6b4d1ce3e727de59a4a53131a975d9552b591636))
+
+## [10.2.3](https://github.com/zachreborn/terraform-modules/compare/v10.2.2...v10.2.3) (2026-07-14)
+
+
+### Bug Fixes
+
+* **route53:** drop trailing TXT separator on exact 255-char multiples ([#408](https://github.com/zachreborn/terraform-modules/issues/408)) ([74aae22](https://github.com/zachreborn/terraform-modules/commit/74aae228e18428a603033fe1e2ca587d1b31f2c3))
+
 ## [10.2.2](https://github.com/zachreborn/terraform-modules/compare/v10.2.1...v10.2.2) (2026-07-14)
 
 
