@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.7](https://github.com/zachreborn/terraform-modules/compare/v10.2.6...v10.2.7) (2026-07-14)
+
+
+### Bug Fixes
+
+* **aws/cloudformation/stack:** give URL form precedence over body ([#410](https://github.com/zachreborn/terraform-modules/issues/410)) ([e05561d](https://github.com/zachreborn/terraform-modules/commit/e05561d7d9ec6a82989828eba3ec21cefaf1df6a))
+
 ## [10.2.6](https://github.com/zachreborn/terraform-modules/compare/v10.2.5...v10.2.6) (2026-07-14)
 
 
