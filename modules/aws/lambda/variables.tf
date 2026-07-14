@@ -35,7 +35,7 @@ variable "runtime" {
 }
 
 variable "timeout" {
-  description = "(Optional) The amount of time your Lambda Function has to run in seconds. Defaults to 3. See Limits"
+  description = "(Optional) The amount of time your Lambda Function has to run in seconds. Defaults to 180. See Limits"
   default     = 180
 }
 
