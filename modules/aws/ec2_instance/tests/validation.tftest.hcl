@@ -127,12 +127,11 @@ run "rejects_invalid_tenancy" {
 # it contains neither accepted token, so it correctly fails both today and after that bug is
 # fixed.
 #
-# Separately, var.auto_recovery is never referenced by aws_instance.ec2 in main.tf, so even
-# though this variable is validated, setting it to a valid value (e.g. "disabled") has no
-# effect on the plan -- tracked as
-# https://github.com/zachreborn/terraform-modules/issues/397. No default/override assertion
-# for auto_recovery is added to tests/main.tftest.hcl until that wiring exists, since there is
-# nothing in the plan for such an assertion to observe.
+# var.auto_recovery is now wired into aws_instance.ec2 via a maintenance_options {} block in
+# main.tf (fixed in https://github.com/zachreborn/terraform-modules/issues/397), so its
+# default and override behavior is asserted in tests/main.tftest.hcl
+# (maintenance_options[0].auto_recovery == "default" / "disabled"). This case covers only the
+# variable's validation {} rule.
 run "rejects_invalid_auto_recovery" {
   command = plan
 
