@@ -82,7 +82,7 @@ run "description_override_is_honored" {
   }
 }
 
-run "tags_merge_module_and_default_tags" {
+run "custom_tags_merge_with_computed_name_tag" {
   command = plan
 
   variables {
