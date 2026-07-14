@@ -33,11 +33,14 @@ resource "aws_instance" "ec2" {
   placement_group                      = var.placement_group
   private_ip                           = var.private_ip
 
+  maintenance_options {
+    auto_recovery = var.auto_recovery
+  }
+
   metadata_options {
     http_endpoint = var.http_endpoint
     http_tokens   = var.http_tokens
   }
-
 
   root_block_device {
     delete_on_termination = var.root_delete_on_termination

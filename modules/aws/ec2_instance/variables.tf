@@ -26,7 +26,7 @@ variable "auto_recovery" {
   description = "(Optional) Whether the instance is protected from auto recovery by Auto Recovery from User Space (ARU) feature. Can be 'default' or 'disabled'. Defaults to default. See Auto Recovery from User Space for more information. https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-auto-recovery.html"
   default     = "default"
   validation {
-    condition     = can(regex("default|disabled", var.auto_recovery))
+    condition     = can(regex("^(default|disabled)$", var.auto_recovery))
     error_message = "The value must be either default or disabled."
   }
 }
@@ -84,7 +84,7 @@ variable "instance_initiated_shutdown_behavior" {
   description = "(Optional) Shutdown behavior for the instance. Amazon defaults this to stop for EBS-backed instances and terminate for instance-store instances. Cannot be set on instance-store instances. See Shutdown Behavior for more information. https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior"
   default     = "stop"
   validation {
-    condition     = can(regex("stop|terminate", var.instance_initiated_shutdown_behavior))
+    condition     = can(regex("^(stop|terminate)$", var.instance_initiated_shutdown_behavior))
     error_message = "The value must be either stop or terminate."
   }
 }
