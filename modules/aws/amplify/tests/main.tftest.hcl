@@ -123,14 +123,12 @@ run "auto_branch_creation_config_toggle_adds_the_block" {
   }
 }
 
-# NOTE: main.tf's dynamic "cache_config" block is gated on `var.cache_config_type != null`,
-# implying null is a valid way to omit the cache_config block entirely. However, the
-# variable's own validation block does not allow null, so this path is actually
-# unreachable -- passing null always fails variable validation before main.tf ever runs.
-# TODO(https://github.com/zachreborn/terraform-modules/issues/379): tracked module bug.
-# This test documents the actual current (buggy) behavior rather than the likely-intended
-# one.
-run "cache_config_type_null_is_rejected_by_validation" {
+# Proves that passing null for cache_config_type succeeds (fix for
+# https://github.com/zachreborn/terraform-modules/issues/379) and produces no
+# cache_config block on aws_amplify_app. This case was previously unreachable
+# because the validation block rejected null before main.tf could evaluate the
+# dynamic block.
+run "cache_config_type_null_omits_cache_config_block" {
   command = plan
 
   variables {
@@ -139,7 +137,30 @@ run "cache_config_type_null_is_rejected_by_validation" {
     cache_config_type = null
   }
 
-  expect_failures = [var.cache_config_type]
+  assert {
+    condition     = length(aws_amplify_app.this.cache_config) == 0
+    error_message = "cache_config block should be absent when cache_config_type = null."
+  }
+}
+
+run "cache_config_type_no_cookies_succeeds" {
+  command = plan
+
+  variables {
+    name              = "my-app"
+    branches          = {}
+    cache_config_type = "AMPLIFY_MANAGED_NO_COOKIES"
+  }
+
+  assert {
+    condition     = length(aws_amplify_app.this.cache_config) == 1
+    error_message = "cache_config block should be present when cache_config_type = AMPLIFY_MANAGED_NO_COOKIES."
+  }
+
+  assert {
+    condition     = aws_amplify_app.this.cache_config[0].type == "AMPLIFY_MANAGED_NO_COOKIES"
+    error_message = "cache_config.type should equal AMPLIFY_MANAGED_NO_COOKIES."
+  }
 }
 
 run "custom_rules_toggle_adds_dynamic_blocks" {
