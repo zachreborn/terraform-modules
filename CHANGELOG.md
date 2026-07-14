@@ -1,5 +1,47 @@
 # Changelog
 
+## [10.2.6](https://github.com/zachreborn/terraform-modules/compare/v10.2.5...v10.2.6) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** anchor enum regex validations for shutdown behavior and auto_recovery ([#412](https://github.com/zachreborn/terraform-modules/issues/412)) ([aebf992](https://github.com/zachreborn/terraform-modules/commit/aebf992962503d7cbd975d1b976d5e9755ff97fe))
+
+## [10.2.5](https://github.com/zachreborn/terraform-modules/compare/v10.2.4...v10.2.5) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** apply auto_recovery via maintenance_options block ([#413](https://github.com/zachreborn/terraform-modules/issues/413)) ([7971c03](https://github.com/zachreborn/terraform-modules/commit/7971c03212fb0ae3277656707d4444798860a0ce))
+
+## [10.2.4](https://github.com/zachreborn/terraform-modules/compare/v10.2.3...v10.2.4) (2026-07-14)
+
+
+### Bug Fixes
+
+* **vpc:** gate NAT routes and public association on local.enable_igw ([#415](https://github.com/zachreborn/terraform-modules/issues/415)) ([6b4d1ce](https://github.com/zachreborn/terraform-modules/commit/6b4d1ce3e727de59a4a53131a975d9552b591636))
+
+## [10.2.3](https://github.com/zachreborn/terraform-modules/compare/v10.2.2...v10.2.3) (2026-07-14)
+
+
+### Bug Fixes
+
+* **route53:** drop trailing TXT separator on exact 255-char multiples ([#408](https://github.com/zachreborn/terraform-modules/issues/408)) ([74aae22](https://github.com/zachreborn/terraform-modules/commit/74aae228e18428a603033fe1e2ca587d1b31f2c3))
+
+## [10.2.2](https://github.com/zachreborn/terraform-modules/compare/v10.2.1...v10.2.2) (2026-07-14)
+
+
+### Bug Fixes
+
+* **lambda:** align timeout description with actual 180 default ([#414](https://github.com/zachreborn/terraform-modules/issues/414)) ([536507e](https://github.com/zachreborn/terraform-modules/commit/536507eac0d6cd06e8bf6aec94e5539f3c09a8fd))
+
+## [10.2.1](https://github.com/zachreborn/terraform-modules/compare/v10.2.0...v10.2.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **amplify:** widen cache_config_type validation to allow null ([#411](https://github.com/zachreborn/terraform-modules/issues/411)) ([7bbd540](https://github.com/zachreborn/terraform-modules/commit/7bbd540d12c57669ba5b531d552d46112212143e))
+
 ## [10.2.0](https://github.com/zachreborn/terraform-modules/compare/v10.1.0...v10.2.0) (2026-07-12)
 
 
