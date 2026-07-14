@@ -69,18 +69,28 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
-    condition     = output.user_ids["John Hill"] != null
-    error_message = "user_ids output should contain the John Hill key."
+    condition     = output.user_ids["John Hill"] == aws_identitystore_user.this["John Hill"].id
+    error_message = "user_ids output should forward the exact id of the corresponding user resource."
   }
 
   assert {
-    condition     = output.group_ids["Administrators"] != null
-    error_message = "group_ids output should contain the Administrators key."
+    condition     = output.group_ids["Administrators"] == aws_identitystore_group.this["Administrators"].id
+    error_message = "group_ids output should forward the exact id of the corresponding group resource."
   }
 
   assert {
-    condition     = output.group_memberships["John Hill-Administrators"].member != null
-    error_message = "group_memberships output should contain the composite key with a resolved member id."
+    condition     = output.group_memberships["John Hill-Administrators"].membership_id == aws_identitystore_group_membership.this["John Hill-Administrators"].membership_id
+    error_message = "group_memberships.membership_id should forward the exact membership_id of the corresponding membership resource."
+  }
+
+  assert {
+    condition     = output.group_memberships["John Hill-Administrators"].member == aws_identitystore_user.this["John Hill"].user_id
+    error_message = "group_memberships.member should forward the exact user_id of the member, proving the output is wired to the underlying user resource."
+  }
+
+  assert {
+    condition     = output.group_memberships["John Hill-Administrators"].group == aws_identitystore_group.this["Administrators"].group_id
+    error_message = "group_memberships.group should forward the exact group_id, proving the output is wired to the underlying group resource."
   }
 }
 

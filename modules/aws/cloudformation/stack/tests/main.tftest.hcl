@@ -25,8 +25,13 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
-    condition     = output.outputs != null
-    error_message = "outputs output should expose the stack's outputs map."
+    condition     = output.outputs["ExampleOutput"] == "example-value"
+    error_message = "outputs output should expose the stack's outputs map with the exact key/value returned by the stack."
+  }
+
+  assert {
+    condition     = length(output.outputs) == 1
+    error_message = "outputs output should contain exactly the one key returned by the mocked stack."
   }
 
   assert {
