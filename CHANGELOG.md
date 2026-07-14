@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.1](https://github.com/zachreborn/terraform-modules/compare/v10.2.0...v10.2.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **amplify:** widen cache_config_type validation to allow null ([#411](https://github.com/zachreborn/terraform-modules/issues/411)) ([7bbd540](https://github.com/zachreborn/terraform-modules/commit/7bbd540d12c57669ba5b531d552d46112212143e))
+
 ## [10.2.0](https://github.com/zachreborn/terraform-modules/compare/v10.1.0...v10.2.0) (2026-07-12)
 
 

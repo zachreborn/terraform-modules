@@ -49,12 +49,12 @@ variable "build_spec" {
 }
 
 variable "cache_config_type" {
-  description = "Cache config type for the Amplify App. Valid values are AMPLIFY_MANAGED, AMPLIFY_MANAGED_NO_COOKIES, "
+  description = "Cache config type for the Amplify App. Valid values are AMPLIFY_MANAGED or AMPLIFY_MANAGED_NO_COOKIES. Set to null to omit the cache_config block entirely (disables cache configuration)."
   type        = string
   default     = "AMPLIFY_MANAGED"
   validation {
-    condition     = var.cache_config_type == "AMPLIFY_MANAGED" || var.cache_config_type == "AMPLIFY_MANAGED_NO_COOKIES"
-    error_message = "Cache config type must be either AMPLIFY_MANAGED or AMPLIFY_MANAGED_NO_COOKIES."
+    condition     = var.cache_config_type == null || var.cache_config_type == "AMPLIFY_MANAGED" || var.cache_config_type == "AMPLIFY_MANAGED_NO_COOKIES"
+    error_message = "Cache config type must be null (to disable cache_config) or one of: AMPLIFY_MANAGED, AMPLIFY_MANAGED_NO_COOKIES."
   }
 }
 
