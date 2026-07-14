@@ -109,15 +109,11 @@ run "records_longer_than_255_characters_are_split" {
   }
 }
 
-# BUG (tracked in https://github.com/zachreborn/terraform-modules/issues/394): the
-# `replace(record, "/(.{255})/", "$1\"\"")` splitting regex in locals.records matches an
-# exact multiple of 255 characters and appends a trailing, unnecessary "" separator even
-# though there is no remaining content after it to separate from. The module's own comment
-# says records are only split when "longer than 255 characters", so a record of exactly 255
-# (or exactly 510, etc.) characters should arguably pass through with no trailing separator
-# at all. These two runs pin the CURRENT (buggy) behavior so the suite documents reality --
-# do not treat them as a specification. Update both runs when issue #394 is fixed.
-run "records_of_exactly_255_characters_get_an_unwanted_trailing_separator" {
+# Boundary cases for issue #394: a record whose length is an exact multiple of 255 must NOT
+# receive a trailing "" separator, because a separator only belongs *between* two chunks. Do
+# NOT re-pin these to the old buggy `<255>""` / `<255>""<255>""` values -- if a case fails,
+# fix the chunking `locals` in main.tf, not the assertion.
+run "records_of_exactly_255_characters_pass_through_unchanged" {
   command = plan
 
   variables {
@@ -128,12 +124,17 @@ run "records_of_exactly_255_characters_get_an_unwanted_trailing_separator" {
   }
 
   assert {
-    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\""
-    error_message = "Known bug (#394): an exactly-255-character record currently gets a superfluous trailing \"\" separator appended, even though nothing follows it to split off."
+    condition     = tolist(aws_route53_record.this.records)[0] == join("", [for i in range(255) : "a"])
+    error_message = "An exactly-255-character record should pass through unchanged with no trailing \"\" separator (fixes #394); it fits in a single 255-character chunk with nothing to split off."
+  }
+
+  assert {
+    condition     = length(tolist(aws_route53_record.this.records)[0]) == 255
+    error_message = "An exactly-255-character record must stay 255 characters long, not 257 (no trailing \"\" separator)."
   }
 }
 
-run "records_of_exactly_510_characters_get_an_unwanted_trailing_separator" {
+run "records_of_exactly_510_characters_get_one_separator_between_chunks" {
   command = plan
 
   variables {
@@ -144,7 +145,12 @@ run "records_of_exactly_510_characters_get_an_unwanted_trailing_separator" {
   }
 
   assert {
-    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\"${join("", [for i in range(255) : "a"])}\"\""
-    error_message = "Known bug (#394): an exactly-510-character record currently gets a superfluous trailing \"\" separator appended after the second 255-character chunk, even though nothing follows it to split off."
+    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\"${join("", [for i in range(255) : "a"])}"
+    error_message = "An exactly-510-character record should split into <255>\"\"<255> with exactly one separator between the two chunks and none after the last (fixes #394)."
+  }
+
+  assert {
+    condition     = length(tolist(aws_route53_record.this.records)[0]) == 512
+    error_message = "An exactly-510-character record must be 512 characters long (510 content + one 2-character separator), not 514."
   }
 }
