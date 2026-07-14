@@ -174,8 +174,8 @@ run "outputs_expose_resource_attributes" {
   }
 
   assert {
-    condition     = output.arn != null
-    error_message = "arn output should be populated."
+    condition     = output.arn == aws_cloudwatch_event_rule.event_rule.arn
+    error_message = "arn output should be wired to the event rule's arn."
   }
 
   assert {

@@ -122,13 +122,13 @@ run "outputs_expose_resource_attributes" {
   }
 
   assert {
-    condition     = output.arn != null
-    error_message = "arn output should be populated."
+    condition     = output.arn == aws_cloudwatch_log_group.this.arn
+    error_message = "arn output should be wired to the log group's arn."
   }
 
   assert {
-    condition     = output.id != null
-    error_message = "id output should be populated."
+    condition     = output.id == aws_cloudwatch_log_group.this.id
+    error_message = "id output should be wired to the log group's id."
   }
 
   assert {

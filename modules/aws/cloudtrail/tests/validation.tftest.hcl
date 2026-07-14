@@ -69,6 +69,17 @@ run "rejects_invalid_key_deletion_window_in_days" {
   expect_failures = [var.key_deletion_window_in_days]
 }
 
+run "rejects_key_deletion_window_in_days_over_maximum" {
+  command = plan
+
+  variables {
+    target_bucket               = "test-cloudtrail-logging-target"
+    key_deletion_window_in_days = 31
+  }
+
+  expect_failures = [var.key_deletion_window_in_days]
+}
+
 run "rejects_invalid_key_usage" {
   command = plan
 
@@ -144,4 +155,26 @@ run "rejects_invalid_name" {
   }
 
   expect_failures = [var.name]
+}
+
+run "rejects_iam_role_max_session_duration_below_minimum" {
+  command = plan
+
+  variables {
+    target_bucket                 = "test-cloudtrail-logging-target"
+    iam_role_max_session_duration = 1800
+  }
+
+  expect_failures = [var.iam_role_max_session_duration]
+}
+
+run "rejects_iam_role_max_session_duration_above_maximum" {
+  command = plan
+
+  variables {
+    target_bucket                 = "test-cloudtrail-logging-target"
+    iam_role_max_session_duration = 50000
+  }
+
+  expect_failures = [var.iam_role_max_session_duration]
 }

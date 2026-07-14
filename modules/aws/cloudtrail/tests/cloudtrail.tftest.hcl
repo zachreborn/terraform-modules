@@ -221,37 +221,42 @@ run "outputs_expose_resource_attributes" {
   }
 
   assert {
-    condition     = output.s3_bucket_id != null
-    error_message = "s3_bucket_id output should be populated."
+    condition     = output.s3_bucket_id == aws_s3_bucket.cloudtrail_s3_bucket.id
+    error_message = "s3_bucket_id output should be wired to the S3 bucket's id."
   }
 
   assert {
-    condition     = output.s3_bucket_arn != null
-    error_message = "s3_bucket_arn output should be populated."
+    condition     = output.s3_bucket_arn == aws_s3_bucket.cloudtrail_s3_bucket.arn
+    error_message = "s3_bucket_arn output should be wired to the S3 bucket's arn."
   }
 
   assert {
-    condition     = output.s3_bucket_domain_name != null
-    error_message = "s3_bucket_domain_name output should be populated."
+    condition     = output.s3_bucket_domain_name == aws_s3_bucket.cloudtrail_s3_bucket.bucket_domain_name
+    error_message = "s3_bucket_domain_name output should be wired to the S3 bucket's bucket_domain_name."
   }
 
   assert {
-    condition     = output.hosted_zone_id != null
-    error_message = "hosted_zone_id output should be populated."
+    condition     = output.hosted_zone_id == aws_s3_bucket.cloudtrail_s3_bucket.hosted_zone_id
+    error_message = "hosted_zone_id output should be wired to the S3 bucket's hosted_zone_id."
   }
 
   assert {
-    condition     = output.cloudtrail_id != null
-    error_message = "cloudtrail_id output should be populated."
+    condition     = output.s3_bucket_region == aws_s3_bucket.cloudtrail_s3_bucket.region
+    error_message = "s3_bucket_region output should be wired to the S3 bucket's region."
   }
 
   assert {
-    condition     = output.cloudtrail_home_region != null
-    error_message = "cloudtrail_home_region output should be populated."
+    condition     = output.cloudtrail_id == aws_cloudtrail.cloudtrail.id
+    error_message = "cloudtrail_id output should be wired to the trail's id."
   }
 
   assert {
-    condition     = output.cloudtrail_arn != null
-    error_message = "cloudtrail_arn output should be populated."
+    condition     = output.cloudtrail_home_region == aws_cloudtrail.cloudtrail.home_region
+    error_message = "cloudtrail_home_region output should be wired to the trail's home_region."
+  }
+
+  assert {
+    condition     = output.cloudtrail_arn == aws_cloudtrail.cloudtrail.arn
+    error_message = "cloudtrail_arn output should be wired to the trail's arn."
   }
 }
