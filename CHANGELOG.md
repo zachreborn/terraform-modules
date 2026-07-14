@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.4](https://github.com/zachreborn/terraform-modules/compare/v10.2.3...v10.2.4) (2026-07-14)
+
+
+### Bug Fixes
+
+* **vpc:** gate NAT routes and public association on local.enable_igw ([#415](https://github.com/zachreborn/terraform-modules/issues/415)) ([6b4d1ce](https://github.com/zachreborn/terraform-modules/commit/6b4d1ce3e727de59a4a53131a975d9552b591636))
+
 ## [10.2.3](https://github.com/zachreborn/terraform-modules/compare/v10.2.2...v10.2.3) (2026-07-14)
 
 
