@@ -228,6 +228,11 @@ run "capabilities_and_other_fields_pass_through" {
   }
 
   assert {
+    condition     = aws_cloudformation_stack.this.notification_arns == toset(["arn:aws:sns:us-east-1:123456789012:cfn-notifications"])
+    error_message = "notification_arns should pass through unchanged."
+  }
+
+  assert {
     condition     = aws_cloudformation_stack.this.parameters["Environment"] == "prod"
     error_message = "parameters should pass through unchanged."
   }

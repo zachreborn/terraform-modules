@@ -90,8 +90,8 @@ run "notifications_enabled_with_create_sns_topic_wires_both_child_modules" {
   }
 
   assert {
-    condition     = strcontains(module.amplify_notifications_event[0].rule_name, "amplify-notifications")
-    error_message = "Expected the cloudwatch event rule name to be derived from the app name."
+    condition     = module.amplify_notifications_event[0].rule_name == "my-app-amplify-notifications"
+    error_message = "Expected the cloudwatch event rule name to be the exact deterministic '<app_name>-amplify-notifications' string, proving var.name is actually wired into the child module (not just a rule name that happens to contain a constant substring)."
   }
 }
 
