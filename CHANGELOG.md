@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.3](https://github.com/zachreborn/terraform-modules/compare/v10.2.2...v10.2.3) (2026-07-14)
+
+
+### Bug Fixes
+
+* **route53:** drop trailing TXT separator on exact 255-char multiples ([#408](https://github.com/zachreborn/terraform-modules/issues/408)) ([74aae22](https://github.com/zachreborn/terraform-modules/commit/74aae228e18428a603033fe1e2ca587d1b31f2c3))
+
 ## [10.2.2](https://github.com/zachreborn/terraform-modules/compare/v10.2.1...v10.2.2) (2026-07-14)
 
 
