@@ -16,6 +16,16 @@ jobs:
   verify_terraform_docs:
     name: Verify - terraform-docs
     runs-on: ubuntu-latest
+    # Skip for release-please's own chore PRs: they only ever touch CHANGELOG.md
+    # and .release-please-manifest.json, never module README.md/main.tf files, so
+    # there is nothing for terraform-docs to regenerate. A job skipped via its own
+    # `if:` reports "skipped", which GitHub treats as a passing state for a
+    # required status check (unlike a workflow-level `paths`/`branches` filter,
+    # which would leave the check stuck "pending" and block the merge forever).
+    # Both the PR author AND the head branch name are checked together so an
+    # external fork PR can't bypass this by naming its branch the same way
+    # release-please does.
+    if: ${{ !(github.event.pull_request.user.login == 'github-actions[bot]' && startsWith(github.head_ref, 'release-please--')) }}
 
     permissions:
       contents: read

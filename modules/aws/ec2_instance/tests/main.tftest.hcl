@@ -84,6 +84,11 @@ run "plan_succeeds_with_valid_input" {
   }
 
   assert {
+    condition     = aws_instance.ec2[0].maintenance_options[0].auto_recovery == "default"
+    error_message = "auto_recovery should default to default and flow through to maintenance_options."
+  }
+
+  assert {
     condition     = aws_instance.ec2[0].root_block_device[0].delete_on_termination == true
     error_message = "root_delete_on_termination should default to true."
   }
@@ -347,6 +352,26 @@ run "overrides_are_honored" {
   assert {
     condition     = aws_instance.ec2[0].tags["team"] == "platform"
     error_message = "Custom tags should be merged into the instance tags."
+  }
+}
+
+run "auto_recovery_override_is_honored" {
+  command = plan
+
+  variables {
+    ami                    = "ami-0123456789abcdef0"
+    instance_type          = "t3.micro"
+    name                   = "example"
+    vpc_security_group_ids = ["sg-0123456789abcdef0"]
+    auto_recovery          = "disabled"
+  }
+
+  # Core regression guard for https://github.com/zachreborn/terraform-modules/issues/397:
+  # proves var.auto_recovery is actually wired into the planned maintenance_options block
+  # rather than being validated and silently discarded.
+  assert {
+    condition     = aws_instance.ec2[0].maintenance_options[0].auto_recovery == "disabled"
+    error_message = "auto_recovery override should be honored and flow through to maintenance_options."
   }
 }
 
