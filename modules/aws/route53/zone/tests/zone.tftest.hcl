@@ -66,8 +66,14 @@ run "optional_fields_default_to_null" {
   }
 
   assert {
+    # NOTE: this asserts the module's own wiring (each.value.comment flows through
+    # unmodified when the zones map entry omits comment), not the real AWS provider's
+    # behavior. mock_provider does not run the provider's schema-level defaulting logic,
+    # so this does not prove what a real (unmocked) plan/apply would produce -- the AWS
+    # provider applies its own default of "Managed by Terraform" for aws_route53_zone.comment
+    # when it is left unset, which is outside the scope of these offline tests.
     condition     = aws_route53_zone.zone["example.com"].comment == null
-    error_message = "comment should default to null when unset."
+    error_message = "The module should pass through null (not inject its own default) for comment when the zones map entry omits it."
   }
 
   assert {

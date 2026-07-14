@@ -107,6 +107,11 @@ run "kms_key_defaults_are_applied" {
     condition     = aws_kms_key.dnssec.tags["Name"] == "example-ksk"
     error_message = "KMS key tags should include a Name tag derived from var.name."
   }
+
+  assert {
+    condition     = aws_kms_alias.dnssec.name_prefix == "alias/dnssec_"
+    error_message = "name_prefix should default to alias/dnssec_."
+  }
 }
 
 run "status_and_signing_status_overrides_are_honored" {
@@ -130,7 +135,7 @@ run "status_and_signing_status_overrides_are_honored" {
   }
 }
 
-run "kms_alias_name_prefix_defaults_and_overrides" {
+run "kms_alias_name_prefix_override_is_honored" {
   command = plan
 
   variables {

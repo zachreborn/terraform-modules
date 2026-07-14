@@ -1,3 +1,11 @@
+# NOTE: variables.tf also declares weighted_routing_policy_weight,
+# latency_routing_policy_region, geolocation_routing_policy_continent,
+# geolocation_routing_policy_country, geolocation_routing_policy_subdivision, and
+# failover_routing_policy_type, but main.tf never references any of them -- setting them
+# has zero effect on the plan. This is a module bug tracked in
+# https://github.com/zachreborn/terraform-modules/issues/387. No pass-through tests are
+# added for these variables here since there is nothing in main.tf for them to exercise;
+# add coverage once that issue is resolved.
 mock_provider "aws" {
   mock_resource "aws_route53_record" {
     defaults = {

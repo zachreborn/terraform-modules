@@ -104,7 +104,7 @@ run "records_longer_than_255_characters_are_split" {
   }
 
   assert {
-    condition     = length(tolist(aws_route53_record.this.records)[0]) == 302
-    error_message = "A 300-character record should have an escaped-quote pair inserted after the first 255 characters (per the AWS TXT-record chunking workaround), yielding 302 characters total."
+    condition     = tolist(aws_route53_record.this.records)[0] == "${join("", [for i in range(255) : "a"])}\"\"${join("", [for i in range(45) : "a"])}"
+    error_message = "A 300-character record should have an escaped-quote pair inserted immediately after the first 255 characters (per the AWS TXT-record chunking workaround), with the remaining 45 characters appended unchanged."
   }
 }
