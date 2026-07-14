@@ -6,7 +6,7 @@ variable "capabilities" {
   type        = list(string)
   default     = null
   validation {
-    condition     = var.capabilities == null || alltrue([for cap in var.capabilities : contains(["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"], cap)])
+    condition     = var.capabilities == null ? true : alltrue([for cap in var.capabilities : contains(["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"], cap)])
     error_message = "capabilities must be null or a list from these options: CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND."
   }
 }
@@ -75,12 +75,12 @@ variable "template_url" {
 }
 
 variable "timeout_in_minutes" {
-  description = "The amount of time in minutes that CloudFormation waits for a stack to be created or updated before timing out."
+  description = "The amount of time in minutes that CloudFormation waits for a stack to be created or updated before timing out. Set to null to omit the argument, which is useful when importing existing stacks created without a timeout."
   type        = number
-  default     = 60
+  default     = null
   validation {
-    condition     = var.timeout_in_minutes > 0
-    error_message = "timeout_in_minutes must be greater than 0."
+    condition     = var.timeout_in_minutes == null ? true : var.timeout_in_minutes > 0
+    error_message = "timeout_in_minutes must be null or greater than 0."
   }
 }
 
