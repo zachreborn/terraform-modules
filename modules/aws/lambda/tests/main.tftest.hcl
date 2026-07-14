@@ -37,11 +37,20 @@ run "plan_succeeds_with_valid_input" {
     error_message = "memory_size should default to 128."
   }
 
+  # Note: python3.6 is AWS Lambda's actual module default today, but AWS deprecated it for
+  # function create/update in 2022 -- a plan with this default succeeds (no client-side
+  # runtime validation exists), but a real `apply` against AWS would fail. This assertion
+  # documents current behavior; it is not an endorsement of the default. Tracked as
+  # https://github.com/zachreborn/terraform-modules/issues/402.
   assert {
     condition     = aws_lambda_function.lambda_function.runtime == "python3.6"
     error_message = "runtime should default to python3.6."
   }
 
+  # Note: variables.tf's description for `timeout` says it "Defaults to 3", but the actual
+  # HCL default is 180 -- this assertion documents the real (180) default, which is what a
+  # caller actually gets. Tracked as
+  # https://github.com/zachreborn/terraform-modules/issues/403.
   assert {
     condition     = aws_lambda_function.lambda_function.timeout == 180
     error_message = "timeout should default to 180."

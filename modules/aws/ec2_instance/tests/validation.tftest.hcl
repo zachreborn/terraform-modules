@@ -28,6 +28,11 @@ run "valid_baseline_does_not_fail" {
   }
 }
 
+# Note: ami's validation regex (`^ami-`) only checks the prefix, so it also accepts
+# malformed values such as "ami-" or "ami-not-hex" that are not real AMI IDs -- tracked as
+# https://github.com/zachreborn/terraform-modules/issues/404. "invalid-ami-id" is used here
+# because it lacks the ami- prefix entirely, so it correctly fails both today and after that
+# bug is fixed.
 run "rejects_invalid_ami" {
   command = plan
 

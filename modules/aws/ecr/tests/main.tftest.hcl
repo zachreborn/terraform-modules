@@ -1,8 +1,11 @@
 mock_provider "aws" {
   mock_resource "aws_ecr_repository" {
     defaults = {
-      arn            = "arn:aws:ecr:us-east-1:123456789012:repository/mock-repo"
-      id             = "123456789012"
+      arn = "arn:aws:ecr:us-east-1:123456789012:repository/mock-repo"
+      # The AWS provider sets an ECR repository's `id` to its repository name (not the
+      # account id), while `registry_id` is the account id. These must be distinct mock
+      # values so a test that accidentally swapped the two output references would fail.
+      id             = "mock-repo"
       registry_id    = "123456789012"
       repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/mock-repo"
     }
@@ -67,7 +70,7 @@ run "plan_succeeds_with_valid_input" {
   }
 
   assert {
-    condition     = output.id == "123456789012"
+    condition     = output.id == "mock-repo"
     error_message = "id output should expose the mocked repository id."
   }
 
