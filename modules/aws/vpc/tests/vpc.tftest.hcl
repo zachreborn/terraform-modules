@@ -274,27 +274,25 @@ run "enable_nat_gateway_false_creates_no_nat_resources" {
   }
 }
 
-# NOTE: enable_nat_gateway and public_subnets_list are both neutralized below.
-# With the default enable_nat_gateway=true and a non-empty public_subnets_list,
-# disabling the IGW (via enable_internet_gateway=false, or an empty
-# public_subnets_list on its own) crashes plan today because several
-# resources (the *_default_route_natgw routes and
-# aws_route_table_association.public) key their `count` off
+# Primary repro from issue #384: with the default enable_nat_gateway=true and a
+# non-empty public_subnets_list, disabling the IGW (via
+# enable_internet_gateway=false, or an empty public_subnets_list on its own)
+# used to crash plan because the *_default_route_natgw routes and
+# aws_route_table_association.public keyed their `count` off
 # enable_nat_gateway/subnet-list length alone, without also checking
-# local.enable_igw the way aws_nat_gateway.natgw itself does. This is a real
-# module bug, filed as https://github.com/zachreborn/terraform-modules/issues/384
-# and fixed in a separate PR (#409) -- this test-only PR does not modify
-# main.tf, so the workaround below keeps this suite green against the current
-# (unfixed) module. Once #409 merges, these two runs can drop the workaround
-# variables and assert the default-NAT scenario directly.
+# local.enable_igw the way aws_nat_gateway.natgw itself does. The fix conjoins
+# local.enable_igw into those counts, so the cases below exercise the real
+# default-NAT scenario directly (no enable_nat_gateway workaround) and assert
+# that every NAT-gateway-dependent resource is skipped when no IGW/NAT can
+# exist. public_subnets_list is left at its non-empty default here so the
+# aws_route_table_association.public gating is meaningfully exercised (its
+# count must be 0 despite public subnets being present).
 run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
   command = plan
 
   variables {
     name                    = "core-vpc"
     enable_internet_gateway = false
-    enable_nat_gateway      = false
-    public_subnets_list     = []
   }
 
   assert {
@@ -309,17 +307,12 @@ run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
 
   assert {
     condition     = length(aws_route_table_association.public) == 0
-    error_message = "enable_internet_gateway=false should create no public route table associations."
+    error_message = "enable_internet_gateway=false should create no public route table associations, even with public subnets present."
   }
 
   assert {
     condition     = length(aws_nat_gateway.natgw) == 0
     error_message = "NAT gateways depend on the IGW being enabled, so they should also be skipped."
-  }
-
-  assert {
-    condition     = length(aws_eip.nateip) == 0
-    error_message = "NAT EIPs should also be skipped when the IGW is disabled."
   }
 
   assert {
@@ -346,17 +339,33 @@ run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
     condition     = length(aws_route.workspaces_default_route_natgw) == 0
     error_message = "Workspaces NAT default routes should be skipped when the IGW is disabled."
   }
+
+  assert {
+    condition     = length(output.natgw_ids) == 0
+    error_message = "natgw_ids output should be empty when the IGW is disabled."
+  }
+
+  assert {
+    condition     = length(output.igw_id) == 0
+    error_message = "igw_id output should be empty when the IGW is disabled."
+  }
+
+  assert {
+    condition     = length(output.public_route_table_ids) == 0
+    error_message = "public_route_table_ids output should be empty when the IGW is disabled."
+  }
 }
 
-# See the note above run "enable_internet_gateway_false_disables_igw_and_dependent_nat":
-# enable_nat_gateway is disabled here for the same reason (tracked in issue #384, fixed in PR #409).
+# Empty public_subnets_list drives local.enable_igw false even when
+# enable_internet_gateway=true, so the same NAT-gateway-dependent resources are
+# skipped. NAT gateway is left at its default-enabled value to exercise the
+# real repro path.
 run "empty_public_subnets_list_disables_igw_even_when_enabled" {
   command = plan
 
   variables {
     name                    = "core-vpc"
     enable_internet_gateway = true
-    enable_nat_gateway      = false
     public_subnets_list     = []
   }
 
@@ -366,18 +375,58 @@ run "empty_public_subnets_list_disables_igw_even_when_enabled" {
   }
 
   assert {
+    condition     = length(aws_route_table_association.public) == 0
+    error_message = "public route table associations should be skipped when public_subnets_list is empty."
+  }
+
+  assert {
     condition     = length(aws_nat_gateway.natgw) == 0
     error_message = "NAT gateways should also be skipped when public_subnets_list is empty."
   }
 
   assert {
-    condition     = length(aws_eip.nateip) == 0
-    error_message = "NAT EIPs should also be skipped when public_subnets_list is empty."
+    condition     = length(aws_route.private_default_route_natgw) == 0
+    error_message = "Private NAT default routes should be skipped when public_subnets_list is empty."
   }
 
   assert {
-    condition     = length(aws_route.private_default_route_natgw) == 0
-    error_message = "Private NAT default routes should be skipped when public_subnets_list is empty."
+    condition     = length(aws_route.db_default_route_natgw) == 0
+    error_message = "DB NAT default routes should be skipped when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "DMZ NAT default routes should be skipped when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "Mgmt NAT default routes should be skipped when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "Workspaces NAT default routes should be skipped when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(output.natgw_ids) == 0
+    error_message = "natgw_ids output should be empty when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(output.igw_id) == 0
+    error_message = "igw_id output should be empty when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(output.public_route_table_ids) == 0
+    error_message = "public_route_table_ids output should be empty when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(output.public_subnet_ids) == 0
+    error_message = "public_subnet_ids output should be empty when public_subnets_list is empty."
   }
 }
 

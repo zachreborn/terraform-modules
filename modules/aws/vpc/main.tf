@@ -310,7 +310,7 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route" "private_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
@@ -331,7 +331,7 @@ resource "aws_route_table" "db_route_table" {
 }
 
 resource "aws_route" "db_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
@@ -352,7 +352,7 @@ resource "aws_route_table" "dmz_route_table" {
 }
 
 resource "aws_route" "dmz_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
@@ -373,7 +373,7 @@ resource "aws_route_table" "mgmt_route_table" {
 }
 
 resource "aws_route" "mgmt_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
@@ -394,7 +394,7 @@ resource "aws_route_table" "workspaces_route_table" {
 }
 
 resource "aws_route" "workspaces_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
@@ -416,7 +416,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnets_list)
+  count          = local.enable_igw ? length(var.public_subnets_list) : 0
   route_table_id = aws_route_table.public_route_table[0].id
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
 }
