@@ -19,13 +19,18 @@ data "aws_region" "current" {}
 ###########################
 locals {
 
-  flow_logs_source = coalesce(
+  # try() guards against the case where none of the five target variables are
+  # set (all null): coalesce() would otherwise fail with "no non-null,
+  # non-empty-string arguments". Real callers always provide exactly one
+  # target list; this only matters for static analysis tools (e.g. tflint)
+  # that evaluate the module with all variables left at their defaults.
+  flow_logs_source = try(coalesce(
     var.flow_eni_ids,
     var.flow_subnet_ids,
     var.flow_transit_gateway_ids,
     var.flow_transit_gateway_attachment_ids,
     var.flow_vpc_ids
-  )
+  ), [])
 }
 
 ###########################
