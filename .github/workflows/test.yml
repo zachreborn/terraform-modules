@@ -217,9 +217,9 @@ jobs:
     # existing required-status-check configuration keeps working (matrix jobs render
     # as "OpenTofu Test (<module>)", never as this exact name).
     needs:
-      - test_opentofu_fmt,
-      - discover_test_modules,
-      - warm_opentofu_provider_cache,
+      - test_opentofu_fmt
+      - discover_test_modules
+      - warm_opentofu_provider_cache
       - test_opentofu_matrix
     if: always()
     runs-on: ubuntu-latest
