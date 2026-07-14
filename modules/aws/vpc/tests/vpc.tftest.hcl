@@ -71,33 +71,163 @@ run "baseline_plans_with_defaults" {
   }
 
   assert {
-    condition     = output.vpc_id != null
-    error_message = "vpc_id output should resolve."
+    condition     = output.vpc_id == aws_vpc.vpc.id
+    error_message = "vpc_id output should equal the VPC resource's id."
   }
 
   assert {
-    condition     = length(output.private_subnet_ids) == 3
-    error_message = "private_subnet_ids output should contain 3 entries."
+    condition     = output.vpc_cidr_block == aws_vpc.vpc.cidr_block
+    error_message = "vpc_cidr_block output should equal the VPC resource's cidr_block."
   }
 
   assert {
-    condition     = length(output.public_subnet_ids) == 3
-    error_message = "public_subnet_ids output should contain 3 entries."
+    condition     = output.vpc_arn == aws_vpc.vpc.arn
+    error_message = "vpc_arn output should equal the VPC resource's arn."
   }
 
   assert {
-    condition     = length(output.natgw_ids) == 3
-    error_message = "natgw_ids output should contain 3 entries."
+    condition     = output.default_security_group_id == aws_vpc.vpc[*].default_security_group_id
+    error_message = "default_security_group_id output should equal the VPC resource's default_security_group_id."
   }
 
   assert {
-    condition     = length(output.igw_id) == 1
-    error_message = "igw_id output should contain 1 entry."
+    condition     = output.private_subnet_ids == aws_subnet.private_subnets[*].id
+    error_message = "private_subnet_ids output should equal the private subnet resources' ids."
   }
 
   assert {
-    condition     = output.name == "core-vpc"
-    error_message = "name output should reflect the Name tag."
+    condition     = output.public_subnet_ids == aws_subnet.public_subnets[*].id
+    error_message = "public_subnet_ids output should equal the public subnet resources' ids."
+  }
+
+  assert {
+    condition     = output.db_subnet_ids == aws_subnet.db_subnets[*].id
+    error_message = "db_subnet_ids output should equal the db subnet resources' ids."
+  }
+
+  assert {
+    condition     = output.dmz_subnet_ids == aws_subnet.dmz_subnets[*].id
+    error_message = "dmz_subnet_ids output should equal the dmz subnet resources' ids."
+  }
+
+  assert {
+    condition     = output.mgmt_subnet_ids == aws_subnet.mgmt_subnets[*].id
+    error_message = "mgmt_subnet_ids output should equal the mgmt subnet resources' ids."
+  }
+
+  assert {
+    condition     = output.workspaces_subnet_ids == aws_subnet.workspaces_subnets[*].id
+    error_message = "workspaces_subnet_ids output should equal the workspaces subnet resources' ids."
+  }
+
+  assert {
+    condition     = output.private_subnets == aws_subnet.private_subnets[*].cidr_block
+    error_message = "private_subnets output should equal the private subnet resources' cidr_blocks."
+  }
+
+  assert {
+    condition     = output.public_subnets == aws_subnet.public_subnets[*].cidr_block
+    error_message = "public_subnets output should equal the public subnet resources' cidr_blocks."
+  }
+
+  assert {
+    condition     = output.private_subnet_arns == aws_subnet.private_subnets[*].arn
+    error_message = "private_subnet_arns output should equal the private subnet resources' arns."
+  }
+
+  assert {
+    condition     = output.availability_zone == aws_subnet.private_subnets[*].availability_zone
+    error_message = "availability_zone output should equal the private subnet resources' availability_zones."
+  }
+
+  assert {
+    condition     = output.public_route_table_ids == aws_route_table.public_route_table[*].id
+    error_message = "public_route_table_ids output should equal the public route table resources' ids."
+  }
+
+  assert {
+    condition     = output.private_route_table_ids == aws_route_table.private_route_table[*].id
+    error_message = "private_route_table_ids output should equal the private route table resources' ids."
+  }
+
+  assert {
+    condition     = output.db_route_table_ids == aws_route_table.db_route_table[*].id
+    error_message = "db_route_table_ids output should equal the db route table resources' ids."
+  }
+
+  assert {
+    condition     = output.dmz_route_table_ids == aws_route_table.dmz_route_table[*].id
+    error_message = "dmz_route_table_ids output should equal the dmz route table resources' ids."
+  }
+
+  assert {
+    condition     = output.mgmt_route_table_ids == aws_route_table.mgmt_route_table[*].id
+    error_message = "mgmt_route_table_ids output should equal the mgmt route table resources' ids."
+  }
+
+  assert {
+    condition     = output.workspaces_route_table_ids == aws_route_table.workspaces_route_table[*].id
+    error_message = "workspaces_route_table_ids output should equal the workspaces route table resources' ids."
+  }
+
+  assert {
+    condition     = output.nat_eips == aws_eip.nateip[*].id
+    error_message = "nat_eips output should equal the NAT EIP resources' ids."
+  }
+
+  assert {
+    condition     = output.nat_eips_public_ips == aws_eip.nateip[*].public_ip
+    error_message = "nat_eips_public_ips output should equal the NAT EIP resources' public_ips."
+  }
+
+  assert {
+    condition     = output.natgw_ids == aws_nat_gateway.natgw[*].id
+    error_message = "natgw_ids output should equal the NAT gateway resources' ids."
+  }
+
+  assert {
+    condition     = output.igw_id == aws_internet_gateway.igw[*].id
+    error_message = "igw_id output should equal the IGW resource's id."
+  }
+
+  assert {
+    condition     = output.name == aws_vpc.vpc.tags["Name"]
+    error_message = "name output should reflect the VPC resource's Name tag."
+  }
+}
+
+run "ipam_sourced_cidr_passes_ipam_arguments_through" {
+  command = plan
+
+  variables {
+    name                = "core-vpc"
+    enable_flow_logs    = false
+    ipv4_ipam_pool_id   = "ipam-pool-0123456789abcdef0"
+    ipv4_netmask_length = 20
+  }
+
+  override_resource {
+    target = aws_vpc.vpc
+    values = {
+      cidr_block = "10.222.0.0/16"
+    }
+  }
+
+  # Note: cidr_block is Optional+Computed on aws_vpc, so once ipv4_ipam_pool_id
+  # is set and cidr_block is passed through as null, the provider (real or
+  # mocked) resolves a concrete value for it rather than leaving it null --
+  # this mirrors real behavior (the planned value would be "(known after
+  # apply)", not null). The meaningful, directly-assertable proof that the
+  # module took the IPAM branch of the conditional is that both IPAM
+  # arguments below pass through unchanged.
+  assert {
+    condition     = aws_vpc.vpc.ipv4_ipam_pool_id == "ipam-pool-0123456789abcdef0"
+    error_message = "ipv4_ipam_pool_id should pass through unchanged."
+  }
+
+  assert {
+    condition     = aws_vpc.vpc.ipv4_netmask_length == 20
+    error_message = "ipv4_netmask_length should pass through unchanged."
   }
 }
 
@@ -144,23 +274,17 @@ run "enable_nat_gateway_false_creates_no_nat_resources" {
   }
 }
 
-# NOTE: enable_nat_gateway and public_subnets_list are both neutralized below.
-# With the default enable_nat_gateway=true and a non-empty public_subnets_list,
-# disabling the IGW (via enable_internet_gateway=false, or an empty
-# public_subnets_list on its own) crashes plan because several resources (the
-# *_default_route_natgw routes and aws_route_table_association.public) key
-# their `count` off enable_nat_gateway / subnet-list length alone, without also
-# checking local.enable_igw the way aws_nat_gateway.natgw itself does. This is
-# a real module bug, filed as https://github.com/zachreborn/terraform-modules/issues/384
-# -- not a test bug, so it is not being worked around by editing main.tf here.
+# Regression coverage for https://github.com/zachreborn/terraform-modules/issues/384:
+# NAT gateway/EIP creation and the *_default_route_natgw routes and
+# aws_route_table_association.public must be skipped (not crash) whenever the
+# IGW is disabled, even though enable_nat_gateway stays at its default true
+# and public_subnets_list stays non-empty.
 run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
   command = plan
 
   variables {
     name                    = "core-vpc"
     enable_internet_gateway = false
-    enable_nat_gateway      = false
-    public_subnets_list     = []
   }
 
   assert {
@@ -177,23 +301,70 @@ run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
     condition     = length(aws_route_table_association.public) == 0
     error_message = "enable_internet_gateway=false should create no public route table associations."
   }
+
+  assert {
+    condition     = length(aws_nat_gateway.natgw) == 0
+    error_message = "NAT gateways depend on the IGW being enabled, so they should also be skipped, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_eip.nateip) == 0
+    error_message = "NAT EIPs should also be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == 0
+    error_message = "Private NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_natgw) == 0
+    error_message = "DB NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "DMZ NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "Mgmt NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "Workspaces NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
+  }
 }
 
-# See the note above run "enable_internet_gateway_false_disables_igw_and_dependent_nat":
-# enable_nat_gateway is disabled here for the same reason (tracked in issue #384).
 run "empty_public_subnets_list_disables_igw_even_when_enabled" {
   command = plan
 
   variables {
     name                    = "core-vpc"
     enable_internet_gateway = true
-    enable_nat_gateway      = false
     public_subnets_list     = []
   }
 
   assert {
     condition     = length(aws_internet_gateway.igw) == 0
     error_message = "local.enable_igw should be false when public_subnets_list is empty, even if enable_internet_gateway=true."
+  }
+
+  assert {
+    condition     = length(aws_nat_gateway.natgw) == 0
+    error_message = "NAT gateways should also be skipped when public_subnets_list is empty, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_eip.nateip) == 0
+    error_message = "NAT EIPs should also be skipped when public_subnets_list is empty, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == 0
+    error_message = "Private NAT default routes should be skipped when public_subnets_list is empty, even with enable_nat_gateway left at its default true."
   }
 }
 

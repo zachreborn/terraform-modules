@@ -107,6 +107,21 @@ run "internet_monitor_s3_delivery_configured_when_bucket_name_set" {
     condition     = length(aws_internetmonitor_monitor.this[0].internet_measurements_log_delivery) == 1
     error_message = "The dynamic internet_measurements_log_delivery block should be populated when internet_monitor_s3_bucket_name is set."
   }
+
+  assert {
+    condition     = aws_internetmonitor_monitor.this[0].internet_measurements_log_delivery[0].s3_config[0].bucket_name == "core-vpc-internet-monitor-logs"
+    error_message = "The S3 delivery block's bucket_name should match internet_monitor_s3_bucket_name."
+  }
+
+  assert {
+    condition     = aws_internetmonitor_monitor.this[0].internet_measurements_log_delivery[0].s3_config[0].bucket_prefix == "internet-monitor/"
+    error_message = "The S3 delivery block's bucket_prefix should match internet_monitor_s3_bucket_prefix."
+  }
+
+  assert {
+    condition     = aws_internetmonitor_monitor.this[0].internet_measurements_log_delivery[0].s3_config[0].log_delivery_status == "ENABLED"
+    error_message = "The S3 delivery block's log_delivery_status should match internet_monitor_s3_bucket_status."
+  }
 }
 
 run "internet_monitor_s3_delivery_omitted_when_bucket_name_unset" {

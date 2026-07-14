@@ -51,6 +51,21 @@ run "connect_peer_defaults_are_applied" {
     }
   }
 
+  # transit_gateway_address is Optional+Computed on the underlying resource and
+  # is left unset in the peers input above. Give it a distinctive sentinel via
+  # override_resource (which only takes effect for attributes that are still
+  # null/computed in this run's plan) and assert that exact sentinel. If a
+  # module regression hard-coded any address for transit_gateway_address
+  # instead of passing each.value.transit_gateway_address through, the
+  # attribute would no longer be eligible for this override and the assertion
+  # below would fail.
+  override_resource {
+    target = aws_ec2_transit_gateway_connect_peer.peer
+    values = {
+      transit_gateway_address = "203.0.113.55"
+    }
+  }
+
   assert {
     condition     = length(aws_ec2_transit_gateway_connect_peer.peer) == 1
     error_message = "Expected exactly one connect peer to be planned."
@@ -62,8 +77,8 @@ run "connect_peer_defaults_are_applied" {
   }
 
   assert {
-    condition     = aws_ec2_transit_gateway_connect_peer.peer["sdwan_vedge_1"].transit_gateway_address != null
-    error_message = "transit_gateway_address is Optional+Computed on the underlying resource -- when not set explicitly it should be left for AWS/the provider to assign, not coerced to a fixed value."
+    condition     = aws_ec2_transit_gateway_connect_peer.peer["sdwan_vedge_1"].transit_gateway_address == "203.0.113.55"
+    error_message = "transit_gateway_address should reflect the provider-assigned (overridden) sentinel, proving the module left it unset rather than coercing it to a fixed value."
   }
 
   assert {
@@ -135,7 +150,32 @@ run "multiple_connect_peers_expand_via_for_each" {
   }
 
   assert {
-    condition     = output.peer_addresses["sdwan_vedge_1"] == "203.0.113.11"
+    condition     = output.configurations["sdwan_vedge_1"].bgp_asn == "64512"
+    error_message = "configurations output's bgp_asn field should reflect the connect peer's actual bgp_asn."
+  }
+
+  assert {
+    condition     = output.configurations["sdwan_vedge_1"].id == aws_ec2_transit_gateway_connect_peer.peer["sdwan_vedge_1"].id
+    error_message = "configurations output's id field should match the connect peer resource's id."
+  }
+
+  assert {
+    condition     = output.configurations["sdwan_vedge_1"].peer_address == var.peers["sdwan_vedge_1"].peer_address
+    error_message = "configurations output's peer_address field should match the configured peer_address."
+  }
+
+  assert {
+    condition     = length(output.configurations["sdwan_vedge_1"].inside_cidr_blocks) == 1
+    error_message = "configurations output should expose the inside_cidr_blocks field by its correct (non-typo'd) name with the configured CIDR block."
+  }
+
+  assert {
+    condition     = output.peer_addresses["sdwan_vedge_1"] == var.peers["sdwan_vedge_1"].peer_address
+    error_message = "peer_addresses output should map each peer to its configured address."
+  }
+
+  assert {
+    condition     = output.peer_addresses["sdwan_vedge_2"] == var.peers["sdwan_vedge_2"].peer_address
     error_message = "peer_addresses output should map each peer to its configured address."
   }
 }

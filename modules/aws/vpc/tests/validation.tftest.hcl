@@ -26,13 +26,25 @@ run "rejects_invalid_instance_tenancy" {
   expect_failures = [var.instance_tenancy]
 }
 
-run "rejects_subnet_index_out_of_range" {
+run "rejects_subnet_index_above_range" {
   command = plan
 
   variables {
     name             = "core-vpc"
     enable_flow_logs = false
     subnet_indices   = [3]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_subnet_index_below_range" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    subnet_indices   = [-1]
   }
 
   expect_failures = [var.subnet_indices]

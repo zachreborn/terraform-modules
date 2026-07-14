@@ -72,18 +72,33 @@ run "baseline_plans_with_defaults" {
   }
 
   assert {
-    condition     = output.id != null
-    error_message = "id output should resolve."
+    condition     = output.id == aws_ec2_transit_gateway.transit_gateway.id
+    error_message = "id output should equal the transit gateway resource's id."
   }
 
   assert {
-    condition     = output.arn != null
-    error_message = "arn output should resolve."
+    condition     = output.arn == aws_ec2_transit_gateway.transit_gateway.arn
+    error_message = "arn output should equal the transit gateway resource's arn."
   }
 
   assert {
-    condition     = output.bgp_asn == 64525
+    condition     = output.bgp_asn == aws_ec2_transit_gateway.transit_gateway.amazon_side_asn
     error_message = "bgp_asn output should mirror amazon_side_asn."
+  }
+
+  assert {
+    condition     = output.association_default_route_table_id == aws_ec2_transit_gateway.transit_gateway.association_default_route_table_id
+    error_message = "association_default_route_table_id output should equal the transit gateway resource's association_default_route_table_id."
+  }
+
+  assert {
+    condition     = output.propagation_default_route_table_id == aws_ec2_transit_gateway.transit_gateway.propagation_default_route_table_id
+    error_message = "propagation_default_route_table_id output should equal the transit gateway resource's propagation_default_route_table_id."
+  }
+
+  assert {
+    condition     = output.transit_gateway_cidr_blocks == aws_ec2_transit_gateway.transit_gateway.transit_gateway_cidr_blocks
+    error_message = "transit_gateway_cidr_blocks output should equal the transit gateway resource's transit_gateway_cidr_blocks (both null by default)."
   }
 }
 

@@ -73,8 +73,8 @@ run "baseline_single_attachment_with_defaults" {
   }
 
   assert {
-    condition     = output.ids["transit_vpc"] != null
-    error_message = "ids output should expose the attachment's ID."
+    condition     = output.ids["transit_vpc"] == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc"].id
+    error_message = "ids output should equal the attachment resource's id."
   }
 
   assert {
@@ -162,8 +162,68 @@ run "for_each_expands_to_one_attachment_per_vpc" {
   }
 
   assert {
+    condition     = output.info["transit_vpc_a"].id == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc_a"].id
+    error_message = "info output's id field should match the attachment resource's id."
+  }
+
+  assert {
+    condition     = output.info["transit_vpc_a"].transit_gateway_id == var.transit_gateway_id
+    error_message = "info output's transit_gateway_id field should match the configured transit_gateway_id."
+  }
+
+  assert {
+    condition     = output.info["transit_vpc_a"].subnet_ids == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc_a"].subnet_ids
+    error_message = "info output's subnet_ids field should match the attachment resource's subnet_ids."
+  }
+
+  assert {
+    condition     = output.info["transit_vpc_a"].appliance_mode_support == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc_a"].appliance_mode_support
+    error_message = "info output's appliance_mode_support field should match the attachment resource's appliance_mode_support."
+  }
+
+  assert {
     condition     = length(output.vpc_owner_id) == 2
     error_message = "vpc_owner_id output should contain one entry per VPC."
+  }
+
+  assert {
+    condition     = output.vpc_owner_id[aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc_a"].vpc_id] == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc_a"].vpc_owner_id
+    error_message = "vpc_owner_id output should map each attachment's vpc_id to that attachment resource's vpc_owner_id."
+  }
+}
+
+run "empty_vpc_ids_map_creates_no_attachments" {
+  command = plan
+
+  variables {
+    transit_gateway_id = "tgw-0123456789abcdef0"
+    enable_flow_logs   = false
+    vpc_ids            = {}
+  }
+
+  assert {
+    condition     = length(aws_ec2_transit_gateway_vpc_attachment.this) == 0
+    error_message = "An empty vpc_ids map should plan zero attachments."
+  }
+
+  assert {
+    condition     = length(output.ids) == 0
+    error_message = "ids output should be empty when vpc_ids is empty."
+  }
+
+  assert {
+    condition     = length(output.ids_list) == 0
+    error_message = "ids_list output should be empty when vpc_ids is empty."
+  }
+
+  assert {
+    condition     = length(output.info) == 0
+    error_message = "info output should be empty when vpc_ids is empty."
+  }
+
+  assert {
+    condition     = length(output.vpc_owner_id) == 0
+    error_message = "vpc_owner_id output should be empty when vpc_ids is empty."
   }
 }
 
