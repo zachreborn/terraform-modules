@@ -80,6 +80,11 @@ run "notifications_enabled_with_create_sns_topic_wires_both_child_modules" {
   }
 
   assert {
+    condition     = module.amplify_notifications_event[0].target_arn == module.amplify_notifications_sns[0].topic_arn
+    error_message = "Expected the EventBridge target to consume the sns child module's topic_arn directly, proving the two child modules are actually wired together (not just each independently non-null)."
+  }
+
+  assert {
     condition     = module.amplify_notifications_sns[0].subscription_arns["ops@example.com"] != null
     error_message = "Expected notification_emails to be wired into the sns child module's subscriptions map, keyed by email."
   }

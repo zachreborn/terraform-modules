@@ -87,8 +87,52 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
-    condition     = tolist(aws_cloudformation_stack_set_instance.this.deployment_targets[0].organizational_unit_ids) == tolist(["ou-abcd-11111111"])
+    condition     = aws_cloudformation_stack_set_instance.this.deployment_targets[0].organizational_unit_ids == toset(["ou-abcd-11111111"])
     error_message = "deployment_targets.organizational_unit_ids should pass through unchanged."
+  }
+}
+
+# NOTE: main.tf's template_body/template_url ternaries have the same mutual-nulling defect
+# as modules/aws/cloudformation/stack (tracked separately as issue #400, related to #377):
+# each ternary checks the *other* variable independently, so supplying both nulls out both
+# instead of one taking precedence. template_body is Optional+Computed in the AWS provider
+# schema (template_url is not), so an explicit config-level null on template_body defers to
+# the provider and is filled with an arbitrary mock value here rather than surfacing as a
+# literal null -- hence we assert it no longer equals the caller-supplied literal, instead
+# of asserting an exact null.
+run "template_url_is_used_when_template_body_is_absent" {
+  command = plan
+
+  variables {
+    name                    = "test-stack-set"
+    template_url            = "https://example.org/template.json"
+    organizational_unit_ids = ["ou-abcd-11111111"]
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_set.this.template_url == "https://example.org/template.json"
+    error_message = "template_url should pass through when template_body is not set."
+  }
+}
+
+run "providing_both_template_body_and_template_url_nulls_out_both" {
+  command = plan
+
+  variables {
+    name                    = "test-stack-set"
+    template_body           = jsonencode({ Resources = {} })
+    template_url            = "https://example.org/template.json"
+    organizational_unit_ids = ["ou-abcd-11111111"]
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_set.this.template_url == null
+    error_message = "Current (buggy) behavior: template_url is nulled out when template_body is also non-null (tracked in issue #400)."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_set.this.template_body != jsonencode({ Resources = {} })
+    error_message = "Current (buggy) behavior: the caller-supplied template_body literal is discarded when template_url is also non-null (tracked in issue #400)."
   }
 }
 
@@ -204,7 +248,7 @@ run "stack_set_instance_deployment_targets_pass_through" {
   }
 
   assert {
-    condition     = tolist(aws_cloudformation_stack_set_instance.this.deployment_targets[0].accounts) == tolist(["111111111111", "222222222222"])
+    condition     = aws_cloudformation_stack_set_instance.this.deployment_targets[0].accounts == toset(["111111111111", "222222222222"])
     error_message = "deployment_targets.accounts should pass through unchanged."
   }
 
