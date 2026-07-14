@@ -50,7 +50,16 @@ run "valid_baseline_plans_successfully" {
   }
 }
 
-run "disable_rollback_true_forces_on_failure_to_null" {
+# NOTE: same root-cause pattern as the policy_body/policy_url and template_body/template_url
+# mutual-nulling bugs tracked in issue #377 (broadened via a comment on that issue to cover
+# this pair too): the disable_rollback/on_failure ternaries each check the *original* var
+# independently (`disable_rollback = var.on_failure == null ? var.disable_rollback : false`
+# and `on_failure = var.disable_rollback ? null : var.on_failure`), so when a caller
+# supplies BOTH disable_rollback = true and a non-null on_failure, disable_rollback is
+# forced back to false (discarding the caller's true) AND on_failure is nulled out
+# (discarding the caller's requested value) -- neither input survives. This test documents
+# the actual current plan-time behavior rather than the likely-intended one.
+run "providing_both_disable_rollback_true_and_on_failure_nulls_out_both" {
   command = plan
 
   variables {
@@ -61,7 +70,12 @@ run "disable_rollback_true_forces_on_failure_to_null" {
 
   assert {
     condition     = aws_cloudformation_stack.this.on_failure == null
-    error_message = "on_failure should be forced to null when disable_rollback is true, since the two conflict."
+    error_message = "Current (buggy) behavior: on_failure is nulled out when disable_rollback is true."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack.this.disable_rollback == false
+    error_message = "Current (buggy) behavior: disable_rollback is forced back to false (discarding the caller's true) because on_failure is also non-null."
   }
 }
 

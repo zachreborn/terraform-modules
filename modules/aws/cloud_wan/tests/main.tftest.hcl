@@ -31,6 +31,16 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
+    condition     = aws_networkmanager_transit_gateway_registration.this["arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-0123456789abcdef0"].transit_gateway_arn == "arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-0123456789abcdef0"
+    error_message = "The registration should be wired to the exact input transit gateway ARN."
+  }
+
+  assert {
+    condition     = aws_networkmanager_transit_gateway_registration.this["arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-0123456789abcdef0"].global_network_id == "gn-01234567890abcdef"
+    error_message = "The registration should be wired to the global network's id."
+  }
+
+  assert {
     condition     = output.global_network_arn == "arn:aws:networkmanager::123456789012:global-network/gn-01234567890abcdef"
     error_message = "global_network_arn output should expose the global network's arn."
   }
