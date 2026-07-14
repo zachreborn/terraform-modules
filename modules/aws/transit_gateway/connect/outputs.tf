@@ -45,7 +45,7 @@ output "configurations" {
   value = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => {
     bgp_asn                 = value.bgp_asn
     id                      = value.id
-    insider_cidr_blocks     = value.inside_cidr_blocks
+    inside_cidr_blocks      = value.inside_cidr_blocks
     peer_address            = value.peer_address
     transit_gateway_address = value.transit_gateway_address
     }
