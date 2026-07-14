@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  test_opentofu:
-    name: Test OpenTofu
+  test_opentofu_fmt:
+    name: OpenTofu Format Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,22 +35,247 @@ jobs:
         id: fmt
         run: tofu fmt -check -diff -recursive
 
-      - name: OpenTofu test
-        id: test
-        # Runs `tofu test` in every module directory that has its own tests/ directory.
-        # Modules without tests are skipped, so this scales automatically as more modules
-        # adopt native tofu test coverage. See AGENTS.md § Module Design Specifications
-        # (Native Test Coverage) for the coverage requirements this step enforces.
+  discover_test_modules:
+    name: Discover Test Modules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      modules: ${{ steps.discover.outputs.modules }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Discover module test directories
+        id: discover
+        # Finds every module directory that has its own tests/ directory and emits it
+        # as a JSON array so the matrix job below can test each module in parallel
+        # instead of looping over them sequentially on a single runner. Modules without
+        # tests are skipped, so this scales automatically as more modules adopt native
+        # tofu test coverage. See AGENTS.md § Module Design Specifications
+        # (Native Test Coverage) for the coverage requirements this enforces.
+        # `xargs -r` avoids running `dirname` with no arguments (which fails) if the
+        # repo ever has zero modules with a tests/ directory.
         run: |
           set -euo pipefail
-          status=0
-          while IFS= read -r -d '' dir; do
-            module_dir="$(dirname "$dir")"
-            echo "::group::tofu test - ${module_dir}"
-            (cd "${module_dir}" && tofu init -backend=false && tofu test) || status=1
+          modules="$(find modules -type d -name tests -print0 \
+            | xargs -r -0 -n1 dirname \
+            | sort -u \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          echo "modules=${modules}" >> "$GITHUB_OUTPUT"
+
+  warm_opentofu_provider_cache:
+    name: Warm OpenTofu Provider Cache
+    needs: discover_test_modules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: OpenTofu - Setup OpenTofu
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Cache OpenTofu provider plugins
+        # Keyed on github.run_id + github.run_attempt so every run - and every retry
+        # of that run - gets a genuine cache miss here, and therefore a fresh save at
+        # the end. run_id alone is NOT enough: it stays identical across a manual
+        # "re-run", so a re-run would get an exact hit on whatever the first attempt
+        # saved (possibly an incomplete warm if that attempt failed partway through)
+        # and never write a fresh entry. This job is the only writer, so that per-run
+        # cost is one small upload, not 38 (see the matrix job below). A content hash
+        # of modules/**/main.tf was tried instead of run_id, but tested modules use
+        # open-ended constraints like `aws >= 6.0.0`, so a newer provider release can
+        # become the selected version with no main.tf change at all. Since
+        # actions/cache never resaves on an exact key hit, that hash-based key would
+        # still freeze the cache the moment a later PR reused the same hash, silently
+        # discarding the newly warmed provider on every run after that. restore-keys
+        # below still gives a fast read from the most recent previous run/attempt.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: tofu-providers-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            tofu-providers-${{ runner.os }}-
+
+      - name: Warm provider cache for every discovered module
+        env:
+          MODULES: ${{ needs.discover_test_modules.outputs.modules }}
+          # Without a committed .terraform.lock.hcl (gitignored in this repo, since
+          # module libraries shouldn't pin versions for their callers), OpenTofu only
+          # reuses a TF_PLUGIN_CACHE_DIR entry if it already matches a checksum in
+          # THAT module's lock file - which is never true here, because `tofu init`
+          # generates a brand new lock file from scratch in every module directory.
+          # Without this setting the cache dir still gets populated, but every
+          # module's `tofu init` re-downloads anyway, which is what made an earlier
+          # version of this job take as long as the original, uncached, sequential
+          # loop it replaced. This is OpenTofu's documented escape hatch for exactly
+          # that situation, but it is not a free lunch: it makes OpenTofu trust the
+          # cached provider package's content as-is, without verifying it against a
+          # registry-provided checksum for this run (the install log shows
+          # "(unauthenticated)" instead of "(signed, key ID ...)" once this is set).
+          # That's an acceptable tradeoff here specifically because the cache
+          # directory is populated exclusively by this same warm-cache job on
+          # GitHub-hosted runners (never user-supplied or externally writable), and
+          # every downstream use is `tofu test` against mocked providers, never a
+          # real plan/apply - not because the discarded lock file itself doesn't
+          # matter.
+          # See https://github.com/opentofu/opentofu/issues/3094
+          TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE: "true"
+        # Runs `tofu init` (never `tofu test`) for every discovered module so the
+        # shared plugin cache picks up every distinct provider in use across all
+        # tested modules, not just whichever module a matrix job happens to test
+        # (this repo already has untested Datadog/Cloudflare/Scalr/vSphere modules
+        # that will need their own providers cached once they gain test coverage).
+        # Modules that resolve to a provider version already present in the cache
+        # restored above reuse it directly instead of re-downloading; only genuinely
+        # new provider versions hit the network. Best-effort: an individual module's
+        # init failing here doesn't fail this job, since correctness is already
+        # verified by that module's own job in the test matrix below.
+        run: |
+          set -euo pipefail
+          export TF_PLUGIN_CACHE_DIR="${HOME}/.terraform.d/plugin-cache"
+          mkdir -p "${TF_PLUGIN_CACHE_DIR}"
+          while IFS= read -r module; do
+            echo "::group::warm cache - ${module}"
+            (cd "${module}" && tofu init -backend=false) || echo "::warning::tofu init failed while warming cache for ${module}"
             echo "::endgroup::"
-          done < <(find modules -type d -name tests -print0)
-          exit "${status}"
+          done < <(jq -r '.[]' <<< "${MODULES}")
+
+  test_opentofu_matrix:
+    name: "OpenTofu Test (${{ matrix.module }})"
+    needs: [discover_test_modules, warm_opentofu_provider_cache]
+    # Guards against "Matrix vector does not contain any values": if the repo ever has
+    # zero modules with a tests/ directory, discover_test_modules emits `[]` and this
+    # job (matrix included) is skipped entirely instead of erroring, since `if:` here
+    # is evaluated before the matrix strategy is expanded.
+    if: needs.discover_test_modules.outputs.modules != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.discover_test_modules.outputs.modules) }}
+
+    steps:
+      - name: OpenTofu - Setup OpenTofu
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Restore OpenTofu provider plugins
+        # Read-only restore, using the exact same per-run-and-attempt key the
+        # warm-cache job just saved above (not just the restore-keys prefix): matrix
+        # jobs start only after that job completes, so this key is always present and
+        # always the freshest entry - never an older, stale exact match left over
+        # from a previous run OR a previous attempt of this same run.
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: tofu-providers-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            tofu-providers-${{ runner.os }}-
+
+      - name: OpenTofu test
+        id: test
+        env:
+          # Passed via env (rather than interpolated directly into the script below)
+          # so the matrix value can't be spliced into the shell command as raw text.
+          # See https://docs.zizmor.sh/audits/#template-injection
+          MODULE: ${{ matrix.module }}
+          # See the cache-warming job above for why this is required (without it,
+          # OpenTofu ignores the restored cache and re-downloads anyway) and the real
+          # trust tradeoff it implies (skips registry checksum verification for this
+          # run).
+          TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE: "true"
+        # Runs `tofu test` for a single module directory discovered above. Each module
+        # runs in its own parallel job instead of a sequential loop over every module.
+        run: |
+          set -euo pipefail
+          export TF_PLUGIN_CACHE_DIR="${HOME}/.terraform.d/plugin-cache"
+          mkdir -p "${TF_PLUGIN_CACHE_DIR}"
+          echo "::group::tofu test - ${MODULE}"
+          cd "${MODULE}"
+          tofu init -backend=false
+          tofu test
+          echo "::endgroup::"
+
+  test_opentofu:
+    name: Test OpenTofu
+    # Aggregates every upstream job into a single check named "Test OpenTofu" so
+    # existing required-status-check configuration keeps working (matrix jobs render
+    # as "OpenTofu Test (<module>)", never as this exact name).
+    needs:
+      [
+        test_opentofu_fmt,
+        discover_test_modules,
+        warm_opentofu_provider_cache,
+        test_opentofu_matrix,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check OpenTofu job results
+        env:
+          MODULES: ${{ needs.discover_test_modules.outputs.modules }}
+        run: |
+          set -euo pipefail
+          fmt_result="${{ needs.test_opentofu_fmt.result }}"
+          discover_result="${{ needs.discover_test_modules.result }}"
+          warm_result="${{ needs.warm_opentofu_provider_cache.result }}"
+          test_result="${{ needs.test_opentofu_matrix.result }}"
+          echo "OpenTofu Format Check: ${fmt_result}"
+          echo "Discover Test Modules: ${discover_result}"
+          echo "Warm OpenTofu Provider Cache: ${warm_result}"
+          echo "OpenTofu Test (matrix): ${test_result}"
+
+          failed=0
+          if [ "${fmt_result}" != "success" ]; then
+            echo "OpenTofu Format Check did not succeed."
+            failed=1
+          fi
+          if [ "${discover_result}" != "success" ]; then
+            echo "Discover Test Modules did not succeed."
+            failed=1
+          fi
+          if [ "${warm_result}" != "success" ]; then
+            echo "Warm OpenTofu Provider Cache did not succeed."
+            failed=1
+          fi
+          # test_opentofu_matrix's `if:` implicitly requires discover_test_modules and
+          # warm_opentofu_provider_cache to have succeeded (see that job's `if:`
+          # comment), so a "skipped" result here is only legitimate when discovery
+          # itself genuinely found zero modules to test - not when it's masking an
+          # upstream failure that was already caught above.
+          if [ "${MODULES}" = "[]" ]; then
+            if [ "${test_result}" != "skipped" ]; then
+              echo "Expected OpenTofu Test (matrix) to be skipped for zero discovered modules, got: ${test_result}"
+              failed=1
+            fi
+          else
+            if [ "${test_result}" != "success" ]; then
+              echo "OpenTofu Test (matrix) did not succeed."
+              failed=1
+            fi
+          fi
+
+          if [ "${failed}" -ne 0 ]; then
+            exit 1
+          fi
 
   test_unicode:
     name: Invisible Unicode Check
