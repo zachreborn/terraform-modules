@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.6](https://github.com/zachreborn/terraform-modules/compare/v10.2.5...v10.2.6) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** anchor enum regex validations for shutdown behavior and auto_recovery ([#412](https://github.com/zachreborn/terraform-modules/issues/412)) ([aebf992](https://github.com/zachreborn/terraform-modules/commit/aebf992962503d7cbd975d1b976d5e9755ff97fe))
+
 ## [10.2.5](https://github.com/zachreborn/terraform-modules/compare/v10.2.4...v10.2.5) (2026-07-14)
 
 
