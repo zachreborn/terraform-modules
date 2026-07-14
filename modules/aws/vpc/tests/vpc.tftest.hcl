@@ -596,4 +596,14 @@ run "enable_flow_logs_true_wires_vpc_id_into_flow_logs_module" {
     condition     = module.vpc_flow_logs[0].arn != null
     error_message = "The flow_logs module's arn output should resolve, proving flow_vpc_ids wiring (coalesce) succeeded."
   }
+
+  assert {
+    condition     = length(module.vpc_flow_logs[0].flow_log_ids) == 1
+    error_message = "Exactly one aws_flow_log resource should be created inside the flow_logs module, targeting the VPC."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].flow_log_vpc_ids[0] == aws_vpc.vpc.id
+    error_message = "The flow log's vpc_id should equal the parent VPC's id, proving flow_vpc_ids was actually wired through (not just that some flow log exists)."
+  }
 }

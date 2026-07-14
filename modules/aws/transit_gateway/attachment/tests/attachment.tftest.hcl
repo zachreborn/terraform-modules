@@ -250,6 +250,16 @@ run "enable_flow_logs_true_creates_flow_logs_module" {
     condition     = module.vpc_flow_logs[0].arn != null
     error_message = "The flow_logs module's arn output should resolve, proving the transit gateway attachment ID wiring succeeded."
   }
+
+  assert {
+    condition     = length(module.vpc_flow_logs[0].flow_log_ids) == 1
+    error_message = "Exactly one aws_flow_log resource should be created inside the flow_logs module, targeting the transit gateway attachment."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].flow_log_transit_gateway_attachment_ids[0] == aws_ec2_transit_gateway_vpc_attachment.this["transit_vpc"].id
+    error_message = "The flow log's transit_gateway_attachment_id should equal the attachment resource's id, proving flow_transit_gateway_attachment_ids was actually wired through."
+  }
 }
 
 run "enable_flow_logs_false_skips_flow_logs_module" {

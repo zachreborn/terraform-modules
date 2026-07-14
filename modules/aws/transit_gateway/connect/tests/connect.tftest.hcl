@@ -85,6 +85,11 @@ run "connect_peer_defaults_are_applied" {
     condition     = aws_ec2_transit_gateway_connect_peer.peer["sdwan_vedge_1"].tags["Name"] == "sdwan_vedge_1"
     error_message = "Connect peer Name tag should default to its map key."
   }
+
+  assert {
+    condition     = output.transit_gateway_addresses["sdwan_vedge_1"] == "203.0.113.55"
+    error_message = "transit_gateway_addresses output should reflect the provider-assigned (overridden) sentinel."
+  }
 }
 
 run "connect_peer_overrides_are_honored" {
@@ -167,6 +172,11 @@ run "multiple_connect_peers_expand_via_for_each" {
   assert {
     condition     = length(output.configurations["sdwan_vedge_1"].inside_cidr_blocks) == 1
     error_message = "configurations output should expose the inside_cidr_blocks field by its correct (non-typo'd) name with the configured CIDR block."
+  }
+
+  assert {
+    condition     = output.configurations["sdwan_vedge_1"].insider_cidr_blocks == output.configurations["sdwan_vedge_1"].inside_cidr_blocks
+    error_message = "The deprecated insider_cidr_blocks alias should still be exported and match inside_cidr_blocks, so existing callers relying on the misspelled key are not broken."
   }
 
   assert {
