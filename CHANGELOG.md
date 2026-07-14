@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.5](https://github.com/zachreborn/terraform-modules/compare/v10.2.4...v10.2.5) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** apply auto_recovery via maintenance_options block ([#413](https://github.com/zachreborn/terraform-modules/issues/413)) ([7971c03](https://github.com/zachreborn/terraform-modules/commit/7971c03212fb0ae3277656707d4444798860a0ce))
+
 ## [10.2.4](https://github.com/zachreborn/terraform-modules/compare/v10.2.3...v10.2.4) (2026-07-14)
 
 
