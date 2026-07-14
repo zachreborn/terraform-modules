@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.2.2](https://github.com/zachreborn/terraform-modules/compare/v10.2.1...v10.2.2) (2026-07-14)
+
+
+### Bug Fixes
+
+* **lambda:** align timeout description with actual 180 default ([#414](https://github.com/zachreborn/terraform-modules/issues/414)) ([536507e](https://github.com/zachreborn/terraform-modules/commit/536507eac0d6cd06e8bf6aec94e5539f3c09a8fd))
+
 ## [10.2.1](https://github.com/zachreborn/terraform-modules/compare/v10.2.0...v10.2.1) (2026-07-14)
 
 
