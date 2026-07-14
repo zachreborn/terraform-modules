@@ -82,8 +82,8 @@ run "plan_succeeds_with_valid_input" {
   }
 
   assert {
-    condition     = output.tags_all != null
-    error_message = "tags_all output should be populated."
+    condition     = output.tags_all == aws_ecr_repository.this.tags_all
+    error_message = "tags_all output should expose the repository's tags_all attribute."
   }
 }
 

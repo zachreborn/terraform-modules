@@ -161,11 +161,12 @@ run "plan_succeeds_with_valid_input" {
 
   # Note: private_ip is Optional+Computed and is explicitly overridden in a later run in
   # this file, so it intentionally has no fixed mock default (OpenTofu rejects a mock
-  # default for a field that a run elsewhere sets explicitly via config). We can only
-  # assert it is populated here, not its exact generated value.
+  # default for a field that a run elsewhere sets explicitly via config). Comparing directly
+  # against the resource attribute (rather than a fixed literal) keeps this deterministic
+  # regardless of what value the mock provider generates.
   assert {
-    condition     = output.private_ip[0] != null
-    error_message = "private_ip output should be populated."
+    condition     = output.private_ip[0] == aws_instance.ec2[0].private_ip
+    error_message = "private_ip output should expose the instance's private_ip attribute."
   }
 
   assert {
@@ -201,6 +202,11 @@ run "plan_succeeds_with_valid_input" {
   assert {
     condition     = contains(output.vpc_security_group_ids[0], "sg-0123456789abcdef0")
     error_message = "vpc_security_group_ids output should pass through the input value."
+  }
+
+  assert {
+    condition     = length(output.security_groups[0]) == 0
+    error_message = "security_groups output should expose the (mocked, empty) EC2-Classic security_groups attribute."
   }
 }
 

@@ -41,6 +41,11 @@ run "rejects_invalid_ami" {
   expect_failures = [var.ami]
 }
 
+# Note: instance_initiated_shutdown_behavior's validation regex (`stop|terminate`) is
+# unanchored, so it also accepts invalid substring matches such as "stop-now" -- tracked as
+# https://github.com/zachreborn/terraform-modules/issues/396. "reboot" is used here (rather
+# than a substring-match case like "stop-now") because it is a value that correctly fails
+# both today and after that bug is fixed, keeping this test meaningful in the meantime.
 run "rejects_invalid_instance_initiated_shutdown_behavior" {
   command = plan
 
@@ -111,6 +116,18 @@ run "rejects_invalid_tenancy" {
   expect_failures = [var.tenancy]
 }
 
+# Note: auto_recovery's validation regex (`default|disabled`) is unanchored, so it also
+# accepts invalid substring matches such as "default-invalid" -- tracked as
+# https://github.com/zachreborn/terraform-modules/issues/396. "invalid" is used here because
+# it contains neither accepted token, so it correctly fails both today and after that bug is
+# fixed.
+#
+# Separately, var.auto_recovery is never referenced by aws_instance.ec2 in main.tf, so even
+# though this variable is validated, setting it to a valid value (e.g. "disabled") has no
+# effect on the plan -- tracked as
+# https://github.com/zachreborn/terraform-modules/issues/397. No default/override assertion
+# for auto_recovery is added to tests/main.tftest.hcl until that wiring exists, since there is
+# nothing in the plan for such an assertion to observe.
 run "rejects_invalid_auto_recovery" {
   command = plan
 
