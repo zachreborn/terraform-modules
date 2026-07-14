@@ -98,15 +98,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -115,14 +115,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [aws_ec2_transit_gateway_connect.connect_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect) | resource |
 | [aws_ec2_transit_gateway_connect_peer.peer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect_peer) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway connect resources. | `string` | n/a | yes |
 | <a name="input_peers"></a> [peers](#input\_peers) | (Required) A map of transit gateway connect peers, where the key is the name of the peer and the value is a map of peer configuration options. | <pre>map(object({<br/>    bgp_asn                 = optional(number, 64512) # (Optional) The BGP ASN number assigned customer device. If not provided, it will use the same BGP ASN as is associated with transit gateway.<br/>    inside_cidr_blocks      = list(string)            # (Required) The CIDR block that will be used for addressing within the tunnel. It must contain exactly one IPv4 CIDR block and up to one IPv6 CIDR block. The IPv4 CIDR block must be /29 size and must be within 169.254.0.0/16 range, with exception of: 169.254.0.0/29, 169.254.1.0/29, 169.254.2.0/29, 169.254.3.0/29, 169.254.4.0/29, 169.254.5.0/29, 169.254.169.248/29. The IPv6 CIDR block must be /125 size and must be within fd00::/8. The first IP from each CIDR block is assigned for customer gateway, the second and third is for Transit Gateway (An example: from range 169.254.100.0/29, .1 is assigned to customer gateway and .2 and .3 are assigned to the transit gateway)<br/>    peer_address            = string                  # (Required) The IP addressed assigned to customer device, which will be used as tunnel endpoint. It can be IPv4 or IPv6 address, but must be the same address family as transit_gateway_address<br/>    transit_gateway_address = optional(string)        # (Optional) The IP address assigned to the transit gateway, which will be used as tunnel endpoint. This address must be from associated transit gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated transit gateway CIDR blocks.<br/>  }))</pre> | n/a | yes |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | (Optional) The tunnel protocol. Valid values: gre. Default is gre. | `string` | `"gre"` | no |
@@ -130,12 +130,12 @@ No modules.
 | <a name="input_transit_gateway_default_route_table_association"></a> [transit\_gateway\_default\_route\_table\_association](#input\_transit\_gateway\_default\_route\_table\_association) | (Optional) Boolean whether the Connect should be associated with the EC2 transit gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
 | <a name="input_transit_gateway_default_route_table_propagation"></a> [transit\_gateway\_default\_route\_table\_propagation](#input\_transit\_gateway\_default\_route\_table\_propagation) | (Optional) Boolean whether the Connect should propagate routes with the EC2 transit gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: true. | `bool` | `true` | no |
 | <a name="input_transit_gateway_id"></a> [transit\_gateway\_id](#input\_transit\_gateway\_id) | (Required) Identifier of EC2 transit gateway. | `string` | n/a | yes |
-| <a name="input_transport_attachment_id"></a> [transport\_attachment\_id](#input\_transport\_attachment\_id) | (Required) The underlaying transit gateway VPC attachment ID. | `string` | n/a | yes |
+| <a name="input_transport_attachment_id"></a> [transport\_attachment\_id](#input\_transport\_attachment\_id) | (Required) The underlying transit gateway VPC attachment ID. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_arns"></a> [arns](#output\_arns) | A map of ARNs of the transit gateway connect peers. |
 | <a name="output_attachment_id"></a> [attachment\_id](#output\_attachment\_id) | The ID of the transit gateway connect attachment. |
 | <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |

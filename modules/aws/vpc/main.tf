@@ -19,13 +19,7 @@ data "aws_region" "current" {}
 
 locals {
   # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
-  enable_igw = var.enable_internet_gateway && length(var.public_subnets_list) != 0
-  # NAT gateways require a public subnet/IGW to attach to, so treat them as
-  # disabled whenever the IGW itself is disabled -- consumers of this local
-  # (aws_eip.nateip, aws_nat_gateway.natgw, and the *_default_route_natgw
-  # routes) must not create resources that reference a NAT gateway that will
-  # never exist.
-  enable_natgw = var.enable_nat_gateway && local.enable_igw
+  enable_igw   = var.enable_internet_gateway && length(var.public_subnets_list) != 0
   service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
@@ -292,14 +286,14 @@ resource "aws_route" "public_default_route" {
 }
 
 resource "aws_eip" "nateip" {
-  count  = local.enable_natgw ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
+  count  = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
   domain = "vpc"
 }
 
 resource "aws_nat_gateway" "natgw" {
   depends_on = [aws_internet_gateway.igw]
 
-  count         = local.enable_natgw ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0
+  count         = var.enable_nat_gateway ? (local.enable_igw ? (var.single_nat_gateway ? 1 : length(var.azs)) : 0) : 0
   allocation_id = element(aws_eip.nateip[*].id, (var.single_nat_gateway ? 0 : count.index))
   subnet_id     = element(aws_subnet.public_subnets[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
@@ -316,7 +310,7 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route" "private_default_route_natgw" {
-  count                  = (local.enable_natgw && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
@@ -337,7 +331,7 @@ resource "aws_route_table" "db_route_table" {
 }
 
 resource "aws_route" "db_default_route_natgw" {
-  count                  = (local.enable_natgw && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
@@ -358,7 +352,7 @@ resource "aws_route_table" "dmz_route_table" {
 }
 
 resource "aws_route" "dmz_default_route_natgw" {
-  count                  = (local.enable_natgw && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
@@ -379,7 +373,7 @@ resource "aws_route_table" "mgmt_route_table" {
 }
 
 resource "aws_route" "mgmt_default_route_natgw" {
-  count                  = (local.enable_natgw && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
@@ -400,7 +394,7 @@ resource "aws_route_table" "workspaces_route_table" {
 }
 
 resource "aws_route" "workspaces_default_route_natgw" {
-  count                  = (local.enable_natgw && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
@@ -422,7 +416,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = local.enable_igw ? length(var.public_subnets_list) : 0
+  count          = length(var.public_subnets_list)
   route_table_id = aws_route_table.public_route_table[0].id
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
 }

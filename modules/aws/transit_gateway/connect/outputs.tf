@@ -45,13 +45,9 @@ output "configurations" {
   value = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => {
     bgp_asn                 = value.bgp_asn
     id                      = value.id
-    inside_cidr_blocks      = value.inside_cidr_blocks
+    insider_cidr_blocks     = value.inside_cidr_blocks
     peer_address            = value.peer_address
     transit_gateway_address = value.transit_gateway_address
-    # Deprecated: kept as a backward-compatible alias for the misspelled key
-    # this object previously exported. Use inside_cidr_blocks instead; this
-    # alias will be removed in a future major version.
-    insider_cidr_blocks = value.inside_cidr_blocks
     }
   }
 }

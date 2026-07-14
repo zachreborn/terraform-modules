@@ -160,15 +160,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25.0 |
 
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.25.0 |
 
 ## Modules
 
@@ -177,7 +177,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [aws_cloudwatch_log_group.log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_flow_log.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log) | resource |
 | [aws_iam_policy.policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -191,7 +191,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_cloudwatch_deletion_protection_enabled"></a> [cloudwatch\_deletion\_protection\_enabled](#input\_cloudwatch\_deletion\_protection\_enabled) | (Optional) If true, prevents the log group from being deleted. Defaults to false. Requires AWS provider >= 6.25.0. | `bool` | `false` | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. | `string` | `"flow_logs_"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire. | `number` | `90` | no |
@@ -226,12 +226,8 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the cloudwatch log group used for flow logs |
-| <a name="output_flow_log_ids"></a> [flow\_log\_ids](#output\_flow\_log\_ids) | IDs of the created aws\_flow\_log resources. Useful for callers to verify wiring (that the flow log count and its target IDs match what was passed in). |
-| <a name="output_flow_log_transit_gateway_attachment_ids"></a> [flow\_log\_transit\_gateway\_attachment\_ids](#output\_flow\_log\_transit\_gateway\_attachment\_ids) | transit\_gateway\_attachment\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_attachment\_ids. Null entries indicate the flow log was targeted at a different resource type. |
-| <a name="output_flow_log_transit_gateway_ids"></a> [flow\_log\_transit\_gateway\_ids](#output\_flow\_log\_transit\_gateway\_ids) | transit\_gateway\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_ids. Null entries indicate the flow log was targeted at a different resource type. |
-| <a name="output_flow_log_vpc_ids"></a> [flow\_log\_vpc\_ids](#output\_flow\_log\_vpc\_ids) | vpc\_id of each created aws\_flow\_log resource, in the same order as flow\_vpc\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
