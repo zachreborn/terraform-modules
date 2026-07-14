@@ -1,12 +1,12 @@
 # Note: several validation {} blocks in variables.tf apply to `bool`-typed variables using a
 # `can(regex("true|false", var.x))` condition (key_enable_key_rotation, bucket_key_enabled,
 # force_destroy, include_global_service_events, is_multi_region_trail, is_organization_trail,
-# enable_log_file_validation, enable_s3_bucket_logging). Because those variables are already
-# constrained to `bool` by their declared `type`, every value the type system allows through
-# (true or false) also satisfies the regex, so there is no reachable input that makes those
-# specific validation blocks fail -- there is no distinct failure mode to add a run block
-# for. Only the validations below (on variables typed `string` or `number`) can actually be
-# violated by a caller.
+# enable_log_file_validation, enable_s3_bucket_logging, iam_role_force_detach_policies). Because
+# those variables are already constrained to `bool` by their declared `type`, every value the
+# type system allows through (true or false) also satisfies the regex, so there is no reachable
+# input that makes those specific validation blocks fail -- there is no distinct failure mode to
+# add a run block for. Only the validations below (on variables typed `string` or `number`) can
+# actually be violated by a caller.
 mock_provider "aws" {
   mock_resource "aws_kms_key" {
     defaults = {

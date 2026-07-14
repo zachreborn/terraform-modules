@@ -23,6 +23,11 @@ run "valid_baseline_plans_successfully" {
     condition     = aws_cloudwatch_event_target.event_target.rule == "test-rule"
     error_message = "The target should reference the rule's name."
   }
+
+  assert {
+    condition     = aws_cloudwatch_event_rule.event_rule.schedule_expression == "rate(5 minutes)"
+    error_message = "schedule_expression should pass through unchanged."
+  }
 }
 
 run "field_defaults_are_applied" {
@@ -87,6 +92,11 @@ run "field_overrides_are_honored" {
   assert {
     condition     = aws_cloudwatch_event_rule.event_rule.event_bus_name == "custom-bus"
     error_message = "event_bus_name override should be honored."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_event_target.event_target.event_bus_name == "custom-bus"
+    error_message = "event_bus_name override should also be honored on the target, since the module passes the same input to both resources."
   }
 
   assert {
@@ -161,6 +171,11 @@ run "input_transformer_present_when_set" {
   assert {
     condition     = aws_cloudwatch_event_target.event_target.input_transformer[0].input_template == "\"Instance <instance> state changed.\""
     error_message = "input_transformer.input_template should pass through unchanged."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_event_target.event_target.input_transformer[0].input_paths["instance"] == "$.detail.instance-id"
+    error_message = "input_transformer.input_paths should pass through unchanged."
   }
 }
 

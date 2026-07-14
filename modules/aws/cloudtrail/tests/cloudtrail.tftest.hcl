@@ -116,10 +116,9 @@ run "field_overrides_are_honored" {
     key_description               = "Custom CloudTrail KMS key description"
     key_deletion_window_in_days   = 10
     key_enable_key_rotation       = false
-    # key_usage's validation only accepts "ENCRYPT_DECRYPT" -- there is no distinct valid
-    # value to override to, so this is set explicitly (matching the default) purely to prove
-    # the wiring holds alongside every other overridden argument in this run.
-    key_usage                        = "ENCRYPT_DECRYPT"
+    # key_usage is intentionally left unset here: its validation only accepts
+    # "ENCRYPT_DECRYPT", so there is no distinct valid value to override to. The assertion
+    # below still checks its wiring using the unchanged default value.
     key_is_enabled                   = "false"
     bucket_lifecycle_rule_id         = "custom_lifecycle_rule"
     bucket_lifecycle_expiration_days = 180
@@ -200,7 +199,7 @@ run "field_overrides_are_honored" {
 
   assert {
     condition     = aws_kms_key.cloudtrail.key_usage == "ENCRYPT_DECRYPT"
-    error_message = "key_usage should be wired through even though it has only one valid value."
+    error_message = "key_usage should stay wired to its default value even though every other argument in this run is overridden -- it has only one valid value, so there is nothing else to override it to."
   }
 
   assert {
