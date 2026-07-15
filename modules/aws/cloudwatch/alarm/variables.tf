@@ -1,17 +1,19 @@
 variable "actions_enabled" {
-  type        = string
+  type        = bool
   description = "(Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to true."
   default     = true
 }
 
 variable "alarm_actions" {
-  type        = string
+  type        = list(string)
   description = "(Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Number (ARN)."
+  default     = []
 }
 
 variable "alarm_description" {
   type        = string
   description = "(Optional) The description for the alarm."
+  default     = null
 }
 
 variable "alarm_name" {
@@ -22,26 +24,42 @@ variable "alarm_name" {
 variable "comparison_operator" {
   type        = string
   description = "(Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: GreaterThanOrEqualToThreshold, GreaterThanThreshold, LessThanThreshold, LessThanOrEqualToThreshold."
+
+  validation {
+    condition = contains([
+      "GreaterThanOrEqualToThreshold",
+      "GreaterThanThreshold",
+      "LessThanThreshold",
+      "LessThanOrEqualToThreshold",
+      "LessThanLowerOrGreaterThanUpperThreshold",
+      "LessThanLowerThreshold",
+      "GreaterThanUpperThreshold",
+    ], var.comparison_operator)
+    error_message = "comparison_operator must be one of: GreaterThanOrEqualToThreshold, GreaterThanThreshold, LessThanThreshold, LessThanOrEqualToThreshold, LessThanLowerOrGreaterThanUpperThreshold, LessThanLowerThreshold, GreaterThanUpperThreshold."
+  }
 }
 
 variable "datapoints_to_alarm" {
-  type        = string
+  type        = number
   description = "(Optional) The number of datapoints that must be breaching to trigger the alarm."
+  default     = null
 }
 
 variable "dimensions" {
-  type        = map(any)
+  type        = map(string)
   description = "(Optional) The dimensions for the alarm's associated metric. For the list of available dimensions see the AWS documentation"
+  default     = {}
 }
 
 variable "evaluation_periods" {
-  type        = string
+  type        = number
   description = "(Required) The number of periods over which data is compared to the specified threshold."
 }
 
 variable "insufficient_data_actions" {
-  type        = string
+  type        = list(string)
   description = "(Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Number (ARN)."
+  default     = []
 }
 
 variable "metric_name" {
@@ -55,32 +73,41 @@ variable "namespace" {
 }
 
 variable "ok_actions" {
-  type        = string
+  type        = list(string)
   description = "(Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Number (ARN)."
+  default     = []
 }
 
 variable "period" {
-  type        = string
+  type        = number
   description = "(Required) The period in seconds over which the specified statistic is applied."
 }
 
 variable "statistic" {
   type        = string
   description = "(Optional) The statistic to apply to the alarm's associated metric. Either of the following is supported: SampleCount, Average, Sum, Minimum, Maximum"
+  default     = null
 }
 
 variable "threshold" {
-  type        = string
+  type        = number
   description = "(Required) The value against which the specified statistic is compared."
-  default     = 1.0
+  default     = 1
 }
 
 variable "treat_missing_data" {
   type        = string
   description = "(Optional) Sets how this alarm is to handle missing data points. The following values are supported: missing, ignore, breaching and notBreaching. Defaults to missing."
+  default     = "missing"
+
+  validation {
+    condition     = contains(["missing", "ignore", "breaching", "notBreaching"], var.treat_missing_data)
+    error_message = "treat_missing_data must be one of: missing, ignore, breaching, notBreaching."
+  }
 }
 
 variable "unit" {
   type        = string
   description = "(Optional) The unit for the alarm's associated metric."
+  default     = null
 }
