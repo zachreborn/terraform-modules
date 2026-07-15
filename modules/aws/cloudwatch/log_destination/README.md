@@ -1,4 +1,3 @@
-<!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
 <a name="readme-top"></a>
@@ -26,9 +25,9 @@
     <img src="/images/terraform_modules_logo.webp" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">module_name</h3>
+<h3 align="center">CloudWatch Log Destination</h3>
   <p align="center">
-    module_description
+    Manages a cross-account CloudWatch Logs destination and its optional access policy.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,13 +61,48 @@
 
 ## Usage
 
-```
-module test {
-    source =
+This module manages an `aws_cloudwatch_log_destination` (a cross-account CloudWatch Logs subscription target) and, optionally, its companion `aws_cloudwatch_log_destination_policy`. It is a focused leaf module: the IAM role that grants CloudWatch Logs permission to write to the target, and the delivery target itself (e.g. a Kinesis stream or Firehose delivery stream), are cross-cutting resources that must be provisioned by the caller and wired in via the `destination_role_arn` and `destination_target_arn` variables (see `AGENTS.md` § 2, Module Composition).
 
-    variable =
+### Prerequisites
+
+- An IAM role that CloudWatch Logs can assume to write to the target (provision via `modules/aws/iam/role`), passed in as `destination_role_arn`.
+- A delivery target (e.g. a Kinesis Firehose delivery stream), passed in as `destination_target_arn`.
+
+### Example
+
+```hcl
+module "log_destination" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloudwatch/log_destination"
+
+  destination_name       = "central-logging"
+  destination_role_arn   = module.cloudwatch_to_firehose_role.arn
+  destination_target_arn = aws_kinesis_firehose_delivery_stream.this.arn
+
+  # Optional: attach a cross-account access policy so other accounts can
+  # create subscription filters that target this destination.
+  destination_policy_access_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "AllowCrossAccountSubscription"
+      Effect    = "Allow"
+      Principal = { AWS = "111122223333" }
+      Action    = "logs:PutSubscriptionFilter"
+      Resource  = "arn:aws:logs:us-east-1:123456789012:destination:central-logging"
+    }]
+  })
+
+  tags = {
+    Team       = "platform"
+    CostCenter = "12345"
+  }
 }
 ```
+
+### Notes / design decisions
+
+- The `aws_cloudwatch_log_destination_policy` resource is created only when `destination_policy_access_policy` is non-null, so single-account uses that do not need a cross-account policy remain valid.
+- `destination_policy_access_policy` is validated to be parseable JSON when set.
+- Per `AGENTS.md` § 2, this module does not declare the IAM role, IAM policy, or S3/delivery resources inline; the caller owns those cross-cutting concerns.
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -100,17 +134,26 @@ No modules.
 |------|------|
 | [aws_cloudwatch_log_destination.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_destination) | resource |
 | [aws_cloudwatch_log_destination_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_destination_policy) | resource |
-| [aws_iam_policy.firehose_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_role.firehose_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy_attachment.role_attach](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_destination_name"></a> [destination\_name](#input\_destination\_name) | (Required) A name for the log destination. | `string` | n/a | yes |
+| <a name="input_destination_policy_access_policy"></a> [destination\_policy\_access\_policy](#input\_destination\_policy\_access\_policy) | (Optional) The cross-account access policy document (JSON) attached to the log destination via aws\_cloudwatch\_log\_destination\_policy. When null, no destination policy resource is created. | `string` | `null` | no |
+| <a name="input_destination_policy_force_update"></a> [destination\_policy\_force\_update](#input\_destination\_policy\_force\_update) | (Optional) Whether to update the access policy on the log destination even if the destination is currently in use. Maps to the force\_update argument of aws\_cloudwatch\_log\_destination\_policy. | `bool` | `null` | no |
+| <a name="input_destination_role_arn"></a> [destination\_role\_arn](#input\_destination\_role\_arn) | (Required) The ARN of an IAM role that grants CloudWatch Logs permission to write to the target ARN (destination\_target\_arn). Supplied by the caller (e.g. from the modules/aws/iam/role module). | `string` | n/a | yes |
+| <a name="input_destination_target_arn"></a> [destination\_target\_arn](#input\_destination\_target\_arn) | (Required) The ARN of the target Amazon resource (e.g. a Kinesis stream or Kinesis Firehose delivery stream) that the log destination delivers matching log events to. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the log destination. A Name tag is merged in automatically from destination\_name. | `map(string)` | `{}` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_access_policy"></a> [access\_policy](#output\_access\_policy) | The effective cross-account access policy attached to the log destination, or null when no destination policy is created. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the CloudWatch log destination. Used by other accounts as the destination\_arn of a subscription filter. |
+| <a name="output_id"></a> [id](#output\_id) | The ID (name) of the CloudWatch log destination. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the CloudWatch log destination. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
