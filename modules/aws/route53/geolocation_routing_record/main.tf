@@ -23,7 +23,13 @@ terraform {
 locals {
   # If a record in var.records is longer than 255 characters, we split the record every 255 characters with \"\" between each 255th and 256th character.
   # See https://github.com/hashicorp/terraform-provider-aws/issues/14941 for more information
-  records = [for record in var.records : replace(record, "/(.{255})/", "$1\"\"")]
+  records = [
+    for record in var.records :
+    join("\"\"", [
+      for i in range(ceil(length(record) / 255)) :
+      substr(record, i * 255, 255)
+    ])
+  ]
 }
 
 ###########################
