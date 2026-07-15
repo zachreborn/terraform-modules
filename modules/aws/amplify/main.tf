@@ -172,7 +172,10 @@ resource "aws_amplify_branch" "this" {
 # Amplify App Domain Association
 ###########################
 resource "aws_amplify_domain_association" "this" {
-  for_each               = var.branches
+  # Guarded for parity with aws_amplify_branch.this and defense in depth; with
+  # nullable = false + default = {} on var.branches, this value is already
+  # guaranteed non-null.
+  for_each               = var.branches != null ? var.branches : {}
   app_id                 = aws_amplify_app.this.id
   domain_name            = each.value.domain_name
   enable_auto_sub_domain = each.value.enable_auto_sub_domain

@@ -162,7 +162,7 @@ variable "repository" {
 ###########################
 
 variable "branches" {
-  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings."
+  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
   type = map(object({
     basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
@@ -185,6 +185,8 @@ variable "branches" {
     ttl                           = optional(number)                    # The TTL for the branch.
     wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.
   }))
+  default  = {}
+  nullable = false
   # Example:
   # branches = {
   #   main = {
