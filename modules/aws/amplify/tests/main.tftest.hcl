@@ -94,6 +94,50 @@ run "valid_baseline_plans_successfully" {
   }
 }
 
+# Core regression for issue #406: passing branches = null previously crashed the
+# plan with "Invalid for_each argument" on aws_amplify_domain_association.this.
+# nullable = false + default = {} now coerces null to {}, so both the branch and
+# domain-association resources plan with zero instances (matching the existing
+# null-safe behavior of aws_amplify_branch.this).
+run "branches_null_plans_with_zero_resources" {
+  command = plan
+
+  variables {
+    name     = "my-app"
+    branches = null
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 0
+    error_message = "branches = null should coerce to {} and plan zero branches."
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 0
+    error_message = "branches = null should coerce to {} and plan zero domain associations (no Invalid for_each crash)."
+  }
+}
+
+# Exercises the new default = {} by leaving branches unset entirely, confirming
+# the variable is now optional and defaults to an empty map.
+run "branches_default_empty_plans" {
+  command = plan
+
+  variables {
+    name = "my-app"
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 0
+    error_message = "Omitting branches should default to {} and plan zero branches."
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 0
+    error_message = "Omitting branches should default to {} and plan zero domain associations."
+  }
+}
+
 run "auto_branch_creation_config_toggle_adds_the_block" {
   command = plan
 
