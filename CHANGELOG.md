@@ -1,5 +1,12 @@
 # Changelog
 
+## [11.0.1](https://github.com/zachreborn/terraform-modules/compare/v11.0.0...v11.0.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **cloudformation/stack_set:** reject both template_body and template_url at plan time ([#425](https://github.com/zachreborn/terraform-modules/issues/425)) ([1e13d7f](https://github.com/zachreborn/terraform-modules/commit/1e13d7f6796362cb9a934aa8d4dc954f11047c27))
+
 ## [11.0.0](https://github.com/zachreborn/terraform-modules/compare/v10.2.7...v11.0.0) (2026-07-15)
 
 
