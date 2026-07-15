@@ -169,14 +169,14 @@ run "multiple_connect_peers_expand_via_for_each" {
     error_message = "configurations output's peer_address field should match the configured peer_address."
   }
 
-  # NOTE: the configurations output's CIDR-block field is currently named
-  # insider_cidr_blocks (a typo -- it should be inside_cidr_blocks). That is
-  # fixed in the separate fix PR #409 (out of scope for this test-only PR
-  # since it requires editing outputs.tf), which also adds inside_cidr_blocks
-  # as the corrected key while keeping this one as a deprecated alias.
   assert {
-    condition     = length(output.configurations["sdwan_vedge_1"].insider_cidr_blocks) == 1
-    error_message = "configurations output should expose exactly one CIDR block for this peer under its current (typo'd) key name."
+    condition     = toset(output.configurations["sdwan_vedge_1"].inside_cidr_blocks) == toset(var.peers["sdwan_vedge_1"].inside_cidr_blocks)
+    error_message = "configurations output should expose the inside_cidr_blocks field by its correct (non-typo'd) name with the exact configured CIDR block(s)."
+  }
+
+  assert {
+    condition     = output.configurations["sdwan_vedge_1"].insider_cidr_blocks == output.configurations["sdwan_vedge_1"].inside_cidr_blocks
+    error_message = "The deprecated insider_cidr_blocks alias should still be exported and match inside_cidr_blocks, so existing callers relying on the misspelled key are not broken."
   }
 
   assert {

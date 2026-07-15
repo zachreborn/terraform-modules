@@ -160,14 +160,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.2.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.25.0 |
 
 ## Modules
@@ -177,7 +177,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_log_group.log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_flow_log.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log) | resource |
 | [aws_iam_policy.policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -191,7 +191,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_cloudwatch_deletion_protection_enabled"></a> [cloudwatch\_deletion\_protection\_enabled](#input\_cloudwatch\_deletion\_protection\_enabled) | (Optional) If true, prevents the log group from being deleted. Defaults to false. Requires AWS provider >= 6.25.0. | `bool` | `false` | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. | `string` | `"flow_logs_"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, and 0. If you select 0, the events in the log group are always retained and never expire. | `number` | `90` | no |
@@ -213,7 +213,7 @@ No modules.
 | <a name="input_iam_role_force_detach_policies"></a> [iam\_role\_force\_detach\_policies](#input\_iam\_role\_force\_detach\_policies) | (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to false. | `bool` | `false` | no |
 | <a name="input_iam_role_max_session_duration"></a> [iam\_role\_max\_session\_duration](#input\_iam\_role\_max\_session\_duration) | (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours. | `number` | `3600` | no |
 | <a name="input_iam_role_name_prefix"></a> [iam\_role\_name\_prefix](#input\_iam\_role\_name\_prefix) | (Required, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with name. | `string` | `"flow_logs_role_"` | no |
-| <a name="input_iam_role_permissions_boundary"></a> [iam\_role\_permissions\_boundary](#input\_iam\_role\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `""` | no |
+| <a name="input_iam_role_permissions_boundary"></a> [iam\_role\_permissions\_boundary](#input\_iam\_role\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
 | <a name="input_key_customer_master_key_spec"></a> [key\_customer\_master\_key\_spec](#input\_key\_customer\_master\_key\_spec) | (Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC\_DEFAULT, RSA\_2048, RSA\_3072, RSA\_4096, ECC\_NIST\_P256, ECC\_NIST\_P384, ECC\_NIST\_P521, or ECC\_SECG\_P256K1. Defaults to SYMMETRIC\_DEFAULT. For help with choosing a key spec, see the AWS KMS Developer Guide. | `string` | `"SYMMETRIC_DEFAULT"` | no |
 | <a name="input_key_deletion_window_in_days"></a> [key\_deletion\_window\_in\_days](#input\_key\_deletion\_window\_in\_days) | (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days. | `number` | `30` | no |
 | <a name="input_key_description"></a> [key\_description](#input\_key\_description) | (Optional) The description of the key as viewed in AWS console. | `string` | `"CloudWatch kms key used to encrypt flow logs"` | no |
@@ -226,8 +226,14 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the cloudwatch log group used for flow logs |
+| <a name="output_flow_log_eni_ids"></a> [flow\_log\_eni\_ids](#output\_flow\_log\_eni\_ids) | eni\_id of each created aws\_flow\_log resource, in the same order as flow\_eni\_ids. Null entries indicate the flow log was targeted at a different resource type. |
+| <a name="output_flow_log_ids"></a> [flow\_log\_ids](#output\_flow\_log\_ids) | IDs of the created aws\_flow\_log resources. Useful for callers to verify wiring (that the flow log count and its target IDs match what was passed in). |
+| <a name="output_flow_log_subnet_ids"></a> [flow\_log\_subnet\_ids](#output\_flow\_log\_subnet\_ids) | subnet\_id of each created aws\_flow\_log resource, in the same order as flow\_subnet\_ids. Null entries indicate the flow log was targeted at a different resource type. |
+| <a name="output_flow_log_transit_gateway_attachment_ids"></a> [flow\_log\_transit\_gateway\_attachment\_ids](#output\_flow\_log\_transit\_gateway\_attachment\_ids) | transit\_gateway\_attachment\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_attachment\_ids. Null entries indicate the flow log was targeted at a different resource type. |
+| <a name="output_flow_log_transit_gateway_ids"></a> [flow\_log\_transit\_gateway\_ids](#output\_flow\_log\_transit\_gateway\_ids) | transit\_gateway\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_ids. Null entries indicate the flow log was targeted at a different resource type. |
+| <a name="output_flow_log_vpc_ids"></a> [flow\_log\_vpc\_ids](#output\_flow\_log\_vpc\_ids) | vpc\_id of each created aws\_flow\_log resource, in the same order as flow\_vpc\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

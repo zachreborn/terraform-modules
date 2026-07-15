@@ -98,15 +98,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
 
 ## Modules
 
@@ -115,14 +115,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ec2_transit_gateway_connect.connect_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect) | resource |
 | [aws_ec2_transit_gateway_connect_peer.peer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_transit_gateway_connect_peer) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the transit gateway connect resources. | `string` | n/a | yes |
 | <a name="input_peers"></a> [peers](#input\_peers) | (Required) A map of transit gateway connect peers, where the key is the name of the peer and the value is a map of peer configuration options. | <pre>map(object({<br/>    bgp_asn                 = optional(number, 64512) # (Optional) The BGP ASN number assigned customer device. If not provided, it will use the same BGP ASN as is associated with transit gateway.<br/>    inside_cidr_blocks      = list(string)            # (Required) The CIDR block that will be used for addressing within the tunnel. It must contain exactly one IPv4 CIDR block and up to one IPv6 CIDR block. The IPv4 CIDR block must be /29 size and must be within 169.254.0.0/16 range, with exception of: 169.254.0.0/29, 169.254.1.0/29, 169.254.2.0/29, 169.254.3.0/29, 169.254.4.0/29, 169.254.5.0/29, 169.254.169.248/29. The IPv6 CIDR block must be /125 size and must be within fd00::/8. The first IP from each CIDR block is assigned for customer gateway, the second and third is for Transit Gateway (An example: from range 169.254.100.0/29, .1 is assigned to customer gateway and .2 and .3 are assigned to the transit gateway)<br/>    peer_address            = string                  # (Required) The IP addressed assigned to customer device, which will be used as tunnel endpoint. It can be IPv4 or IPv6 address, but must be the same address family as transit_gateway_address<br/>    transit_gateway_address = optional(string)        # (Optional) The IP address assigned to the transit gateway, which will be used as tunnel endpoint. This address must be from associated transit gateway CIDR block. The address must be from the same address family as peer_address. If not set explicitly, it will be selected from associated transit gateway CIDR blocks.<br/>  }))</pre> | n/a | yes |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | (Optional) The tunnel protocol. Valid values: gre. Default is gre. | `string` | `"gre"` | no |
@@ -135,11 +135,11 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arns"></a> [arns](#output\_arns) | A map of ARNs of the transit gateway connect peers. |
 | <a name="output_attachment_id"></a> [attachment\_id](#output\_attachment\_id) | The ID of the transit gateway connect attachment. |
 | <a name="output_bgp_asns"></a> [bgp\_asns](#output\_bgp\_asns) | A map of BGP ASNs of the connect peers. |
-| <a name="output_configurations"></a> [configurations](#output\_configurations) | A map of the transit gateway connect peer configurations. |
+| <a name="output_configurations"></a> [configurations](#output\_configurations) | A map of the transit gateway connect peer configurations. Includes a deprecated insider\_cidr\_blocks key kept as a backward-compatible alias for the misspelled key this object previously exported -- use inside\_cidr\_blocks instead, as insider\_cidr\_blocks will be removed in a future major version. |
 | <a name="output_ids"></a> [ids](#output\_ids) | A map of the IDs of the transit gateway connect peers |
 | <a name="output_inside_cidr_blocks"></a> [inside\_cidr\_blocks](#output\_inside\_cidr\_blocks) | The CIDR blocks associated with the inside IP addresses of the connect peer. |
 | <a name="output_peer_addresses"></a> [peer\_addresses](#output\_peer\_addresses) | A map of the IP address of the connect peers. |

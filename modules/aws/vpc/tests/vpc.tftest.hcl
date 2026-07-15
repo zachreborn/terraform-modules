@@ -286,7 +286,10 @@ run "enable_nat_gateway_false_creates_no_nat_resources" {
 # that every NAT-gateway-dependent resource is skipped when no IGW/NAT can
 # exist. public_subnets_list is left at its non-empty default here so the
 # aws_route_table_association.public gating is meaningfully exercised (its
-# count must be 0 despite public subnets being present).
+# count must be 0 despite public subnets being present). aws_eip.nateip is
+# also asserted since this module additionally gates NAT EIP creation on
+# local.enable_igw (via local.enable_natgw) to avoid creating orphaned EIPs
+# when no NAT gateway can exist.
 run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
   command = plan
 
@@ -312,32 +315,37 @@ run "enable_internet_gateway_false_disables_igw_and_dependent_nat" {
 
   assert {
     condition     = length(aws_nat_gateway.natgw) == 0
-    error_message = "NAT gateways depend on the IGW being enabled, so they should also be skipped."
+    error_message = "NAT gateways depend on the IGW being enabled, so they should also be skipped, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_eip.nateip) == 0
+    error_message = "NAT EIPs should also be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
     condition     = length(aws_route.private_default_route_natgw) == 0
-    error_message = "Private NAT default routes should be skipped when the IGW is disabled."
+    error_message = "Private NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
     condition     = length(aws_route.db_default_route_natgw) == 0
-    error_message = "DB NAT default routes should be skipped when the IGW is disabled."
+    error_message = "DB NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
     condition     = length(aws_route.dmz_default_route_natgw) == 0
-    error_message = "DMZ NAT default routes should be skipped when the IGW is disabled."
+    error_message = "DMZ NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
     condition     = length(aws_route.mgmt_default_route_natgw) == 0
-    error_message = "Mgmt NAT default routes should be skipped when the IGW is disabled."
+    error_message = "Mgmt NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
     condition     = length(aws_route.workspaces_default_route_natgw) == 0
-    error_message = "Workspaces NAT default routes should be skipped when the IGW is disabled."
+    error_message = "Workspaces NAT default routes should be skipped when the IGW is disabled, even with enable_nat_gateway left at its default true."
   }
 
   assert {
@@ -381,7 +389,12 @@ run "empty_public_subnets_list_disables_igw_even_when_enabled" {
 
   assert {
     condition     = length(aws_nat_gateway.natgw) == 0
-    error_message = "NAT gateways should also be skipped when public_subnets_list is empty."
+    error_message = "NAT gateways should also be skipped when public_subnets_list is empty, even with enable_nat_gateway left at its default true."
+  }
+
+  assert {
+    condition     = length(aws_eip.nateip) == 0
+    error_message = "NAT EIPs should also be skipped when public_subnets_list is empty, even with enable_nat_gateway left at its default true."
   }
 
   assert {
@@ -659,10 +672,13 @@ run "enable_flow_logs_true_wires_vpc_id_into_flow_logs_module" {
     error_message = "The flow_logs module's arn output should resolve, proving flow_vpc_ids wiring (coalesce) succeeded."
   }
 
-  # NOTE: flow_logs currently only exposes an `arn` output (the CloudWatch log
-  # group ID), which is independent of flow_vpc_ids -- so this doesn't fully
-  # prove wiring beyond "the module didn't error". Stronger wiring outputs
-  # (flow_log_ids/flow_log_vpc_ids/etc.) are added in the separate fix PR #409
-  # (out of scope for this test-only PR since they require editing
-  # flow_logs/outputs.tf); once that merges, this run can assert against them.
+  assert {
+    condition     = length(module.vpc_flow_logs[0].flow_log_ids) == 1
+    error_message = "Exactly one aws_flow_log resource should be created inside the flow_logs module, targeting the VPC."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].flow_log_vpc_ids[0] == aws_vpc.vpc.id
+    error_message = "The flow log's vpc_id should equal the parent VPC's id, proving flow_vpc_ids was actually wired through (not just that some flow log exists)."
+  }
 }
