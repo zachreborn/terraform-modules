@@ -1,5 +1,16 @@
 # Changelog
 
+## [12.0.0](https://github.com/zachreborn/terraform-modules/compare/v11.0.2...v12.0.0) (2026-07-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modules/aws/flow_logs now requires Terraform >= 1.2.0 (previously >= 1.0.0) due to its new lifecycle.precondition-based "exactly one target" validation.
+
+### Bug Fixes
+
+* **vpc:** gate NAT-gateway resources on IGW state ([#409](https://github.com/zachreborn/terraform-modules/issues/409)) ([2e9ebd1](https://github.com/zachreborn/terraform-modules/commit/2e9ebd18d6af2e3edd2cb459f7203716aef9471d))
+
 ## [11.0.2](https://github.com/zachreborn/terraform-modules/compare/v11.0.1...v11.0.2) (2026-07-15)
 
 
