@@ -32,6 +32,16 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
+    condition     = aws_cloudformation_stack_set.this.template_body != null
+    error_message = "template_body should be non-null when supplied."
+  }
+
+  assert {
+    condition     = aws_cloudformation_stack_set.this.template_url == null
+    error_message = "template_url should be null when only template_body is supplied."
+  }
+
+  assert {
     condition     = aws_cloudformation_stack_set.this.call_as == "SELF"
     error_message = "call_as should default to SELF."
   }
@@ -92,15 +102,7 @@ run "valid_baseline_plans_successfully" {
   }
 }
 
-# NOTE: main.tf's template_body/template_url ternaries have the same mutual-nulling defect
-# as modules/aws/cloudformation/stack (tracked separately as issue #400, related to #377):
-# each ternary checks the *other* variable independently, so supplying both nulls out both
-# instead of one taking precedence. template_body is Optional+Computed in the AWS provider
-# schema (template_url is not), so an explicit config-level null on template_body defers to
-# the provider and is filled with an arbitrary mock value here rather than surfacing as a
-# literal null -- hence we assert it no longer equals the caller-supplied literal, instead
-# of asserting an exact null.
-run "template_url_is_used_when_template_body_is_absent" {
+run "plan_succeeds_with_template_url_only" {
   command = plan
 
   variables {
@@ -113,9 +115,30 @@ run "template_url_is_used_when_template_body_is_absent" {
     condition     = aws_cloudformation_stack_set.this.template_url == "https://example.org/template.json"
     error_message = "template_url should pass through when template_body is not set."
   }
+
+  # Note: template_body is Optional+Computed in the AWS provider schema. When the config sets
+  # it to null, the mock provider fills it with an arbitrary value during plan rather than
+  # keeping it as null. It is not possible to assert `template_body == null` reliably in an
+  # offline mock test. The key assertions here are that template_url passes through correctly
+  # and that no validation error is raised when only template_url is supplied.
+
+  assert {
+    condition     = output.name != null
+    error_message = "name output should be non-null."
+  }
+
+  assert {
+    condition     = output.arn != null
+    error_message = "arn output should be non-null."
+  }
+
+  assert {
+    condition     = output.id != null
+    error_message = "id output should be non-null."
+  }
 }
 
-run "providing_both_template_body_and_template_url_nulls_out_both" {
+run "rejects_both_template_body_and_template_url" {
   command = plan
 
   variables {
@@ -125,15 +148,7 @@ run "providing_both_template_body_and_template_url_nulls_out_both" {
     organizational_unit_ids = ["ou-abcd-11111111"]
   }
 
-  assert {
-    condition     = aws_cloudformation_stack_set.this.template_url == null
-    error_message = "Current (buggy) behavior: template_url is nulled out when template_body is also non-null (tracked in issue #400)."
-  }
-
-  assert {
-    condition     = aws_cloudformation_stack_set.this.template_body != jsonencode({ Resources = {} })
-    error_message = "Current (buggy) behavior: the caller-supplied template_body literal is discarded when template_url is also non-null (tracked in issue #400)."
-  }
+  expect_failures = [var.template_body]
 }
 
 run "disabling_auto_deployment_removes_the_block" {

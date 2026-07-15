@@ -43,6 +43,18 @@ run "rejects_invalid_capability" {
   expect_failures = [var.capabilities]
 }
 
+run "rejects_both_template_body_and_template_url" {
+  command = plan
+
+  variables {
+    name          = "test-stack-set"
+    template_body = jsonencode({ Resources = {} })
+    template_url  = "https://example.org/template.json"
+  }
+
+  expect_failures = [var.template_body]
+}
+
 run "rejects_invalid_template_url" {
   command = plan
 
