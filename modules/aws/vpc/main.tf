@@ -20,11 +20,10 @@ data "aws_region" "current" {}
 locals {
   # Disable the IGW if either enable_internet_gateway is false or public_subnets_list is empty
   enable_igw = var.enable_internet_gateway && length(var.public_subnets_list) != 0
-  # NAT gateways require a public subnet/IGW to attach to, so treat them as
-  # disabled whenever the IGW itself is disabled -- consumers of this local
-  # (aws_eip.nateip, aws_nat_gateway.natgw, and the *_default_route_natgw
-  # routes) must not create resources that reference a NAT gateway that will
-  # never exist.
+  # NAT gateways require a public subnet/IGW to attach to, so treat NAT-gateway
+  # resources as disabled whenever the IGW itself is disabled. NAT-dependent
+  # routes are gated on local.enable_igw to avoid referencing a NAT gateway that
+  # will never exist.
   enable_natgw = var.enable_nat_gateway && local.enable_igw
   service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
