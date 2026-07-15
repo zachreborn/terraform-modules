@@ -1,5 +1,16 @@
 # Changelog
 
+## [11.0.0](https://github.com/zachreborn/terraform-modules/compare/v10.2.7...v11.0.0) (2026-07-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427))
+
+### Bug Fixes
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427)) ([ca12815](https://github.com/zachreborn/terraform-modules/commit/ca12815f4445cd391ad44897ca652a2799e24a03))
+
 ## [10.2.7](https://github.com/zachreborn/terraform-modules/compare/v10.2.6...v10.2.7) (2026-07-14)
 
 
