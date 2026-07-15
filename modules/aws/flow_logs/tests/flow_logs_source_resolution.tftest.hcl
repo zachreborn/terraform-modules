@@ -34,8 +34,8 @@ run "with_real_target_still_creates_one_flow_log" {
   }
 
   assert {
-    condition     = length(output.flow_log_ids) == 1
-    error_message = "flow_log_ids should expose exactly one ID when one flow log is created."
+    condition     = output.flow_log_ids == aws_flow_log.this[*].id
+    error_message = "flow_log_ids should expose exactly the IDs of the created aws_flow_log resources."
   }
 
   assert {

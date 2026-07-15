@@ -170,8 +170,8 @@ run "multiple_connect_peers_expand_via_for_each" {
   }
 
   assert {
-    condition     = length(output.configurations["sdwan_vedge_1"].inside_cidr_blocks) == 1
-    error_message = "configurations output should expose the inside_cidr_blocks field by its correct (non-typo'd) name with the configured CIDR block."
+    condition     = toset(output.configurations["sdwan_vedge_1"].inside_cidr_blocks) == toset(var.peers["sdwan_vedge_1"].inside_cidr_blocks)
+    error_message = "configurations output should expose the inside_cidr_blocks field by its correct (non-typo'd) name with the exact configured CIDR block(s)."
   }
 
   assert {
