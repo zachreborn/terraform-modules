@@ -21,9 +21,11 @@ locals {
 
   # try() guards against the case where none of the five target variables are
   # set (all null): coalesce() would otherwise fail with "no non-null,
-  # non-empty-string arguments". Real callers always provide exactly one
-  # target list; this only matters for static analysis tools (e.g. tflint)
-  # that evaluate the module with all variables left at their defaults.
+  # non-empty-string arguments" when static analysis tools (e.g. tflint)
+  # evaluate the module with all variables left at their defaults. Real
+  # callers must still provide exactly one target list -- that contract is
+  # enforced explicitly by the lifecycle precondition on aws_kms_key.key
+  # below, rather than relying on coalesce() itself to error out.
   flow_logs_source = try(coalesce(
     var.flow_eni_ids,
     var.flow_subnet_ids,
@@ -45,6 +47,14 @@ resource "aws_kms_key" "key" {
   key_usage                = var.key_usage
   is_enabled               = var.key_is_enabled
   tags                     = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = length(local.flow_logs_source) > 0
+      error_message = "One of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, or flow_vpc_ids must be provided."
+    }
+  }
+
   policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
