@@ -1,11 +1,21 @@
 output "arn" {
   description = "ARN of the cloudwatch log group used for flow logs"
-  value       = aws_cloudwatch_log_group.log_group[*].id
+  value       = aws_cloudwatch_log_group.log_group[*].arn
 }
 
 output "flow_log_ids" {
   description = "IDs of the created aws_flow_log resources. Useful for callers to verify wiring (that the flow log count and its target IDs match what was passed in)."
   value       = aws_flow_log.this[*].id
+}
+
+output "flow_log_eni_ids" {
+  description = "eni_id of each created aws_flow_log resource, in the same order as flow_eni_ids. Null entries indicate the flow log was targeted at a different resource type."
+  value       = aws_flow_log.this[*].eni_id
+}
+
+output "flow_log_subnet_ids" {
+  description = "subnet_id of each created aws_flow_log resource, in the same order as flow_subnet_ids. Null entries indicate the flow log was targeted at a different resource type."
+  value       = aws_flow_log.this[*].subnet_id
 }
 
 output "flow_log_vpc_ids" {

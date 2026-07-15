@@ -1,5 +1,8 @@
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.2.0: lifecycle.precondition (used below to enforce the "exactly one
+  # target" contract on aws_kms_key.key) was introduced in Terraform 1.2 /
+  # OpenTofu (all versions, since OpenTofu forked after Terraform 1.6).
+  required_version = ">= 1.2.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -50,8 +53,27 @@ resource "aws_kms_key" "key" {
 
   lifecycle {
     precondition {
+      # Count -- rather than just checking non-null -- so that supplying two or
+      # more target variables is rejected too. Without this, aws_flow_log.this
+      # would set multiple mutually exclusive target arguments (e.g. both
+      # subnet_id and vpc_id) from local.flow_logs_source, which the provider
+      # would only reject once it reaches AWS, not with a clear module error.
+      condition = (
+        (var.flow_eni_ids != null ? 1 : 0) +
+        (var.flow_subnet_ids != null ? 1 : 0) +
+        (var.flow_transit_gateway_ids != null ? 1 : 0) +
+        (var.flow_transit_gateway_attachment_ids != null ? 1 : 0) +
+        (var.flow_vpc_ids != null ? 1 : 0)
+      ) == 1
+      error_message = "Exactly one of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, or flow_vpc_ids must be provided."
+    }
+    precondition {
+      # Catches the edge case where the one supplied target variable is a
+      # non-null but empty list (e.g. flow_vpc_ids = []): the count above
+      # would pass, but flow_logs_source would resolve to [] and silently
+      # create zero flow logs instead of failing explicitly.
       condition     = length(local.flow_logs_source) > 0
-      error_message = "One of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, or flow_vpc_ids must be provided."
+      error_message = "The one target list provided (one of flow_eni_ids, flow_subnet_ids, flow_transit_gateway_ids, flow_transit_gateway_attachment_ids, flow_vpc_ids) must not be empty."
     }
   }
 
