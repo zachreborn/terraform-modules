@@ -41,7 +41,7 @@ output "transit_gateway_addresses" {
 
 # Complex Outputs
 output "configurations" {
-  description = "A map of the transit gateway connect peer configurations."
+  description = "A map of the transit gateway connect peer configurations. Includes a deprecated insider_cidr_blocks key kept as a backward-compatible alias for the misspelled key this object previously exported -- use inside_cidr_blocks instead, as insider_cidr_blocks will be removed in a future major version."
   value = { for key, value in aws_ec2_transit_gateway_connect_peer.peer : key => {
     bgp_asn                 = value.bgp_asn
     id                      = value.id
