@@ -1,5 +1,12 @@
 # Changelog
 
+## [11.0.2](https://github.com/zachreborn/terraform-modules/compare/v11.0.1...v11.0.2) (2026-07-15)
+
+
+### Bug Fixes
+
+* **amplify:** treat branches = null as empty map to prevent plan crash ([#426](https://github.com/zachreborn/terraform-modules/issues/426)) ([2e29296](https://github.com/zachreborn/terraform-modules/commit/2e2929682335cce62e5f17fe8a28313b8d7bd4b4))
+
 ## [11.0.1](https://github.com/zachreborn/terraform-modules/compare/v11.0.0...v11.0.1) (2026-07-15)
 
 
