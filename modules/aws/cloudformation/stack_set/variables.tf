@@ -122,6 +122,10 @@ variable "template_body" {
   description = "Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. Conflicts with 'template_url' parameter."
   type        = string
   default     = null
+  validation {
+    condition     = !(var.template_body != null && var.template_url != null)
+    error_message = "Only one of template_body or template_url may be set, not both."
+  }
 }
 
 variable "template_url" {

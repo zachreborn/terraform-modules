@@ -1,5 +1,23 @@
 # Changelog
 
+## [11.0.1](https://github.com/zachreborn/terraform-modules/compare/v11.0.0...v11.0.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **cloudformation/stack_set:** reject both template_body and template_url at plan time ([#425](https://github.com/zachreborn/terraform-modules/issues/425)) ([1e13d7f](https://github.com/zachreborn/terraform-modules/commit/1e13d7f6796362cb9a934aa8d4dc954f11047c27))
+
+## [11.0.0](https://github.com/zachreborn/terraform-modules/compare/v10.2.7...v11.0.0) (2026-07-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427))
+
+### Bug Fixes
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427)) ([ca12815](https://github.com/zachreborn/terraform-modules/commit/ca12815f4445cd391ad44897ca652a2799e24a03))
+
 ## [10.2.7](https://github.com/zachreborn/terraform-modules/compare/v10.2.6...v10.2.7) (2026-07-14)
 
 
