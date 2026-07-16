@@ -13,4 +13,12 @@ resource "aws_security_group" "sg" {
   name        = var.name
   tags        = merge(var.tags, ({ "Name" = format("%s", var.name) }))
   vpc_id      = var.vpc_id
+
+  # A name change forces replacement; create_before_destroy avoids the
+  # "DependencyViolation" delete-ordering problem for callers that reference
+  # this group's id from other resources (e.g. VPC endpoints, rules attached
+  # via aws_vpc_security_group_ingress_rule/egress_rule).
+  lifecycle {
+    create_before_destroy = true
+  }
 }
