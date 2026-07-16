@@ -19,8 +19,38 @@ variable "ipv4_netmask_length" {
   default     = null
 }
 
+variable "enable_ipv6" {
+  description = "(Optional) A boolean flag to enable/disable dual-stack IPv6 support. When true and ipv6_ipam_pool_id is not set, an Amazon-provided /56 IPv6 CIDR is auto-assigned to the VPC (assign_generated_ipv6_cidr_block). Every subnet this module manages then receives a /64 carved out of that block, an egress-only internet gateway is created, and IPv6 default routes (::/0) are added alongside the existing IPv4 defaults. Defaults false (IPv4-only)."
+  type        = bool
+  default     = false
+}
+
+variable "ipv6_ipam_pool_id" {
+  description = "(Optional) The ID of an IPv6 IPAM pool to source the VPC's IPv6 CIDR from. When set, the VPC requests its IPv6 CIDR from this pool (via ipv6_cidr_block/ipv6_netmask_length) instead of an Amazon-provided block. Only used when enable_ipv6 is true."
+  type        = string
+  default     = null
+}
+
+variable "ipv6_cidr_block" {
+  description = "(Optional) A specific IPv6 CIDR to request from the IPAM pool referenced by ipv6_ipam_pool_id. Leave null to let IPAM choose a CIDR automatically using ipv6_netmask_length."
+  type        = string
+  default     = null
+}
+
+variable "ipv6_netmask_length" {
+  description = "(Optional) The netmask length of the IPv6 CIDR to allocate from ipv6_ipam_pool_id. Valid values are 44-60 in increments of 4. Also used (regardless of ipv6_ipam_pool_id) to compute the /64 subnet carve-out math; defaults to 56, matching the fixed prefix length AWS assigns for Amazon-provided IPv6 CIDRs."
+  type        = number
+  default     = 56
+}
+
+variable "ipv6_cidr_block_network_border_group" {
+  description = "(Optional) The Network Border Group (e.g. a Local Zone) to restrict IPv6 address advertisement to. Defaults to the VPC's region when null."
+  type        = string
+  default     = null
+}
+
 variable "enable_dns_hostnames" {
-  description = "(Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false."
+  description = "(Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults true."
   type        = bool
   default     = true
 }
@@ -29,6 +59,12 @@ variable "enable_dns_support" {
   description = "(Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true."
   type        = bool
   default     = true
+}
+
+variable "enable_network_address_usage_metrics" {
+  description = "(Optional) Indicates whether Network Address Usage metrics are enabled for the VPC. Defaults false."
+  type        = bool
+  default     = false
 }
 
 variable "instance_tenancy" {
@@ -63,17 +99,35 @@ variable "enable_ecr_vpc_endpoints" {
   default     = false
 }
 variable "subnet_indices" {
-  description = "List of subnet indices to use (0-2)"
+  description = "(Optional) List of indices into private_subnets_list identifying which private subnets the SSM VPC endpoints (enable_ssm_vpc_endpoints) should be placed in. Defaults to just the first private subnet to minimize per-AZ interface endpoint charges; add more indices to spread SSM endpoints across additional AZs. Unlike the SSM endpoints, the ECR/CloudWatch Logs endpoints (enable_ecr_vpc_endpoints) are always placed in every private subnet, since container image pulls must succeed from workloads in any AZ."
   type        = list(number)
   default     = [0]
 
   validation {
     condition = alltrue([
-      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= 2 && length(var.subnet_indices) <= length(var.private_subnets_list)
-
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= max(length(var.private_subnets_list) - 1, 0) && length(var.subnet_indices) <= length(var.private_subnets_list)
     ])
-    error_message = "Subnet indices must be between 0 and 2."
+    error_message = "Subnet indices must reference valid, unique positions within private_subnets_list (0 to length(private_subnets_list) - 1)."
   }
+}
+
+variable "vpc_endpoints" {
+  description = "(Optional) Map of additional VPC endpoints to create, keyed by an arbitrary, unique endpoint name. Use this to attach any Interface, Gateway, GatewayLoadBalancer, Resource, or ServiceNetwork endpoint not covered by enable_ssm_vpc_endpoints/enable_ecr_vpc_endpoints/enable_s3_endpoint, without editing this module (e.g. Secrets Manager, STS, EC2, SNS/SQS). Gateway-type endpoints default to being associated with every public and private route table this module manages unless route_table_ids is set explicitly."
+  type = map(object({
+    service_name               = optional(string)
+    resource_configuration_arn = optional(string)
+    service_network_arn        = optional(string)
+    vpc_endpoint_type          = optional(string, "Interface")
+    auto_accept                = optional(bool)
+    policy                     = optional(string)
+    private_dns_enabled        = optional(bool, false)
+    ip_address_type            = optional(string)
+    security_group_ids         = optional(list(string), [])
+    subnet_ids                 = optional(list(string))
+    route_table_ids            = optional(list(string))
+    tags                       = optional(map(string), {})
+  }))
+  default = {}
 }
 ###########################
 # Subnets
@@ -98,7 +152,7 @@ variable "dmz_subnets_list" {
 }
 
 variable "map_public_ip_on_launch" {
-  description = "(Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is false."
+  description = "(Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is true."
   type        = bool
   default     = true
 }
@@ -189,6 +243,26 @@ variable "workspaces_propagating_vgws" {
   default     = null
 }
 
+variable "additional_routes" {
+  description = "(Optional) Map of additional routes to add to this module's managed route tables, for destinations not covered by the built-in IGW/NAT/firewall/IPv6 defaults (e.g. VPC peering, Transit Gateway, prefix lists, carrier gateway, VPC Lattice). Each key is an arbitrary, unique route name. route_table_types selects which of this module's route table tiers (private, public, db, dmz, mgmt, workspaces) the route is added to; the same route is replicated across every route table this module manages in each selected tier."
+  type = map(object({
+    route_table_types           = list(string)
+    destination_cidr_block      = optional(string)
+    destination_ipv6_cidr_block = optional(string)
+    destination_prefix_list_id  = optional(string)
+    vpc_peering_connection_id   = optional(string)
+    transit_gateway_id          = optional(string)
+    carrier_gateway_id          = optional(string)
+    core_network_arn            = optional(string)
+    vpc_endpoint_id             = optional(string)
+    network_interface_id        = optional(string)
+    egress_only_gateway_id      = optional(string)
+    nat_gateway_id              = optional(string)
+    gateway_id                  = optional(string)
+  }))
+  default = {}
+}
+
 ###########################
 # VPC Flow Log
 ###########################
@@ -208,6 +282,18 @@ variable "cloudwatch_retention_in_days" {
   }
 }
 
+variable "cloudwatch_deletion_protection_enabled" {
+  description = "(Optional) If true, prevents the flow logs' CloudWatch log group from being deleted. Defaults false. Requires AWS provider >= 6.25.0. Passed through to modules/aws/flow_logs."
+  type        = bool
+  default     = false
+}
+
+variable "iam_policy_description" {
+  description = "(Optional, Forces new resource) Description of the flow logs IAM policy. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = "Used with flow logs to send packet capture logs to a CloudWatch log group."
+}
+
 variable "iam_policy_name_prefix" {
   description = "(Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with name."
   type        = string
@@ -220,10 +306,41 @@ variable "iam_policy_path" {
   default     = "/"
 }
 
+variable "iam_role_assume_role_policy" {
+  description = "(Optional) The policy that grants the flow logs service permission to assume the IAM role. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
 variable "iam_role_description" {
   description = "(Optional) The description of the role."
   type        = string
   default     = "Role utilized for VPC flow logs. This role allows creation of log streams and adding logs to the log streams in cloudwatch"
+}
+
+variable "iam_role_force_detach_policies" {
+  description = "(Optional) Specifies to force detaching any policies the flow logs role has before destroying it. Defaults false. Passed through to modules/aws/flow_logs."
+  type        = bool
+  default     = false
+}
+
+variable "iam_role_max_session_duration" {
+  description = "(Optional) The maximum session duration (in seconds, 3600-43200) for the flow logs IAM role. Passed through to modules/aws/flow_logs."
+  type        = number
+  default     = 3600
 }
 
 variable "iam_role_name_prefix" {
@@ -232,10 +349,76 @@ variable "iam_role_name_prefix" {
   default     = "flow_logs_role_"
 }
 
+variable "iam_role_permissions_boundary" {
+  description = "(Optional) The ARN of the policy used to set the permissions boundary for the flow logs IAM role. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = null
+}
+
+variable "key_customer_master_key_spec" {
+  description = "(Optional) Specifies whether the flow logs KMS key contains a symmetric key or an asymmetric key pair. Defaults SYMMETRIC_DEFAULT. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = "SYMMETRIC_DEFAULT"
+}
+
+variable "key_description" {
+  description = "(Optional) The description of the flow logs KMS key as viewed in the AWS console. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = "CloudWatch kms key used to encrypt flow logs"
+}
+
+variable "key_deletion_window_in_days" {
+  description = "(Optional) Duration in days (7-30) after which the flow logs KMS key is deleted after destruction of the resource. Defaults 30. Passed through to modules/aws/flow_logs."
+  type        = number
+  default     = 30
+}
+
+variable "key_enable_key_rotation" {
+  description = "(Optional) Specifies whether automatic rotation is enabled for the flow logs KMS key. Defaults true. Passed through to modules/aws/flow_logs."
+  type        = bool
+  default     = true
+}
+
+variable "key_usage" {
+  description = "(Optional) Specifies the intended use of the flow logs KMS key. Defaults ENCRYPT_DECRYPT. Passed through to modules/aws/flow_logs."
+  type        = string
+  default     = "ENCRYPT_DECRYPT"
+}
+
+variable "key_is_enabled" {
+  description = "(Optional) Specifies whether the flow logs KMS key is enabled. Defaults true. Passed through to modules/aws/flow_logs."
+  type        = bool
+  default     = true
+}
+
 variable "key_name_prefix" {
   description = "(Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/)."
   type        = string
   default     = "alias/flow_logs_key_"
+}
+
+variable "flow_eni_ids" {
+  description = "(Optional) List of Elastic Network Interface IDs to attach the flow logs to, in addition to this module's own VPC. Passed through to modules/aws/flow_logs."
+  type        = list(string)
+  default     = null
+}
+
+variable "flow_subnet_ids" {
+  description = "(Optional) List of Subnet IDs to attach the flow logs to, in addition to this module's own VPC. Passed through to modules/aws/flow_logs."
+  type        = list(string)
+  default     = null
+}
+
+variable "flow_transit_gateway_ids" {
+  description = "(Optional) List of IDs of the transit gateways to attach the flow logs to. Passed through to modules/aws/flow_logs."
+  type        = list(string)
+  default     = null
+}
+
+variable "flow_transit_gateway_attachment_ids" {
+  description = "(Optional) List of IDs of the transit gateway attachments to attach the flow logs to. Passed through to modules/aws/flow_logs."
+  type        = list(string)
+  default     = null
 }
 
 variable "flow_deliver_cross_account_role" {
