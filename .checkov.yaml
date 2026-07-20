@@ -138,6 +138,14 @@ skip-check:
   # SNS
   - CKV_AWS_26 # SNS topic encryption - exposed as kms_master_key_id variable
 
+  # WorkSpaces
+  # root_volume_encryption_enabled/user_volume_encryption_enabled default to true and are exposed as
+  # per-entry caller-controlled variables; Checkov's static analysis cannot resolve the dynamic
+  # each.value.<attribute> reference used to wire a for_each map entry into the resource, so it cannot
+  # see that encryption defaults on.
+  - CKV_AWS_155 # Workspace user volumes are encrypted
+  - CKV_AWS_156 # Workspace root volumes are encrypted
+
   # Miscellaneous configurable checks
   - CKV_AWS_274 # Configurable by caller
   - CKV_AWS_289 # Configurable by caller
