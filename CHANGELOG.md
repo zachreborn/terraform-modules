@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.1.0](https://github.com/zachreborn/terraform-modules/compare/v12.0.1...v12.1.0) (2026-07-20)
+
+
+### Features
+
+* **kms:** add optional region variable for cross-Region key creation ([#439](https://github.com/zachreborn/terraform-modules/issues/439)) ([5b60b47](https://github.com/zachreborn/terraform-modules/commit/5b60b47dc5c05846318c6bbd392c30de78eec060))
+
 ## [12.0.1](https://github.com/zachreborn/terraform-modules/compare/v12.0.0...v12.0.1) (2026-07-20)
 
 
