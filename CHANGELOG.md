@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.0.1](https://github.com/zachreborn/terraform-modules/compare/v12.0.0...v12.0.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **ecs:** suppress Checkov CKV_AWS_224 and CKV_AWS_97 false positives on cluster and task_definition ([#437](https://github.com/zachreborn/terraform-modules/issues/437)) ([b1bddb8](https://github.com/zachreborn/terraform-modules/commit/b1bddb8aa46149c3b07ab532f572ecce576e6415))
+
 ## [12.0.0](https://github.com/zachreborn/terraform-modules/compare/v11.0.2...v12.0.0) (2026-07-15)
 
 
