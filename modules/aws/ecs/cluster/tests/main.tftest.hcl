@@ -37,6 +37,19 @@ run "fargate_defaults_plan_succeeds" {
     condition     = anytrue([for s in data.aws_iam_policy_document.kms[0].statement : s.sid == "AllowFargateCreateGrant"])
     error_message = "Expected the KMS key policy to grant fargate.amazonaws.com the CreateGrant permission needed for Fargate ephemeral storage encryption."
   }
+
+  # CKV_AWS_224 behavior assertions: prove that, under module defaults, the exec-command
+  # configuration is genuinely CMK-backed and CloudWatch-encrypted (i.e. the suppressed
+  # finding is a false positive, not a real gap).
+  assert {
+    condition     = aws_ecs_cluster.this.configuration[0].execute_command_configuration[0].kms_key_id != null
+    error_message = "Expected execute_command_configuration.kms_key_id to be set by default (CMK-backed exec-command logging), proving CKV_AWS_224 is a false positive."
+  }
+
+  assert {
+    condition     = aws_ecs_cluster.this.configuration[0].execute_command_configuration[0].log_configuration[0].cloud_watch_encryption_enabled == true
+    error_message = "Expected log_configuration.cloud_watch_encryption_enabled to be true by default, proving CKV_AWS_224 is a false positive."
+  }
 }
 
 run "bring_your_own_kms_key_does_not_create_one" {
@@ -85,5 +98,10 @@ run "disabling_execute_command_logging_skips_log_group_creation" {
   assert {
     condition     = output.cloud_watch_log_group_name == null
     error_message = "Expected no log group output when enable_execute_command_logging is false, even though create_cloud_watch_log_group defaults to true."
+  }
+
+  assert {
+    condition     = length(aws_ecs_cluster.this.configuration[0].execute_command_configuration) == 0
+    error_message = "Expected execute_command_configuration block to be absent when enable_execute_command_logging is false, proving the dynamic block guard works correctly."
   }
 }
