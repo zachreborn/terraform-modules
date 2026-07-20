@@ -70,17 +70,17 @@ run "outputs_expose_keyed_maps" {
   }
 
   assert {
-    condition     = output.ids["primary"] != null
-    error_message = "ids output should contain the primary key."
+    condition     = output.ids["primary"] == "rft-8012925589"
+    error_message = "ids output should reflect the mocked ID."
   }
 
   assert {
-    condition     = output.owner_account_ids["primary"] != null
-    error_message = "owner_account_ids output should contain the primary key."
+    condition     = output.owner_account_ids["primary"] == "123456789012"
+    error_message = "owner_account_ids output should reflect the mocked owner account ID."
   }
 
   assert {
-    condition     = output.states["primary"] != null
-    error_message = "states output should contain the primary key."
+    condition     = output.states["primary"] == "CREATED"
+    error_message = "states output should reflect the mocked state."
   }
 }

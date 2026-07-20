@@ -129,7 +129,7 @@ run "outputs_expose_keyed_map" {
   }
 
   assert {
-    condition     = output.ids["contractors"] != null
-    error_message = "ids output should contain the contractors key."
+    condition     = output.ids["contractors"] == "wsipg-488lrtl3k"
+    error_message = "ids output should reflect the mocked ID."
   }
 }

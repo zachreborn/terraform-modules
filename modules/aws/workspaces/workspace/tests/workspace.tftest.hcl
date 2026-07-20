@@ -129,8 +129,8 @@ run "default_kms_key_created_when_an_entry_needs_it" {
   }
 
   assert {
-    condition     = output.kms_key_arn != null
-    error_message = "kms_key_arn output should be non-null when the default key is created."
+    condition     = output.kms_key_arn == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
+    error_message = "kms_key_arn output should reflect the mocked default KMS key ARN."
   }
 }
 
@@ -161,6 +161,37 @@ run "default_kms_key_not_created_when_every_entry_supplies_its_own_key" {
   assert {
     condition     = output.kms_key_arn == null
     error_message = "kms_key_arn output should be null when no default key is created."
+  }
+}
+
+run "default_kms_key_not_created_when_entry_disables_both_encryption_flags" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_id                   = "d-1234567890"
+        user_name                      = "jdoe"
+        bundle_id                      = "wsb-bh8rsxt14"
+        root_volume_encryption_enabled = false
+        user_volume_encryption_enabled = false
+      }
+    }
+  }
+
+  assert {
+    condition     = length(module.default_kms_key) == 0
+    error_message = "No default KMS key module instance should be created when the only entry has both encryption flags disabled."
+  }
+
+  assert {
+    condition     = aws_workspaces_workspace.this["jdoe"].volume_encryption_key == null
+    error_message = "volume_encryption_key should be null when both encryption flags are disabled, even though enable_default_kms_key defaults to true."
+  }
+
+  assert {
+    condition     = output.kms_key_arn == null
+    error_message = "kms_key_arn output should be null when no entry actually needs a key."
   }
 }
 
@@ -218,6 +249,31 @@ run "workspace_properties_defaults_are_applied" {
   }
 }
 
+run "running_mode_auto_stop_timeout_is_null_for_always_on" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_id = "d-1234567890"
+        user_name    = "jdoe"
+        bundle_id    = "wsb-bh8rsxt14"
+        workspace_properties = {
+          running_mode = "ALWAYS_ON"
+        }
+      }
+    }
+  }
+
+  # The provider schema represents this optional nested-block attribute's "unset" state as 0, not null,
+  # so setting it to null (rather than the module's AUTO_STOP-oriented default of 60) for ALWAYS_ON makes
+  # the config-time value match what AWS itself reports (0), eliminating the perpetual 0 -> 60 diff.
+  assert {
+    condition     = aws_workspaces_workspace.this["jdoe"].workspace_properties[0].running_mode_auto_stop_timeout_in_minutes == 0
+    error_message = "running_mode_auto_stop_timeout_in_minutes must resolve to 0 (not 60) for ALWAYS_ON to avoid a perpetual diff against AWS's reported value."
+  }
+}
+
 run "tags_merge_module_and_entry_tags" {
   command = plan
 
@@ -262,18 +318,23 @@ run "outputs_expose_keyed_maps" {
   }
 
   assert {
-    condition     = output.ids["jdoe"] != null
-    error_message = "ids output should contain the jdoe key."
+    condition     = output.ids["jdoe"] == "ws-9z9zmbkhv"
+    error_message = "ids output should reflect the mocked ID."
   }
 
   assert {
-    condition     = output.ip_addresses["jdoe"] != null
-    error_message = "ip_addresses output should contain the jdoe key."
+    condition     = output.ip_addresses["jdoe"] == aws_workspaces_workspace.this["jdoe"].ip_address
+    error_message = "ip_addresses output should reflect the resource's ip_address attribute."
   }
 
   assert {
-    condition     = output.computer_names["jdoe"] != null
-    error_message = "computer_names output should contain the jdoe key."
+    condition     = output.computer_names["jdoe"] == "IP-1234ABCD"
+    error_message = "computer_names output should reflect the mocked computer name."
+  }
+
+  assert {
+    condition     = output.states["jdoe"] == "AVAILABLE"
+    error_message = "states output should reflect the mocked state."
   }
 
   assert {

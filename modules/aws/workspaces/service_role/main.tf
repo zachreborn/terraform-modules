@@ -45,8 +45,8 @@ module "role" {
   source = "../../iam/role"
 
   name               = var.name
-  description        = "Service-linked role used by Amazon WorkSpaces to manage Elastic Network Interfaces and (optionally) self-service actions on behalf of directory users."
+  description        = "Service role used by Amazon WorkSpaces to manage Elastic Network Interfaces and (optionally) self-service actions on behalf of directory users."
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
   policy_arns        = local.policy_arns
-  tags               = var.tags
+  tags               = merge(tomap({ Name = var.name }), var.tags)
 }

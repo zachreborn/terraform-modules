@@ -180,7 +180,7 @@ run "outputs_expose_keyed_map" {
   }
 
   assert {
-    condition     = output.ids["corp"] != null
-    error_message = "ids output should contain the corp key."
+    condition     = output.ids["corp"] == "d-1234567890"
+    error_message = "ids output should reflect the mocked ID."
   }
 }

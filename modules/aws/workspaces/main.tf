@@ -43,6 +43,12 @@ module "directories" {
   directories        = var.directories
   ip_group_id_lookup = module.ip_groups.ids
   tags               = var.tags
+
+  # WorkSpaces requires workspaces_DefaultRole (and its policy attachments) to exist before directories can
+  # be registered against the service; without this, a fresh apply can attempt directory registration
+  # concurrently with role creation and fail nondeterministically. module.workspaces already depends on this
+  # transitively via module.directories.ids, but module.directories itself has no such dependency otherwise.
+  depends_on = [module.service_role]
 }
 
 ###########################
@@ -66,6 +72,6 @@ module "workspaces" {
   workspaces             = var.workspaces
   directory_id_lookup    = module.directories.ids
   enable_default_kms_key = var.enable_default_kms_key
-  kms_key_alias          = var.kms_key_alias
+  kms_key_alias_prefix   = var.kms_key_alias_prefix
   tags                   = var.tags
 }

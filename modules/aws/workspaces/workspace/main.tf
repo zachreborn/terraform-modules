@@ -31,20 +31,30 @@ locals {
     }
   }
 
-  # Whether any entry needs the shared default KMS key because it didn't supply its own volume_encryption_key.
+  # Whether an entry actually needs a volume_encryption_key at all: AWS rejects VolumeEncryptionKey when
+  # neither root nor user volume encryption is enabled, so an entry with both flags false must never be
+  # assigned a key (caller-supplied or shared default).
+  entry_needs_encryption_key = {
+    for k, v in var.workspaces : k => v.root_volume_encryption_enabled || v.user_volume_encryption_enabled
+  }
+
+  # Whether any entry needs the shared default KMS key because it didn't supply its own volume_encryption_key
+  # and actually has at least one volume encryption flag enabled (see entry_needs_encryption_key above) --
+  # an entry with both flags false must not trigger creation of a key it can never use.
   default_kms_key_needed = var.enable_default_kms_key && anytrue([
-    for k, v in var.workspaces : v.volume_encryption_key == null
+    for k, v in var.workspaces : v.volume_encryption_key == null && local.entry_needs_encryption_key[k]
   ])
 
   # Resolve each entry's directory_id from directory_key via var.directory_id_lookup when a literal
-  # directory_id was not supplied. Uses lookup() (returns null for a missing key) rather than direct
-  # indexing, so an invalid key surfaces through the resource's own precondition below with a clear error
-  # message instead of a raw "Invalid index" evaluation error -- referencing var.directory_id_lookup (a
-  # different variable from var.workspaces) inside a variable validation block isn't supported on
-  # Terraform < 1.9 / OpenTofu < 1.9, so this check must live here instead. See
-  # modules/aws/organizations/account/main.tf for the same pattern applied to parent_key.
+  # directory_id was not supplied. Uses lookup() with a non-null sentinel default (rather than null or
+  # direct indexing) so the resolved value stays type-correct: aws_workspaces_workspace.directory_id is a
+  # required string, and a null value would fail Terraform's own required-argument check before the
+  # resource's lifecycle precondition below ever runs, surfacing a generic error instead of the intended
+  # clearer message. Referencing var.directory_id_lookup (a different variable from var.workspaces) inside
+  # a variable validation block isn't supported on Terraform < 1.9 / OpenTofu < 1.9, so this check must live
+  # here instead. See modules/aws/organizations/account/main.tf for the same pattern applied to parent_key.
   resolved_directory_ids = {
-    for k, v in var.workspaces : k => v.directory_key != null ? lookup(var.directory_id_lookup, v.directory_key, null) : v.directory_id
+    for k, v in var.workspaces : k => v.directory_key != null ? lookup(var.directory_id_lookup, v.directory_key, "__invalid_directory_key__") : v.directory_id
   }
 
   resolved_bundle_ids = {
@@ -56,9 +66,13 @@ locals {
 
   # Not coalesce(): coalesce() errors when every argument is null, but this should resolve to a plain null
   # (so AWS falls back to its own default key) when both volume_encryption_key and the shared default key
-  # are unset, e.g. when enable_default_kms_key is false and the caller didn't supply their own key.
+  # are unset, e.g. when enable_default_kms_key is false and the caller didn't supply their own key. Also
+  # forced to null whenever the entry has both encryption flags disabled (entry_needs_encryption_key),
+  # since AWS rejects VolumeEncryptionKey in that case even if a shared/caller key would otherwise apply.
   resolved_volume_encryption_keys = {
-    for k, v in var.workspaces : k => v.volume_encryption_key != null ? v.volume_encryption_key : try(module.default_kms_key["this"].arn, null)
+    for k, v in var.workspaces : k => !local.entry_needs_encryption_key[k] ? null : (
+      v.volume_encryption_key != null ? v.volume_encryption_key : try(module.default_kms_key["this"].arn, null)
+    )
   }
 }
 
@@ -105,8 +119,10 @@ data "aws_iam_policy_document" "default_kms_key" {
     sid    = "AllowWorkSpacesServiceUse"
     effect = "Allow"
     actions = [
+      "kms:Encrypt",
       "kms:Decrypt",
-      "kms:GenerateDataKey",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*", # Covers both GenerateDataKey and GenerateDataKeyWithoutPlaintext.
       "kms:DescribeKey",
       "kms:CreateGrant",
     ]
@@ -124,10 +140,10 @@ module "default_kms_key" {
 
   for_each = local.default_kms_key_needed ? { this = true } : {}
 
-  name_prefix = var.kms_key_alias
+  name_prefix = var.kms_key_alias_prefix
   description = "Shared customer-managed key used to encrypt Amazon WorkSpaces root/user volumes."
   policy      = data.aws_iam_policy_document.default_kms_key["this"].json
-  tags        = var.tags
+  tags        = merge(tomap({ Name = var.kms_key_alias_prefix }), var.tags)
 }
 
 ###########################
@@ -140,10 +156,11 @@ resource "aws_workspaces_workspace" "this" {
   directory_id                   = local.resolved_directory_ids[each.key]
   bundle_id                      = local.resolved_bundle_ids[each.key]
   user_name                      = each.value.user_name
+  region                         = each.value.region
   root_volume_encryption_enabled = each.value.root_volume_encryption_enabled
   user_volume_encryption_enabled = each.value.user_volume_encryption_enabled
   volume_encryption_key          = local.resolved_volume_encryption_keys[each.key]
-  tags                           = merge(var.tags, each.value.tags)
+  tags                           = merge(tomap({ Name = each.key }), var.tags, each.value.tags)
 
   lifecycle {
     precondition {
@@ -153,10 +170,13 @@ resource "aws_workspaces_workspace" "this" {
   }
 
   workspace_properties {
-    compute_type_name                         = each.value.workspace_properties.compute_type_name
-    root_volume_size_gib                      = each.value.workspace_properties.root_volume_size_gib
-    running_mode                              = each.value.workspace_properties.running_mode
-    running_mode_auto_stop_timeout_in_minutes = each.value.workspace_properties.running_mode_auto_stop_timeout_in_minutes
+    compute_type_name    = each.value.workspace_properties.compute_type_name
+    root_volume_size_gib = each.value.workspace_properties.root_volume_size_gib
+    running_mode         = each.value.workspace_properties.running_mode
+    # The provider never sends this timeout to AWS for ALWAYS_ON and reads it back as 0, so supplying the
+    # module's AUTO_STOP-oriented default of 60 unconditionally would produce a perpetual 0 -> 60 diff for
+    # ALWAYS_ON entries. Only set it for AUTO_STOP.
+    running_mode_auto_stop_timeout_in_minutes = each.value.workspace_properties.running_mode == "AUTO_STOP" ? each.value.workspace_properties.running_mode_auto_stop_timeout_in_minutes : null
     user_volume_size_gib                      = each.value.workspace_properties.user_volume_size_gib
   }
 }

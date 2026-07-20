@@ -169,6 +169,125 @@ run "rejects_invalid_ip_group_key_reference" {
   expect_failures = [aws_workspaces_directory.this]
 }
 
+run "explicit_null_workspace_access_properties_falls_back_to_default" {
+  command = plan
+
+  # Terraform replaces an explicit null with the declared default for an optional(type, default)
+  # attribute -- identical to omitting it entirely -- so this must not fail and must apply the
+  # same secure-by-default workspace_access_properties as omitting it.
+  variables {
+    directories = {
+      corp = {
+        directory_id                = "d-1234567890"
+        workspace_access_properties = null
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_workspaces_directory.this["corp"].workspace_access_properties[0].device_type_web == "DENY"
+    error_message = "An explicit null workspace_access_properties should fall back to the secure-by-default value, not crash or bypass it."
+  }
+}
+
+run "rejects_active_directory_config_for_personal_directory" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        active_directory_config = {
+          domain_name                = "example.internal"
+          service_account_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "rejects_enabled_saml_without_user_access_url" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        saml_properties = {
+          status = "ENABLED"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "allows_enabled_saml_with_user_access_url" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        saml_properties = {
+          status          = "ENABLED"
+          user_access_url = "https://sso.example.com/"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_workspaces_directory.this) == 1
+    error_message = "Expected exactly one directory to be planned."
+  }
+}
+
+run "rejects_enabled_cba_without_certificate_authority_arn_and_saml" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        certificate_based_auth_properties = {
+          status = "ENABLED"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "allows_enabled_cba_with_certificate_authority_arn_and_saml_enabled" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        saml_properties = {
+          status          = "ENABLED"
+          user_access_url = "https://sso.example.com/"
+        }
+        certificate_based_auth_properties = {
+          status                    = "ENABLED"
+          certificate_authority_arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/example"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_workspaces_directory.this) == 1
+    error_message = "Expected exactly one directory to be planned."
+  }
+}
+
 run "resolves_valid_ip_group_key_via_ip_group_id_lookup" {
   command = plan
 

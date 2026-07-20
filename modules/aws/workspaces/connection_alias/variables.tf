@@ -5,10 +5,13 @@ variable "connection_aliases" {
     Fields:
       - connection_string: (Required) Fully qualified domain name for the connection alias, e.g.
                             "workspaces.example.com".
+      - region:             (Optional) Region where this connection alias is managed. Defaults to the Region
+                            set in the provider configuration.
       - tags:              (Optional) Additional tags for this connection alias, merged with var.tags.
   EOT
   type = map(object({
     connection_string = string
+    region            = optional(string)
     tags              = optional(map(string), {})
   }))
   default = {}

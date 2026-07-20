@@ -27,15 +27,17 @@ locals {
   }
 
   # Merge each entry's literal ip_group_ids with IDs looked up from ip_group_keys via var.ip_group_id_lookup.
-  # Uses lookup() (returns null for a missing key) rather than direct indexing, so an invalid key surfaces
-  # through the resource's own precondition below with a clear error message instead of a raw "Invalid index"
-  # evaluation error -- referencing var.ip_group_id_lookup (a different variable from var.directories) inside
-  # a variable validation block isn't supported on Terraform < 1.9 / OpenTofu < 1.9, so this check must live
-  # here instead. See modules/aws/organizations/account/main.tf for the same pattern applied to parent_key.
+  # Uses lookup() with a non-null sentinel default (rather than null or direct indexing) so the resolved
+  # list stays type-correct: aws_workspaces_directory.ip_group_ids is list(string), and a null element would
+  # fail Terraform's own type check before the resource's lifecycle precondition below ever runs, surfacing
+  # a generic error instead of the intended clearer message. Referencing var.ip_group_id_lookup (a different
+  # variable from var.directories) inside a variable validation block isn't supported on Terraform < 1.9 /
+  # OpenTofu < 1.9, so this check must live here instead. See modules/aws/organizations/account/main.tf for
+  # the same pattern applied to parent_key.
   resolved_ip_group_ids = {
     for k, v in var.directories : k => distinct(concat(
       v.ip_group_ids,
-      [for ip_group_key in v.ip_group_keys : lookup(var.ip_group_id_lookup, ip_group_key, null)]
+      [for ip_group_key in v.ip_group_keys : lookup(var.ip_group_id_lookup, ip_group_key, "__invalid_ip_group_key__")]
     ))
   }
 }
@@ -49,8 +51,9 @@ resource "aws_workspaces_directory" "this" {
 
   directory_id                    = each.value.directory_id
   ip_group_ids                    = local.resolved_ip_group_ids[each.key]
+  region                          = each.value.region
   subnet_ids                      = each.value.subnet_ids
-  tags                            = merge(var.tags, each.value.tags)
+  tags                            = merge(tomap({ Name = each.key }), var.tags, each.value.tags)
   tenancy                         = each.value.tenancy
   workspace_type                  = each.value.workspace_type
   workspace_directory_name        = each.value.workspace_directory_name

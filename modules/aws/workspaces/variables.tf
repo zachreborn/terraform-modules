@@ -15,9 +15,9 @@ variable "service_role_name" {
 }
 
 variable "enable_self_service_access" {
-  description = "(Optional) If true, additionally attaches the AmazonWorkSpacesSelfServiceAccess managed policy to the service role created when enable_service_role is true. Passed through to the service_role submodule. Defaults to false."
+  description = "(Optional) If true (the default), additionally attaches the AmazonWorkSpacesSelfServiceAccess managed policy to the service role created when enable_service_role is true. Passed through to the service_role submodule, whose own default matches this one -- see that module's variable for the rationale (directories default restart_workspace = true, so the role needs this policy for that to actually work)."
   type        = bool
-  default     = false
+  default     = true
 }
 
 ############################################################
@@ -169,8 +169,8 @@ variable "enable_default_kms_key" {
   default     = true
 }
 
-variable "kms_key_alias" {
-  description = "(Optional) Passed through to the workspace submodule's kms_key_alias field. Ignored when enable_default_kms_key is false or no entry needs the shared key."
+variable "kms_key_alias_prefix" {
+  description = "(Optional) Passed through to the workspace submodule's kms_key_alias_prefix field. Ignored when enable_default_kms_key is false or no entry needs the shared key. See that submodule's variable for the exact alias-naming behavior (a generated suffix is appended to this prefix)."
   type        = string
   default     = "workspaces"
 }

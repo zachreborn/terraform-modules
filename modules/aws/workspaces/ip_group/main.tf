@@ -17,7 +17,8 @@ resource "aws_workspaces_ip_group" "this" {
 
   name        = coalesce(each.value.name, each.key)
   description = each.value.description
-  tags        = merge(var.tags, each.value.tags)
+  region      = each.value.region
+  tags        = merge(tomap({ Name = coalesce(each.value.name, each.key) }), var.tags, each.value.tags)
 
   dynamic "rules" {
     for_each = each.value.rules

@@ -19,7 +19,7 @@ groups:
       - dprince
 
   - directory_key: corp_saml
-    bundle_name: "Amazon Linux 2"
+    bundle_name: "Ubuntu 22.04"
     usernames:
       - egordon
       - fcastle

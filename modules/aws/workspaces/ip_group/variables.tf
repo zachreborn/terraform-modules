@@ -4,6 +4,8 @@ variable "ip_groups" {
     Fields:
       - name:        (Optional) Name of the IP group. Defaults to the entry's map key when unset.
       - description: (Optional) Description of the IP group.
+      - region:      (Optional) Region where this IP group is managed. Defaults to the Region set in the
+                     provider configuration.
       - rules:       (Optional) List of CIDR rules for this group. Each rule sets source (Required, CIDR
                      notation, e.g. "10.0.0.0/16") and an optional description. Defaults to [].
       - tags:        (Optional) Additional tags for this IP group, merged with var.tags.
@@ -11,6 +13,7 @@ variable "ip_groups" {
   type = map(object({
     name        = optional(string)
     description = optional(string)
+    region      = optional(string)
     rules = optional(list(object({
       source      = string
       description = optional(string)

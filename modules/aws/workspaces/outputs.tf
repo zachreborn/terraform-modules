@@ -30,6 +30,26 @@ output "directory_ids" {
   value       = module.directories.ids
 }
 
+output "directory_aliases" {
+  description = "Map of WorkSpaces directory aliases, keyed by the same keys as var.directories."
+  value       = module.directories.aliases
+}
+
+output "directory_registration_codes" {
+  description = "Map of directory registration codes (entered by users in the WorkSpaces client to connect), keyed by the same keys as var.directories."
+  value       = module.directories.registration_codes
+}
+
+output "directory_dns_ip_addresses" {
+  description = "Map of the list of DNS server IP addresses for each directory, keyed by the same keys as var.directories."
+  value       = module.directories.dns_ip_addresses
+}
+
+output "directory_workspace_security_group_ids" {
+  description = "Map of the security group IDs assigned to new WorkSpaces desktops in each directory, keyed by the same keys as var.directories."
+  value       = module.directories.workspace_security_group_ids
+}
+
 ############################################################
 # Connection Aliases
 ############################################################

@@ -227,4 +227,19 @@ run "full_kitchen_sink_example_plans_successfully" {
     condition     = length(output.ip_group_ids) == 1
     error_message = "Expected 1 IP group to be planned."
   }
+
+  assert {
+    condition     = output.workspace_ip_addresses["jdoe"] != null
+    error_message = "workspace_ip_addresses should forward the workspace submodule's output; exact-value fidelity is covered by that submodule's own tests."
+  }
+
+  assert {
+    condition     = output.workspace_computer_names["jdoe"] == "IP-1234ABCD"
+    error_message = "workspace_computer_names should forward the workspace submodule's mocked computer name."
+  }
+
+  assert {
+    condition     = output.kms_key_arn == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
+    error_message = "kms_key_arn should forward the workspace submodule's mocked default KMS key ARN."
+  }
 }

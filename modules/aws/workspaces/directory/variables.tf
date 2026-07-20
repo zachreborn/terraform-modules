@@ -17,24 +17,28 @@ variable "directories" {
                                            to [].
       - ip_group_keys:                    (Optional) Keys into var.ip_group_id_lookup, resolved into literal
                                            IP group IDs and merged with ip_group_ids above. Defaults to [].
+      - region:                           (Optional) Region where this directory is managed. Defaults to the
+                                           Region set in the provider configuration.
       - tenancy:                          (Optional) DEDICATED or SHARED.
       - workspace_directory_name:         (Required when workspace_type = POOLS) Name of the directory.
       - workspace_directory_description:  (Required when workspace_type = POOLS) Description of the directory.
       - user_identity_type:               (Required when workspace_type = POOLS) One of CUSTOMER_MANAGED,
                                            AWS_DIRECTORY_SERVICE, or AWS_IAM_IDENTITY_CENTER.
-      - active_directory_config:          (Optional, POOLS only) Active Directory domain join settings.
-                                           Fields: domain_name (Required), service_account_secret_arn
-                                           (Required, ARN of a Secrets Manager secret holding the domain-join
-                                           service account credentials).
+      - active_directory_config:          (Optional, POOLS only -- rejected for PERSONAL) Active Directory
+                                           domain join settings. Fields: domain_name (Required),
+                                           service_account_secret_arn (Required, ARN of a Secrets Manager
+                                           secret holding the domain-join service account credentials).
       - certificate_based_auth_properties: (Optional) Certificate-based authentication (CBA) via an ACM
                                            Private CA, layered on top of saml_properties for smart-card /
                                            passwordless authentication. Fields: certificate_authority_arn
-                                           (Optional), status (Optional, defaults to "DISABLED").
+                                           (Optional; required when status = "ENABLED"), status (Optional,
+                                           defaults to "DISABLED"). Enabling CBA also requires saml_properties
+                                           to be enabled.
       - saml_properties:                  (Optional) External SAML 2.0 identity provider integration (e.g.
                                            Okta, Entra ID, an IAM Identity Center SAML application, or ADFS).
                                            Fields: relay_state_parameter_name (Optional, defaults to
                                            "RelayState"), status (Optional, defaults to "DISABLED"),
-                                           user_access_url (Optional, the IdP's user access URL).
+                                           user_access_url (Optional; required when status = "ENABLED").
       - self_service_permissions:         (Optional, PERSONAL only -- ignored/omitted for POOLS directories)
                                            Secure-by-default: only restart_workspace is enabled; every other
                                            self-service action is disabled unless explicitly turned on.
@@ -57,6 +61,7 @@ variable "directories" {
     subnet_ids                      = optional(list(string))
     ip_group_ids                    = optional(list(string), [])
     ip_group_keys                   = optional(list(string), [])
+    region                          = optional(string)
     tenancy                         = optional(string)
     workspace_directory_name        = optional(string)
     workspace_directory_description = optional(string)
@@ -160,9 +165,35 @@ variable "directories" {
   validation {
     condition = alltrue([
       for k, v in var.directories :
-      v.workspace_type != "POOLS" || v.active_directory_config != null || v.workspace_creation_properties.default_ou == null
+      v.workspace_type != "POOLS" || v.workspace_creation_properties == null || v.active_directory_config != null || v.workspace_creation_properties.default_ou == null
     ])
     error_message = "Each directories entry with workspace_type = POOLS can only set workspace_creation_properties.default_ou when active_directory_config is also set (AWS rejects default_ou otherwise)."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.directories : v.workspace_type == "POOLS" || v.active_directory_config == null
+    ])
+    error_message = "Each directories entry's active_directory_config may only be set when workspace_type = POOLS -- AWS rejects it for PERSONAL directories."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.directories :
+      v.saml_properties == null || v.saml_properties.status != "ENABLED" || v.saml_properties.user_access_url != null
+    ])
+    error_message = "Each directories entry's saml_properties.user_access_url is required when saml_properties.status = ENABLED."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.directories :
+      v.certificate_based_auth_properties == null || v.certificate_based_auth_properties.status != "ENABLED" || (
+        v.certificate_based_auth_properties.certificate_authority_arn != null &&
+        v.saml_properties != null && v.saml_properties.status == "ENABLED"
+      )
+    ])
+    error_message = "Each directories entry's certificate_based_auth_properties requires certificate_authority_arn to be set and saml_properties.status = ENABLED when certificate_based_auth_properties.status = ENABLED."
   }
 }
 

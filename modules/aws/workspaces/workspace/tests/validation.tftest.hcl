@@ -160,6 +160,32 @@ run "rejects_entry_with_neither_bundle_id_nor_bundle_name" {
   expect_failures = [var.workspaces]
 }
 
+run "explicit_null_workspace_properties_falls_back_to_default" {
+  command = plan
+
+  # Terraform replaces an explicit null with the declared default for an optional(type, default)
+  # attribute -- identical to omitting it entirely -- so this must not fail and must apply the same
+  # defaults as omitting it. enable_default_kms_key = false + volume_encryption_key avoids exercising
+  # the default_kms_key/aws_iam_policy_document path, which this test file doesn't mock.
+  variables {
+    enable_default_kms_key = false
+    workspaces = {
+      jdoe = {
+        directory_id          = "d-1234567890"
+        user_name             = "jdoe"
+        bundle_id             = "wsb-bh8rsxt14"
+        volume_encryption_key = "arn:aws:kms:us-east-1:123456789012:key/example"
+        workspace_properties  = null
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_workspaces_workspace.this) == 1
+    error_message = "Expected exactly one workspace to be planned."
+  }
+}
+
 run "rejects_invalid_running_mode" {
   command = plan
 

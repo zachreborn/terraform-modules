@@ -53,7 +53,7 @@
 
 ## Usage
 
-This module manages a single, account-wide resource -- only call it once per AWS account/region (or set `enable_service_role = false` on the parent `modules/aws/workspaces` module and call this module separately if you share one role across multiple parent-module calls).
+IAM roles are account-global, not regional -- this module manages a single, account-wide resource, so only call it once per AWS account (calling it again in a second region will fail with `EntityAlreadyExists`). Set `enable_service_role = false` on the parent `modules/aws/workspaces` module for every additional call (e.g. one per region) once the role already exists.
 
 ### Simple Example
 
@@ -127,8 +127,8 @@ None -- this module only creates an IAM role and does not depend on any other Wo
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_enable_self_service_access"></a> [enable\_self\_service\_access](#input\_enable\_self\_service\_access) | (Optional) If true, additionally attaches the AmazonWorkSpacesSelfServiceAccess managed policy so this role also covers self-service actions (rebuild, restart, change compute type, etc.), in addition to the always-attached AmazonWorkSpacesServiceAccess policy. Defaults to false. | `bool` | `false` | no |
-| <a name="input_name"></a> [name](#input\_name) | (Optional) Name of the IAM role. Amazon WorkSpaces looks for a role named workspaces\_DefaultRole by default, so only change this if you understand the implications documented in the AWS WorkSpaces Administration Guide. | `string` | `"workspaces_DefaultRole"` | no |
+| <a name="input_enable_self_service_access"></a> [enable\_self\_service\_access](#input\_enable\_self\_service\_access) | (Optional) If true (the default), additionally attaches the AmazonWorkSpacesSelfServiceAccess managed policy so this role also covers self-service actions (rebuild, restart, change compute type, etc.), in addition to the always-attached AmazonWorkSpacesServiceAccess policy. Defaults to true to match AWS's own default workspaces\_DefaultRole setup (both managed policies attached) and modules/aws/workspaces/directory's own secure-by-default restart\_workspace = true -- setting this false would advertise self-service restart without the IAM permission needed to perform it. Set to false only if you intend to also disable every directory self-service permission. | `bool` | `true` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Optional) Name of the IAM role. Amazon WorkSpaces looks up this role by the exact, hard-coded name workspaces\_DefaultRole -- the WorkSpaces directory/desktop APIs do not accept an alternate role name, so this must always be exactly "workspaces\_DefaultRole". Exposed as a variable (rather than a hard-coded literal) purely for self-documentation/testability; it is validated below and cannot actually be changed to a working alternate value. | `string` | `"workspaces_DefaultRole"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the IAM role. | `map(string)` | `{}` | no |
 
 ## Outputs

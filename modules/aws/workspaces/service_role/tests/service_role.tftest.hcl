@@ -20,12 +20,35 @@ run "valid_baseline_creates_role_with_default_name" {
   }
 }
 
-run "self_service_access_disabled_by_default" {
+run "self_service_access_enabled_by_default" {
   command = plan
 
   assert {
+    condition     = length(output.policy_arns) == 2
+    error_message = "Both managed policies should be attached by default, matching AWS's own default workspaces_DefaultRole setup."
+  }
+
+  assert {
+    condition     = contains(output.policy_arns, "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess")
+    error_message = "AmazonWorkSpacesServiceAccess should always be attached."
+  }
+
+  assert {
+    condition     = contains(output.policy_arns, "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess")
+    error_message = "AmazonWorkSpacesSelfServiceAccess should be attached by default."
+  }
+}
+
+run "disabling_self_service_access_attaches_only_one_policy" {
+  command = plan
+
+  variables {
+    enable_self_service_access = false
+  }
+
+  assert {
     condition     = length(output.policy_arns) == 1
-    error_message = "Only the service-access policy should be attached by default."
+    error_message = "Only the service-access policy should be attached when enable_self_service_access is false."
   }
 
   assert {
@@ -34,33 +57,12 @@ run "self_service_access_disabled_by_default" {
   }
 }
 
-run "enable_self_service_access_attaches_second_policy" {
-  command = plan
-
-  variables {
-    enable_self_service_access = true
-  }
-
-  assert {
-    condition     = length(output.policy_arns) == 2
-    error_message = "Enabling self-service access should attach both managed policies."
-  }
-
-  assert {
-    condition     = contains(output.policy_arns, "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess")
-    error_message = "AmazonWorkSpacesSelfServiceAccess should be attached when enable_self_service_access is true."
-  }
-}
-
-run "name_override_is_honored" {
+run "rejects_name_override" {
   command = plan
 
   variables {
     name = "custom_workspaces_role"
   }
 
-  assert {
-    condition     = output.name == "custom_workspaces_role"
-    error_message = "Explicit name should override the default."
-  }
+  expect_failures = [var.name]
 }
