@@ -56,6 +56,11 @@ run "fargate_defaults_plan_succeeds" {
     condition     = module.execution_role[0].arn != null && module.task_role[0].arn != null
     error_message = "Expected the execution role and task role to be created as two separate module instances (least-privilege separation), not a single shared role."
   }
+
+  assert {
+    condition     = length(aws_ecs_task_definition.this.volume) == 0
+    error_message = "Expected no volume blocks when volumes defaults to [], covering the empty-volumes side of the dynamic volume toggle."
+  }
 }
 
 run "bring_your_own_execution_role_does_not_create_one" {
@@ -136,5 +141,62 @@ run "enable_fault_injection_is_wired_through" {
   assert {
     condition     = aws_ecs_task_definition.this.enable_fault_injection == true
     error_message = "Expected enable_fault_injection to be passed through to the resource."
+  }
+}
+
+# CKV_AWS_97 behavior assertions: prove that efs_volume_configuration's transit_encryption
+# defaults to "ENABLED" via the optional(string, "ENABLED") type constraint even when the
+# caller omits it (i.e. the suppressed finding is a false positive, not a real gap).
+run "efs_volume_omitting_transit_encryption_defaults_to_enabled" {
+  command = plan
+
+  variables {
+    volumes = [
+      {
+        name = "efs-data"
+        efs_volume_configuration = {
+          file_system_id = "fs-12345678"
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(aws_ecs_task_definition.this.volume) == 1
+    error_message = "Expected exactly one volume block to be created for the supplied EFS volume."
+  }
+
+  # volume is a set of objects; efs_volume_configuration inside it is also a set (0 or 1 elements),
+  # so iterate with `for` rather than indexing directly with [0].
+  assert {
+    condition = anytrue([
+      for v in aws_ecs_task_definition.this.volume :
+      anytrue([for e in v.efs_volume_configuration : e.transit_encryption == "ENABLED"])
+    ])
+    error_message = "Expected transit_encryption to default to ENABLED when omitted from efs_volume_configuration, proving CKV_AWS_97 is a false positive."
+  }
+}
+
+run "efs_volume_explicit_transit_encryption_enabled" {
+  command = plan
+
+  variables {
+    volumes = [
+      {
+        name = "efs-data"
+        efs_volume_configuration = {
+          file_system_id     = "fs-12345678"
+          transit_encryption = "ENABLED"
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition = anytrue([
+      for v in aws_ecs_task_definition.this.volume :
+      anytrue([for e in v.efs_volume_configuration : e.transit_encryption == "ENABLED"])
+    ])
+    error_message = "Expected transit_encryption to be ENABLED when explicitly set by the caller."
   }
 }

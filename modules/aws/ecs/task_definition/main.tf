@@ -91,7 +91,14 @@ module "task_role" {
 ###########################
 
 resource "aws_ecs_task_definition" "this" {
-  family                   = var.family
+  family = var.family
+
+  # volumes' efs_volume_configuration defaults transit_encryption to "ENABLED" via the
+  # optional(string, "ENABLED") type constraint. Checkov cannot resolve the object-type
+  # default through the caller-supplied list(object) var.volumes and the nested dynamic
+  # volume/efs_volume_configuration blocks.
+  # checkov:skip=CKV_AWS_97:volumes' efs_volume_configuration defaults transit_encryption to "ENABLED"; Checkov cannot resolve the object-type default through list(object) var.volumes and the nested dynamic volume/efs_volume_configuration blocks
+
   container_definitions    = var.container_definitions
   cpu                      = var.cpu
   memory                   = var.memory

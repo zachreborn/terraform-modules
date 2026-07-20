@@ -210,6 +210,12 @@ module "log_group" {
 resource "aws_ecs_cluster" "this" {
   name = var.name
 
+  # CMK-backed kms_key_id and cloud_watch_encryption_enabled are enabled by default.
+  # Checkov cannot statically resolve the value through local.kms_key_arn (module.kms[0].arn)
+  # and the triple-nested dynamic configuration/execute_command_configuration/log_configuration
+  # blocks (bridgecrewio/checkov#2985, #4921, #6265 — graph-resolution limitation).
+  # checkov:skip=CKV_AWS_224:CMK-backed kms_key_id and cloud_watch_encryption_enabled are enabled by default; Checkov cannot statically resolve through local.kms_key_arn and the triple-nested dynamic configuration/execute_command_configuration/log_configuration blocks
+
   # Declared as a static block (rather than folded into the dynamic block below)
   # so static analyzers can verify the secure-by-default containerInsights value.
   setting {
