@@ -129,6 +129,29 @@ run "name_prefix_with_alias_prefix_passes_through_unchanged" {
   }
 }
 
+# region is Optional and Computed on both aws_kms_key and aws_kms_alias (AWS provider v6's per-resource
+# Region override feature), so the mock provider generates fake data for it when unset -- there is no
+# meaningful "defaults to null" case to assert via mocks. The override case below is sufficient to prove
+# the module wires var.region through to both resources.
+run "region_override_is_honored" {
+  command = plan
+
+  variables {
+    name_prefix = "example-key"
+    region      = "us-west-2"
+  }
+
+  assert {
+    condition     = aws_kms_key.this.region == "us-west-2"
+    error_message = "region override should be passed through to aws_kms_key.this."
+  }
+
+  assert {
+    condition     = aws_kms_alias.this.region == "us-west-2"
+    error_message = "region override should be passed through to aws_kms_alias.this so the alias is created alongside the key."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.
