@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.2.0](https://github.com/zachreborn/terraform-modules/compare/v12.1.0...v12.2.0) (2026-07-20)
+
+
+### Features
+
+* **workspaces:** add AWS WorkSpaces modules with multi-IdP support ([#373](https://github.com/zachreborn/terraform-modules/issues/373)) ([200a990](https://github.com/zachreborn/terraform-modules/commit/200a99032f3e81612ce7777ee8103ef76ff4ca25))
+
 ## [12.1.0](https://github.com/zachreborn/terraform-modules/compare/v12.0.1...v12.1.0) (2026-07-20)
 
 
