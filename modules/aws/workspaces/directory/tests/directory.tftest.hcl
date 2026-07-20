@@ -1,7 +1,15 @@
 mock_provider "aws" {
   mock_resource "aws_workspaces_directory" {
     defaults = {
-      id = "d-1234567890"
+      id                          = "d-1234567890"
+      alias                       = "d-1234567890.awsapps.com"
+      customer_user_name          = "Administrator"
+      directory_name              = "corp.example.com"
+      directory_type              = "SIMPLE_AD"
+      dns_ip_addresses            = ["172.16.1.140", "172.16.0.30"]
+      iam_role_id                 = "arn:aws:iam::123456789012:role/workspaces_DefaultRole"
+      registration_code           = "WSpdx+9RJ8JT"
+      workspace_security_group_id = "sg-0d89e927e5645d7c5"
     }
   }
 }
@@ -182,5 +190,45 @@ run "outputs_expose_keyed_map" {
   assert {
     condition     = output.ids["corp"] == "d-1234567890"
     error_message = "ids output should reflect the mocked ID."
+  }
+
+  assert {
+    condition     = output.aliases["corp"] == aws_workspaces_directory.this["corp"].alias
+    error_message = "aliases output should reflect the mocked alias."
+  }
+
+  assert {
+    condition     = output.customer_user_names["corp"] == aws_workspaces_directory.this["corp"].customer_user_name
+    error_message = "customer_user_names output should reflect the mocked customer_user_name."
+  }
+
+  assert {
+    condition     = output.directory_names["corp"] == aws_workspaces_directory.this["corp"].directory_name
+    error_message = "directory_names output should reflect the mocked directory_name."
+  }
+
+  assert {
+    condition     = output.directory_types["corp"] == aws_workspaces_directory.this["corp"].directory_type
+    error_message = "directory_types output should reflect the mocked directory_type."
+  }
+
+  assert {
+    condition     = output.dns_ip_addresses["corp"] == aws_workspaces_directory.this["corp"].dns_ip_addresses
+    error_message = "dns_ip_addresses output should reflect the mocked dns_ip_addresses."
+  }
+
+  assert {
+    condition     = output.iam_role_ids["corp"] == aws_workspaces_directory.this["corp"].iam_role_id
+    error_message = "iam_role_ids output should reflect the mocked iam_role_id."
+  }
+
+  assert {
+    condition     = output.registration_codes["corp"] == aws_workspaces_directory.this["corp"].registration_code
+    error_message = "registration_codes output should reflect the mocked registration_code."
+  }
+
+  assert {
+    condition     = output.workspace_security_group_ids["corp"] == aws_workspaces_directory.this["corp"].workspace_security_group_id
+    error_message = "workspace_security_group_ids output should reflect the mocked workspace_security_group_id."
   }
 }

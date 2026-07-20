@@ -22,8 +22,12 @@ variable "directories" {
       - tenancy:                          (Optional) DEDICATED or SHARED.
       - workspace_directory_name:         (Required when workspace_type = POOLS) Name of the directory.
       - workspace_directory_description:  (Required when workspace_type = POOLS) Description of the directory.
-      - user_identity_type:               (Required when workspace_type = POOLS) One of CUSTOMER_MANAGED,
-                                           AWS_DIRECTORY_SERVICE, or AWS_IAM_IDENTITY_CENTER.
+      - user_identity_type:               (Required when workspace_type = POOLS) One of CUSTOMER_MANAGED or
+                                           AWS_DIRECTORY_SERVICE. AWS_IAM_IDENTITY_CENTER is not supported by
+                                           this module: RegisterWorkspaceDirectory requires an IdcInstanceArn
+                                           for that identity type, but the aws_workspaces_directory resource
+                                           does not expose an idc_instance_arn argument (as of
+                                           hashicorp/aws 6.54.0).
       - active_directory_config:          (Optional, POOLS only -- rejected for PERSONAL) Active Directory
                                            domain join settings. Fields: domain_name (Required),
                                            service_account_secret_arn (Required, ARN of a Secrets Manager
@@ -150,9 +154,9 @@ variable "directories" {
   validation {
     condition = alltrue([
       for k, v in var.directories :
-      v.user_identity_type == null || contains(["CUSTOMER_MANAGED", "AWS_DIRECTORY_SERVICE", "AWS_IAM_IDENTITY_CENTER"], v.user_identity_type)
+      v.user_identity_type == null || contains(["CUSTOMER_MANAGED", "AWS_DIRECTORY_SERVICE"], v.user_identity_type)
     ])
-    error_message = "Each directories entry's user_identity_type must be one of CUSTOMER_MANAGED, AWS_DIRECTORY_SERVICE, or AWS_IAM_IDENTITY_CENTER."
+    error_message = "Each directories entry's user_identity_type must be CUSTOMER_MANAGED or AWS_DIRECTORY_SERVICE. AWS_IAM_IDENTITY_CENTER is not supported: RegisterWorkspaceDirectory requires an IdcInstanceArn for that identity type, but aws_workspaces_directory does not expose an idc_instance_arn argument."
   }
 
   validation {

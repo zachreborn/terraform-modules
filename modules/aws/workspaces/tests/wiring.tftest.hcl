@@ -158,12 +158,42 @@ run "literal_directory_id_still_works_without_directory_key" {
   }
 }
 
-# Note: entries with both/neither of directory_id and directory_key, an invalid directory_key, and an
-# invalid ip_group_keys entry are all rejected by the workspace/directory submodules' own variable
-# validation and resource preconditions (see modules/aws/workspaces/workspace/tests/validation.tftest.hcl
-# and modules/aws/workspaces/directory/tests/validation.tftest.hcl). They aren't re-tested here because
-# those failures happen inside the nested submodules, which isn't a checkable object expect_failures can
-# reference from this wrapper's tests.
+run "rejects_invalid_directory_key_reference" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_key = "does_not_exist"
+        user_name     = "jdoe"
+        bundle_id     = "wsb-bh8rsxt14"
+      }
+    }
+  }
+
+  expect_failures = [var.workspaces]
+}
+
+run "rejects_invalid_ip_group_key_reference" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id  = "d-1234567890"
+        ip_group_keys = ["does_not_exist"]
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+# Note: entries with both/neither of directory_id and directory_key (a self-referencing check) are
+# rejected by the workspace submodule's own variable validation (see
+# modules/aws/workspaces/workspace/tests/validation.tftest.hcl). That check isn't duplicated at this level
+# (matching modules/aws/organizations' convention of not duplicating self-referencing child validations in
+# the parent), so it isn't re-tested here.
 run "full_kitchen_sink_example_plans_successfully" {
   command = plan
 

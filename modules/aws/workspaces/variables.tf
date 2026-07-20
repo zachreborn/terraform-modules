@@ -30,9 +30,9 @@ variable "directories" {
     own directories variable, including ip_group_keys: a list of keys into var.ip_groups, resolved through
     this module's own wiring (ip_group_id_lookup, wired to the ip_groups submodule's ids output) into literal
     IP group IDs and merged with any literal ip_group_ids also supplied -- this lets a single tofu apply of
-    this module create IP groups and a directory that references them together. An invalid key surfaces as
-    an error on the directory submodule's own precondition; see that module's README for the full field
-    reference.
+    this module create IP groups and a directory that references them together. An invalid key is rejected
+    immediately by this variable's own validation below, and defensively by the directory submodule's own
+    precondition; see that module's README for the full field reference.
   EOT
   type = map(object({
     directory_id                    = optional(string)
@@ -40,6 +40,7 @@ variable "directories" {
     subnet_ids                      = optional(list(string))
     ip_group_ids                    = optional(list(string), [])
     ip_group_keys                   = optional(list(string), [])
+    region                          = optional(string)
     tenancy                         = optional(string)
     workspace_directory_name        = optional(string)
     workspace_directory_description = optional(string)
@@ -91,6 +92,15 @@ variable "directories" {
     tags = optional(map(string), {})
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.directories : alltrue([
+        for ip_group_key in v.ip_group_keys : contains(keys(var.ip_groups), ip_group_key)
+      ])
+    ])
+    error_message = "Each directories entry's ip_group_keys must reference existing keys in var.ip_groups."
+  }
 }
 
 ############################################################
@@ -102,6 +112,7 @@ variable "ip_groups" {
   type = map(object({
     name        = optional(string)
     description = optional(string)
+    region      = optional(string)
     rules = optional(list(object({
       source      = string
       description = optional(string)
@@ -119,6 +130,7 @@ variable "connection_aliases" {
   description = "(Optional) Map of WorkSpaces connection aliases (cross-Region redirection FQDNs) to create, keyed by a caller-chosen logical name. Identical shape to modules/aws/workspaces/connection_alias's own connection_aliases variable."
   type = map(object({
     connection_string = string
+    region            = optional(string)
     tags              = optional(map(string), {})
   }))
   default = {}
@@ -135,8 +147,9 @@ variable "workspaces" {
     module's own wiring (directory_id_lookup, wired to the directories submodule's ids output) into a
     literal directory ID -- this lets a single tofu apply of this module create a directory and the desktops
     that attach to it together. Entries that instead target an already-existing, externally-managed directory
-    should keep using the literal directory_id field. An invalid directory_key surfaces as an error on the
-    workspace submodule's own precondition; see that module's README for the full field reference.
+    should keep using the literal directory_id field. An invalid directory_key is rejected immediately by
+    this variable's own validation below, and defensively by the workspace submodule's own precondition;
+    see that module's README for the full field reference.
   EOT
   type = map(object({
     directory_id  = optional(string)
@@ -149,6 +162,7 @@ variable "workspaces" {
     root_volume_encryption_enabled = optional(bool, true)
     user_volume_encryption_enabled = optional(bool, true)
     volume_encryption_key          = optional(string)
+    region                         = optional(string)
 
     workspace_properties = optional(object({
       compute_type_name                         = optional(string, "STANDARD")
@@ -161,10 +175,17 @@ variable "workspaces" {
     tags = optional(map(string), {})
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.workspaces : v.directory_key == null || contains(keys(var.directories), v.directory_key)
+    ])
+    error_message = "Each workspaces entry's directory_key must reference an existing key in var.directories."
+  }
 }
 
 variable "enable_default_kms_key" {
-  description = "(Optional) If true (the default), passed through to the workspace submodule so it creates one shared AWS KMS customer-managed key for every workspaces entry that omits volume_encryption_key. Set to false to require every entry to supply its own volume_encryption_key."
+  description = "(Optional) If true (the default), passed through to the workspace submodule so it creates one shared AWS KMS customer-managed key for every workspaces entry that omits volume_encryption_key. Set to false to require every entry to supply its own volume_encryption_key, or to rely on the AWS-managed alias/aws/workspaces key by leaving volume_encryption_key null."
   type        = bool
   default     = true
 }

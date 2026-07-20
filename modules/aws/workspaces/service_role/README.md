@@ -90,7 +90,7 @@ None -- this module only creates an IAM role and does not depend on any other Wo
 ## Notes / Design Decisions
 
 - This module composes `modules/aws/iam/role` rather than declaring an inline `aws_iam_role`, per this repository's module composition guidance.
-- `AmazonWorkSpacesServiceAccess` is always attached; `AmazonWorkSpacesSelfServiceAccess` is opt-in via `enable_self_service_access`, since not every deployment delegates self-service actions (rebuild, restart, change compute type) to end users.
+- `AmazonWorkSpacesServiceAccess` is always attached; `AmazonWorkSpacesSelfServiceAccess` is attached by default via `enable_self_service_access` (default `true`), matching AWS's own default `workspaces_DefaultRole` setup and the directory submodule's secure-by-default `restart_workspace = true`. Set `enable_self_service_access = false` to omit it if you don't delegate any self-service actions (rebuild, restart, change compute type) to end users.
 - Only one `workspaces_DefaultRole` is useful per account -- this module does not accept a map input (see Module Design Spec §5's documented exception for standalone singleton resources).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

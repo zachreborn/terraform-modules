@@ -1,5 +1,8 @@
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.9.0: var.directories and var.workspaces validate ip_group_keys/directory_key against the sibling
+  # var.ip_groups/var.directories variables, which requires referencing another input variable from within
+  # a variable's own validation condition (supported by Terraform >= 1.9.0 and OpenTofu >= 1.9.0).
+  required_version = ">= 1.9.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

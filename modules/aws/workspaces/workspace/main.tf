@@ -115,22 +115,38 @@ data "aws_iam_policy_document" "default_kms_key" {
     }
   }
 
+  # WorkSpaces itself never calls Encrypt/Decrypt/GenerateDataKey* directly -- it only creates a grant that
+  # lets Amazon EBS perform those cryptographic operations on its behalf when encrypting the root/user
+  # volumes. Per AWS's own KMS key policy guidance, CreateGrant is split into its own statement gated by the
+  # kms:GrantIsForAWSResource condition (true only for grants created by AWS services on your behalf), kept
+  # separate from any direct crypto-operation statement.
   statement {
-    sid    = "AllowWorkSpacesServiceUse"
-    effect = "Allow"
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*", # Covers both GenerateDataKey and GenerateDataKeyWithoutPlaintext.
-      "kms:DescribeKey",
-      "kms:CreateGrant",
-    ]
+    sid       = "AllowWorkSpacesServiceDescribeKey"
+    effect    = "Allow"
+    actions   = ["kms:DescribeKey"]
     resources = ["*"]
 
     principals {
       type        = "Service"
       identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "AllowWorkSpacesServiceCreateGrant"
+    effect    = "Allow"
+    actions   = ["kms:CreateGrant"]
+    resources = ["*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = ["true"]
     }
   }
 }

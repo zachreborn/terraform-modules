@@ -10,9 +10,9 @@ thousands without hand-authoring more HCL.
   - `corp_ad` -- a `PERSONAL` directory backed by native Active Directory.
   - `corp_saml` -- a `PERSONAL` directory backed by an external SAML 2.0 identity provider (Okta in this
     example; Entra ID, ADFS, or an IAM Identity Center SAML application work the same way).
-  - `pool_identity_center` -- a `POOLS` directory using IAM Identity Center as the identity provider,
-    included to show directory-level support for that combination (see the note in `directories.yaml` about
-    why no desktops target it).
+  - `pool_customer_managed` -- a `POOLS` directory using a customer-managed identity provider, included to
+    show directory-level support for that workspace type (see the note in `directories.yaml` about why no
+    desktops target it).
 - **An IP access control group** (`ip_groups.yaml`) referenced by both `PERSONAL` directories via
   `ip_group_keys`.
 - **A fleet that scales to hundreds or thousands of users** (`users.yaml` + `main.tf`): rather than one YAML
