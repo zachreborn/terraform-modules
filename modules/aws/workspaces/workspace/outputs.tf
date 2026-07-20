@@ -24,6 +24,6 @@ output "bundle_ids" {
 }
 
 output "kms_key_arn" {
-  description = "ARN of the shared default KMS key created for volume encryption, or null when enable_default_kms_key is false or no entry needed it."
-  value       = try(module.default_kms_key["this"].arn, null)
+  description = "Map of shared default KMS key ARNs created for volume encryption, keyed by Region. One key is created per distinct Region among entries that need it (see var.workspaces' region field); empty when enable_default_kms_key is false or no entry needed one."
+  value       = { for region, m in module.default_kms_key : region => m.arn }
 }

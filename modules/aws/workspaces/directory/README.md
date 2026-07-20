@@ -17,7 +17,7 @@
 
 <h3 align="center">AWS WorkSpaces Directory Module</h3>
   <p align="center">
-    This module registers one or more Amazon WorkSpaces directories, supporting Active Directory, external SAML 2.0, certificate-based, and IAM Identity Center identity providers.
+    This module registers one or more Amazon WorkSpaces directories, supporting Active Directory, external SAML 2.0, and certificate-based identity providers, plus POOLS directories for pooled/non-persistent desktops.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -88,7 +88,7 @@ module "workspaces_directory" {
 }
 ```
 
-### POOLS Directory with IAM Identity Center
+### POOLS Directory with a Customer-Managed Identity Provider
 
 ```
 module "workspaces_directory" {
@@ -100,7 +100,7 @@ module "workspaces_directory" {
       subnet_ids                       = [aws_subnet.a.id, aws_subnet.b.id]
       workspace_directory_name         = "pool-directory"
       workspace_directory_description  = "WorkSpaces Pools directory"
-      user_identity_type               = "AWS_IAM_IDENTITY_CENTER"
+      user_identity_type               = "CUSTOMER_MANAGED"
     }
   }
 }
@@ -120,7 +120,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - This module only registers a directory with the WorkSpaces service (`aws_workspaces_directory`) -- it never creates the underlying AWS Directory Service directory, so the same directory-provisioning modules already in this repository can be reused regardless of identity-provider choice.
-- Identity providers supported per entry: native Active Directory (via `directory_id`), external SAML 2.0 (`saml_properties`, e.g. Okta, Entra ID, an IAM Identity Center SAML application, or ADFS), certificate-based authentication layered on SAML (`certificate_based_auth_properties`), and IAM Identity Center for `POOLS` directories (`user_identity_type = "AWS_IAM_IDENTITY_CENTER"`).
+- Identity providers supported per entry: native Active Directory (via `directory_id`), external SAML 2.0 (`saml_properties`, e.g. Okta, Entra ID, an IAM Identity Center SAML application, or ADFS), and certificate-based authentication layered on SAML (`certificate_based_auth_properties`). `POOLS` directories set `user_identity_type` to `CUSTOMER_MANAGED` or `AWS_DIRECTORY_SERVICE` -- `AWS_IAM_IDENTITY_CENTER` is deliberately not supported, since `RegisterWorkspaceDirectory` requires an `IdcInstanceArn` for that identity type that the `aws_workspaces_directory` resource does not expose.
 - Secure-by-default `self_service_permissions`, `workspace_access_properties`, and `workspace_creation_properties` follow AWS Well-Architected End User Computing Lens guidance (deny the web/zero-client device types, disable direct internet access, disable local administrator rights) -- override any field per entry as needed.
 - Provisioning pooled/non-persistent desktops via `aws_workspaces_pool` (available in `hashicorp/aws` >= 6.54.0) is an intentional scoping decision for this module family, not a provider limitation: a pool manages a fleet-level capacity/timeout lifecycle rather than per-user `aws_workspaces_workspace` desktops, so it warrants its own dedicated child module (e.g. a future `modules/aws/workspaces/pool`) rather than being folded into this one. This module already supports registering a `POOLS`-type directory today, so it is ready to pair with that future child module.
 
@@ -140,7 +140,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.55.0 |
 
 ## Modules
 

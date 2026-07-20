@@ -38,6 +38,12 @@ mock_provider "aws" {
       json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
     }
   }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
 }
 
 run "bundle_id_passes_through_when_set" {
@@ -124,13 +130,84 @@ run "default_kms_key_created_when_an_entry_needs_it" {
   }
 
   assert {
-    condition     = aws_workspaces_workspace.this["jdoe"].volume_encryption_key == module.default_kms_key["this"].arn
-    error_message = "The shared default KMS key ARN should be used when volume_encryption_key is unset."
+    condition     = aws_workspaces_workspace.this["jdoe"].volume_encryption_key == module.default_kms_key["us-east-1"].arn
+    error_message = "The shared default KMS key ARN for the entry's Region should be used when volume_encryption_key is unset."
   }
 
   assert {
-    condition     = output.kms_key_arn == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
-    error_message = "kms_key_arn output should reflect the mocked default KMS key ARN."
+    condition     = output.kms_key_arn["us-east-1"] == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
+    error_message = "kms_key_arn output should expose the mocked default KMS key ARN, keyed by the entry's (provider-default) Region."
+  }
+}
+
+run "default_kms_key_created_per_distinct_region" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_id = "d-1234567890"
+        user_name    = "jdoe"
+        bundle_id    = "wsb-bh8rsxt14"
+      }
+      asmith = {
+        directory_id = "d-1234567890"
+        user_name    = "asmith"
+        bundle_id    = "wsb-bh8rsxt14"
+        region       = "us-west-2"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(module.default_kms_key) == 2
+    error_message = "Two entries in different Regions should each get their own shared default KMS key instance."
+  }
+
+  assert {
+    condition     = aws_workspaces_workspace.this["jdoe"].volume_encryption_key == module.default_kms_key["us-east-1"].arn
+    error_message = "The entry with no explicit region should fall back to the key created in the provider's Region."
+  }
+
+  assert {
+    condition     = aws_workspaces_workspace.this["asmith"].volume_encryption_key == module.default_kms_key["us-west-2"].arn
+    error_message = "The entry with region = us-west-2 should fall back to the key created in that same Region, not the provider's default Region."
+  }
+
+  assert {
+    condition     = module.default_kms_key["us-west-2"].arn != null
+    error_message = "The us-west-2 default KMS key module instance should exist and expose an ARN."
+  }
+}
+
+run "default_kms_key_shared_across_entries_in_same_non_default_region" {
+  command = plan
+
+  variables {
+    workspaces = {
+      jdoe = {
+        directory_id = "d-1234567890"
+        user_name    = "jdoe"
+        bundle_id    = "wsb-bh8rsxt14"
+        region       = "us-west-2"
+      }
+      asmith = {
+        directory_id = "d-1234567890"
+        user_name    = "asmith"
+        bundle_id    = "wsb-bh8rsxt14"
+        region       = "us-west-2"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(module.default_kms_key) == 1
+    error_message = "Two entries sharing the same non-default Region should still only trigger one shared default KMS key, not one per entry."
+  }
+
+  assert {
+    condition     = alltrue([for k, v in aws_workspaces_workspace.this : v.volume_encryption_key == module.default_kms_key["us-west-2"].arn])
+    error_message = "Both entries should resolve to the same us-west-2 default KMS key ARN."
   }
 }
 
@@ -159,8 +236,8 @@ run "default_kms_key_not_created_when_every_entry_supplies_its_own_key" {
   }
 
   assert {
-    condition     = output.kms_key_arn == null
-    error_message = "kms_key_arn output should be null when no default key is created."
+    condition     = length(output.kms_key_arn) == 0
+    error_message = "kms_key_arn output should be empty when no default key is created."
   }
 }
 
@@ -190,8 +267,8 @@ run "default_kms_key_not_created_when_entry_disables_both_encryption_flags" {
   }
 
   assert {
-    condition     = output.kms_key_arn == null
-    error_message = "kms_key_arn output should be null when no entry actually needs a key."
+    condition     = length(output.kms_key_arn) == 0
+    error_message = "kms_key_arn output should be empty when no entry actually needs a key."
   }
 }
 

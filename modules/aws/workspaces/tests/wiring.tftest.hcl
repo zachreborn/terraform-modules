@@ -7,7 +7,11 @@ mock_provider "aws" {
 
   mock_resource "aws_workspaces_directory" {
     defaults = {
-      id = "d-9067783251"
+      id                          = "d-9067783251"
+      alias                       = "d-9067783251.awsapps.com"
+      registration_code           = "WSpdx+9RJ8JT"
+      dns_ip_addresses            = ["************", "***********"]
+      workspace_security_group_id = "sg-0d89e927e5645d7c5"
     }
   }
 
@@ -53,6 +57,12 @@ mock_provider "aws" {
   mock_data "aws_iam_policy_document" {
     defaults = {
       json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
     }
   }
 }
@@ -269,7 +279,27 @@ run "full_kitchen_sink_example_plans_successfully" {
   }
 
   assert {
-    condition     = output.kms_key_arn == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
-    error_message = "kms_key_arn should forward the workspace submodule's mocked default KMS key ARN."
+    condition     = output.kms_key_arn["us-east-1"] == "arn:aws:kms:us-east-1:123456789012:key/mock-key-id"
+    error_message = "kms_key_arn should forward the workspace submodule's mocked default KMS key ARN, keyed by Region."
+  }
+
+  assert {
+    condition     = output.directory_aliases["corp"] == module.directories.aliases["corp"]
+    error_message = "directory_aliases should forward the directories submodule's mocked alias."
+  }
+
+  assert {
+    condition     = output.directory_registration_codes["corp"] == module.directories.registration_codes["corp"]
+    error_message = "directory_registration_codes should forward the directories submodule's mocked registration_code."
+  }
+
+  assert {
+    condition     = output.directory_dns_ip_addresses["corp"] == module.directories.dns_ip_addresses["corp"]
+    error_message = "directory_dns_ip_addresses should forward the directories submodule's mocked dns_ip_addresses."
+  }
+
+  assert {
+    condition     = output.directory_workspace_security_group_ids["corp"] == module.directories.workspace_security_group_ids["corp"]
+    error_message = "directory_workspace_security_group_ids should forward the directories submodule's mocked workspace_security_group_id."
   }
 }

@@ -185,13 +185,13 @@ variable "workspaces" {
 }
 
 variable "enable_default_kms_key" {
-  description = "(Optional) If true (the default), passed through to the workspace submodule so it creates one shared AWS KMS customer-managed key for every workspaces entry that omits volume_encryption_key. Set to false to require every entry to supply its own volume_encryption_key, or to rely on the AWS-managed alias/aws/workspaces key by leaving volume_encryption_key null."
+  description = "(Optional) If true (the default), passed through to the workspace submodule so it creates one shared AWS KMS customer-managed key per distinct Region among workspaces entries that omit volume_encryption_key (see that variable's region field). Set to false to require every entry to supply its own volume_encryption_key, or to rely on the AWS-managed alias/aws/workspaces key by leaving volume_encryption_key null."
   type        = bool
   default     = true
 }
 
 variable "kms_key_alias_prefix" {
-  description = "(Optional) Passed through to the workspace submodule's kms_key_alias_prefix field. Ignored when enable_default_kms_key is false or no entry needs the shared key. See that submodule's variable for the exact alias-naming behavior (a generated suffix is appended to this prefix)."
+  description = "(Optional) Passed through to the workspace submodule's kms_key_alias_prefix field, reused for every distinct-Region default KMS key it creates. Ignored when enable_default_kms_key is false or no entry needs the shared key. See that submodule's variable for the exact alias-naming behavior (a generated suffix is appended to this prefix)."
   type        = string
   default     = "workspaces"
 }

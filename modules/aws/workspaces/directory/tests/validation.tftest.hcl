@@ -58,13 +58,47 @@ run "rejects_invalid_workspace_type" {
   expect_failures = [var.directories]
 }
 
-run "rejects_pools_missing_required_fields" {
+run "rejects_pools_missing_workspace_directory_name" {
   command = plan
 
   variables {
     directories = {
       pool = {
-        workspace_type = "POOLS"
+        workspace_type                  = "POOLS"
+        workspace_directory_description = "WorkSpaces Pools directory"
+        user_identity_type              = "CUSTOMER_MANAGED"
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "rejects_pools_missing_workspace_directory_description" {
+  command = plan
+
+  variables {
+    directories = {
+      pool = {
+        workspace_type           = "POOLS"
+        workspace_directory_name = "Pool directory"
+        user_identity_type       = "CUSTOMER_MANAGED"
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "rejects_pools_missing_user_identity_type" {
+  command = plan
+
+  variables {
+    directories = {
+      pool = {
+        workspace_type                  = "POOLS"
+        workspace_directory_name        = "Pool directory"
+        workspace_directory_description = "WorkSpaces Pools directory"
       }
     }
   }
@@ -246,7 +280,28 @@ run "allows_enabled_saml_with_user_access_url" {
   }
 }
 
-run "rejects_enabled_cba_without_certificate_authority_arn_and_saml" {
+run "rejects_enabled_cba_with_saml_enabled_but_no_certificate_authority_arn" {
+  command = plan
+
+  variables {
+    directories = {
+      corp = {
+        directory_id = "d-1234567890"
+        saml_properties = {
+          status          = "ENABLED"
+          user_access_url = "https://sso.example.com/"
+        }
+        certificate_based_auth_properties = {
+          status = "ENABLED"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.directories]
+}
+
+run "rejects_enabled_cba_with_certificate_authority_arn_but_saml_disabled" {
   command = plan
 
   variables {
@@ -254,7 +309,8 @@ run "rejects_enabled_cba_without_certificate_authority_arn_and_saml" {
       corp = {
         directory_id = "d-1234567890"
         certificate_based_auth_properties = {
-          status = "ENABLED"
+          status                    = "ENABLED"
+          certificate_authority_arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/example"
         }
       }
     }

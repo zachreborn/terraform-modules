@@ -27,7 +27,12 @@ variable "workspaces" {
                                          When unset and var.enable_default_kms_key is true (the default), the
                                          shared KMS key this module creates is used instead.
       - region:                         (Optional) Region where this desktop is managed. Defaults to the
-                                         Region set in the provider configuration.
+                                         Region set in the provider configuration. When volume_encryption_key
+                                         is unset and var.enable_default_kms_key is true, this module creates
+                                         the shared default KMS key in this same Region (one key per distinct
+                                         Region across all entries) rather than only in the provider's
+                                         Region, since AWS requires volume_encryption_key to reference a key
+                                         in the same Region as the desktop.
       - workspace_properties:           (Optional) Compute/running-mode settings. See nested fields below.
       - tags:                           (Optional) Additional tags for this desktop, merged with var.tags.
     workspace_properties fields:
@@ -94,13 +99,13 @@ variable "directory_id_lookup" {
 
 variable "enable_default_kms_key" {
   type        = bool
-  description = "(Optional) If true (the default) and an entry in var.workspaces omits volume_encryption_key, this module creates one shared AWS KMS customer-managed key (via modules/aws/kms) and uses its ARN as that entry's volume_encryption_key. The key's alias is derived from kms_key_alias_prefix -- see that variable for the exact naming behavior. Set to false to require every entry to supply its own volume_encryption_key, or to rely on the AWS-managed alias/aws/workspaces key by leaving volume_encryption_key null."
+  description = "(Optional) If true (the default) and an entry in var.workspaces omits volume_encryption_key, this module creates one shared AWS KMS customer-managed key (via modules/aws/kms) per distinct Region among those entries (see the region field), and uses that Region's key ARN as the entry's volume_encryption_key -- AWS requires the key to be in the same Region as the desktop, so entries in different Regions never share a key. The keys' aliases are derived from kms_key_alias_prefix -- see that variable for the exact naming behavior. Set to false to require every entry to supply its own volume_encryption_key, or to rely on the AWS-managed alias/aws/workspaces key by leaving volume_encryption_key null."
   default     = true
 }
 
 variable "kms_key_alias_prefix" {
   type        = string
-  description = "(Optional) Passed as name_prefix to modules/aws/kms for the shared default KMS key created when enable_default_kms_key is true and at least one entry needs it. Ignored otherwise. modules/aws/kms creates the alias as aws_kms_alias with this name_prefix, so the actual alias is alias/<kms_key_alias_prefix><randomly-generated suffix>, not an exact alias/<kms_key_alias_prefix> name."
+  description = "(Optional) Passed as name_prefix to modules/aws/kms for every shared default KMS key created when enable_default_kms_key is true and at least one entry needs it (one per distinct Region -- see enable_default_kms_key). Ignored otherwise. modules/aws/kms creates the alias as aws_kms_alias with this name_prefix, so the actual alias is alias/<kms_key_alias_prefix><randomly-generated suffix>, not an exact alias/<kms_key_alias_prefix> name; the same prefix is reused in every Region since aliases are Region-scoped and cannot collide across Regions."
   default     = "workspaces"
 }
 
