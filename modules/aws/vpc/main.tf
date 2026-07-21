@@ -318,6 +318,7 @@ resource "aws_vpc_endpoint" "custom" {
   service_name               = each.value.service_name
   resource_configuration_arn = each.value.resource_configuration_arn
   service_network_arn        = each.value.service_network_arn
+  service_region             = each.value.service_region
   vpc_endpoint_type          = each.value.vpc_endpoint_type
   auto_accept                = each.value.auto_accept
   policy                     = each.value.policy
@@ -333,6 +334,25 @@ resource "aws_vpc_endpoint" "custom" {
     : each.value.route_table_ids
   )
   tags = merge(tomap({ Name = each.key }), var.tags, each.value.tags)
+
+  dynamic "dns_options" {
+    for_each = each.value.dns_options != null ? [each.value.dns_options] : []
+    content {
+      dns_record_ip_type                             = dns_options.value.dns_record_ip_type
+      private_dns_only_for_inbound_resolver_endpoint = dns_options.value.private_dns_only_for_inbound_resolver_endpoint
+      private_dns_preference                         = dns_options.value.private_dns_preference
+      private_dns_specified_domains                  = dns_options.value.private_dns_specified_domains
+    }
+  }
+
+  dynamic "subnet_configuration" {
+    for_each = each.value.subnet_configuration
+    content {
+      ipv4      = subnet_configuration.value.ipv4
+      ipv6      = subnet_configuration.value.ipv6
+      subnet_id = subnet_configuration.value.subnet_id
+    }
+  }
 }
 
 ###########################
@@ -634,6 +654,8 @@ resource "aws_route" "additional" {
   egress_only_gateway_id      = each.value.route.egress_only_gateway_id
   nat_gateway_id              = each.value.route.nat_gateway_id
   gateway_id                  = each.value.route.gateway_id
+  local_gateway_id            = each.value.route.local_gateway_id
+  odb_network_arn             = each.value.route.odb_network_arn
 }
 
 resource "aws_route_table_association" "private" {
@@ -703,6 +725,14 @@ module "vpc_flow_logs" {
   key_name_prefix              = var.key_name_prefix
 
   # Flow Log
+  #
+  # modules/aws/flow_logs enforces exactly one non-null target list
+  # (flow_eni_ids/flow_subnet_ids/flow_transit_gateway_ids/
+  # flow_transit_gateway_attachment_ids/flow_vpc_ids). This module's default
+  # target is its own VPC, but if the caller supplies any of the four
+  # alternate target variables, flow_vpc_ids must resolve to null instead of
+  # always being set -- otherwise the child module's precondition rejects
+  # the plan (two non-null targets) any time an alternate target is used.
   flow_deliver_cross_account_role     = var.flow_deliver_cross_account_role
   flow_eni_ids                        = var.flow_eni_ids
   flow_log_destination_type           = var.flow_log_destination_type
@@ -712,7 +742,12 @@ module "vpc_flow_logs" {
   flow_traffic_type                   = var.flow_traffic_type
   flow_transit_gateway_ids            = var.flow_transit_gateway_ids
   flow_transit_gateway_attachment_ids = var.flow_transit_gateway_attachment_ids
-  flow_vpc_ids                        = [aws_vpc.vpc.id]
+  flow_vpc_ids = (
+    var.flow_eni_ids == null &&
+    var.flow_subnet_ids == null &&
+    var.flow_transit_gateway_ids == null &&
+    var.flow_transit_gateway_attachment_ids == null
+  ) ? [aws_vpc.vpc.id] : null
 
   tags = var.tags
 }

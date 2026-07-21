@@ -231,3 +231,102 @@ run "rejects_invalid_internet_monitor_s3_bucket_status" {
 
   expect_failures = [var.internet_monitor_s3_bucket_status]
 }
+
+run "rejects_additional_routes_with_unsupported_tier_name" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["privte"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_empty_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = []
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_duplicate_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["private", "private"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_vpc_endpoints_entry_with_no_identifier" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {}
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_two_identifiers" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name               = "com.amazonaws.us-east-1.secretsmanager"
+        resource_configuration_arn = "arn:aws:vpc-lattice:us-east-1:123456789012:resourceconfiguration/rcfg-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_invalid_type" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type = "Bogus"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}

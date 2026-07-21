@@ -721,6 +721,31 @@ run "flow_logs_full_variable_surface_plans_successfully" {
   }
 }
 
+# Regression test: previously, flow_vpc_ids was always set to [aws_vpc.vpc.id]
+# regardless of the alternate target variables, which violates the child
+# flow_logs module's "exactly one non-null target" precondition the moment a
+# caller sets any of flow_eni_ids/flow_subnet_ids/flow_transit_gateway_ids/
+# flow_transit_gateway_attachment_ids. This should now plan successfully.
+run "flow_eni_ids_target_suppresses_default_vpc_target" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = true
+    flow_eni_ids     = ["eni-0123456789abcdef0"]
+  }
+
+  assert {
+    condition     = length(module.vpc_flow_logs) == 1
+    error_message = "enable_flow_logs=true with flow_eni_ids set should still create the flow_logs module."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].arn != null
+    error_message = "The flow_logs module should plan successfully when flow_eni_ids is set (previously always also set flow_vpc_ids, tripping the child module's exactly-one-target precondition)."
+  }
+}
+
 run "vpc_attribute_outputs_resolve" {
   command = plan
 
@@ -841,7 +866,7 @@ run "additional_routes_fans_out_across_selected_tiers" {
     additional_routes = {
       peering = {
         route_table_types         = ["private", "dmz"]
-        destination_cidr_block    = "192.168.100.0/24"
+        destination_cidr_block    = cidrsubnet(var.workspaces_subnets_list[0], 4, 1)
         vpc_peering_connection_id = "pcx-0123456789abcdef0"
       }
     }
@@ -858,7 +883,95 @@ run "additional_routes_fans_out_across_selected_tiers" {
   }
 
   assert {
-    condition     = alltrue([for r in aws_route.additional : r.destination_cidr_block == "192.168.100.0/24"])
+    condition     = alltrue([for r in aws_route.additional : r.destination_cidr_block == cidrsubnet(var.workspaces_subnets_list[0], 4, 1)])
     error_message = "Every replicated route should carry through the destination_cidr_block."
+  }
+}
+
+# Regression test for the previously-missing local_gateway_id/odb_network_arn
+# targets on additional_routes.
+run "additional_routes_supports_local_gateway_and_odb_network_targets" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      outposts = {
+        route_table_types      = ["private"]
+        destination_cidr_block = cidrsubnet(var.mgmt_subnets_list[0], 4, 2)
+        local_gateway_id       = "lgw-0123456789abcdef0"
+      }
+      odb = {
+        route_table_types      = ["private"]
+        destination_cidr_block = cidrsubnet(var.mgmt_subnets_list[0], 4, 3)
+        odb_network_arn        = "arn:aws:odb:us-east-1:123456789012:network/odb-network-0123456789abcdef0"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_route.additional["outposts-private-0"].local_gateway_id == "lgw-0123456789abcdef0"
+    error_message = "local_gateway_id should pass through unchanged."
+  }
+
+  assert {
+    condition     = aws_route.additional["odb-private-0"].odb_network_arn == "arn:aws:odb:us-east-1:123456789012:network/odb-network-0123456789abcdef0"
+    error_message = "odb_network_arn should pass through unchanged."
+  }
+}
+
+# Regression test for the previously-missing service_region/dns_options/
+# subnet_configuration arguments on the generic vpc_endpoints escape hatch.
+run "custom_vpc_endpoints_supports_dns_options_and_subnet_configuration" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        service_region      = "us-east-1"
+        private_dns_enabled = true
+        dns_options = {
+          dns_record_ip_type = "ipv4"
+        }
+        subnet_configuration = [
+          {
+            subnet_id = "subnet-0123456789abcdef0"
+            ipv4      = cidrhost(var.private_subnets_list[0], 10)
+          }
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].service_region == "us-east-1"
+    error_message = "service_region should pass through unchanged."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["secretsmanager"].dns_options) == 1
+    error_message = "The dns_options block should be populated when dns_options is set."
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].dns_options[0].dns_record_ip_type == "ipv4"
+    error_message = "dns_options.dns_record_ip_type should pass through unchanged."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["secretsmanager"].subnet_configuration) == 1
+    error_message = "The subnet_configuration block should be populated when subnet_configuration is set."
+  }
+
+  # subnet_configuration is a set-typed nested block, not a list, so it can't
+  # be indexed by position ([0]) -- convert to a list first.
+  assert {
+    condition     = tolist(aws_vpc_endpoint.custom["secretsmanager"].subnet_configuration)[0].ipv4 == cidrhost(var.private_subnets_list[0], 10)
+    error_message = "subnet_configuration.ipv4 should pass through unchanged."
   }
 }
