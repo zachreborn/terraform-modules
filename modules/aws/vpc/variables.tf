@@ -508,6 +508,11 @@ variable "internet_monitor_monitor_name" {
   description = "(Optional) The name of the Internet Monitor. Required when enable_internet_monitor is true. Maps to the monitor_name argument."
   type        = string
   default     = null
+
+  validation {
+    condition     = !var.enable_internet_monitor || var.internet_monitor_monitor_name != null
+    error_message = "internet_monitor_monitor_name must be set when enable_internet_monitor is true."
+  }
 }
 
 variable "internet_monitor_traffic_percentage_to_monitor" {

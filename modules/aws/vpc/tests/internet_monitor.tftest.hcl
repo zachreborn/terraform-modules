@@ -78,7 +78,7 @@ run "internet_monitor_enabled_with_name_plans_successfully" {
   }
 }
 
-run "internet_monitor_enabled_without_name_fails_precondition" {
+run "internet_monitor_enabled_without_name_fails_validation" {
   command = plan
 
   variables {
@@ -87,7 +87,12 @@ run "internet_monitor_enabled_without_name_fails_precondition" {
     enable_internet_monitor = true
   }
 
-  expect_failures = [aws_internetmonitor_monitor.this]
+  # This is now a cross-variable validation on internet_monitor_monitor_name
+  # itself (var.internet_monitor_monitor_name must be set when
+  # var.enable_internet_monitor is true), rather than a resource
+  # precondition -- the module now requires OpenTofu/Terraform >= 1.9.0,
+  # which supports referencing other variables in a validation block.
+  expect_failures = [var.internet_monitor_monitor_name]
 }
 
 run "internet_monitor_s3_delivery_configured_when_bucket_name_set" {
