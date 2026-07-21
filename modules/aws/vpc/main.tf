@@ -1,5 +1,9 @@
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.9.0: this module's variable validation blocks (subnet_indices,
+  # internet_monitor_monitor_name) reference other variables
+  # (e.g. var.private_subnets_list), which OpenTofu and Terraform both only
+  # support starting in their respective 1.9.0 releases.
+  required_version = ">= 1.9.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -780,15 +784,6 @@ resource "aws_internetmonitor_monitor" "this" {
         bucket_prefix       = var.internet_monitor_s3_bucket_prefix
         log_delivery_status = var.internet_monitor_s3_bucket_status
       }
-    }
-  }
-
-  lifecycle {
-    # required_version (>= 1.0.0) predates cross-variable validation, so enforce
-    # the "monitor_name required when enabled" contract with a precondition.
-    precondition {
-      condition     = !var.enable_internet_monitor || var.internet_monitor_monitor_name != null
-      error_message = "internet_monitor_monitor_name must be set when enable_internet_monitor is true."
     }
   }
 }
