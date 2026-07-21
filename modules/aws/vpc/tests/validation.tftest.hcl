@@ -240,7 +240,7 @@ run "rejects_additional_routes_with_unsupported_tier_name" {
     enable_flow_logs = false
     additional_routes = {
       bad = {
-        route_table_types      = ["privte"]
+        route_table_types      = ["bogus"]
         destination_cidr_block = "192.0.2.0/24"
       }
     }

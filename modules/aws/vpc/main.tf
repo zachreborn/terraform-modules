@@ -92,6 +92,15 @@ locals {
 ###########################
 
 resource "aws_vpc" "vpc" {
+  # Flow logging is enabled by default via the composed vpc_flow_logs module
+  # below (var.enable_flow_logs defaults to true), which targets this VPC by
+  # default through the flow_vpc_ids expression (see that module block).
+  # Checkov's static graph resolution can't trace flow_vpc_ids's conditional
+  # expression -- it depends on whether the caller supplied any alternate
+  # flow-log target -- through the module boundary back to this aws_vpc
+  # resource, so it reports a false positive here.
+  # checkov:skip=CKV2_AWS_11:Flow logging is enabled by default via the composed vpc_flow_logs module; Checkov cannot trace the conditional flow_vpc_ids expression through the module boundary.
+
   # When ipv4_ipam_pool_id is set, the CIDR is sourced from the IPAM pool and
   # cidr_block must be null; otherwise fall back to the static vpc_cidr.
   cidr_block          = var.ipv4_ipam_pool_id == null ? var.vpc_cidr : null
