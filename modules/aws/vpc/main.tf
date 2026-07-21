@@ -27,14 +27,25 @@ locals {
   enable_natgw = var.enable_nat_gateway && local.enable_igw
   service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
-  # IPv6: the VPC's IPv6 CIDR is fixed-length (var.ipv6_netmask_length, 56 by
-  # default), and every subnet gets a /64. newbits below is how many extra
-  # bits distinguish each /64 within that block, e.g. 64-56=8 (256 possible
-  # subnets). This is computed from input variables only (never from the
-  # VPC's own possibly-unknown-until-apply ipv6_cidr_block attribute) so it's
-  # always known at plan time.
-  ipv6_prefix_length = var.ipv6_ipam_pool_id != null && var.ipv6_netmask_length != null ? var.ipv6_netmask_length : 56
-  ipv6_newbits       = 64 - local.ipv6_prefix_length
+  # IPv6: every subnet gets a /64, carved out of the VPC's own IPv6 prefix.
+  # newbits below is how many extra bits distinguish each /64 within that
+  # block. The VPC's actual prefix length depends on how the CIDR was
+  # sourced (in priority order):
+  #   1. An explicit ipv6_cidr_block (from an IPAM pool) -- derive the
+  #      prefix from that CIDR's own suffix, since it may not match
+  #      ipv6_netmask_length (e.g. a /52 explicit CIDR with the default
+  #      ipv6_netmask_length of 56 left unset).
+  #   2. ipv6_netmask_length (IPAM auto-selects a CIDR of this size).
+  #   3. 56, the fixed prefix length for an Amazon-provided IPv6 CIDR.
+  # This is computed from input variables only (never from the VPC's own
+  # possibly-unknown-until-apply ipv6_cidr_block attribute) so it's always
+  # known at plan time.
+  ipv6_prefix_length = (
+    var.enable_ipv6 && var.ipv6_ipam_pool_id != null && var.ipv6_cidr_block != null
+    ? tonumber(split("/", var.ipv6_cidr_block)[1])
+    : (var.enable_ipv6 && var.ipv6_ipam_pool_id != null && var.ipv6_netmask_length != null ? var.ipv6_netmask_length : 56)
+  )
+  ipv6_newbits = 64 - local.ipv6_prefix_length
 
   # Sequential per-tier offsets into the VPC's IPv6 CIDR so every subnet
   # (across all tiers) gets a unique /64 block. Tiers are ordered private,
@@ -91,10 +102,14 @@ resource "aws_vpc" "vpc" {
   # set to false/null-with-a-value" as "set" for conflict purposes, so the
   # inactive branch must resolve to null, not false, to avoid a
   # "Conflicting configuration arguments" plan error.
-  assign_generated_ipv6_cidr_block     = (var.enable_ipv6 && var.ipv6_ipam_pool_id == null) ? true : null
-  ipv6_ipam_pool_id                    = var.enable_ipv6 ? var.ipv6_ipam_pool_id : null
-  ipv6_cidr_block                      = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null) ? var.ipv6_cidr_block : null
-  ipv6_netmask_length                  = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null) ? var.ipv6_netmask_length : null
+  assign_generated_ipv6_cidr_block = (var.enable_ipv6 && var.ipv6_ipam_pool_id == null) ? true : null
+  ipv6_ipam_pool_id                = var.enable_ipv6 ? var.ipv6_ipam_pool_id : null
+  ipv6_cidr_block                  = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null) ? var.ipv6_cidr_block : null
+  # ipv6_netmask_length conflicts with ipv6_cidr_block at the provider level
+  # (they're alternate ways to size/select the CIDR from the pool), so only
+  # pass it through when the caller hasn't also supplied an explicit
+  # ipv6_cidr_block.
+  ipv6_netmask_length                  = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null && var.ipv6_cidr_block == null) ? var.ipv6_netmask_length : null
   ipv6_cidr_block_network_border_group = var.enable_ipv6 ? var.ipv6_cidr_block_network_border_group : null
 
   enable_dns_hostnames                 = var.enable_dns_hostnames
@@ -102,6 +117,22 @@ resource "aws_vpc" "vpc" {
   enable_network_address_usage_metrics = var.enable_network_address_usage_metrics
   instance_tenancy                     = var.instance_tenancy
   tags                                 = merge(tomap({ Name = var.name }), var.tags)
+
+  lifecycle {
+    # Every managed subnet needs a unique /64 out of the VPC's own IPv6
+    # prefix; if the combined subnet count across all tiers exceeds the
+    # number of /64 blocks the selected prefix can provide, the
+    # cidrsubnet() calls on aws_subnet resources below fail with an opaque
+    # "not enough remaining address space" error. Fail fast here instead
+    # with a clear, specific message.
+    precondition {
+      condition = !var.enable_ipv6 || (
+        length(var.private_subnets_list) + length(var.public_subnets_list) + length(var.dmz_subnets_list) +
+        length(var.db_subnets_list) + length(var.mgmt_subnets_list) + length(var.workspaces_subnets_list)
+      ) <= pow(2, local.ipv6_newbits)
+      error_message = "The combined subnet count across all tiers (private+public+dmz+db+mgmt+workspaces) exceeds the number of /64 blocks available from the selected IPv6 prefix length (ipv6_netmask_length, or the prefix derived from an explicit ipv6_cidr_block). Use a larger prefix (smaller netmask number) or reduce the total subnet count."
+    }
+  }
 }
 
 
@@ -452,11 +483,16 @@ resource "aws_route" "private_default_route_fw" {
 
 # NAT gateways don't support IPv6, so outbound-only IPv6 always targets the
 # egress-only internet gateway regardless of enable_nat_gateway/enable_firewall.
+# count/indexing must match the number of private route tables
+# (length(var.private_subnets_list)), not length(var.azs) -- those two can
+# differ (e.g. more subnets than AZs, now explicitly supported by
+# subnet_indices), and using length(var.azs) would either skip a route table
+# entirely or wrap via element() and attempt a duplicate ::/0 route on one.
 resource "aws_route" "private_default_route_ipv6" {
-  count                       = (var.enable_ipv6 && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
+  count                       = var.enable_ipv6 ? length(var.private_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
-  route_table_id              = element(aws_route_table.private_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.private_route_table[count.index].id
 }
 
 resource "aws_route_table" "db_route_table" {
@@ -480,11 +516,13 @@ resource "aws_route" "db_default_route_fw" {
   route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
 }
 
+# count/indexing must match the number of db route tables (see the comment
+# on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "db_default_route_ipv6" {
-  count                       = (var.enable_ipv6 && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
+  count                       = var.enable_ipv6 ? length(var.db_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
-  route_table_id              = element(aws_route_table.db_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.db_route_table[count.index].id
 }
 
 resource "aws_route_table" "dmz_route_table" {
@@ -508,11 +546,13 @@ resource "aws_route" "dmz_default_route_fw" {
   route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
 }
 
+# count/indexing must match the number of dmz route tables (see the comment
+# on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "dmz_default_route_ipv6" {
-  count                       = (var.enable_ipv6 && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
+  count                       = var.enable_ipv6 ? length(var.dmz_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
-  route_table_id              = element(aws_route_table.dmz_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.dmz_route_table[count.index].id
 }
 
 resource "aws_route_table" "mgmt_route_table" {
@@ -536,11 +576,13 @@ resource "aws_route" "mgmt_default_route_fw" {
   route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
 }
 
+# count/indexing must match the number of mgmt route tables (see the comment
+# on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "mgmt_default_route_ipv6" {
-  count                       = (var.enable_ipv6 && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
+  count                       = var.enable_ipv6 ? length(var.mgmt_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
-  route_table_id              = element(aws_route_table.mgmt_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.mgmt_route_table[count.index].id
 }
 
 resource "aws_route_table" "workspaces_route_table" {
@@ -564,11 +606,13 @@ resource "aws_route" "workspaces_default_route_fw" {
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
 }
 
+# count/indexing must match the number of workspaces route tables (see the
+# comment on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "workspaces_default_route_ipv6" {
-  count                       = (var.enable_ipv6 && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
+  count                       = var.enable_ipv6 ? length(var.workspaces_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
-  route_table_id              = element(aws_route_table.workspaces_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.workspaces_route_table[count.index].id
 }
 
 # Caller-defined additional routes (VPC peering, Transit Gateway, prefix
