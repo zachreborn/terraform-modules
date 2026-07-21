@@ -112,11 +112,12 @@ variable "subnet_indices" {
 }
 
 variable "vpc_endpoints" {
-  description = "(Optional) Map of additional VPC endpoints to create, keyed by an arbitrary, unique endpoint name. Use this to attach any Interface, Gateway, GatewayLoadBalancer, Resource, or ServiceNetwork endpoint not covered by enable_ssm_vpc_endpoints/enable_ecr_vpc_endpoints/enable_s3_endpoint, without editing this module (e.g. Secrets Manager, STS, EC2, SNS/SQS). Gateway-type endpoints default to being associated with every public and private route table this module manages unless route_table_ids is set explicitly."
+  description = "(Optional) Map of additional VPC endpoints to create, keyed by an arbitrary, unique endpoint name. Use this to attach any Interface, Gateway, GatewayLoadBalancer, Resource, or ServiceNetwork endpoint not covered by enable_ssm_vpc_endpoints/enable_ecr_vpc_endpoints/enable_s3_endpoint, without editing this module (e.g. Secrets Manager, STS, EC2, SNS/SQS). Gateway-type endpoints default to being associated with every public and private route table this module manages unless route_table_ids is set explicitly. Each entry must set exactly one of service_name, resource_configuration_arn, or service_network_arn."
   type = map(object({
     service_name               = optional(string)
     resource_configuration_arn = optional(string)
     service_network_arn        = optional(string)
+    service_region             = optional(string)
     vpc_endpoint_type          = optional(string, "Interface")
     auto_accept                = optional(bool)
     policy                     = optional(string)
@@ -126,8 +127,34 @@ variable "vpc_endpoints" {
     subnet_ids                 = optional(list(string))
     route_table_ids            = optional(list(string))
     tags                       = optional(map(string), {})
+    dns_options = optional(object({
+      dns_record_ip_type                             = optional(string)
+      private_dns_only_for_inbound_resolver_endpoint = optional(bool)
+      private_dns_preference                         = optional(string)
+      private_dns_specified_domains                  = optional(list(string))
+    }))
+    subnet_configuration = optional(list(object({
+      ipv4      = optional(string)
+      ipv6      = optional(string)
+      subnet_id = optional(string)
+    })), [])
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      (v.service_name != null ? 1 : 0) + (v.resource_configuration_arn != null ? 1 : 0) + (v.service_network_arn != null ? 1 : 0) == 1
+    ])
+    error_message = "Each vpc_endpoints entry must set exactly one of service_name, resource_configuration_arn, or service_network_arn."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints : contains(["Gateway", "GatewayLoadBalancer", "Interface", "Resource", "ServiceNetwork"], v.vpc_endpoint_type)
+    ])
+    error_message = "Each vpc_endpoints entry's vpc_endpoint_type must be one of: Gateway, GatewayLoadBalancer, Interface, Resource, ServiceNetwork."
+  }
 }
 ###########################
 # Subnets
@@ -244,7 +271,7 @@ variable "workspaces_propagating_vgws" {
 }
 
 variable "additional_routes" {
-  description = "(Optional) Map of additional routes to add to this module's managed route tables, for destinations not covered by the built-in IGW/NAT/firewall/IPv6 defaults (e.g. VPC peering, Transit Gateway, prefix lists, carrier gateway, VPC Lattice). Each key is an arbitrary, unique route name. route_table_types selects which of this module's route table tiers (private, public, db, dmz, mgmt, workspaces) the route is added to; the same route is replicated across every route table this module manages in each selected tier."
+  description = "(Optional) Map of additional routes to add to this module's managed route tables, for destinations not covered by the built-in IGW/NAT/firewall/IPv6 defaults (e.g. VPC peering, Transit Gateway, prefix lists, carrier gateway, Outposts local gateway, ODB network, VPC Lattice). Each key is an arbitrary, unique route name. route_table_types selects which of this module's route table tiers (private, public, db, dmz, mgmt, workspaces) the route is added to; the same route is replicated across every route table this module manages in each selected tier. route_table_types must be a non-empty list of unique, supported tier names."
   type = map(object({
     route_table_types           = list(string)
     destination_cidr_block      = optional(string)
@@ -259,8 +286,20 @@ variable "additional_routes" {
     egress_only_gateway_id      = optional(string)
     nat_gateway_id              = optional(string)
     gateway_id                  = optional(string)
+    local_gateway_id            = optional(string)
+    odb_network_arn             = optional(string)
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for route in var.additional_routes :
+      length(route.route_table_types) > 0
+      && length(route.route_table_types) == length(distinct(route.route_table_types))
+      && alltrue([for rtt in route.route_table_types : contains(["private", "public", "db", "dmz", "mgmt", "workspaces"], rtt)])
+    ])
+    error_message = "Each additional_routes entry's route_table_types must be a non-empty list of unique values, each one of: private, public, db, dmz, mgmt, workspaces."
+  }
 }
 
 ###########################
@@ -398,25 +437,25 @@ variable "key_name_prefix" {
 }
 
 variable "flow_eni_ids" {
-  description = "(Optional) List of Elastic Network Interface IDs to attach the flow logs to, in addition to this module's own VPC. Passed through to modules/aws/flow_logs."
+  description = "(Optional) List of Elastic Network Interface IDs to attach the flow logs to, instead of this module's own VPC. The underlying flow_logs module only supports one flow-log target at a time, so setting this makes the flow log target these ENIs and suppresses the default VPC target. Passed through to modules/aws/flow_logs."
   type        = list(string)
   default     = null
 }
 
 variable "flow_subnet_ids" {
-  description = "(Optional) List of Subnet IDs to attach the flow logs to, in addition to this module's own VPC. Passed through to modules/aws/flow_logs."
+  description = "(Optional) List of Subnet IDs to attach the flow logs to, instead of this module's own VPC. The underlying flow_logs module only supports one flow-log target at a time, so setting this makes the flow log target these subnets and suppresses the default VPC target. Passed through to modules/aws/flow_logs."
   type        = list(string)
   default     = null
 }
 
 variable "flow_transit_gateway_ids" {
-  description = "(Optional) List of IDs of the transit gateways to attach the flow logs to. Passed through to modules/aws/flow_logs."
+  description = "(Optional) List of IDs of the transit gateways to attach the flow logs to, instead of this module's own VPC. The underlying flow_logs module only supports one flow-log target at a time, so setting this makes the flow log target these transit gateways and suppresses the default VPC target. Passed through to modules/aws/flow_logs."
   type        = list(string)
   default     = null
 }
 
 variable "flow_transit_gateway_attachment_ids" {
-  description = "(Optional) List of IDs of the transit gateway attachments to attach the flow logs to. Passed through to modules/aws/flow_logs."
+  description = "(Optional) List of IDs of the transit gateway attachments to attach the flow logs to, instead of this module's own VPC. The underlying flow_logs module only supports one flow-log target at a time, so setting this makes the flow log target these attachments and suppresses the default VPC target. Passed through to modules/aws/flow_logs."
   type        = list(string)
   default     = null
 }
