@@ -225,15 +225,21 @@ resource "aws_wafv2_web_acl_rule" "this" {
     }
   }
 
-  captcha_config {
-    immunity_time_property {
-      immunity_time = try(each.value.captcha_config.immunity_time_property.immunity_time, 300)
+  dynamic "captcha_config" {
+    for_each = try(each.value.captcha_config, null) != null ? [each.value.captcha_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = captcha_config.value.immunity_time_property.immunity_time
+      }
     }
   }
 
-  challenge_config {
-    immunity_time_property {
-      immunity_time = try(each.value.challenge_config.immunity_time_property.immunity_time, 300)
+  dynamic "challenge_config" {
+    for_each = try(each.value.challenge_config, null) != null ? [each.value.challenge_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = challenge_config.value.immunity_time_property.immunity_time
+      }
     }
   }
 
