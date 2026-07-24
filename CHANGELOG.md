@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.3.0](https://github.com/zachreborn/terraform-modules/compare/v12.2.0...v12.3.0) (2026-07-24)
+
+
+### Features
+
+* **issue-triage:** detect duplicate and similar issues before advancing ([#448](https://github.com/zachreborn/terraform-modules/issues/448)) ([6237d7f](https://github.com/zachreborn/terraform-modules/commit/6237d7f41b74c3e8b8925a0e9428b55305a4c0c6))
+
 ## [12.2.0](https://github.com/zachreborn/terraform-modules/compare/v12.1.0...v12.2.0) (2026-07-20)
 
 
