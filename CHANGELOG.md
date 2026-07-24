@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.4.0](https://github.com/zachreborn/terraform-modules/compare/v12.3.0...v12.4.0) (2026-07-24)
+
+
+### Features
+
+* **organizations:** wire delegated_admin into the organizations parent module ([#451](https://github.com/zachreborn/terraform-modules/issues/451)) ([2a332b3](https://github.com/zachreborn/terraform-modules/commit/2a332b3d8ed13a1c7b7cca4a6f309fd603eb28d3))
+
 ## [12.3.0](https://github.com/zachreborn/terraform-modules/compare/v12.2.0...v12.3.0) (2026-07-24)
 
 
