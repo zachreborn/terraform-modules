@@ -277,7 +277,7 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release-please.yml` | Push → main | Maintains the Release PR + `CHANGELOG.md` from Conventional Commits; merging the Release PR cuts the `vX.Y.Z` tag and publishes the GitHub Release (the single automated publisher) |
 | `release.yml` | Manual (`workflow_dispatch`) | Emergency/manual fallback only — publishes a GitHub Release for an **already-existing** `vX.Y.Z` tag; no longer triggers on tag pushes |
-| `issue-triage.yml` | Issue opened/edited/labeled | Oz agent checks for duplicate/similar issues, validates issue against minimum standards, comments + labels |
+| `issue-triage.yml` | Issue opened/edited | Oz agent checks for duplicate/similar issues, validates issue against minimum standards, comments + labels |
 | `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
 | `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
 | `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |

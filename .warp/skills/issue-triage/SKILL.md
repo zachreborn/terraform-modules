@@ -61,8 +61,11 @@ do this first, before classification.
    The `--jq` filter is required, not optional: the issue being triaged is
    usually its own strongest search match, and without filtering it out it
    can get misread as an "open duplicate" of itself in step 5 below.
-   Re-run with just the module path if the first search is too broad or
-   returns nothing useful.
+   Re-run with just the module path if the first search returns nothing
+   useful — that broadens it. If it instead returns too many candidates to
+   review, narrow it with a quoted, distinctive phrase from the title;
+   dropping terms only produces a superset of matches, so it cannot fix an
+   overly broad search.
 3. Search pull requests the same way — a spec or implementation PR can exist
    for a request even before (or without) its issue carrying a pipeline
    label:
@@ -82,10 +85,14 @@ do this first, before classification.
    underlying request* — not merely the same module. A different bug or
    feature in a shared module is not a duplicate.
 Classify the strongest candidate found, if any:
-- **Active or completed effort** — a candidate issue/PR carries (or carried)
+- **Active or completed effort** — a candidate issue carries (or carried)
   any of `ready-for-spec`, `spec-in-progress`, `spec-ready-for-review`,
-  `spec-approved`, `implementation-in-progress`, `implemented`, or a merged
-  spec/implementation exists for the same request.
+  `spec-approved`, `implementation-in-progress`, `implemented`; or a
+  candidate PR — open or merged — is a spec/implementation PR for the same
+  request, recognizable by its branch prefix (`spec/issue-<N>-...`,
+  `feat/issue-<N>-...`, `fix/issue-<N>-...`) or title. An open, unmerged PR
+  is active work in progress — do not wait for it to merge before counting
+  it.
 - **Open duplicate** — an open issue with no pipeline label yet already
   describes the same request.
 - **Related, not duplicate** — same module/area but a distinct problem or
