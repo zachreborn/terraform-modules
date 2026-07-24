@@ -55,8 +55,12 @@ do this first, before classification.
    ```sh
    gh issue list --repo <repository> --state all \
      --search "<signal-1> <signal-2>" \
-     --json number,title,state,labels,url --limit 20
+     --json number,title,state,labels,url --limit 20 \
+     --jq "map(select(.number != <issue_number>))"
    ```
+   The `--jq` filter is required, not optional: the issue being triaged is
+   usually its own strongest search match, and without filtering it out it
+   can get misread as an "open duplicate" of itself in step 5 below.
    Re-run with just the module path if the first search is too broad or
    returns nothing useful.
 3. Search pull requests the same way — a spec or implementation PR can exist
@@ -141,10 +145,13 @@ duplicate:**
 
     > If this is not a duplicate, please **edit the issue body** to explain the difference — editing the body re-triggers triage automatically. If it is a duplicate, please close this issue and reference the original.
 
-- Then apply the label:
+- Then apply the label and clear a stale `needs-info` from a prior run —
+  the duplicate check takes priority over that state, so only one of the
+  two should remain:
 
   ```sh
   gh issue edit <issue_number> --repo <repository> --add-label possible-duplicate
+  gh issue edit <issue_number> --repo <repository> --remove-label needs-info || true
   ```
 
 **If ANY required item is missing** (and no duplicate was flagged above):
