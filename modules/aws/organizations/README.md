@@ -305,6 +305,30 @@ module "organizations" {
 }
 ```
 
+### Delegated Administration
+
+This composed module does not manage delegated administrators directly — callers wire that
+separately using [`modules/aws/organizations/delegated_admin`](delegated_admin). Key point: key
+the `delegated_admins` map by a **static logical name** (not the account ID), so the `account_id`
+value can reference a newly-created account from the same plan without causing
+`Invalid for_each argument`:
+
+```hcl
+module "delegated_admin" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+
+  delegated_admins = {
+    backups = {
+      account_id = module.organizations.account_ids["backups"]  # apply-time value is fine as a VALUE
+      services   = ["backup.amazonaws.com"]
+    }
+  }
+}
+```
+
+See [`delegated_admin/README.md`](delegated_admin/README.md) for the full interface, migration
+guidance from the old account-ID-keyed shape, and `moved {}` block examples.
+
 ### Testing
 
 This module, [`ou`](ou), and [`account`](account) each have native OpenTofu tests under their own
