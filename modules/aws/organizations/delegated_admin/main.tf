@@ -14,9 +14,9 @@ terraform {
 
 resource "aws_organizations_delegated_administrator" "this" {
   for_each = merge([
-    for account_id, services in var.delegated_admins : {
-      for service in services : "${account_id}-${service}" => {
-        account_id        = account_id
+    for admin_key, admin in var.delegated_admins : {
+      for service in admin.services : "${admin_key}-${service}" => {
+        account_id        = admin.account_id
         service_principal = service
       }
     }

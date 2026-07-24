@@ -62,20 +62,145 @@
 
 ## Usage
 
+This module manages `aws_organizations_delegated_administrator` resources. It is keyed by a
+caller-supplied **static logical name** (not the AWS account ID), which allows the `account_id`
+value to be an apply-time-unknown reference (e.g. `module.organizations.account_ids["backups"]`)
+without triggering `Invalid for_each argument`.
+
 ### Simple Example
 
-This example delegates administrative functionality of a service to an account.
+Delegate AWS Backup administration to an existing account:
 
-```
-module "organization" {
-    source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+```hcl
+module "delegated_admin" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
 
-    delegated_admins = {
-        "123456789012" = "service-abbreviation.amazonaws.com",
-        (module.prod_network.id) = "networkmanager.amazonaws.com"
+  delegated_admins = {
+    backups = {
+      account_id = "123456789012"
+      services   = ["backup.amazonaws.com"]
     }
+  }
 }
 ```
+
+### New Account in the Same Apply
+
+The primary motivation for the static-key design: `account_id` may be an apply-time-unknown
+value from a concurrently created account without causing a plan-time error:
+
+```hcl
+module "organizations" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations"
+
+  # ... organization, organizational_units, accounts ...
+  accounts = {
+    backups = {
+      email      = "backups@example.com"
+      parent_key = "aws_infrastructure"
+    }
+  }
+}
+
+module "delegated_admin" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+
+  delegated_admins = {
+    # Map key is the static logical name "backups" — known at plan time.
+    # account_id is the apply-time-unknown account ID — used only as a value.
+    backups = {
+      account_id = module.organizations.account_ids["backups"]
+      services   = ["backup.amazonaws.com"]
+    }
+  }
+}
+```
+
+### Multiple Accounts and Services
+
+```hcl
+module "delegated_admin" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+
+  delegated_admins = {
+    backups = {
+      account_id = module.organizations.account_ids["backups"]
+      services   = ["backup.amazonaws.com"]
+    }
+    security = {
+      account_id = module.organizations.account_ids["security"]
+      services   = [
+        "guardduty.amazonaws.com",
+        "securityhub.amazonaws.com",
+        "inspector2.amazonaws.com",
+      ]
+    }
+  }
+}
+```
+
+## Migration from the Previous Interface
+
+The `delegated_admins` variable changed from `map(list(string))` keyed by AWS account ID to
+`map(object({ account_id, services }))` keyed by a static logical name. This is a **breaking
+change** — callers must update their configuration.
+
+### Configuration update
+
+```hcl
+# Before (old interface — account ID as map key)
+delegated_admins = {
+  (module.organizations.account_ids["backups"]) = ["backup.amazonaws.com"]
+}
+
+# After (new interface — static logical name as map key)
+delegated_admins = {
+  backups = {
+    account_id = module.organizations.account_ids["backups"]
+    services   = ["backup.amazonaws.com"]
+  }
+}
+```
+
+### Avoiding destroy+recreate with `moved` blocks
+
+Because the resource instance keys change from `"<account_id>-<service>"` to
+`"<logical_key>-<service>"`, OpenTofu/Terraform will plan destroy+recreate of every managed
+delegated-administrator registration unless you add `moved` blocks. Because
+`aws_organizations_delegated_administrator` registration is idempotent on
+`(account_id, service_principal)`, adding `moved` blocks is strongly recommended to avoid
+needless churn:
+
+```hcl
+# Example: account 123456789012 was previously registered for backup.amazonaws.com.
+# The old resource key was "123456789012-backup.amazonaws.com";
+# the new key is "backups-backup.amazonaws.com".
+moved {
+  from = module.delegated_admin.aws_organizations_delegated_administrator.this["123456789012-backup.amazonaws.com"]
+  to   = module.delegated_admin.aws_organizations_delegated_administrator.this["backups-backup.amazonaws.com"]
+}
+```
+
+Alternatively, use `tofu state mv` (or `terraform state mv`) to rename the resource in state
+before applying, which avoids the need for `moved` blocks in configuration.
+
+## Notes / Design Decisions
+
+- **Static map keys are required.** The map key must be a string literal, `local` value, or other
+  plan-time-known expression. Using a resource attribute (e.g. an account ID output) as a map key
+  causes `Invalid for_each argument` if that value is unknown at plan time.
+
+- **`account_id` is a value, not a key.** Moving `account_id` from the map key to an object
+  attribute is the sole purpose of this interface. It allows the account ID to be supplied from a
+  concurrently-created `aws_organizations_account` in the same plan/apply without splitting work
+  across two applies.
+
+- **Instance key format.** The `for_each` key for each resource instance is
+  `"<logical_key>-<service_principal>"` (e.g. `"backups-backup.amazonaws.com"`). Output maps use
+  this same key so outputs are easy to cross-reference with inputs.
+
+- **No tags.** `aws_organizations_delegated_administrator` does not accept a `tags` argument, so
+  this module has no tagging support.
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -95,7 +220,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.56.0 |
 
 ## Modules
 
@@ -111,11 +236,14 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Required) Map where the keys are AWS account IDs and the values are lists of service principal names to associate with the account. This allows multiple service principals per account. | `map(list(string))` | n/a | yes |
+| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Optional) Map of delegated administrator configurations keyed by a caller-supplied static logical<br/>name (e.g. "backups", "security"). The map key must be known at plan time — a string literal or<br/>local value, never a resource attribute such as an AWS account ID — so the resource for\_each key<br/>remains resolvable even when account\_id is an apply-time-unknown value.<br/><br/>Each entry has:<br/>  - account\_id : The AWS account ID to register as a delegated administrator. May be an<br/>                 apply-time value such as module.organizations.account\_ids["backups"]; it is<br/>                 passed only as a resource argument value, never used as a for\_each key.<br/>  - services   : Non-empty list of service principal names to associate with the account<br/>                 (e.g. ["backup.amazonaws.com", "config.amazonaws.com"]).<br/><br/>Example:<br/>  delegated\_admins = {<br/>    backups = {<br/>      account\_id = module.organizations.account\_ids["backups"]<br/>      services   = ["backup.amazonaws.com"]<br/>    }<br/>    security = {<br/>      account\_id = "123456789012"<br/>      services   = ["guardduty.amazonaws.com", "securityhub.amazonaws.com"]<br/>    }<br/>  } | <pre>map(object({<br/>    account_id = string<br/>    services   = list(string)<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_delegated_administrator_ids"></a> [delegated\_administrator\_ids](#output\_delegated\_administrator\_ids) | Map of delegated administrator instance IDs keyed by '<logical\_key>-<service\_principal>' (e.g. 'backups-backup.amazonaws.com'). Each value is the resource ID in the form '<account\_id>/<service\_principal>'. |
+| <a name="output_delegated_administrators"></a> [delegated\_administrators](#output\_delegated\_administrators) | Map of full delegated administrator resource objects keyed by '<logical\_key>-<service\_principal>'. Each object exposes account\_id, service\_principal, arn, name, email, status, joined\_method, joined\_timestamp, and delegation\_enabled\_date. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
