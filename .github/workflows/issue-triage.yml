@@ -15,6 +15,11 @@ concurrency:
 permissions:
   contents: read
   issues: write
+  # Needed for the duplicate/similar-issue check in the issue-triage skill,
+  # which calls `gh pr list` to search open and merged PRs. GITHUB_TOKEN
+  # permissions are explicit here, so any scope not listed defaults to
+  # `none` — without this, that search would silently fail with a 403.
+  pull-requests: read
   # Needed to dispatch the spec-generation workflow as the next stage when
   # the agent applies `ready-for-spec`. Label events from GITHUB_TOKEN do
   # not cascade to other workflows, but workflow_dispatch events from

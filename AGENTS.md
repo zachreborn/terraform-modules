@@ -277,7 +277,7 @@ tags = merge(tomap({ Name = var.name }), var.tags)
 | `scan.yml` | Scheduled (12 hrs) or manual | Checkov security scan, uploads SARIF to GitHub |
 | `release-please.yml` | Push → main | Maintains the Release PR + `CHANGELOG.md` from Conventional Commits; merging the Release PR cuts the `vX.Y.Z` tag and publishes the GitHub Release (the single automated publisher) |
 | `release.yml` | Manual (`workflow_dispatch`) | Emergency/manual fallback only — publishes a GitHub Release for an **already-existing** `vX.Y.Z` tag; no longer triggers on tag pushes |
-| `issue-triage.yml` | Issue opened/edited/labeled | Oz agent validates issue against minimum standards, comments + labels |
+| `issue-triage.yml` | Issue opened/edited | Oz agent checks for duplicate/similar issues, validates issue against minimum standards, comments + labels |
 | `spec-generation.yml` | Issue labeled `ready-for-spec` (or manual) | Oz agent opens a spec PR under `.github/specs/` |
 | `spec-approved.yml` | Spec PR merged | Flips originating issue to `spec-approved` |
 | `implementation.yml` | Issue labeled `spec-approved` (or manual) | Oz agent opens an implementation PR per the merged spec |
@@ -354,8 +354,11 @@ This repo runs an Oz-powered pipeline that turns issues into reviewed specs and 
 ```mermaid
 stateDiagram-v2
     [*] --> needs_info: triage finds missing info
+    [*] --> possible_duplicate: triage finds a likely duplicate
     [*] --> ready_for_spec: triage passes minimum standards
     needs_info --> ready_for_spec: author edits, re-triage passes
+    possible_duplicate --> ready_for_spec: author edits issue, re-triage clears flag
+    possible_duplicate --> [*]: closed as duplicate
     ready_for_spec --> spec_in_progress: Spec Generation runs
     spec_in_progress --> spec_ready_for_review: spec PR opened
     spec_in_progress --> ready_for_spec: failure (label restored)
@@ -368,6 +371,7 @@ stateDiagram-v2
 **Stages and the label that drives each transition**:
 
 1. Issue opened → triage agent runs (only for trusted authors; see below).
+   - Likely duplicate of an open, in-flight, or already-`implemented` issue/PR/spec → label `possible-duplicate` + comment linking the match; classification and minimum-standards checks are skipped for that run.
    - Missing required info → label `needs-info` + comment listing what's missing.
    - Complete → label `ready-for-spec` + classification comment.
 2. `ready-for-spec` → spec-generation agent runs; opens a PR under `.github/specs/issue-<N>-<slug>.md`; issue moves to `spec-in-progress` then `spec-ready-for-review`.
@@ -388,8 +392,9 @@ stateDiagram-v2
 
 - Apply the `skip-oz` label to any issue to disable all Oz workflows for it (label-triggered runs *and* `workflow_dispatch`).
 - Use `workflow_dispatch` on `spec-generation.yml` or `implementation.yml` to re-run a stage manually with an `issue_number` input. Manual dispatch still re-checks `skip-oz` and the trust gate at runtime.
+- A `possible-duplicate` flag is a triage suggestion, not a verdict: edit the issue body (even a small clarifying note) to re-trigger triage and re-evaluate it, or close the issue referencing the original if it is in fact a duplicate.
 
-**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info`, `skip-oz`, and `implemented` (color `#0E8A16`). The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. `spec-approved.yml` and `impl-complete.yml` do not use `WARP_API_KEY` (they are plain `actions/github-script` jobs) and will act on merged PRs as soon as they land, regardless of secret configuration.
+**Required repo config** (one-time): set `WARP_API_KEY` (secret), optional `WARP_AGENT_PROFILE` (variable), and create the labels listed above plus `needs-info`, `possible-duplicate`, `skip-oz`, and `implemented` (color `#0E8A16`). The three Oz-agent workflows fail fast with a clear error if `WARP_API_KEY` is missing, so the PR is safe to merge before configuration is done. `spec-approved.yml` and `impl-complete.yml` do not use `WARP_API_KEY` (they are plain `actions/github-script` jobs) and will act on merged PRs as soon as they land, regardless of secret configuration.
 
 **Specs directory**: see `.github/specs/README.md` for naming and `.github/specs/_template.md` for the canonical layout.
 
