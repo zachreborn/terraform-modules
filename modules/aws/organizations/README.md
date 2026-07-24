@@ -378,6 +378,9 @@ native OpenTofu tests under their own `tests/` directory, using `mock_provider "
 without real AWS credentials, cost, or cloud side effects. Run them per module:
 
 ```sh
+tofu -chdir=modules/aws/organizations/delegated_admin init -backend=false
+tofu -chdir=modules/aws/organizations/delegated_admin test
+
 tofu -chdir=modules/aws/organizations/ou init -backend=false
 tofu -chdir=modules/aws/organizations/ou test
 
