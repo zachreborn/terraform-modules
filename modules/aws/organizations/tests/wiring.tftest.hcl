@@ -177,6 +177,15 @@ run "delegated_admins_wiring_uses_internal_account_ids" {
     condition     = output.delegated_administrator_ids["backups-backup.amazonaws.com"] != null
     error_message = "delegated_admins entry should resolve account_key against this module's own accounts output."
   }
+
+  # Prove the wrapper actually passed module.accounts.ids["backups"] through as account_ids -- not just
+  # that some entry landed under the expected key. "222222222222" is the mocked aws_organizations_account
+  # id above; a wrong or unresolved account_id would fail this even though the != null check above would
+  # still pass.
+  assert {
+    condition     = output.delegated_administrators["backups-backup.amazonaws.com"].account_id == "222222222222"
+    error_message = "account_key \"backups\" should resolve to the account created by this same module call's accounts input, via module.accounts.ids."
+  }
 }
 
 run "delegated_admins_accepts_external_account_id" {
