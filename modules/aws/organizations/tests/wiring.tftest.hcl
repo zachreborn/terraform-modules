@@ -17,6 +17,18 @@ mock_provider "aws" {
       ]
     }
   }
+
+  mock_resource "aws_organizations_account" {
+    defaults = {
+      id = "222222222222"
+    }
+  }
+
+  mock_resource "aws_organizations_delegated_administrator" {
+    defaults = {
+      id = "222222222222/backup.amazonaws.com"
+    }
+  }
 }
 
 run "bare_top_level_ou_defaults_to_organization_root_when_org_managed" {
@@ -102,6 +114,17 @@ run "full_kitchen_sink_example_plans_successfully" {
         parent_key = "prod"
       }
     }
+
+    delegated_admins = {
+      company_security = {
+        account_key = "company_security"
+        services    = ["guardduty.amazonaws.com", "securityhub.amazonaws.com"]
+      }
+      backups = {
+        account_id = "999999999999"
+        services   = ["backup.amazonaws.com"]
+      }
+    }
   }
 
   assert {
@@ -112,5 +135,64 @@ run "full_kitchen_sink_example_plans_successfully" {
   assert {
     condition     = length(output.account_ids) == 3
     error_message = "Expected 3 accounts to be planned."
+  }
+
+  assert {
+    condition     = length(output.delegated_administrator_ids) == 3
+    error_message = "Expected 3 delegated administrator instances to be planned (two services for company_security, one for backups)."
+  }
+}
+
+# Note: the services non-empty validation failure case is exercised by
+# modules/aws/organizations/delegated_admin/tests/delegated_admin.tftest.hcl ("rejects_entry_with_empty_services").
+# It isn't re-tested here since that failure happens inside the nested delegated_admin module's own variable
+# validation, following the same precedent as the ou submodule note above.
+run "delegated_admins_wiring_uses_internal_account_ids" {
+  command = plan
+
+  variables {
+    organization = {
+      enable_identity_center_scp    = false
+      enable_leave_organization_scp = false
+      enable_root_access_key_scp    = false
+    }
+    organizational_units = {
+      workloads = {}
+    }
+    accounts = {
+      backups = {
+        email      = "backups@example.com"
+        parent_key = "workloads"
+      }
+    }
+    delegated_admins = {
+      backups = {
+        account_key = "backups"
+        services    = ["backup.amazonaws.com"]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.delegated_administrator_ids["backups-backup.amazonaws.com"] != null
+    error_message = "delegated_admins entry should resolve account_key against this module's own accounts output."
+  }
+}
+
+run "delegated_admins_accepts_external_account_id" {
+  command = plan
+
+  variables {
+    delegated_admins = {
+      security = {
+        account_id = "123456789012"
+        services   = ["guardduty.amazonaws.com"]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.delegated_administrator_ids["security-guardduty.amazonaws.com"] != null
+    error_message = "delegated_admins entry with a literal account_id (no corresponding var.accounts entry) should plan successfully."
   }
 }

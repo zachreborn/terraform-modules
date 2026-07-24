@@ -153,6 +153,49 @@ run "mixed_known_and_unknown_account_ids_plans" {
 }
 
 ###########################################################
+# account_key / account_ids resolution (internal cross-reference)
+###########################################################
+
+run "resolves_account_key_against_account_ids" {
+  command = plan
+
+  variables {
+    account_ids = {
+      backups = "333333333333"
+    }
+    delegated_admins = {
+      backups = {
+        account_key = "backups"
+        services    = ["backup.amazonaws.com"]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.delegated_administrators["backups-backup.amazonaws.com"].account_id == "333333333333"
+    error_message = "account_key should resolve to the matching entry in var.account_ids."
+  }
+}
+
+run "rejects_account_key_not_found_in_account_ids" {
+  command = plan
+
+  variables {
+    account_ids = {
+      backups = "333333333333"
+    }
+    delegated_admins = {
+      security = {
+        account_key = "does_not_exist"
+        services    = ["guardduty.amazonaws.com"]
+      }
+    }
+  }
+
+  expect_failures = [aws_organizations_delegated_administrator.this]
+}
+
+###########################################################
 # Validation: expect_failures — one case per validation rule
 ###########################################################
 
@@ -164,6 +207,36 @@ run "rejects_entry_with_empty_services" {
       backups = {
         account_id = "123456789012"
         services   = []
+      }
+    }
+  }
+
+  expect_failures = [var.delegated_admins]
+}
+
+run "rejects_entry_with_both_account_id_and_account_key" {
+  command = plan
+
+  variables {
+    delegated_admins = {
+      backups = {
+        account_id  = "123456789012"
+        account_key = "backups"
+        services    = ["backup.amazonaws.com"]
+      }
+    }
+  }
+
+  expect_failures = [var.delegated_admins]
+}
+
+run "rejects_entry_with_neither_account_id_nor_account_key" {
+  command = plan
+
+  variables {
+    delegated_admins = {
+      backups = {
+        services = ["backup.amazonaws.com"]
       }
     }
   }

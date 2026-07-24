@@ -62,15 +62,16 @@
 
 ## Usage
 
-This module composes three independent, standalone submodules that live alongside it:
-[`organization`](organization), [`ou`](ou), and [`account`](account). Each remains fully usable on its
-own for partial adoption (e.g. an Organization managed by Control Tower, with only accounts vended by
-this module). Use this composed module when you always want all three managed together from a single
-set of inputs, as described in each submodule's own README.
+This module composes four independent, standalone submodules that live alongside it:
+[`organization`](organization), [`ou`](ou), [`account`](account), and
+[`delegated_admin`](delegated_admin). Each remains fully usable on its own for partial adoption (e.g.
+an Organization managed by Control Tower, with only accounts vended by this module). Use this composed
+module when you always want them managed together from a single set of inputs, as described in each
+submodule's own README.
 
-Already calling `organization`, `ou`, and/or `account` directly? See [MIGRATION.md](MIGRATION.md) for
-both available paths: keep the modules separate and update to their new map-based interfaces, or
-consolidate into this composed module.
+Already calling `organization`, `ou`, `account`, and/or `delegated_admin` directly? See
+[MIGRATION.md](MIGRATION.md) for both available paths: keep the modules separate and update to their
+new map-based interfaces, or consolidate into this composed module.
 
 ### Single YAML File Example
 
@@ -176,11 +177,11 @@ module "organizations" {
 ### Full Example (All Options)
 
 A "kitchen sink" reference showing every field available across `organization`, `organizational_units`,
-and `accounts` in one YAML file. Most fields have sensible defaults and don't need to be set explicitly
-— see the simpler examples above for the common case. This example intentionally sets every field so
-you can see the full shape each submodule accepts; cross-reference field meanings in
-[`organization/README.md`](organization/README.md), [`ou/README.md`](ou/README.md), and
-[`account/README.md`](account/README.md).
+`accounts`, and `delegated_admins` in one YAML file. Most fields have sensible defaults and don't need
+to be set explicitly — see the simpler examples above for the common case. This example intentionally
+sets every field so you can see the full shape each submodule accepts; cross-reference field meanings in
+[`organization/README.md`](organization/README.md), [`ou/README.md`](ou/README.md),
+[`account/README.md`](account/README.md), and [`delegated_admin/README.md`](delegated_admin/README.md).
 
 ```yaml
 # organization_structure.yaml
@@ -284,6 +285,26 @@ accounts:
     tags:
       environment: prod
       purpose: consulting-business
+
+delegated_admins:
+  backups:
+    # account_key resolves against the accounts defined above in this same YAML file --
+    # no need to know company_organization's account ID ahead of time.
+    account_key: company_organization
+    services:
+      - backup.amazonaws.com
+  security:
+    account_key: company_security
+    services:
+      - guardduty.amazonaws.com
+      - securityhub.amazonaws.com
+      - inspector2.amazonaws.com
+  audit:
+    # account_id is a literal ID, for an account that already exists or is managed elsewhere
+    # (i.e. not defined under accounts: above).
+    account_id: "123456789012"
+    services:
+      - config.amazonaws.com
 ```
 
 ```
@@ -297,6 +318,7 @@ module "organizations" {
   organization          = try(local.org_structure.organization, null)
   organizational_units  = local.org_structure.organizational_units
   accounts              = local.org_structure.accounts
+  delegated_admins      = try(local.org_structure.delegated_admins, {})
 
   # Module-wide default tags, merged with each organizational_units/accounts entry's own tags.
   tags = {
@@ -305,35 +327,55 @@ module "organizations" {
 }
 ```
 
+See the [Delegated Administration](#delegated-administration) section below for the inline (non-YAML)
+form of `delegated_admins`, and how to look up a specific delegated administrator instance.
+
 ### Delegated Administration
 
-This composed module does not manage delegated administrators directly — callers wire that
-separately using [`modules/aws/organizations/delegated_admin`](delegated_admin). Key point: key
-the `delegated_admins` map by a **static logical name** (not the account ID), so the `account_id`
-value can reference a newly-created account from the same plan without causing
-`Invalid for_each argument`:
+`delegated_admins` is wired directly into this composed module, keyed by a **static logical name**
+(not the account ID). Each entry sets exactly one of `account_key` (a key into this same module
+call's `accounts` input) or `account_id` (a literal ID for an account managed elsewhere):
 
 ```hcl
-module "delegated_admin" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations/delegated_admin"
+module "organizations" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/organizations"
+
+  accounts = {
+    backups = {
+      email      = "backups@example.com"
+      parent_key = "aws_infrastructure"
+    }
+  }
 
   delegated_admins = {
+    # account_key resolves against the accounts created by this same module call --
+    # no need to reference an apply-time-unknown account_id from outside the module.
     backups = {
-      account_id = module.organizations.account_ids["backups"]  # apply-time value is fine as a VALUE
-      services   = ["backup.amazonaws.com"]
+      account_key = "backups"
+      services    = ["backup.amazonaws.com"]
+    }
+    # account_id remains available for accounts that already exist or are managed elsewhere.
+    security = {
+      account_id = "123456789012"
+      services   = ["guardduty.amazonaws.com", "securityhub.amazonaws.com"]
     }
   }
 }
 ```
 
-See [`delegated_admin/README.md`](delegated_admin/README.md) for the full interface, migration
-guidance from the old account-ID-keyed shape, and `moved {}` block examples.
+Look up a specific delegated administrator instance via
+`module.organizations.delegated_administrator_ids["backups-backup.amazonaws.com"]`.
+
+Prefer to call `delegated_admin` standalone (e.g. outside this composed module, referencing
+`module.organizations.account_ids["backups"]` from a separate module block)? See
+[`delegated_admin/README.md`](delegated_admin/README.md) for that interface, migration guidance from
+the old account-ID-keyed shape, and `moved {}` block examples.
 
 ### Testing
 
-This module, [`ou`](ou), and [`account`](account) each have native OpenTofu tests under their own
-`tests/` directory, using `mock_provider "aws"` so they run without real AWS credentials, cost, or
-cloud side effects. Run them per module:
+This module, [`ou`](ou), [`account`](account), and [`delegated_admin`](delegated_admin) each have
+native OpenTofu tests under their own `tests/` directory, using `mock_provider "aws"` so they run
+without real AWS credentials, cost, or cloud side effects. Run them per module:
 
 ```sh
 tofu -chdir=modules/aws/organizations/ou init -backend=false
@@ -372,6 +414,7 @@ No providers.
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_accounts"></a> [accounts](#module\_accounts) | ./account | n/a |
+| <a name="module_delegated_admins"></a> [delegated\_admins](#module\_delegated\_admins) | ./delegated_admin | n/a |
 | <a name="module_organization"></a> [organization](#module\_organization) | ./organization | n/a |
 | <a name="module_organizational_units"></a> [organizational\_units](#module\_organizational\_units) | ./ou | n/a |
 
@@ -384,6 +427,7 @@ No resources.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_accounts"></a> [accounts](#input\_accounts) | (Optional) Map of AWS Organization member accounts to create, identical shape to<br/>modules/aws/organizations/account's accounts variable. organizational\_unit\_ids is wired<br/>automatically from the organizational\_units created by this same module call, so there is no<br/>separate organizational\_unit\_ids input here.<br/>Note: iam\_user\_access\_to\_billing has no default here either, for the same reason it has none in the<br/>account submodule -- see that module's variable description for details. | <pre>map(object({<br/>    name                       = optional(string)<br/>    email                      = string<br/>    parent_id                  = optional(string)<br/>    parent_key                 = optional(string)<br/>    iam_user_access_to_billing = optional(string)<br/>    role_name                  = optional(string, "OrganizationAccountAccessRole")<br/>    close_on_deletion          = optional(bool, false)<br/>    tags                       = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_delegated_admins"></a> [delegated\_admins](#input\_delegated\_admins) | (Optional) Map of delegated administrator configurations to create, identical shape to<br/>modules/aws/organizations/delegated\_admin's delegated\_admins variable. account\_ids is wired<br/>automatically from the accounts created by this same module call's `accounts` input, so entries may<br/>set account\_key to reference an account from var.accounts directly, in addition to a literal<br/>account\_id for existing/external accounts.<br/><br/>Validation of each entry (exactly one of account\_id/account\_key, a non-empty services list, and that<br/>account\_key resolves to a real entry) happens inside the delegated\_admin submodule itself -- see that<br/>module's variable description and README for the full interface and examples. | <pre>map(object({<br/>    account_id  = optional(string)<br/>    account_key = optional(string)<br/>    services    = list(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_organization"></a> [organization](#input\_organization) | (Optional) Configuration for the AWS Organization itself, passed through to the organization<br/>submodule (modules/aws/organizations/organization). Leave unset (the default, null) if the<br/>Organization already exists and is managed elsewhere -- this module then manages no<br/>aws\_organizations\_organization resource, and every organizational\_units entry must set an explicit<br/>parent\_id or parent\_key (the automatic root-ID default described on organizational\_units below<br/>requires organization to be set).<br/>Fields mirror modules/aws/organizations/organization's variables exactly; every field here is<br/>optional with no default of its own, so an unset field passes through as null and the organization<br/>submodule's own default takes over -- defaults stay single-sourced there. | <pre>object({<br/>    allowed_regions                               = optional(list(string))<br/>    attach_identity_center_scp                    = optional(bool)<br/>    attach_leave_organization_scp                 = optional(bool)<br/>    attach_region_scp                             = optional(bool)<br/>    attach_root_access_key_scp                    = optional(bool)<br/>    attach_root_actions_scp                       = optional(bool)<br/>    attach_security_services_scp                  = optional(bool)<br/>    aws_service_access_principals                 = optional(list(string))<br/>    enable_identity_center_scp                    = optional(bool)<br/>    enable_leave_organization_scp                 = optional(bool)<br/>    enable_organization_backup                    = optional(bool)<br/>    enable_region_scp                             = optional(bool)<br/>    enable_root_access_key_scp                    = optional(bool)<br/>    enable_root_actions_scp                       = optional(bool)<br/>    enable_security_services_scp                  = optional(bool)<br/>    enabled_features                              = optional(list(string))<br/>    enabled_policy_types                          = optional(list(string))<br/>    feature_set                                   = optional(string)<br/>    identity_center_scp_description               = optional(string)<br/>    identity_center_scp_name                      = optional(string)<br/>    identity_center_scp_target_ids                = optional(list(string))<br/>    leave_organization_scp_description            = optional(string)<br/>    leave_organization_scp_name                   = optional(string)<br/>    leave_organization_scp_target_ids             = optional(list(string))<br/>    region_scp_description                        = optional(string)<br/>    region_scp_exempted_actions                   = optional(list(string))<br/>    region_scp_exempted_principal_arns            = optional(list(string))<br/>    region_scp_name                               = optional(string)<br/>    region_scp_target_ids                         = optional(list(string))<br/>    root_access_key_scp_description               = optional(string)<br/>    root_access_key_scp_name                      = optional(string)<br/>    root_access_key_scp_target_ids                = optional(list(string))<br/>    root_actions_scp_description                  = optional(string)<br/>    root_actions_scp_exempted_actions             = optional(list(string))<br/>    root_actions_scp_name                         = optional(string)<br/>    root_actions_scp_target_ids                   = optional(list(string))<br/>    security_services_scp_description             = optional(string)<br/>    security_services_scp_exempted_principal_arns = optional(list(string))<br/>    security_services_scp_name                    = optional(string)<br/>    security_services_scp_target_ids              = optional(list(string))<br/>    tags                                          = optional(map(string))<br/>  })</pre> | `null` | no |
 | <a name="input_organizational_units"></a> [organizational\_units](#input\_organizational\_units) | (Optional) Map of Organizational Units to create, identical shape to<br/>modules/aws/organizations/ou's organizational\_units variable (including support for bare/null<br/>entries and parent\_key nesting up to 4 levels). Any entry that sets neither parent\_id nor parent\_key<br/>is automatically attached to the managed Organization's root -- this requires var.organization to be<br/>set; otherwise such an entry fails validation in the ou submodule. | <pre>map(object({<br/>    name       = optional(string)<br/>    parent_id  = optional(string)<br/>    parent_key = optional(string)<br/>    tags       = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags applied to every Organizational Unit and Account created by this module, merged with each entry's optional per-resource tags. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
@@ -395,6 +439,8 @@ No resources.
 | <a name="output_account_arns"></a> [account\_arns](#output\_account\_arns) | Map of AWS Organization account ARNs, keyed by the same keys as var.accounts. |
 | <a name="output_account_ids"></a> [account\_ids](#output\_account\_ids) | Map of AWS Organization account IDs, keyed by the same keys as var.accounts. |
 | <a name="output_account_tags_all"></a> [account\_tags\_all](#output\_account\_tags\_all) | Map of the resolved tags for each account, keyed by the same keys as var.accounts. |
+| <a name="output_delegated_administrator_ids"></a> [delegated\_administrator\_ids](#output\_delegated\_administrator\_ids) | Map of delegated administrator instance IDs keyed by '<logical\_key>-<service\_principal>'. Each value is the resource ID in the form '<account\_id>/<service\_principal>'. |
+| <a name="output_delegated_administrators"></a> [delegated\_administrators](#output\_delegated\_administrators) | Map of full delegated administrator resource objects keyed by '<logical\_key>-<service\_principal>'. Each object exposes account\_id, service\_principal, arn, name, email, status, joined\_method, joined\_timestamp, and delegation\_enabled\_date. |
 | <a name="output_organization"></a> [organization](#output\_organization) | Full set of organization submodule outputs (id, arn, roots, master\_account\_id, SCP ids/arns, etc.), or null when var.organization was not set. |
 | <a name="output_organizational_unit_accounts"></a> [organizational\_unit\_accounts](#output\_organizational\_unit\_accounts) | Map of the list of accounts in each Organizational Unit, keyed by the same keys as var.organizational\_units. |
 | <a name="output_organizational_unit_arns"></a> [organizational\_unit\_arns](#output\_organizational\_unit\_arns) | Map of Organizational Unit ARNs, keyed by the same keys as var.organizational\_units. |

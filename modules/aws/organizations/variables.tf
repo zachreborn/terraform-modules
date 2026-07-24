@@ -108,6 +108,30 @@ variable "accounts" {
 }
 
 ############################################################
+# Delegated Administrators
+############################################################
+
+variable "delegated_admins" {
+  description = <<-EOT
+    (Optional) Map of delegated administrator configurations to create, identical shape to
+    modules/aws/organizations/delegated_admin's delegated_admins variable. account_ids is wired
+    automatically from the accounts created by this same module call's `accounts` input, so entries may
+    set account_key to reference an account from var.accounts directly, in addition to a literal
+    account_id for existing/external accounts.
+
+    Validation of each entry (exactly one of account_id/account_key, a non-empty services list, and that
+    account_key resolves to a real entry) happens inside the delegated_admin submodule itself -- see that
+    module's variable description and README for the full interface and examples.
+  EOT
+  type = map(object({
+    account_id  = optional(string)
+    account_key = optional(string)
+    services    = list(string)
+  }))
+  default = {}
+}
+
+############################################################
 # General Variables
 ############################################################
 
