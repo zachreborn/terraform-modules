@@ -44,3 +44,17 @@ output "account_tags_all" {
   description = "Map of the resolved tags for each account, keyed by the same keys as var.accounts."
   value       = module.accounts.tags_all
 }
+
+############################################################
+# Delegated Administrators
+############################################################
+
+output "delegated_administrator_ids" {
+  description = "Map of delegated administrator instance IDs keyed by '<logical_key>-<service_principal>'. Each value is the resource ID in the form '<account_id>/<service_principal>'."
+  value       = module.delegated_admins.delegated_administrator_ids
+}
+
+output "delegated_administrators" {
+  description = "Map of full delegated administrator resource objects keyed by '<logical_key>-<service_principal>'. Each object exposes account_id, service_principal, arn, name, email, status, joined_method, joined_timestamp, and delegation_enabled_date."
+  value       = module.delegated_admins.delegated_administrators
+}

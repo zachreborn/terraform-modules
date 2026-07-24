@@ -113,3 +113,14 @@ module "accounts" {
   organizational_unit_ids = module.organizational_units.ids
   tags                    = var.tags
 }
+
+###########################
+# Delegated Administrators
+###########################
+
+module "delegated_admins" {
+  source = "./delegated_admin"
+
+  delegated_admins = var.delegated_admins
+  account_ids      = module.accounts.ids
+}
