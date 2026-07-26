@@ -1,0 +1,22 @@
+title = "zachreborn/terraform-modules gitleaks configuration"
+
+# Extend (not replace) gitleaks' built-in default ruleset so all standard secret-detection
+# rules stay active. See https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+[extend]
+useDefault = true
+
+# OpenTofu native test files (*.tftest.hcl) intentionally contain realistic-looking mock
+# credentials -- passwords, tokens, private keys, API keys -- as literal fixtures for
+# `mock_provider` blocks, per AGENTS.md > Module Design Specifications > Native Test Coverage
+# ("Tests must run offline... mock_resource blocks so tofu test never requires real cloud
+# credentials"). These values are never used against real infrastructure. Many are also
+# individually documented with `# checkov:skip=CKV_SECRET_6` comments where Checkov's
+# separate secrets scan flags the same literals.
+#
+# See modules/aws/organizations/account/main.tf's tests, and the many modules/scalr/**/tests
+# directories, for examples of this pattern.
+[allowlist]
+description = "OpenTofu native test fixtures use mock secret-shaped literals by design"
+paths = [
+  '''.*\.tftest\.hcl$''',
+]
