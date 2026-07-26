@@ -17,6 +17,48 @@ variable "groups" {
   # }
 }
 
+variable "permission_sets" {
+  description = <<-EOT
+    (Optional) Map of AWS Identity Center permission sets to create, keyed by a caller-chosen logical
+    name (e.g. "admins"). Each entry is wired to the modules/aws/identity_center/permission_set
+    submodule -- see that submodule's README for the full field reference. Group associations can be
+    expressed two ways:
+      - groups:     Pre-existing group display names, resolved via the permission_set submodule's own
+                     aws_identitystore_group data source. Use this for groups that are not managed by
+                     this same identity_center module call.
+      - group_keys: Keys into this module's own var.groups map. Resolved directly from the group
+                     resource created by this same module call (a resource attribute, never a data
+                     source lookup), so a brand-new group and its permission set can be created
+                     together in a single apply -- this is the fix for the eager-lookup failure
+                     described in issue #456. Every entry must exist in var.groups.
+    A permission set with no group associations at all (policy-only) is a legitimate configuration and
+    is not rejected, matching the permission_set submodule's own behavior.
+  EOT
+  type = map(object({
+    name                             = optional(string)           # (Optional) Defaults to the map key when unset.
+    description                      = optional(string)           # (Optional) The description of the permission set.
+    groups                           = optional(list(string), []) # (Optional) Pre-existing group display names.
+    group_keys                       = optional(list(string), []) # (Optional) Keys into this module's own var.groups.
+    customer_managed_iam_policy_name = optional(string)           # (Optional) See permission_set submodule.
+    customer_managed_iam_policy_path = optional(string, "/")      # (Optional) See permission_set submodule.
+    inline_policy                    = optional(string)           # (Optional) See permission_set submodule.
+    managed_policy_arns              = optional(list(string), []) # (Optional) See permission_set submodule.
+    relay_state                      = optional(string)           # (Optional) See permission_set submodule.
+    session_duration                 = optional(string, "PT1H")   # (Optional) See permission_set submodule.
+    target_accounts                  = set(string)                # (Required) AWS account IDs to assign the permission set to.
+    tags                             = optional(map(string), {})  # (Optional) Additional tags for this permission set.
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for k, v in var.permission_sets : v != null
+    ])
+    error_message = "Each permission_sets entry must be an object that sets at least target_accounts; bare/null entries are not supported."
+  }
+}
+
 variable "users" {
   description = "(Required) The list of users to create."
   type = map(object({

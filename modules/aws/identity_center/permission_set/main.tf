@@ -18,7 +18,7 @@ terraform {
 data "aws_ssoadmin_instances" "this" {}
 
 data "aws_identitystore_group" "this" {
-  for_each          = var.groups
+  for_each          = toset([for g in var.groups : g if !contains(keys(var.group_ids), g)])
   identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
   alternate_identifier {
     unique_attribute {
@@ -33,6 +33,15 @@ data "aws_identitystore_group" "this" {
 ###########################
 
 locals {
+  # Effective group display name -> group ID map: looked-up IDs (from the narrowed data source
+  # above) merged with the caller-supplied group_ids (group_ids wins on key overlap). Every
+  # downstream reference to a group's ID goes through this map instead of the data source directly,
+  # so a group covered by group_ids never triggers a GetGroupId API call.
+  group_id_map = merge(
+    { for g, d in data.aws_identitystore_group.this : g => d.group_id },
+    var.group_ids
+  )
+
   # Creates a map of objects with the following structure:
   # assignments = {
   #   "group_name_account_id" = {
@@ -43,10 +52,10 @@ locals {
   # }
   assignments = {
     for item in flatten([
-      for group in var.groups : [
+      for group in keys(local.group_id_map) : [
         for account in var.target_accounts : {
           group_name = group
-          group_id   = data.aws_identitystore_group.this[group].group_id
+          group_id   = local.group_id_map[group]
           account_id = account
         }
       ]

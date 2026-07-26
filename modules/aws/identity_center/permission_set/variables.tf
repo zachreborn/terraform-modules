@@ -17,8 +17,30 @@ variable "description" {
 }
 
 variable "groups" {
-  description = "(Required) The group names to lookup and associate with the permission set."
+  description = <<-EOT
+    (Optional) Group display names to resolve via the aws_identitystore_group data source and
+    associate with the permission set. Names supplied here must already exist in AWS Identity Store
+    at plan time. Keys present in group_ids are resolved from that map instead and skipped here.
+  EOT
   type        = set(string)
+  default     = []
+}
+
+variable "group_ids" {
+  description = <<-EOT
+    (Optional) Pre-resolved Identity Store group IDs keyed by the same logical group name used in
+    groups / the assignment keys. Use this to bypass the name-based data source lookup entirely --
+    e.g. pass a group's id output so a new group and its permission set can be created in one apply.
+    Values may be known-only-after-apply. If the same key appears in both groups and group_ids,
+    group_ids wins and the data source lookup is skipped for it.
+  EOT
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition     = alltrue([for k, v in var.group_ids : v != null && v != ""])
+    error_message = "Each group_ids value must be a non-empty string."
+  }
 }
 
 variable "group_attribute_path" {
