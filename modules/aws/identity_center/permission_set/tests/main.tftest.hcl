@@ -31,10 +31,14 @@ mock_provider "aws" {
     }
   }
 
-  # A single static mocked id is shared by every aws_ssoadmin_account_assignment instance. This is
-  # sufficient to prove the assignment_ids output can parse the comma-delimited id shape, but multiple
-  # instances in the same run will collide onto one parsed output key -- so tests with more than one
-  # assignment instance assert on the raw resource count, not on output.assignment_ids' length.
+  # A single static mocked id is shared by every aws_ssoadmin_account_assignment instance (native tofu
+  # test mocking seeds computed attributes per resource *type*, not per instance). This is fine for
+  # assignment_ids: it's keyed by the resource's own for_each key ("<group_name>_<account_id>"), which
+  # is unique by construction regardless of the shared mocked id, so multi-instance runs can safely
+  # assert on both the raw resource count and the assignment_ids output itself. The parsed *fields*
+  # inside each entry's value (principal_id, target_id, etc.) still reflect the shared mocked id, since
+  # those come from parsing .id -- see "group_ids_branch_bypasses_data_source" below for exactly what's
+  # safe to assert in that case.
   mock_resource "aws_ssoadmin_account_assignment" {
     defaults = {
       id = "94481408-a061-70b9-9ae4-163731112222,GROUP,123456789012,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-abcdef1234567890,arn:aws:sso:::instance/ssoins-1234567890abcdef"
@@ -91,6 +95,19 @@ run "group_ids_branch_bypasses_data_source" {
     condition     = output.group_ids["readonly"] == "94481408-a061-70b9-9ae4-163731119999"
     error_message = "group_ids output should forward the caller-supplied ID unchanged."
   }
+
+  assert {
+    condition     = length(output.assignment_ids) == 2
+    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by '<group_name>_<account_id>' even though both instances share a mocked id."
+  }
+
+  assert {
+    condition = alltrue([
+      contains(keys(output.assignment_ids), "readonly_123456789012"),
+      contains(keys(output.assignment_ids), "readonly_123456789013"),
+    ])
+    error_message = "assignment_ids should be keyed by '<group_name>_<account_id>' for each distinct assignment, proving the for_each-derived key no longer collides across instances."
+  }
 }
 
 run "group_attribute_path_is_forwarded_to_data_source" {
@@ -106,6 +123,11 @@ run "group_attribute_path_is_forwarded_to_data_source" {
   assert {
     condition     = data.aws_identitystore_group.this["jdoe@example.com"].alternate_identifier[0].unique_attribute[0].attribute_path == "UserName"
     error_message = "group_attribute_path should be forwarded to the data source's alternate_identifier.unique_attribute.attribute_path."
+  }
+
+  assert {
+    condition     = output.group_attribute_path == "UserName"
+    error_message = "group_attribute_path output should echo back the value actually used."
   }
 }
 

@@ -234,6 +234,7 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
 | <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group\_name>\_<account\_id>' -- the same key already used by the underlying for\_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id). |
 | <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
+| <a name="output_group_attribute_path"></a> [group\_attribute\_path](#output\_group\_attribute\_path) | The group attribute path actually used for the name-based aws\_identitystore\_group data source lookup (var.group\_attribute\_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly). |
 | <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group\_ids input. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->

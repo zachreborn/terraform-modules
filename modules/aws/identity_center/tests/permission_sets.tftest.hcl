@@ -103,6 +103,26 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
     condition     = output.permission_set_group_ids["admins"]["Administrators"] == "11111111-1111-1111-1111-111111111111"
     error_message = "group_keys should resolve via the resource-mocked group ID, never the permission_set submodule's own data source lookup -- this is the issue #456 regression proof."
   }
+
+  assert {
+    condition     = output.permission_set_arns["admins"] == "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-abcdef1234567890"
+    error_message = "permission_set_arns should forward the child permission_set module's own mocked arn output."
+  }
+
+  assert {
+    condition     = output.permission_set_created_dates["admins"] == "2024-01-01T00:00:00Z"
+    error_message = "permission_set_created_dates should forward the child permission_set module's own mocked created_date output."
+  }
+
+  assert {
+    condition     = length(output.permission_set_assignment_ids["admins"]) == 1
+    error_message = "permission_set_assignment_ids should forward the child permission_set module's own assignment_ids output (one assignment: 1 group x 1 account)."
+  }
+
+  assert {
+    condition     = output.permission_set_assignment_ids["admins"]["Administrators_123456789012"].principal_type == "GROUP"
+    error_message = "permission_set_assignment_ids should be keyed and parsed exactly as the child module's own assignment_ids output."
+  }
 }
 
 run "groups_by_name_branch_uses_data_source" {
@@ -243,7 +263,16 @@ run "group_attribute_path_field_is_forwarded" {
 
   assert {
     condition     = module.permission_sets["custom_attr"].id != null
-    error_message = "A permission_sets entry with a custom group_attribute_path should plan successfully (see permission_set's own tests for direct forwarding verification)."
+    error_message = "A permission_sets entry with a custom group_attribute_path should plan successfully."
+  }
+
+  # Observable, parent-boundary proof that group_attribute_path is actually forwarded (not just that
+  # the plan succeeds, which would also pass if the parent silently dropped the field and the
+  # submodule's own default "DisplayName" were used instead): the submodule's own group_attribute_path
+  # output echoes back the value it actually used.
+  assert {
+    condition     = module.permission_sets["custom_attr"].group_attribute_path == "UserName"
+    error_message = "group_attribute_path should be forwarded to the permission_set submodule, distinguishing the supplied UserName value from the DisplayName default."
   }
 }
 

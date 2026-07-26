@@ -31,3 +31,8 @@ output "group_ids" {
   description = "Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group_ids input."
   value       = local.group_id_map
 }
+
+output "group_attribute_path" {
+  description = "The group attribute path actually used for the name-based aws_identitystore_group data source lookup (var.group_attribute_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly)."
+  value       = var.group_attribute_path
+}

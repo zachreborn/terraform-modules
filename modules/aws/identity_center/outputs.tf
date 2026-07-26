@@ -60,6 +60,11 @@ output "permission_set_arns" {
   value       = { for k, v in module.permission_sets : k => v.arn }
 }
 
+output "permission_set_created_dates" {
+  description = "Map of the date each permission set was created, keyed by the same keys as var.permission_sets."
+  value       = { for k, v in module.permission_sets : k => v.created_date }
+}
+
 output "permission_set_assignment_ids" {
   description = "Map of each permission set's own assignment_ids output (account-assignment IDs and parsed fields), keyed by the same keys as var.permission_sets."
   value       = { for k, v in module.permission_sets : k => v.assignment_ids }
