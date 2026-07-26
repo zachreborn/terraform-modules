@@ -34,19 +34,17 @@ mock_provider "scalr" {
   }
 }
 
-# Baseline scalr_config equivalent to example_scalr_config.yaml, adjusted so that:
-#  - every workspace explicitly sets `vcs_repo` (even if null), because the
-#    `vcs_repo` dynamic block in main.tf's scalr_workspace resource has no
-#    try() guard on its for_each and errors if the key is entirely absent.
+# Baseline scalr_config equivalent to example_scalr_config.yaml, matching the actual
+# scalr_workspace resource schema:
+#  - workspace-1/workspace-2 omit `vcs_repo` entirely (as example_scalr_config.yaml does)
+#    to prove the `vcs_repo` dynamic block's for_each -- guarded with `try()` -- tolerates
+#    a workspace entry that never sets the key, not just one that sets it to `null`.
 #  - `vcs_repo` and `provider_configuration` are single objects (matching the
 #    `.branch`/`.identifier`/`.name`/`.alias` attribute access in main.tf's
-#    content blocks), not lists as shown in the committed example_scalr_config.yaml.
-#    That file's list-of-strings form for both keys does not plan successfully
-#    against the current (unmodified) scalr_workspace resource -- see the
-#    completion report for details. Since main.tf's existing resource blocks are
-#    out of scope for this change, the object form is used here instead.
+#    content blocks), since the resource's `provider_configuration` is only wired up
+#    as a single block per workspace in this module today.
 #  - `trigger_patterns` is a single glob-style string per the provider schema
-#    (not a list, despite the committed example showing it as one).
+#    (not a list).
 variables {
   scalr_config = <<-YAML
     ---
@@ -54,10 +52,8 @@ variables {
       workspaces:
         workspace-1:
           description: "This is workspace 1 in environment 1"
-          vcs_repo: null
         workspace-2:
           description: "This is workspace 2 in environment 1"
-          vcs_repo: null
     environment-2-all-options:
       default_provider_configurations:
         - "default-provider-1"

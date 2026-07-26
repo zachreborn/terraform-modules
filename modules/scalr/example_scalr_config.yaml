@@ -38,8 +38,8 @@ environment-2-all-options:
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
       provider_configuration:
-        - "provider-1"
-        - "provider-2"
+        name: "provider-1"
+        alias: "primary"
       remote_backend: true
       remote_state_consumers:
         - "consumer-1"
@@ -56,13 +56,11 @@ environment-2-all-options:
         - "var-file-2"
       working_directory: "/path/to/working/directory"
       vcs_repo:
-        - branch: "main"
-          dry_runs_enabled: true
-          identifier: "org/repo"
-          ingress_submodules: false
-          trigger_patterns:
-            - "*.tf"
-          trigger_prefixes:
-            - "stage"
-            - "prod"
-            - "dev"
+        branch: "main"
+        dry_runs_enabled: true
+        identifier: "org/repo"
+        ingress_submodules: false
+        trigger_prefixes:
+          - "stage"
+          - "prod"
+          - "dev"
