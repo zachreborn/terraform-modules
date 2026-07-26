@@ -2,7 +2,7 @@
 kubernetes:
   provider_name: "kubernetes"
   environments:
-    - "production"
+    - "env-xxxxxxxxxx"
   argument:
     - name: "host"
       value: "https://kubernetes.example.com"

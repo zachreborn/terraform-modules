@@ -255,7 +255,16 @@ run "azurerm_google_custom_provider_configurations_plan" {
           - name: "config_path"
             value: "~/.kube/config"
             hcl: false
+          - name: "password"
+            sensitive: true
     YAML
+
+    custom_argument_secrets = {
+      kubernetes = {
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+        password = "my-k8s-password"
+      }
+    }
   }
 
   assert {
@@ -276,5 +285,45 @@ run "azurerm_google_custom_provider_configurations_plan" {
   assert {
     condition     = scalr_provider_configuration.custom["kubernetes"].custom[0].provider_name == "kubernetes"
     error_message = "The custom provider configuration's provider_name should be wired through from the YAML."
+  }
+
+  assert {
+    condition     = [for a in scalr_provider_configuration.custom["kubernetes"].custom[0].argument : a.value if a.name == "password"][0] == "my-k8s-password"
+    error_message = "A sensitive custom argument's value should resolve from var.custom_argument_secrets, keyed by the provider configuration name and argument name."
+  }
+
+  assert {
+    condition     = [for a in scalr_provider_configuration.custom["kubernetes"].custom[0].argument : a.value if a.name == "host"][0] == "https://kubernetes.example.com"
+    error_message = "A non-sensitive custom argument's value should still come from the YAML directly."
+  }
+}
+
+run "workspace_provider_configuration_resolves_non_aws_provider" {
+  command = plan
+
+  variables {
+    azurerm_provider_config = <<-YAML
+      ---
+      azurerm_provider_1:
+        auth_type: "oidc"
+        audience: "api://AzureADTokenExchange"
+        client_id: "00000000-0000-0000-0000-000000000000"
+        tenant_id: "11111111-1111-1111-1111-111111111111"
+        subscription_id: "22222222-2222-2222-2222-222222222222"
+    YAML
+
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          azurerm_workspace:
+            provider_configuration:
+              name: "azurerm_provider_1"
+    YAML
+  }
+
+  assert {
+    condition     = length(scalr_workspace.this["environment-1.azurerm_workspace"].provider_configuration) == 1
+    error_message = "A workspace's provider_configuration.name should resolve against the merged local.provider_configuration_ids lookup, not just scalr_provider_configuration.aws."
   }
 }

@@ -121,7 +121,7 @@ environment-2-all-options:
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
       provider_configuration:
-        name: "provider-1"
+        name: "aws_provider_1"
         alias: "primary"
       remote_backend: true
       remote_state_consumers:
@@ -143,10 +143,7 @@ environment-2-all-options:
         dry_runs_enabled: true
         identifier: "org/repo"
         ingress_submodules: false
-        trigger_prefixes:
-          - "stage"
-          - "prod"
-          - "dev"
+        trigger_patterns: "*.tf" # conflicts with trigger_prefixes; a single glob-style string, not a list
 ```
 
 ### AWS Provider Configuration Example
@@ -178,8 +175,8 @@ azurerm_provider_1:
   tenant_id: "11111111-1111-1111-1111-111111111111"
   subscription_id: "22222222-2222-2222-2222-222222222222"
   environments:
-    - "production"
-    - "staging"
+    - "env-xxxxxxxxxx"
+    - "env-yyyyyyyyyy"
 ```
 
 ```yaml
@@ -191,7 +188,7 @@ google_provider_1:
   service_account_email: "scalr@my-gcp-project.iam.gserviceaccount.com"
   workload_provider_name: "projects/123456789/locations/global/workloadIdentityPools/scalr-pool/providers/scalr-provider"
   environments:
-    - "production"
+    - "env-xxxxxxxxxx"
 ```
 
 ```yaml
@@ -200,7 +197,7 @@ google_provider_1:
 kubernetes:
   provider_name: "kubernetes"
   environments:
-    - "production"
+    - "env-xxxxxxxxxx"
   argument:
     - name: "host"
       value: "https://kubernetes.example.com"

@@ -5,8 +5,9 @@ terraform {
   required_version = ">= 1.0.0"
   required_providers {
     scalr = {
-      source  = "registry.scalr.io/scalr/scalr"
-      version = ">= 3.0"
+      source = "registry.scalr.io/scalr/scalr"
+      # >= 3.17.0 is required by the google provider_configuration's default_labels block below.
+      version = ">= 3.17.0"
     }
   }
 }
@@ -20,10 +21,15 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  aws_provider_config     = try(yamldecode(var.aws_provider_config), null)
-  azurerm_provider_config = try(yamldecode(var.azurerm_provider_config), {})
-  custom_provider_config  = try(yamldecode(var.custom_provider_config), {})
-  google_provider_config  = try(yamldecode(var.google_provider_config), {})
+  # Decode each optional provider-config YAML file to an empty map when the variable itself is
+  # unset (the null default), without swallowing genuine YAML syntax errors: unlike
+  # try(yamldecode(var.x), {}), this only short-circuits on a missing variable, so malformed YAML
+  # in a *supplied* file still raises a real decode error at plan time instead of silently
+  # planning zero resources.
+  aws_provider_config     = var.aws_provider_config == null ? {} : yamldecode(var.aws_provider_config)
+  azurerm_provider_config = var.azurerm_provider_config == null ? {} : yamldecode(var.azurerm_provider_config)
+  custom_provider_config  = var.custom_provider_config == null ? {} : yamldecode(var.custom_provider_config)
+  google_provider_config  = var.google_provider_config == null ? {} : yamldecode(var.google_provider_config)
   vcs_provider_config     = try(yamldecode(var.vcs_provider_config), null)
   yaml_config             = try(yamldecode(var.scalr_config), null)
   workspaces = merge([for environment, value in local.yaml_config : {
@@ -32,6 +38,16 @@ locals {
       workspace   = workspace
     })
   }]...)
+
+  # Merged name -> ID lookup across all four provider_configuration resource types, so a
+  # workspace's provider_configuration.name can reference an AzureRM, Google, or custom
+  # configuration -- not just AWS.
+  provider_configuration_ids = merge(
+    { for k, v in scalr_provider_configuration.aws : k => v.id },
+    { for k, v in scalr_provider_configuration.azurerm : k => v.id },
+    { for k, v in scalr_provider_configuration.google : k => v.id },
+    { for k, v in scalr_provider_configuration.custom : k => v.id },
+  )
 }
 
 ###########################
@@ -147,7 +163,11 @@ resource "scalr_provider_configuration" "custom" {
         description = try(argument.value.description, null)
         hcl         = try(argument.value.hcl, false)
         sensitive   = try(argument.value.sensitive, false)
-        value       = try(argument.value.value, null)
+        # Sensitive argument values are never read from the non-sensitive argument.value.value
+        # (the provider's sensitive flag only controls masking in Scalr, not in Terraform/OpenTofu
+        # plan output) -- they must be supplied via var.custom_argument_secrets instead, keyed by
+        # this provider configuration's name (each.key) and the argument's own name.
+        value = try(argument.value.sensitive, false) ? try(var.custom_argument_secrets[each.key][argument.value.name], null) : try(argument.value.value, null)
       }
     }
   }
@@ -201,7 +221,7 @@ resource "scalr_workspace" "this" {
   dynamic "provider_configuration" {
     for_each = try(each.value.provider_configuration != null ? [1] : [], [])
     content {
-      id    = scalr_provider_configuration.aws[each.value.provider_configuration.name].id
+      id    = local.provider_configuration_ids[each.value.provider_configuration.name]
       alias = try(each.value.provider_configuration.alias, null)
     }
   }

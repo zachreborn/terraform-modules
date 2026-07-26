@@ -299,7 +299,7 @@ variable "google_workload_provider_name" {
 # Custom Provider Variables
 ###########################
 variable "custom_argument" {
-  description = "List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file."
+  description = "List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file. When an argument's 'sensitive' is true, its 'value' here is ignored -- supply the real value via var.custom_argument_secrets instead."
   type = list(object({
     name        = string
     value       = optional(string)
@@ -308,6 +308,27 @@ variable "custom_argument" {
     sensitive   = optional(bool, false)
   }))
   default = []
+}
+
+variable "custom_argument_secrets" {
+  description = <<-EOT
+    Map of sensitive custom provider argument values, keyed by the provider configuration's name
+    (a top-level key in custom_provider_config, or the resource's own name for module-wide
+    defaults) and then by argument name. Populate an entry here instead of setting 'value' directly
+    in custom_argument or the YAML file whenever an argument sets 'sensitive = true': the
+    provider's sensitive flag only controls masking in Scalr and does not prevent the value from
+    appearing in Terraform/OpenTofu plan output when sourced from a non-sensitive variable.
+
+    Example:
+      custom_argument_secrets = {
+        kubernetes = {
+          password = "<value-from-a-secret-manager>"
+        }
+      }
+  EOT
+  type        = map(map(string))
+  sensitive   = true
+  default     = {}
 }
 
 variable "custom_environments" {

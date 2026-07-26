@@ -38,7 +38,7 @@ environment-2-all-options:
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
       provider_configuration:
-        name: "provider-1"
+        name: "aws_provider_1"
         alias: "primary"
       remote_backend: true
       remote_state_consumers:
@@ -60,7 +60,4 @@ environment-2-all-options:
         dry_runs_enabled: true
         identifier: "org/repo"
         ingress_submodules: false
-        trigger_prefixes:
-          - "stage"
-          - "prod"
-          - "dev"
+        trigger_patterns: "*.tf" # conflicts with trigger_prefixes; a single glob-style string, not a list
