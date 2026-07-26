@@ -2,7 +2,11 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.9.0 is required because this module's namespace_key validation (variables.tf) references
+  # var.module_namespaces from within var.modules's validation block. Terraform and OpenTofu both
+  # added support for referencing other variables/locals in variable validation in their respective
+  # 1.9.0 releases, so this floor is satisfied by either tool.
+  required_version = ">= 1.9.0"
   required_providers {
     scalr = {
       source  = "registry.scalr.io/scalr/scalr"
