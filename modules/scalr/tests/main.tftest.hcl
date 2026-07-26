@@ -201,7 +201,8 @@ run "vcs_provider_config_plans_and_populates_output" {
       ---
       github-vcs:
         vcs_type: "github"
-        token: "ghp_mocktoken1234567890"
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+        token: "mock-vcs-token-value"
         environments:
           - "*"
     YAML

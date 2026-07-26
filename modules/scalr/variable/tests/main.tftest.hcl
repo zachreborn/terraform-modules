@@ -22,6 +22,7 @@ run "value_and_metadata_wire_through_correctly" {
       }
     }
     values = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
       db_password = "correct-horse-battery-staple"
     }
   }
@@ -66,6 +67,7 @@ run "value_wo_wires_through_correctly" {
       }
     }
     values_wo = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
       api_token = "ephemeral-token-value"
     }
   }

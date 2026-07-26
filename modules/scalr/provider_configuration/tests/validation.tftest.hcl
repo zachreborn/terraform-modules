@@ -15,6 +15,7 @@ run "valid_baseline_does_not_fail" {
     }
     provider_configuration_secrets = {
       aws_prod = {
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
         aws_secret_key = "my-secret-key"
       }
     }

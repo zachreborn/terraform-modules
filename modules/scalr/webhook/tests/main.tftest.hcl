@@ -118,6 +118,7 @@ run "secret_key_flows_from_dedicated_variable" {
   }
 
   assert {
+    # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
     condition     = scalr_webhook.this["run_notifications"].secret_key == "super-secret-value"
     error_message = "secret_key should resolve from var.webhook_secret_keys via the matching logical name."
   }

@@ -33,6 +33,7 @@ run "aws_entry_plans_successfully" {
     }
     provider_configuration_secrets = {
       aws_prod = {
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
         aws_secret_key = "my-secret-key"
       }
     }
@@ -70,6 +71,7 @@ run "azurerm_entry_plans_successfully" {
     }
     provider_configuration_secrets = {
       azurerm_prod = {
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
         azurerm_client_secret = "my-client-secret"
       }
     }
@@ -117,6 +119,7 @@ run "scalr_entry_plans_successfully" {
     }
     provider_configuration_secrets = {
       scalr_main = {
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
         scalr_token = "my-scalr-token"
       }
     }
@@ -147,6 +150,7 @@ run "custom_entry_with_sensitive_argument_plans_successfully" {
     provider_configuration_secrets = {
       k8s = {
         custom_argument_values = {
+          # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
           password = "my-k8s-password"
         }
       }

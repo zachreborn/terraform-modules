@@ -7,7 +7,8 @@ mock_provider "scalr" {
 
   mock_resource "scalr_agent_pool_token" {
     defaults = {
-      id    = "apt-abcd1234"
+      id = "apt-abcd1234"
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
       token = "mock-secret-token-value"
     }
   }

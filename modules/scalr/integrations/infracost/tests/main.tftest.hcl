@@ -58,6 +58,7 @@ run "api_key_flows_from_dedicated_variable" {
   }
 
   assert {
+    # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
     condition     = scalr_integration_infracost.this["default"].api_key == "ico-super-secret-key"
     error_message = "api_key should resolve from var.infracost_api_keys via the matching logical name."
   }
