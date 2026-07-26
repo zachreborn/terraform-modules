@@ -38,8 +38,14 @@ variable "policy_groups" {
   default = {}
 
   validation {
+    # Note: intentionally not calling coalesce(v.name, k) here -- coalesce() raises a hard
+    # evaluation error ("no non-null, non-empty-string arguments") rather than returning
+    # false when every argument is null/empty, which would crash validation entirely for an
+    # empty key + omitted name instead of surfacing the error_message below. This ternary
+    # reproduces coalesce()'s "first non-null, non-empty-string value" semantics without
+    # ever calling it on an all-invalid input.
     condition = alltrue([
-      for k, v in var.policy_groups : coalesce(v.name, k) != ""
+      for k, v in var.policy_groups : (v.name != null && v.name != "" ? v.name : k) != ""
     ])
     error_message = "Each policy_groups entry must resolve to a non-empty name (set name explicitly or use a non-empty map key)."
   }

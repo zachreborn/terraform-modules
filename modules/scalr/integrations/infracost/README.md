@@ -110,7 +110,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr Infracost integration IDs keyed by the same logical name used in var.infracost\_integrations. |
-| <a name="output_infracost_integrations"></a> [infracost\_integrations](#output\_infracost\_integrations) | Map of scalr\_integration\_infracost resource objects (excluding the write-only, provider-sensitive api\_key attribute) keyed by the same logical name used in var.infracost\_integrations. |
+| <a name="output_infracost_integrations"></a> [infracost\_integrations](#output\_infracost\_integrations) | Map of scalr\_integration\_infracost resource objects (excluding the sensitive api\_key attribute, which remains in state) keyed by the same logical name used in var.infracost\_integrations. |
 <!-- END_TF_DOCS -->
 
 ## Notes / Design Decisions

@@ -21,6 +21,24 @@ run "valid_baseline_does_not_fail" {
   }
 }
 
+run "rejects_policy_groups_entry_with_empty_resolved_name" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      "" = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.policy_groups]
+}
+
 run "rejects_policy_groups_entry_with_empty_vcs_repo_identifier" {
   command = plan
 

@@ -151,6 +151,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ----------- |
 | <a name="output_account_ids"></a> [account\_ids](#output\_account\_ids) | Map of the Scalr account ID each variable set belongs to, keyed by the same keys as var.var\_sets. |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr variable set IDs, keyed by the same keys as var.var\_sets. |
+| <a name="output_updated_at"></a> [updated\_at](#output\_updated\_at) | Map of the UTC timestamp of the last update to each variable set, keyed by the same keys as var.var\_sets. |
+| <a name="output_updated_by_email"></a> [updated\_by\_email](#output\_updated\_by\_email) | Map of the email address of the user who last updated each variable set, keyed by the same keys as var.var\_sets. |
 | <a name="output_workspace_link_ids"></a> [workspace\_link\_ids](#output\_workspace\_link\_ids) | Map of workspace/var set link resource IDs, keyed by the same keys as var.workspace\_links. |
 | <a name="output_workspace_links"></a> [workspace\_links](#output\_workspace\_links) | Map of the full resolved link (workspace\_id, var\_set\_id, id) for each var.workspace\_links entry. |
 <!-- END_TF_DOCS -->

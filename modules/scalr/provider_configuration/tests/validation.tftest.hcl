@@ -79,6 +79,42 @@ run "rejects_aws_entry_with_invalid_credentials_type" {
   expect_failures = [var.provider_configurations]
 }
 
+run "rejects_aws_entry_with_invalid_account_type" {
+  command = plan
+
+  variables {
+    provider_configurations = {
+      broken = {
+        account_id = "acc-xxxxxxxxxx"
+        aws = {
+          credentials_type = "access_keys"
+          account_type     = "not_a_real_type"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.provider_configurations]
+}
+
+run "rejects_aws_entry_with_invalid_trusted_entity_type" {
+  command = plan
+
+  variables {
+    provider_configurations = {
+      broken = {
+        account_id = "acc-xxxxxxxxxx"
+        aws = {
+          credentials_type    = "role_delegation"
+          trusted_entity_type = "not_a_real_type"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.provider_configurations]
+}
+
 run "rejects_azurerm_entry_with_invalid_auth_type" {
   command = plan
 
