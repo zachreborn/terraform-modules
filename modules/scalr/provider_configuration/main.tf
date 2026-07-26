@@ -3,10 +3,10 @@
 ###########################
 terraform {
   # >= 1.9.0 is required because this module's provider_configuration_key validation (variables.tf)
-  # references var.provider_configurations from within var.provider_configuration_defaults's
-  # validation block. Terraform and OpenTofu both added support for referencing other variables/
-  # locals in variable validation in their respective 1.9.0 releases, so this floor is satisfied by
-  # either tool.
+  # references var.provider_configurations from within the validation block for
+  # var.provider_configuration_defaults. Terraform and OpenTofu both added support for referencing
+  # other variables/locals in variable validation in their respective 1.9.0 releases, so this floor
+  # is satisfied by either tool.
   required_version = ">= 1.9.0"
   required_providers {
     scalr = {

@@ -3,9 +3,9 @@
 ###########################
 terraform {
   # >= 1.9.0 is required because this module's policy_group_key validation (variables.tf) references
-  # var.policy_groups from within var.policy_group_linkages's validation block. Terraform and OpenTofu
-  # both added support for referencing other variables/locals in variable validation in their
-  # respective 1.9.0 releases, so this floor is satisfied by either tool.
+  # var.policy_groups from within the validation block for var.policy_group_linkages. Terraform and
+  # OpenTofu both added support for referencing other variables/locals in variable validation in
+  # their respective 1.9.0 releases, so this floor is satisfied by either tool.
   required_version = ">= 1.9.0"
   required_providers {
     scalr = {
