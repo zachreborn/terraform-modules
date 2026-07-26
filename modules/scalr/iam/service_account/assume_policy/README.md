@@ -94,4 +94,5 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr Assume Service Account Policy IDs, keyed by the same keys as var.assume\_policies. |
+| <a name="output_service_account_ids"></a> [service\_account\_ids](#output\_service\_account\_ids) | Map of the service\_account\_id actually passed to each scalr\_assume\_service\_account\_policy resource, keyed by the same keys as var.assume\_policies. Useful for callers/tests that need to prove which service account was actually wired into each policy. |
 <!-- END_TF_DOCS -->

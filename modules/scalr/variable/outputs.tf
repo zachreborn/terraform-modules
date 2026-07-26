@@ -21,3 +21,8 @@ output "updated_by_email" {
   description = "Map of the email address of the user who last updated each variable, keyed by the same keys as var.variables."
   value       = { for k, v in scalr_variable.this : k => v.updated_by_email }
 }
+
+output "updated_by" {
+  description = "Map of the details (email, full_name, username) of the user who last updated each variable, keyed by the same keys as var.variables."
+  value       = { for k, v in scalr_variable.this : k => v.updated_by }
+}

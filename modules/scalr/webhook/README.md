@@ -135,6 +135,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr webhook IDs keyed by the same logical name used in var.webhooks. |
+| <a name="output_secret_keys"></a> [secret\_keys](#output\_secret\_keys) | Map of the resolved secret\_key for each webhook -- either the caller-supplied value from var.webhook\_secret\_keys, or the value Scalr generated automatically when it was omitted -- keyed by the same logical name used in var.webhooks. Sensitive. |
 | <a name="output_webhooks"></a> [webhooks](#output\_webhooks) | Map of scalr\_webhook resource objects (excluding the write-only, provider-sensitive secret\_key attribute) keyed by the same logical name used in var.webhooks. |
 <!-- END_TF_DOCS -->
 

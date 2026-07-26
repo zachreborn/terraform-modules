@@ -164,6 +164,7 @@ No modules.
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr variable IDs, keyed by the same keys as var.variables. |
 | <a name="output_readable_values"></a> [readable\_values](#output\_readable\_values) | Map of the non-sensitive read-only copy of each variable's value, keyed by the same keys as var.variables. Per the Scalr provider, this is null for any entry where sensitive = true. |
 | <a name="output_updated_at"></a> [updated\_at](#output\_updated\_at) | Map of the last-updated timestamps, keyed by the same keys as var.variables. |
+| <a name="output_updated_by"></a> [updated\_by](#output\_updated\_by) | Map of the details (email, full\_name, username) of the user who last updated each variable, keyed by the same keys as var.variables. |
 | <a name="output_updated_by_email"></a> [updated\_by\_email](#output\_updated\_by\_email) | Map of the email address of the user who last updated each variable, keyed by the same keys as var.variables. |
 <!-- END_TF_DOCS -->
 

@@ -155,6 +155,7 @@ No modules.
 | <a name="output_created_at"></a> [created\_at](#output\_created\_at) | Map of the resource creation timestamps, keyed by the same keys as var.storage\_profiles. |
 | <a name="output_error_messages"></a> [error\_messages](#output\_error\_messages) | Map of the last error description for each storage profile (non-null only when the backend settings don't work properly), keyed by the same keys as var.storage\_profiles. |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr storage profile IDs, keyed by the same keys as var.storage\_profiles. |
+| <a name="output_updated_at"></a> [updated\_at](#output\_updated\_at) | Map of the resource last-update timestamps, keyed by the same keys as var.storage\_profiles. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -75,5 +75,6 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr Service Account Token IDs, keyed by the same keys as var.tokens. |
+| <a name="output_service_account_ids"></a> [service\_account\_ids](#output\_service\_account\_ids) | Map of the service\_account\_id actually passed to each scalr\_service\_account\_token resource, keyed by the same keys as var.tokens. Useful for callers/tests that need to prove which service account was actually wired into each token. |
 | <a name="output_tokens"></a> [tokens](#output\_tokens) | Map of the issued Service Account token values, keyed by the same keys as var.tokens. Sensitive. |
 <!-- END_TF_DOCS -->

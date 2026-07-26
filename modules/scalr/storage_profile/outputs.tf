@@ -16,3 +16,8 @@ output "created_at" {
   description = "Map of the resource creation timestamps, keyed by the same keys as var.storage_profiles."
   value       = { for k, v in scalr_storage_profile.this : k => v.created_at }
 }
+
+output "updated_at" {
+  description = "Map of the resource last-update timestamps, keyed by the same keys as var.storage_profiles."
+  value       = { for k, v in scalr_storage_profile.this : k => v.updated_at }
+}

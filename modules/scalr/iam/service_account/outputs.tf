@@ -24,6 +24,11 @@ output "token_ids" {
   value       = module.tokens.ids
 }
 
+output "token_service_account_ids" {
+  description = "Map of the service_account_id actually passed to each scalr_service_account_token resource (from the composed ./token submodule), keyed by the same keys as var.tokens. Useful for callers/tests that need to prove which service account was actually wired into each token."
+  value       = module.tokens.service_account_ids
+}
+
 output "tokens" {
   description = "Map of the issued Service Account token values, keyed by the same keys as var.tokens. Sensitive."
   value       = module.tokens.tokens
@@ -36,4 +41,9 @@ output "tokens" {
 output "assume_policy_ids" {
   description = "Map of Scalr Assume Service Account Policy IDs, keyed by the same keys as var.assume_policies."
   value       = module.assume_policies.ids
+}
+
+output "assume_policy_service_account_ids" {
+  description = "Map of the service_account_id actually passed to each scalr_assume_service_account_policy resource (from the composed ./assume_policy submodule), keyed by the same keys as var.assume_policies. Useful for callers/tests that need to prove which service account was actually wired into each policy."
+  value       = module.assume_policies.service_account_ids
 }

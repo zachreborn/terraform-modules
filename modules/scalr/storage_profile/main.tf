@@ -51,4 +51,11 @@ resource "scalr_storage_profile" "this" {
       encryption_key = lookup(var.google_encryption_keys, each.key, null)
     }
   }
+
+  lifecycle {
+    precondition {
+      condition     = each.value.google == null || contains(keys(var.google_credentials), each.key)
+      error_message = "storage_profiles entry \"${each.key}\" sets google but has no corresponding entry in var.google_credentials. Add var.google_credentials[\"${each.key}\"] with the service account JSON key content -- the provider requires google.credentials, and an unset entry silently resolves to null here."
+    }
+  }
 }

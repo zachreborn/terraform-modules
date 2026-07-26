@@ -64,6 +64,24 @@ run "rejects_entry_with_two_backends_set" {
   expect_failures = [var.storage_profiles]
 }
 
+run "rejects_google_entry_missing_from_google_credentials" {
+  command = plan
+
+  variables {
+    storage_profiles = {
+      primary = {
+        google = {
+          storage_bucket = "my-scalr-state-bucket"
+          project        = "my-gcp-project"
+        }
+      }
+    }
+    # google_credentials is intentionally left unset/empty -- no matching key for "primary".
+  }
+
+  expect_failures = [scalr_storage_profile.this]
+}
+
 # Do NOT delete, skip, or loosen an `expect_failures` case (or any assertion above) just to
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # `validation {}` block in variables.tf has a bug or the test's inputs are wrong -- find and

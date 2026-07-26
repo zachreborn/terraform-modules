@@ -10,17 +10,21 @@ variable "agent_pools" {
       - name:            (Optional) Name of the agent pool. Defaults to the entry's map key when unset.
       - account_id:      (Optional, Deprecated by the provider in favor of `environments`) ID of the account
                          that owns the pool.
+      - environment_id:  (Optional, Deprecated by the provider in favor of `environments`) ID of a single
+                         environment that owns the pool.
       - environments:    (Optional) Set of environment IDs the agent pool is shared to. Use ["*"] to share
                          with all environments.
       - vcs_enabled:     (Optional) Whether VCS support is enabled for agents in the pool. Defaults to false.
       - api_gateway_url: (Optional) HTTP(s) destination URL for the pool's webhook.
       - headers:         (Optional) List of additional headers to set on the pool's webhook request. Each
-                         entry sets name (required), value (required), and sensitive (optional, defaults to
-                         false, whether the header value is masked in the Scalr UI). Defaults to an empty list.
+                         entry sets name (required), value (required, ignored when sensitive = true -- see
+                         var.agent_pool_header_values), and sensitive (optional, defaults to false, whether
+                         the header value is masked in the Scalr UI). Defaults to an empty list.
   EOT
   type = map(object({
     name            = optional(string)
     account_id      = optional(string)
+    environment_id  = optional(string)
     environments    = optional(set(string))
     vcs_enabled     = optional(bool, false)
     api_gateway_url = optional(string)
@@ -31,6 +35,27 @@ variable "agent_pools" {
     })), [])
   }))
   default = {}
+}
+
+variable "agent_pool_header_values" {
+  description = <<-EOT
+    Map of sensitive agent pool webhook header values, keyed by the agent pool's logical name
+    (matching a key in var.agent_pools) and then by header name. Populate an entry here instead
+    of setting 'value' directly on a headers entry whenever that header sets 'sensitive = true':
+    the provider's sensitive flag only controls masking in the Scalr UI and does not prevent the
+    value from appearing in Terraform/OpenTofu plan output when sourced from a non-sensitive
+    variable.
+
+    Example:
+      agent_pool_header_values = {
+        default = {
+          Authorization = "Bearer my-secret-token"
+        }
+      }
+  EOT
+  type        = map(map(string))
+  sensitive   = true
+  default     = {}
 }
 
 ###########################

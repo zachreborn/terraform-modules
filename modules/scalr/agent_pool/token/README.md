@@ -118,6 +118,7 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_agent_pool_ids"></a> [agent\_pool\_ids](#output\_agent\_pool\_ids) | Map of the agent\_pool\_id actually passed to each scalr\_agent\_pool\_token resource, keyed by the same keys as var.agent\_pool\_tokens. Useful for callers/tests that need to prove which agent pool was actually wired into each token. |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr agent pool token resource IDs, keyed by the same keys as var.agent\_pool\_tokens. |
 | <a name="output_tokens"></a> [tokens](#output\_tokens) | Map of the actual agent pool token secret values, keyed by the same keys as var.agent\_pool\_tokens. Sensitive. |
 <!-- END_TF_DOCS -->

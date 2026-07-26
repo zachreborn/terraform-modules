@@ -35,6 +35,7 @@ resource "scalr_agent_pool" "this" {
 
   name            = coalesce(each.value.name, each.key)
   account_id      = each.value.account_id
+  environment_id  = each.value.environment_id
   environments    = each.value.environments
   vcs_enabled     = each.value.vcs_enabled
   api_gateway_url = each.value.api_gateway_url
@@ -42,8 +43,12 @@ resource "scalr_agent_pool" "this" {
   dynamic "header" {
     for_each = each.value.headers
     content {
-      name      = header.value.name
-      value     = header.value.value
+      name = header.value.name
+      # Sensitive header values are never read from the non-sensitive headers.value.value (the
+      # provider's sensitive flag only controls masking in the Scalr UI, not in Terraform/OpenTofu
+      # plan output) -- they must be supplied via var.agent_pool_header_values instead, keyed by
+      # this agent pool's logical name (each.key) and the header's own name.
+      value     = header.value.sensitive ? try(var.agent_pool_header_values[each.key][header.value.name], null) : header.value.value
       sensitive = header.value.sensitive
     }
   }

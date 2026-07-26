@@ -41,7 +41,7 @@ run "token_wiring_uses_internal_agent_pool_ids" {
   # the mocked scalr_agent_pool id above; a wrong or unresolved agent_pool_id would fail this even
   # though the != null check above would still pass.
   assert {
-    condition     = module.token.ids["default_token"] != null
+    condition     = output.token_agent_pool_ids["default_token"] == "apool-abcd1234"
     error_message = "agent_pool_key \"default\" should resolve to the agent pool created by this same module call's agent_pools input, via scalr_agent_pool.this."
   }
 

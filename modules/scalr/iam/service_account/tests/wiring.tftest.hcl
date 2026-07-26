@@ -54,8 +54,8 @@ run "token_wiring_uses_internal_service_account_ids" {
   # the mocked scalr_service_account id above; a wrong or unresolved service_account_id would fail
   # this even though the != null check above would still pass.
   assert {
-    condition     = module.tokens.ids["default"] != null
-    error_message = "The token submodule should have planned the default token."
+    condition     = output.token_service_account_ids["default"] == "sa-abcd1234"
+    error_message = "service_account_key \"ci\" should resolve to the service account created by this same module call's service_accounts input, via scalr_service_account.this."
   }
 }
 
@@ -106,9 +106,11 @@ run "assume_policy_wiring_uses_internal_service_account_ids" {
     error_message = "assume_policies entry should resolve service_account_key against this module's own service_accounts output."
   }
 
+  # Prove the wrapper actually passed scalr_service_account.this["staging"].id through as
+  # service_account_ids -- not just that some entry landed under the expected key.
   assert {
-    condition     = module.assume_policies.ids["ga_scalr_staging"] != null
-    error_message = "The assume_policy submodule should have planned the ga_scalr_staging policy."
+    condition     = output.assume_policy_service_account_ids["ga_scalr_staging"] == "sa-abcd1234"
+    error_message = "service_account_key \"staging\" should resolve to the service account created by this same module call's service_accounts input, via scalr_service_account.this."
   }
 }
 

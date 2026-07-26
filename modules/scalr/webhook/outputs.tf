@@ -23,3 +23,9 @@ output "webhooks" {
     }
   }
 }
+
+output "secret_keys" {
+  description = "Map of the resolved secret_key for each webhook -- either the caller-supplied value from var.webhook_secret_keys, or the value Scalr generated automatically when it was omitted -- keyed by the same logical name used in var.webhooks. Sensitive."
+  value       = { for key, value in scalr_webhook.this : key => value.secret_key }
+  sensitive   = true
+}

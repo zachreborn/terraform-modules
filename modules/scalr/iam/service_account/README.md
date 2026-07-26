@@ -106,9 +106,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_assume_policy_ids"></a> [assume\_policy\_ids](#output\_assume\_policy\_ids) | Map of Scalr Assume Service Account Policy IDs, keyed by the same keys as var.assume\_policies. |
+| <a name="output_assume_policy_service_account_ids"></a> [assume\_policy\_service\_account\_ids](#output\_assume\_policy\_service\_account\_ids) | Map of the service\_account\_id actually passed to each scalr\_assume\_service\_account\_policy resource (from the composed ./assume\_policy submodule), keyed by the same keys as var.assume\_policies. Useful for callers/tests that need to prove which service account was actually wired into each policy. |
 | <a name="output_created_by"></a> [created\_by](#output\_created\_by) | Map of the details (email, full\_name, username) of the user that created each service account, keyed by the same keys as var.service\_accounts. |
 | <a name="output_emails"></a> [emails](#output\_emails) | Map of Scalr Service Account emails, keyed by the same keys as var.service\_accounts. |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr Service Account IDs, keyed by the same keys as var.service\_accounts. |
 | <a name="output_token_ids"></a> [token\_ids](#output\_token\_ids) | Map of Scalr Service Account Token IDs, keyed by the same keys as var.tokens. |
+| <a name="output_token_service_account_ids"></a> [token\_service\_account\_ids](#output\_token\_service\_account\_ids) | Map of the service\_account\_id actually passed to each scalr\_service\_account\_token resource (from the composed ./token submodule), keyed by the same keys as var.tokens. Useful for callers/tests that need to prove which service account was actually wired into each token. |
 | <a name="output_tokens"></a> [tokens](#output\_tokens) | Map of the issued Service Account token values, keyed by the same keys as var.tokens. Sensitive. |
 <!-- END_TF_DOCS -->
