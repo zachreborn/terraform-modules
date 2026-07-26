@@ -5,8 +5,9 @@ terraform {
   required_version = ">= 1.0.0"
   required_providers {
     scalr = {
-      source  = "registry.scalr.io/scalr/scalr"
-      version = ">= 3.0"
+      source = "registry.scalr.io/scalr/scalr"
+      # >= 3.17.0 is required by the google provider_configuration's default_labels block below.
+      version = ">= 3.17.0"
     }
   }
 }
@@ -20,15 +21,33 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  aws_provider_config = try(yamldecode(var.aws_provider_config), null)
-  vcs_provider_config = try(yamldecode(var.vcs_provider_config), null)
-  yaml_config         = try(yamldecode(var.scalr_config), null)
+  # Decode each optional provider-config YAML file to an empty map when the variable itself is
+  # unset (the null default), without swallowing genuine YAML syntax errors: unlike
+  # try(yamldecode(var.x), {}), this only short-circuits on a missing variable, so malformed YAML
+  # in a *supplied* file still raises a real decode error at plan time instead of silently
+  # planning zero resources.
+  aws_provider_config     = var.aws_provider_config == null ? {} : yamldecode(var.aws_provider_config)
+  azurerm_provider_config = var.azurerm_provider_config == null ? {} : yamldecode(var.azurerm_provider_config)
+  custom_provider_config  = var.custom_provider_config == null ? {} : yamldecode(var.custom_provider_config)
+  google_provider_config  = var.google_provider_config == null ? {} : yamldecode(var.google_provider_config)
+  vcs_provider_config     = try(yamldecode(var.vcs_provider_config), null)
+  yaml_config             = try(yamldecode(var.scalr_config), null)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment
       workspace   = workspace
     })
   }]...)
+
+  # Merged name -> ID lookup across all four provider_configuration resource types, so a
+  # workspace's provider_configuration.name can reference an AzureRM, Google, or custom
+  # configuration -- not just AWS.
+  provider_configuration_ids = merge(
+    { for k, v in scalr_provider_configuration.aws : k => v.id },
+    { for k, v in scalr_provider_configuration.azurerm : k => v.id },
+    { for k, v in scalr_provider_configuration.google : k => v.id },
+    { for k, v in scalr_provider_configuration.custom : k => v.id },
+  )
 }
 
 ###########################
@@ -67,6 +86,90 @@ resource "scalr_provider_configuration" "aws" {
     role_arn            = try(each.value.role_arn, var.aws_role_arn)
     secret_key          = try(each.value.secret_key, var.aws_secret_key)
     trusted_entity_type = try(each.value.trusted_entity_type, var.aws_trusted_entity_type)
+  }
+}
+
+###########################
+# AzureRM Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "azurerm" {
+  for_each               = local.azurerm_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.azurerm_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.azurerm_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.azurerm_owners)
+  tag_ids                = try(each.value.tag_ids, var.azurerm_tag_ids)
+  azurerm {
+    audience        = try(each.value.audience, var.azurerm_audience)
+    auth_type       = try(each.value.auth_type, var.azurerm_auth_type)
+    client_id       = try(each.value.client_id, var.azurerm_client_id)
+    client_secret   = try(each.value.client_secret, var.azurerm_client_secret)
+    subscription_id = try(each.value.subscription_id, var.azurerm_subscription_id)
+    tenant_id       = try(each.value.tenant_id, var.azurerm_tenant_id)
+  }
+}
+
+###########################
+# Google Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "google" {
+  for_each               = local.google_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.google_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.google_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.google_owners)
+  tag_ids                = try(each.value.tag_ids, var.google_tag_ids)
+  google {
+    auth_type              = try(each.value.auth_type, var.google_auth_type)
+    credentials            = try(each.value.credentials, var.google_credentials)
+    project                = try(each.value.project, var.google_project)
+    service_account_email  = try(each.value.service_account_email, var.google_service_account_email)
+    use_default_project    = try(each.value.use_default_project, var.google_use_default_project)
+    workload_provider_name = try(each.value.workload_provider_name, var.google_workload_provider_name)
+
+    dynamic "default_labels" {
+      for_each = try(each.value.default_labels != null, false) || var.google_default_labels_labels != null || var.google_default_labels_strategy != null ? [1] : []
+      content {
+        labels   = try(each.value.default_labels.labels, var.google_default_labels_labels)
+        strategy = try(each.value.default_labels.strategy, var.google_default_labels_strategy)
+      }
+    }
+  }
+}
+
+###########################
+# Custom Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "custom" {
+  for_each               = local.custom_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.custom_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.custom_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.custom_owners)
+  tag_ids                = try(each.value.tag_ids, var.custom_tag_ids)
+  custom {
+    provider_name = try(each.value.provider_name, var.custom_provider_name)
+
+    dynamic "argument" {
+      for_each = try(each.value.argument, var.custom_argument)
+      content {
+        name        = argument.value.name
+        description = try(argument.value.description, null)
+        hcl         = try(argument.value.hcl, false)
+        sensitive   = try(argument.value.sensitive, false)
+        # Sensitive argument values are never read from the non-sensitive argument.value.value
+        # (the provider's sensitive flag only controls masking in Scalr, not in Terraform/OpenTofu
+        # plan output) -- they must be supplied via var.custom_argument_secrets instead, keyed by
+        # this provider configuration's name (each.key) and the argument's own name.
+        value = try(argument.value.sensitive, false) ? try(var.custom_argument_secrets[each.key][argument.value.name], null) : try(argument.value.value, null)
+      }
+    }
   }
 }
 
@@ -115,16 +218,20 @@ resource "scalr_workspace" "this" {
   vcs_provider_id             = try(each.value.vcs_provider_id, var.vcs_provider_id)
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
+  # scalr_workspace.provider_configuration is a Block Set in the provider schema (multiple
+  # configurations, including two sharing an alias for plan/apply-only use, are explicitly
+  # supported) -- so this always iterates a list, never a single object. A bare/omitted key
+  # decodes to null from YAML, which try() defaults to an empty list here.
   dynamic "provider_configuration" {
-    for_each = try(each.value.provider_configuration != null ? [1] : [], [])
+    for_each = try(each.value.provider_configuration, [])
     content {
-      id    = scalr_provider_configuration.aws[each.value.provider_configuration.name].id
-      alias = try(each.value.provider_configuration.alias, null)
+      id    = local.provider_configuration_ids[provider_configuration.value.name]
+      alias = try(provider_configuration.value.alias, null)
     }
   }
 
   dynamic "vcs_repo" {
-    for_each = each.value.vcs_repo != null ? [1] : []
+    for_each = try(each.value.vcs_repo, null) != null ? [1] : []
     content {
       branch             = try(each.value.vcs_repo.branch, null)
       dry_runs_enabled   = try(each.value.vcs_repo.dry_runs_enabled, true)

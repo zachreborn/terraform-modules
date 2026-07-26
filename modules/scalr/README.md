@@ -120,9 +120,11 @@ environment-2-all-options:
         post_apply: "./scripts/post_apply.sh"
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
+      # provider_configuration is a list -- the provider supports multiple entries per
+      # workspace, including two sharing the same alias for plan/apply-only use.
       provider_configuration:
-        - "provider-1"
-        - "provider-2"
+        - name: "aws_provider_1"
+          alias: "primary"
       remote_backend: true
       remote_state_consumers:
         - "consumer-1"
@@ -139,16 +141,11 @@ environment-2-all-options:
         - "var-file-2"
       working_directory: "/path/to/working/directory"
       vcs_repo:
-        - branch: "main"
-          dry_runs_enabled: true
-          identifier: "org/repo"
-          ingress_submodules: false
-          trigger_patterns:
-            - "*.tf"
-          trigger_prefixes:
-            - "stage"
-            - "prod"
-            - "dev"
+        branch: "main"
+        dry_runs_enabled: true
+        identifier: "org/repo"
+        ingress_submodules: false
+        trigger_patterns: "*.tf" # conflicts with trigger_prefixes; a single glob-style string, not a list
 ```
 
 ### AWS Provider Configuration Example
@@ -166,6 +163,58 @@ aws_provider_1:
   role_arn: "arn:aws:iam::123456789012:role/ScalrOIDCRole"
 ```
 
+### AzureRM, Google, and Custom Provider Configurations
+
+In addition to `aws_provider_config`, the module accepts `azurerm_provider_config`, `google_provider_config`, and `custom_provider_config` -- YAML formatted files defining one or more `scalr_provider_configuration` resources for those provider types, following the exact same `<name>: { ... }` map shape as `aws_provider_config`. Each of the corresponding `azurerm_*`, `google_*`, and `custom_*` input variables (e.g. `azurerm_client_id`, `google_project`, `custom_provider_name`) sets a module-wide default that individual entries in the YAML file can override, mirroring the existing `aws_*` variables.
+
+```yaml
+# azurerm_provider_config
+---
+azurerm_provider_1:
+  auth_type: "oidc"
+  audience: "api://AzureADTokenExchange"
+  client_id: "00000000-0000-0000-0000-000000000000"
+  tenant_id: "11111111-1111-1111-1111-111111111111"
+  subscription_id: "22222222-2222-2222-2222-222222222222"
+  environments:
+    - "env-xxxxxxxxxx"
+    - "env-yyyyyyyyyy"
+```
+
+```yaml
+# google_provider_config
+---
+google_provider_1:
+  auth_type: "oidc"
+  project: "my-gcp-project"
+  service_account_email: "scalr@my-gcp-project.iam.gserviceaccount.com"
+  workload_provider_name: "projects/123456789/locations/global/workloadIdentityPools/scalr-pool/providers/scalr-provider"
+  environments:
+    - "env-xxxxxxxxxx"
+```
+
+```yaml
+# custom_provider_config
+---
+kubernetes:
+  provider_name: "kubernetes"
+  environments:
+    - "env-xxxxxxxxxx"
+  argument:
+    - name: "host"
+      value: "https://kubernetes.example.com"
+      description: "The hostname (in form of URI) of the Kubernetes API."
+    - name: "config_path"
+      value: "~/.kube/config"
+      hcl: false
+```
+
+See `example_azurerm_provider_config.yaml`, `example_google_provider_config.yaml`, and `example_custom_provider_config.yaml` in this directory for the full, ready-to-use files.
+
+### Outputs
+
+The module exposes `environment_ids`, `workspace_ids`, `vcs_provider_ids`, `provider_configuration_ids` (AWS), `provider_configuration_azurerm_ids`, `provider_configuration_google_ids`, and `provider_configuration_custom_ids` -- maps of the YAML-defined name (or, for `workspace_ids`, the `<environment>.<workspace>` composite key) to the corresponding Scalr resource ID.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -176,15 +225,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.0 |
+| ---- | ------- |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.17.0 |
 
 ## Modules
 
@@ -193,9 +242,12 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | scalr_environment.this | resource |
 | scalr_provider_configuration.aws | resource |
+| scalr_provider_configuration.azurerm | resource |
+| scalr_provider_configuration.custom | resource |
+| scalr_provider_configuration.google | resource |
 | scalr_vcs_provider.this | resource |
 | scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
@@ -203,7 +255,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_aws_access_key"></a> [aws\_access\_key](#input\_aws\_access\_key) | The AWS access key. | `string` | `null` | no |
 | <a name="input_aws_account_type"></a> [aws\_account\_type](#input\_aws\_account\_type) | The type of AWS account. Valid values are 'regular', 'gov-cloud', and 'cn-cloud'. | `string` | `"regular"` | no |
 | <a name="input_aws_audience"></a> [aws\_audience](#input\_aws\_audience) | The audience for the AWS credentials. Required if credentials\_type is set to 'oidc'. | `string` | `null` | no |
@@ -216,6 +268,25 @@ No modules.
 | <a name="input_aws_role_arn"></a> [aws\_role\_arn](#input\_aws\_role\_arn) | The ARN of the role to assume. Required if aws\_credentials\_type is set to 'oidc' or 'role\_delegation'. | `string` | `null` | no |
 | <a name="input_aws_secret_key"></a> [aws\_secret\_key](#input\_aws\_secret\_key) | The AWS secret key. | `string` | `null` | no |
 | <a name="input_aws_trusted_entity_type"></a> [aws\_trusted\_entity\_type](#input\_aws\_trusted\_entity\_type) | The type of trusted entity for the role. Valid values are 'aws\_account' and 'aws\_service'. | `string` | `null` | no |
+| <a name="input_azurerm_audience"></a> [azurerm\_audience](#input\_azurerm\_audience) | The value of the 'aud' claim for the identity token. Required if azurerm\_auth\_type is set to 'oidc'. | `string` | `null` | no |
+| <a name="input_azurerm_auth_type"></a> [azurerm\_auth\_type](#input\_azurerm\_auth\_type) | Authentication type for the AzureRM provider configuration. Valid values are 'client-secrets' and 'oidc'. | `string` | `"client-secrets"` | no |
+| <a name="input_azurerm_client_id"></a> [azurerm\_client\_id](#input\_azurerm\_client\_id) | The Client ID that should be used for the AzureRM provider configuration. | `string` | `null` | no |
+| <a name="input_azurerm_client_secret"></a> [azurerm\_client\_secret](#input\_azurerm\_client\_secret) | The Client Secret that should be used for the AzureRM provider configuration. Required when azurerm\_auth\_type is 'client-secrets'. | `string` | `null` | no |
+| <a name="input_azurerm_environments"></a> [azurerm\_environments](#input\_azurerm\_environments) | List of Scalr Environments which the AzureRM provider configuration will be shared to. | `list(string)` | `null` | no |
+| <a name="input_azurerm_export_shell_variables"></a> [azurerm\_export\_shell\_variables](#input\_azurerm\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the AzureRM provider configuration. | `bool` | `false` | no |
+| <a name="input_azurerm_owners"></a> [azurerm\_owners](#input\_azurerm\_owners) | List of Scalr Team IDs who will own the AzureRM Provider Configuration. | `list(string)` | `null` | no |
+| <a name="input_azurerm_provider_config"></a> [azurerm\_provider\_config](#input\_azurerm\_provider\_config) | YAML formatted file defining one or more AzureRM provider configurations. | `string` | `null` | no |
+| <a name="input_azurerm_subscription_id"></a> [azurerm\_subscription\_id](#input\_azurerm\_subscription\_id) | The Subscription ID that should be used for the AzureRM provider configuration. If omitted, it must be set as a shell variable in the workspace or as part of the source configuration. | `string` | `null` | no |
+| <a name="input_azurerm_tag_ids"></a> [azurerm\_tag\_ids](#input\_azurerm\_tag\_ids) | List of Tag IDs to assign to the AzureRM Provider Configuration. | `list(string)` | `null` | no |
+| <a name="input_azurerm_tenant_id"></a> [azurerm\_tenant\_id](#input\_azurerm\_tenant\_id) | The Tenant ID that should be used for the AzureRM provider configuration. | `string` | `null` | no |
+| <a name="input_custom_argument"></a> [custom\_argument](#input\_custom\_argument) | List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file. When an argument's 'sensitive' is true, its 'value' here is ignored -- supply the real value via var.custom\_argument\_secrets instead. | <pre>list(object({<br/>    name        = string<br/>    value       = optional(string)<br/>    description = optional(string)<br/>    hcl         = optional(bool, false)<br/>    sensitive   = optional(bool, false)<br/>  }))</pre> | `[]` | no |
+| <a name="input_custom_argument_secrets"></a> [custom\_argument\_secrets](#input\_custom\_argument\_secrets) | Map of sensitive custom provider argument values, keyed by the provider configuration's name<br/>(a top-level key in custom\_provider\_config, or the resource's own name for module-wide<br/>defaults) and then by argument name. Populate an entry here instead of setting 'value' directly<br/>in custom\_argument or the YAML file whenever an argument sets 'sensitive = true': the<br/>provider's sensitive flag only controls masking in Scalr and does not prevent the value from<br/>appearing in Terraform/OpenTofu plan output when sourced from a non-sensitive variable.<br/><br/>Example:<br/>  custom\_argument\_secrets = {<br/>    kubernetes = {<br/>      password = "<value-from-a-secret-manager>"<br/>    }<br/>  } | `map(map(string))` | `{}` | no |
+| <a name="input_custom_environments"></a> [custom\_environments](#input\_custom\_environments) | List of Scalr Environments which the custom provider configuration will be shared to. | `list(string)` | `null` | no |
+| <a name="input_custom_export_shell_variables"></a> [custom\_export\_shell\_variables](#input\_custom\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the custom provider configuration. | `bool` | `false` | no |
+| <a name="input_custom_owners"></a> [custom\_owners](#input\_custom\_owners) | List of Scalr Team IDs who will own the custom Provider Configuration. | `list(string)` | `null` | no |
+| <a name="input_custom_provider_config"></a> [custom\_provider\_config](#input\_custom\_provider\_config) | YAML formatted file defining one or more custom provider configurations. | `string` | `null` | no |
+| <a name="input_custom_provider_name"></a> [custom\_provider\_name](#input\_custom\_provider\_name) | The name of the Terraform provider being configured (e.g. 'kubernetes'). Can be overridden per provider configuration in the YAML file. | `string` | `null` | no |
+| <a name="input_custom_tag_ids"></a> [custom\_tag\_ids](#input\_custom\_tag\_ids) | List of Tag IDs to assign to the custom Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_environment_default_provider_configurations"></a> [environment\_default\_provider\_configurations](#input\_environment\_default\_provider\_configurations) | List of Provider Configuration IDs to set as the default in the Environment. | `list(string)` | `null` | no |
 | <a name="input_environment_default_workspace_agent_pool_id"></a> [environment\_default\_workspace\_agent\_pool\_id](#input\_environment\_default\_workspace\_agent\_pool\_id) | The default Agent Pool ID to assign to Workspaces in the Environment. | `string` | `null` | no |
 | <a name="input_environment_federated_environments"></a> [environment\_federated\_environments](#input\_environment\_federated\_environments) | List of Environment IDs to federate with this Environment. | `list(string)` | `null` | no |
@@ -224,6 +295,19 @@ No modules.
 | <a name="input_environment_remote_backend_overridable"></a> [environment\_remote\_backend\_overridable](#input\_environment\_remote\_backend\_overridable) | Whether Workspaces in the Environment can override the remote backend configuration. | `bool` | `false` | no |
 | <a name="input_environment_storage_profile_id"></a> [environment\_storage\_profile\_id](#input\_environment\_storage\_profile\_id) | The Storage Profile ID to use for the Environment. | `string` | `null` | no |
 | <a name="input_environment_tag_ids"></a> [environment\_tag\_ids](#input\_environment\_tag\_ids) | List of Tag IDs to assign to the Environment. | `list(string)` | `null` | no |
+| <a name="input_google_auth_type"></a> [google\_auth\_type](#input\_google\_auth\_type) | Authentication type for the Google provider configuration. Valid values are 'service-account-key' and 'oidc'. | `string` | `"service-account-key"` | no |
+| <a name="input_google_credentials"></a> [google\_credentials](#input\_google\_credentials) | Service account key file in JSON format for the Google provider configuration. Required when google\_auth\_type is 'service-account-key'. | `string` | `null` | no |
+| <a name="input_google_default_labels_labels"></a> [google\_default\_labels\_labels](#input\_google\_default\_labels\_labels) | Default labels to be applied to all resources created by the Google provider configuration. | `map(string)` | `null` | no |
+| <a name="input_google_default_labels_strategy"></a> [google\_default\_labels\_strategy](#input\_google\_default\_labels\_strategy) | On duplicate key behaviour for default labels. Valid values are 'skip' and 'update'. | `string` | `null` | no |
+| <a name="input_google_environments"></a> [google\_environments](#input\_google\_environments) | List of Scalr Environments which the Google provider configuration will be shared to. | `list(string)` | `null` | no |
+| <a name="input_google_export_shell_variables"></a> [google\_export\_shell\_variables](#input\_google\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the Google provider configuration. | `bool` | `false` | no |
+| <a name="input_google_owners"></a> [google\_owners](#input\_google\_owners) | List of Scalr Team IDs who will own the Google Provider Configuration. | `list(string)` | `null` | no |
+| <a name="input_google_project"></a> [google\_project](#input\_google\_project) | The default Google Cloud project ID to manage resources in. If another project ID is specified on a resource, it will take precedence. | `string` | `null` | no |
+| <a name="input_google_provider_config"></a> [google\_provider\_config](#input\_google\_provider\_config) | YAML formatted file defining one or more Google provider configurations. | `string` | `null` | no |
+| <a name="input_google_service_account_email"></a> [google\_service\_account\_email](#input\_google\_service\_account\_email) | The service account email used to authenticate to GCP. Required when google\_auth\_type is 'oidc'. | `string` | `null` | no |
+| <a name="input_google_tag_ids"></a> [google\_tag\_ids](#input\_google\_tag\_ids) | List of Tag IDs to assign to the Google Provider Configuration. | `list(string)` | `null` | no |
+| <a name="input_google_use_default_project"></a> [google\_use\_default\_project](#input\_google\_use\_default\_project) | Whether the project a credential is created in will be used by default. | `bool` | `null` | no |
+| <a name="input_google_workload_provider_name"></a> [google\_workload\_provider\_name](#input\_google\_workload\_provider\_name) | The canonical name of the workload identity provider. Required when google\_auth\_type is 'oidc'. | `string` | `null` | no |
 | <a name="input_scalr_config"></a> [scalr\_config](#input\_scalr\_config) | YAML formatted file defining Scalr environments and their workspaces. | `string` | n/a | yes |
 | <a name="input_vcs_provider_agent_pool_id"></a> [vcs\_provider\_agent\_pool\_id](#input\_vcs\_provider\_agent\_pool\_id) | The Agent Pool ID to assign to the VCS Provider. | `string` | `null` | no |
 | <a name="input_vcs_provider_config"></a> [vcs\_provider\_config](#input\_vcs\_provider\_config) | YAML formatted file defining one or more VCS provider configurations. | `string` | `null` | no |
@@ -254,7 +338,15 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_environment_ids"></a> [environment\_ids](#output\_environment\_ids) | Map of Environment names to their Scalr Environment IDs. |
+| <a name="output_provider_configuration_azurerm_ids"></a> [provider\_configuration\_azurerm\_ids](#output\_provider\_configuration\_azurerm\_ids) | Map of AzureRM Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_custom_ids"></a> [provider\_configuration\_custom\_ids](#output\_provider\_configuration\_custom\_ids) | Map of custom Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_google_ids"></a> [provider\_configuration\_google\_ids](#output\_provider\_configuration\_google\_ids) | Map of Google Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_ids"></a> [provider\_configuration\_ids](#output\_provider\_configuration\_ids) | Map of AWS Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_vcs_provider_ids"></a> [vcs\_provider\_ids](#output\_vcs\_provider\_ids) | Map of VCS Provider names to their Scalr VCS Provider IDs. |
+| <a name="output_workspace_ids"></a> [workspace\_ids](#output\_workspace\_ids) | Map of Workspace composite keys ('<environment>.<workspace>') to their Scalr Workspace IDs. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
