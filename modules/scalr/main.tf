@@ -20,9 +20,12 @@ data "scalr_current_account" "account" {}
 # Locals
 ###########################
 locals {
-  aws_provider_config = try(yamldecode(var.aws_provider_config), null)
-  vcs_provider_config = try(yamldecode(var.vcs_provider_config), null)
-  yaml_config         = try(yamldecode(var.scalr_config), null)
+  aws_provider_config     = try(yamldecode(var.aws_provider_config), null)
+  azurerm_provider_config = try(yamldecode(var.azurerm_provider_config), {})
+  custom_provider_config  = try(yamldecode(var.custom_provider_config), {})
+  google_provider_config  = try(yamldecode(var.google_provider_config), {})
+  vcs_provider_config     = try(yamldecode(var.vcs_provider_config), null)
+  yaml_config             = try(yamldecode(var.scalr_config), null)
   workspaces = merge([for environment, value in local.yaml_config : {
     for workspace, workspace_value in value.workspaces : "${environment}.${workspace}" => merge(workspace_value, {
       environment = environment
@@ -67,6 +70,86 @@ resource "scalr_provider_configuration" "aws" {
     role_arn            = try(each.value.role_arn, var.aws_role_arn)
     secret_key          = try(each.value.secret_key, var.aws_secret_key)
     trusted_entity_type = try(each.value.trusted_entity_type, var.aws_trusted_entity_type)
+  }
+}
+
+###########################
+# AzureRM Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "azurerm" {
+  for_each               = local.azurerm_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.azurerm_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.azurerm_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.azurerm_owners)
+  tag_ids                = try(each.value.tag_ids, var.azurerm_tag_ids)
+  azurerm {
+    audience        = try(each.value.audience, var.azurerm_audience)
+    auth_type       = try(each.value.auth_type, var.azurerm_auth_type)
+    client_id       = try(each.value.client_id, var.azurerm_client_id)
+    client_secret   = try(each.value.client_secret, var.azurerm_client_secret)
+    subscription_id = try(each.value.subscription_id, var.azurerm_subscription_id)
+    tenant_id       = try(each.value.tenant_id, var.azurerm_tenant_id)
+  }
+}
+
+###########################
+# Google Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "google" {
+  for_each               = local.google_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.google_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.google_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.google_owners)
+  tag_ids                = try(each.value.tag_ids, var.google_tag_ids)
+  google {
+    auth_type              = try(each.value.auth_type, var.google_auth_type)
+    credentials            = try(each.value.credentials, var.google_credentials)
+    project                = try(each.value.project, var.google_project)
+    service_account_email  = try(each.value.service_account_email, var.google_service_account_email)
+    use_default_project    = try(each.value.use_default_project, var.google_use_default_project)
+    workload_provider_name = try(each.value.workload_provider_name, var.google_workload_provider_name)
+
+    dynamic "default_labels" {
+      for_each = try(each.value.default_labels != null, false) || var.google_default_labels_labels != null || var.google_default_labels_strategy != null ? [1] : []
+      content {
+        labels   = try(each.value.default_labels.labels, var.google_default_labels_labels)
+        strategy = try(each.value.default_labels.strategy, var.google_default_labels_strategy)
+      }
+    }
+  }
+}
+
+###########################
+# Custom Provider Configurations
+###########################
+
+resource "scalr_provider_configuration" "custom" {
+  for_each               = local.custom_provider_config
+  account_id             = data.scalr_current_account.account.id
+  environments           = try(each.value.environments, var.custom_environments)
+  export_shell_variables = try(each.value.export_shell_variables, var.custom_export_shell_variables)
+  name                   = each.key
+  owners                 = try(each.value.owners, var.custom_owners)
+  tag_ids                = try(each.value.tag_ids, var.custom_tag_ids)
+  custom {
+    provider_name = try(each.value.provider_name, var.custom_provider_name)
+
+    dynamic "argument" {
+      for_each = try(each.value.argument, var.custom_argument)
+      content {
+        name        = argument.value.name
+        description = try(argument.value.description, null)
+        hcl         = try(argument.value.hcl, false)
+        sensitive   = try(argument.value.sensitive, false)
+        value       = try(argument.value.value, null)
+      }
+    }
   }
 }
 

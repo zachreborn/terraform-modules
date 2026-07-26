@@ -132,6 +132,221 @@ variable "aws_trusted_entity_type" {
 }
 
 ###########################
+# AzureRM Provider Variables
+###########################
+variable "azurerm_audience" {
+  description = "The value of the 'aud' claim for the identity token. Required if azurerm_auth_type is set to 'oidc'."
+  type        = string
+  default     = null
+}
+
+variable "azurerm_auth_type" {
+  description = "Authentication type for the AzureRM provider configuration. Valid values are 'client-secrets' and 'oidc'."
+  type        = string
+  default     = "client-secrets"
+  validation {
+    condition     = contains(["client-secrets", "oidc"], var.azurerm_auth_type)
+    error_message = "The azurerm_auth_type must be one of 'client-secrets' or 'oidc'."
+  }
+}
+
+variable "azurerm_client_id" {
+  description = "The Client ID that should be used for the AzureRM provider configuration."
+  type        = string
+  default     = null
+}
+
+variable "azurerm_client_secret" {
+  description = "The Client Secret that should be used for the AzureRM provider configuration. Required when azurerm_auth_type is 'client-secrets'."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "azurerm_environments" {
+  description = "List of Scalr Environments which the AzureRM provider configuration will be shared to."
+  type        = list(string)
+  default     = null
+}
+
+variable "azurerm_export_shell_variables" {
+  description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the AzureRM provider configuration."
+  type        = bool
+  default     = false
+}
+
+variable "azurerm_owners" {
+  description = "List of Scalr Team IDs who will own the AzureRM Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+variable "azurerm_provider_config" {
+  description = "YAML formatted file defining one or more AzureRM provider configurations."
+  type        = string
+  default     = null
+}
+
+variable "azurerm_subscription_id" {
+  description = "The Subscription ID that should be used for the AzureRM provider configuration. If omitted, it must be set as a shell variable in the workspace or as part of the source configuration."
+  type        = string
+  default     = null
+}
+
+variable "azurerm_tag_ids" {
+  description = "List of Tag IDs to assign to the AzureRM Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+variable "azurerm_tenant_id" {
+  description = "The Tenant ID that should be used for the AzureRM provider configuration."
+  type        = string
+  default     = null
+}
+
+###########################
+# Google Provider Variables
+###########################
+variable "google_auth_type" {
+  description = "Authentication type for the Google provider configuration. Valid values are 'service-account-key' and 'oidc'."
+  type        = string
+  default     = "service-account-key"
+  validation {
+    condition     = contains(["service-account-key", "oidc"], var.google_auth_type)
+    error_message = "The google_auth_type must be one of 'service-account-key' or 'oidc'."
+  }
+}
+
+variable "google_credentials" {
+  description = "Service account key file in JSON format for the Google provider configuration. Required when google_auth_type is 'service-account-key'."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "google_default_labels_labels" {
+  description = "Default labels to be applied to all resources created by the Google provider configuration."
+  type        = map(string)
+  default     = null
+}
+
+variable "google_default_labels_strategy" {
+  description = "On duplicate key behaviour for default labels. Valid values are 'skip' and 'update'."
+  type        = string
+  default     = null
+  validation {
+    condition     = var.google_default_labels_strategy == null || contains(["skip", "update"], var.google_default_labels_strategy)
+    error_message = "The google_default_labels_strategy must be one of null, 'skip', or 'update'."
+  }
+}
+
+variable "google_environments" {
+  description = "List of Scalr Environments which the Google provider configuration will be shared to."
+  type        = list(string)
+  default     = null
+}
+
+variable "google_export_shell_variables" {
+  description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the Google provider configuration."
+  type        = bool
+  default     = false
+}
+
+variable "google_owners" {
+  description = "List of Scalr Team IDs who will own the Google Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+variable "google_project" {
+  description = "The default Google Cloud project ID to manage resources in. If another project ID is specified on a resource, it will take precedence."
+  type        = string
+  default     = null
+}
+
+variable "google_provider_config" {
+  description = "YAML formatted file defining one or more Google provider configurations."
+  type        = string
+  default     = null
+}
+
+variable "google_service_account_email" {
+  description = "The service account email used to authenticate to GCP. Required when google_auth_type is 'oidc'."
+  type        = string
+  default     = null
+}
+
+variable "google_tag_ids" {
+  description = "List of Tag IDs to assign to the Google Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+variable "google_use_default_project" {
+  description = "Whether the project a credential is created in will be used by default."
+  type        = bool
+  default     = null
+}
+
+variable "google_workload_provider_name" {
+  description = "The canonical name of the workload identity provider. Required when google_auth_type is 'oidc'."
+  type        = string
+  default     = null
+}
+
+###########################
+# Custom Provider Variables
+###########################
+variable "custom_argument" {
+  description = "List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file."
+  type = list(object({
+    name        = string
+    value       = optional(string)
+    description = optional(string)
+    hcl         = optional(bool, false)
+    sensitive   = optional(bool, false)
+  }))
+  default = []
+}
+
+variable "custom_environments" {
+  description = "List of Scalr Environments which the custom provider configuration will be shared to."
+  type        = list(string)
+  default     = null
+}
+
+variable "custom_export_shell_variables" {
+  description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the custom provider configuration."
+  type        = bool
+  default     = false
+}
+
+variable "custom_owners" {
+  description = "List of Scalr Team IDs who will own the custom Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+variable "custom_provider_config" {
+  description = "YAML formatted file defining one or more custom provider configurations."
+  type        = string
+  default     = null
+}
+
+variable "custom_provider_name" {
+  description = "The name of the Terraform provider being configured (e.g. 'kubernetes'). Can be overridden per provider configuration in the YAML file."
+  type        = string
+  default     = null
+}
+
+variable "custom_tag_ids" {
+  description = "List of Tag IDs to assign to the custom Provider Configuration."
+  type        = list(string)
+  default     = null
+}
+
+###########################
 # Environment Variables
 ###########################
 variable "environment_default_provider_configurations" {
