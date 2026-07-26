@@ -66,6 +66,28 @@ run "rejects_subnet_indices_longer_than_private_subnets_list" {
   expect_failures = [var.subnet_indices]
 }
 
+# Regression test for the previously-hardcoded "0 to 2" cap on subnet_indices
+# (fixed to be dynamic: 0 to length(private_subnets_list) - 1). Extend the
+# module's own default private_subnets_list by one entry (rather than
+# hardcoding a new CIDR literal) so subnet_indices can reference index 3,
+# which used to be rejected unconditionally regardless of how many private
+# subnets were actually configured.
+run "accepts_subnet_index_beyond_old_hardcoded_cap_when_private_subnets_list_is_longer" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    subnet_indices       = [3]
+  }
+
+  assert {
+    condition     = aws_vpc.vpc.cidr_block == var.vpc_cidr
+    error_message = "subnet_indices=[3] should now pass validation when private_subnets_list has 4 entries, and the rest of the plan should proceed normally."
+  }
+}
+
 run "rejects_invalid_cloudwatch_retention_in_days" {
   command = plan
 
@@ -208,4 +230,103 @@ run "rejects_invalid_internet_monitor_s3_bucket_status" {
   }
 
   expect_failures = [var.internet_monitor_s3_bucket_status]
+}
+
+run "rejects_additional_routes_with_unsupported_tier_name" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["bogus"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_empty_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = []
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_duplicate_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["private", "private"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_vpc_endpoints_entry_with_no_identifier" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {}
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_two_identifiers" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name               = "com.amazonaws.us-east-1.secretsmanager"
+        resource_configuration_arn = "arn:aws:vpc-lattice:us-east-1:123456789012:resourceconfiguration/rcfg-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_invalid_type" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type = "Bogus"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
 }

@@ -38,6 +38,66 @@ output "vpc_cidr_block" {
   value = aws_vpc.vpc.cidr_block
 }
 
+output "vpc_ipv6_cidr_block" {
+  description = "The IPv6 CIDR block assigned to the VPC. Null when enable_ipv6 is false."
+  value       = aws_vpc.vpc.ipv6_cidr_block
+}
+
+output "vpc_ipv6_association_id" {
+  description = "The association ID for the VPC's IPv6 CIDR block. Null when enable_ipv6 is false."
+  value       = aws_vpc.vpc.ipv6_association_id
+}
+
+output "dhcp_options_id" {
+  description = "The ID of the DHCP options set associated with the VPC."
+  value       = aws_vpc.vpc.dhcp_options_id
+}
+
+output "main_route_table_id" {
+  description = "The ID of the main route table associated with the VPC."
+  value       = aws_vpc.vpc.main_route_table_id
+}
+
+output "default_route_table_id" {
+  description = "The ID of the route table created by default on VPC creation."
+  value       = aws_vpc.vpc.default_route_table_id
+}
+
+output "default_network_acl_id" {
+  description = "The ID of the network ACL created by default on VPC creation."
+  value       = aws_vpc.vpc.default_network_acl_id
+}
+
+output "owner_id" {
+  description = "The ID of the AWS account that owns the VPC."
+  value       = aws_vpc.vpc.owner_id
+}
+
+output "tags_all" {
+  description = "A map of tags assigned to the VPC, including those inherited from the provider default_tags configuration block."
+  value       = aws_vpc.vpc.tags_all
+}
+
+output "egress_only_internet_gateway_id" {
+  description = "The ID of the egress-only internet gateway used for outbound-only IPv6. Null when enable_ipv6 is false."
+  value       = one(aws_egress_only_internet_gateway.eigw[*].id)
+}
+
+output "vpc_endpoint_security_group_id" {
+  description = "The ID of the security group attached to the SSM/ECR/CloudWatch Logs VPC endpoints."
+  value       = module.ssm_vpc_endpoint_sg.id
+}
+
+output "vpc_endpoint_security_group_name" {
+  description = "The name of the security group attached to the SSM/ECR/CloudWatch Logs VPC endpoints."
+  value       = module.ssm_vpc_endpoint_sg.name
+}
+
+output "custom_vpc_endpoint_ids" {
+  description = "Map of caller-defined VPC endpoint (var.vpc_endpoints) names to their resource ids."
+  value       = { for k, v in aws_vpc_endpoint.custom : k => v.id }
+}
+
 output "public_route_table_ids" {
   value = aws_route_table.public_route_table[*].id
 }
