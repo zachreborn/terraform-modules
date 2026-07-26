@@ -218,11 +218,15 @@ resource "scalr_workspace" "this" {
   vcs_provider_id             = try(each.value.vcs_provider_id, var.vcs_provider_id)
   working_directory           = try(each.value.working_directory, var.workspace_working_directory)
 
+  # scalr_workspace.provider_configuration is a Block Set in the provider schema (multiple
+  # configurations, including two sharing an alias for plan/apply-only use, are explicitly
+  # supported) -- so this always iterates a list, never a single object. A bare/omitted key
+  # decodes to null from YAML, which try() defaults to an empty list here.
   dynamic "provider_configuration" {
-    for_each = try(each.value.provider_configuration != null ? [1] : [], [])
+    for_each = try(each.value.provider_configuration, [])
     content {
-      id    = local.provider_configuration_ids[each.value.provider_configuration.name]
-      alias = try(each.value.provider_configuration.alias, null)
+      id    = local.provider_configuration_ids[provider_configuration.value.name]
+      alias = try(provider_configuration.value.alias, null)
     }
   }
 

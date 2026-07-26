@@ -38,8 +38,12 @@ resource "scalr_webhook" "this" {
   dynamic "header" {
     for_each = each.value.header
     content {
-      name  = header.value.name
-      value = header.value.value
+      name = header.value.name
+      # A header's value is resolved from the non-sensitive header.value.value when set; for
+      # headers containing a credential, omit header.value.value and populate
+      # var.webhook_header_values instead (keyed by this webhook's logical name and the header's
+      # own name), since the provider's webhook header schema has no 'sensitive' flag of its own.
+      value = coalesce(header.value.value, try(var.webhook_header_values[each.key][header.value.name], null), "")
     }
   }
 }

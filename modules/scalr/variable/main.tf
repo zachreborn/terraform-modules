@@ -2,7 +2,12 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.11.0 is required because the value_wo argument below is a write-only resource argument.
+  # Both Terraform and OpenTofu added write-only argument support in their respective 1.11.0
+  # releases; the argument is present in this resource's configuration (even when unset, i.e.
+  # null) regardless of whether a caller actually uses var.values_wo, so this floor applies
+  # unconditionally, not just when write-only values are in use.
+  required_version = ">= 1.11.0"
   required_providers {
     scalr = {
       source  = "registry.scalr.io/scalr/scalr"

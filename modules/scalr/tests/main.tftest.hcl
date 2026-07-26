@@ -101,8 +101,8 @@ variables {
             - "var-file-2"
           working_directory: "/path/to/working/directory"
           provider_configuration:
-            name: "aws_provider_1"
-            alias: "primary"
+            - name: "aws_provider_1"
+              alias: "primary"
           vcs_provider_id: "vcs-abc0000000001"
           vcs_repo:
             branch: "main"
@@ -318,12 +318,50 @@ run "workspace_provider_configuration_resolves_non_aws_provider" {
         workspaces:
           azurerm_workspace:
             provider_configuration:
-              name: "azurerm_provider_1"
+              - name: "azurerm_provider_1"
     YAML
   }
 
   assert {
     condition     = length(scalr_workspace.this["environment-1.azurerm_workspace"].provider_configuration) == 1
     error_message = "A workspace's provider_configuration.name should resolve against the merged local.provider_configuration_ids lookup, not just scalr_provider_configuration.aws."
+  }
+}
+
+run "workspace_provider_configuration_supports_multiple_entries" {
+  command = plan
+
+  variables {
+    aws_provider_config = <<-YAML
+      ---
+      aws_provider_1:
+        credentials_type: "access_keys"
+        access_key: "my-plan-access-key"
+      aws_provider_2:
+        credentials_type: "access_keys"
+        access_key: "my-apply-access-key"
+    YAML
+
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          multi_provider_workspace:
+            provider_configuration:
+              - name: "aws_provider_1"
+                alias: "us_east_1"
+              - name: "aws_provider_2"
+                alias: "us_east_2"
+    YAML
+  }
+
+  # Note: both entries resolve to the same mocked scalr_provider_configuration ID here (the mock
+  # provider assigns the same static ID to every instance of a given resource type, regardless of
+  # its for_each key), so they must use different aliases to remain distinguishable as two set
+  # elements -- this is a limitation of the mock, not a restriction of the real provider, which
+  # does support two configurations sharing the same alias for plan/apply-only use.
+  assert {
+    condition     = length(scalr_workspace.this["environment-1.multi_provider_workspace"].provider_configuration) == 2
+    error_message = "scalr_workspace.provider_configuration is a Block Set; a workspace should be able to plan multiple entries, not just one."
   }
 }

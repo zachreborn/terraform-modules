@@ -37,9 +37,11 @@ environment-2-all-options:
         post_apply: "./scripts/post_apply.sh"
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
+      # provider_configuration is a list -- the provider supports multiple entries per
+      # workspace, including two sharing the same alias for plan/apply-only use.
       provider_configuration:
-        name: "aws_provider_1"
-        alias: "primary"
+        - name: "aws_provider_1"
+          alias: "primary"
       remote_backend: true
       remote_state_consumers:
         - "consumer-1"

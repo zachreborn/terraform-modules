@@ -120,9 +120,11 @@ environment-2-all-options:
         post_apply: "./scripts/post_apply.sh"
       iac_platform: "opentofu" # possible values: "terraform", "opentofu"
       module_version_id: "module-version-1"
+      # provider_configuration is a list -- the provider supports multiple entries per
+      # workspace, including two sharing the same alias for plan/apply-only use.
       provider_configuration:
-        name: "aws_provider_1"
-        alias: "primary"
+        - name: "aws_provider_1"
+          alias: "primary"
       remote_backend: true
       remote_state_consumers:
         - "consumer-1"
@@ -225,7 +227,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
 
 ## Providers
 
@@ -277,7 +279,8 @@ No modules.
 | <a name="input_azurerm_subscription_id"></a> [azurerm\_subscription\_id](#input\_azurerm\_subscription\_id) | The Subscription ID that should be used for the AzureRM provider configuration. If omitted, it must be set as a shell variable in the workspace or as part of the source configuration. | `string` | `null` | no |
 | <a name="input_azurerm_tag_ids"></a> [azurerm\_tag\_ids](#input\_azurerm\_tag\_ids) | List of Tag IDs to assign to the AzureRM Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_azurerm_tenant_id"></a> [azurerm\_tenant\_id](#input\_azurerm\_tenant\_id) | The Tenant ID that should be used for the AzureRM provider configuration. | `string` | `null` | no |
-| <a name="input_custom_argument"></a> [custom\_argument](#input\_custom\_argument) | List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file. | <pre>list(object({<br/>    name        = string<br/>    value       = optional(string)<br/>    description = optional(string)<br/>    hcl         = optional(bool, false)<br/>    sensitive   = optional(bool, false)<br/>  }))</pre> | `[]` | no |
+| <a name="input_custom_argument"></a> [custom\_argument](#input\_custom\_argument) | List of argument blocks defining the configuration for a custom provider. Each argument requires a 'name' and may include 'value', 'description', 'hcl', and 'sensitive'. Can be overridden per provider configuration in the YAML file. When an argument's 'sensitive' is true, its 'value' here is ignored -- supply the real value via var.custom\_argument\_secrets instead. | <pre>list(object({<br/>    name        = string<br/>    value       = optional(string)<br/>    description = optional(string)<br/>    hcl         = optional(bool, false)<br/>    sensitive   = optional(bool, false)<br/>  }))</pre> | `[]` | no |
+| <a name="input_custom_argument_secrets"></a> [custom\_argument\_secrets](#input\_custom\_argument\_secrets) | Map of sensitive custom provider argument values, keyed by the provider configuration's name<br/>(a top-level key in custom\_provider\_config, or the resource's own name for module-wide<br/>defaults) and then by argument name. Populate an entry here instead of setting 'value' directly<br/>in custom\_argument or the YAML file whenever an argument sets 'sensitive = true': the<br/>provider's sensitive flag only controls masking in Scalr and does not prevent the value from<br/>appearing in Terraform/OpenTofu plan output when sourced from a non-sensitive variable.<br/><br/>Example:<br/>  custom\_argument\_secrets = {<br/>    kubernetes = {<br/>      password = "<value-from-a-secret-manager>"<br/>    }<br/>  } | `map(map(string))` | `{}` | no |
 | <a name="input_custom_environments"></a> [custom\_environments](#input\_custom\_environments) | List of Scalr Environments which the custom provider configuration will be shared to. | `list(string)` | `null` | no |
 | <a name="input_custom_export_shell_variables"></a> [custom\_export\_shell\_variables](#input\_custom\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the custom provider configuration. | `bool` | `false` | no |
 | <a name="input_custom_owners"></a> [custom\_owners](#input\_custom\_owners) | List of Scalr Team IDs who will own the custom Provider Configuration. | `list(string)` | `null` | no |
