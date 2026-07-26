@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.5.0](https://github.com/zachreborn/terraform-modules/compare/v12.4.0...v12.5.0) (2026-07-26)
+
+
+### Features
+
+* **scalr:** expand module to full Scalr provider resource coverage ([#454](https://github.com/zachreborn/terraform-modules/issues/454)) ([6e2dd27](https://github.com/zachreborn/terraform-modules/commit/6e2dd27fed5366e0884af59d6eb1ae6d97e0f6f6))
+
 ## [12.4.0](https://github.com/zachreborn/terraform-modules/compare/v12.3.0...v12.4.0) (2026-07-24)
 
 
