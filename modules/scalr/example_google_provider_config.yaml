@@ -1,0 +1,8 @@
+---
+google_provider_1:
+  auth_type: "oidc"
+  project: "my-gcp-project"
+  service_account_email: "scalr@my-gcp-project.iam.gserviceaccount.com"
+  workload_provider_name: "projects/123456789/locations/global/workloadIdentityPools/scalr-pool/providers/scalr-provider"
+  environments:
+    - "production"
