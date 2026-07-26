@@ -154,8 +154,10 @@ module "readonly_permissions" {
 
   # group_ids bypasses the name-based lookup entirely -- readonly's ID is known only after apply,
   # but that's fine since it flows through as a resource-argument value, not a for_each key.
+  # Note: use group_id (the Identity Store principal ID), not id (aws_identitystore_group's own
+  # resource id is the composite "<identity_store_id>/<group_id>", which is not a valid principal ID).
   group_ids = {
-    readonly = aws_identitystore_group.readonly.id
+    readonly = aws_identitystore_group.readonly.group_id
   }
 
   managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
@@ -166,6 +168,12 @@ module "readonly_permissions" {
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+## Notes / Design Decisions
+
+### `assignment_ids` output key changed (breaking)
+
+`assignment_ids` is now keyed by `"<group_name>_<account_id>"` (the same key already used by the underlying `aws_ssoadmin_account_assignment` `for_each`) instead of `"<principal_id>_<account_id>"` (parsed from the assignment resource's own runtime `id`). The old derivation re-parsed a value from the resource's `id` to build a map key, which could collide if two assignments ever resolved to the same parsed key, and made it impossible to write native `tofu test` coverage of multiple assignments together, since mocked resource attributes are not unique per instance. If you index this output by the old `<principal_id>_<account_id>` shape, update those references to the new `<group_name>_<account_id>` key before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -183,7 +191,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.56.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 

@@ -106,17 +106,23 @@ module "permission_sets" {
 
   for_each = var.permission_sets
 
-  name        = coalesce(each.value.name, each.key)
-  description = each.value.description
-  groups      = toset(coalesce(each.value.groups, []))
-  # A group_keys entry not found in var.groups is filtered out here (rather than passed through as a
-  # null value) so the permission_set submodule's own generic group_ids validation never trips on it --
-  # the permission_set_resolved_group_keys output (outputs.tf) carries a precondition that is solely
+  name                 = coalesce(each.value.name, each.key)
+  description          = each.value.description
+  groups               = toset(coalesce(each.value.groups, []))
+  group_attribute_path = each.value.group_attribute_path
+  # Caller-supplied group_ids (for externally managed groups) is merged with group_keys resolved
+  # against this module's own groups -- group_keys wins on key overlap. A group_keys entry not found
+  # in var.groups is filtered out here (rather than passed through as a null value) so the
+  # permission_set submodule's own generic group_ids validation never trips on it -- the
+  # permission_set_resolved_group_keys output (outputs.tf) carries a precondition that is solely
   # responsible for surfacing that misconfiguration, with one clear, actionable message.
-  group_ids = {
-    for k in coalesce(each.value.group_keys, []) : k => local.group_id_map[k]
-    if contains(keys(local.group_id_map), k)
-  }
+  group_ids = merge(
+    coalesce(each.value.group_ids, {}),
+    {
+      for k in coalesce(each.value.group_keys, []) : k => local.group_id_map[k]
+      if contains(keys(local.group_id_map), k)
+    }
+  )
   customer_managed_iam_policy_name = each.value.customer_managed_iam_policy_name
   customer_managed_iam_policy_path = each.value.customer_managed_iam_policy_path
   inline_policy                    = each.value.inline_policy

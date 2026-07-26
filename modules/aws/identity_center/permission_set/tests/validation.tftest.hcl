@@ -80,6 +80,18 @@ run "rejects_empty_group_id_value" {
   expect_failures = [var.group_ids]
 }
 
+run "rejects_null_group_id_value" {
+  command = plan
+
+  variables {
+    name            = "AdministratorAccess"
+    group_ids       = { readonly = null }
+    target_accounts = ["123456789012"]
+  }
+
+  expect_failures = [var.group_ids]
+}
+
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a signal that the
 # module code has a bug and fix the root cause in main.tf / variables.tf / outputs.tf, then re-run
 # `tofu test` until it passes for the right reason.

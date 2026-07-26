@@ -181,6 +181,86 @@ run "rejects_group_keys_entry_not_found_in_groups" {
   expect_failures = [output.permission_set_resolved_group_keys]
 }
 
+run "group_ids_field_wires_externally_managed_group" {
+  command = plan
+
+  variables {
+    groups = {}
+    users  = {}
+    permission_sets = {
+      external = {
+        group_ids       = { external_group = "33333333-3333-3333-3333-333333333333" }
+        target_accounts = ["123456789012"]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.permission_set_group_ids["external"]["external_group"] == "33333333-3333-3333-3333-333333333333"
+    error_message = "A literal group_ids entry (for a group not managed by this module call) should be forwarded to the permission_set submodule unchanged."
+  }
+}
+
+run "group_keys_takes_precedence_over_overlapping_group_ids_key" {
+  command = plan
+
+  variables {
+    groups = {
+      Administrators = {
+        display_name = "Administrators"
+      }
+    }
+    users = {}
+    permission_sets = {
+      overlap = {
+        group_ids       = { Administrators = "44444444-4444-4444-4444-444444444444" }
+        group_keys      = ["Administrators"]
+        target_accounts = ["123456789012"]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.permission_set_group_ids["overlap"]["Administrators"] == "11111111-1111-1111-1111-111111111111"
+    error_message = "When the same key appears in both group_ids and group_keys, group_keys (this module's own group resource) should win, per the documented precedence."
+  }
+}
+
+run "group_attribute_path_field_is_forwarded" {
+  command = plan
+
+  variables {
+    groups = {}
+    users  = {}
+    permission_sets = {
+      custom_attr = {
+        groups               = ["pre-existing-group"]
+        group_attribute_path = "UserName"
+        target_accounts      = ["123456789012"]
+      }
+    }
+  }
+
+  assert {
+    condition     = module.permission_sets["custom_attr"].id != null
+    error_message = "A permission_sets entry with a custom group_attribute_path should plan successfully (see permission_set's own tests for direct forwarding verification)."
+  }
+}
+
+run "rejects_null_permission_sets_entry" {
+  command = plan
+
+  variables {
+    groups = {}
+    users  = {}
+    permission_sets = {
+      broken = null
+    }
+  }
+
+  expect_failures = [var.permission_sets]
+}
+
 run "large_permission_sets_map_scales" {
   command = plan
 

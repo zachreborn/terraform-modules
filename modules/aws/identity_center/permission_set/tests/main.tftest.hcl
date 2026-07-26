@@ -93,6 +93,22 @@ run "group_ids_branch_bypasses_data_source" {
   }
 }
 
+run "group_attribute_path_is_forwarded_to_data_source" {
+  command = plan
+
+  variables {
+    name                 = "CustomAttributeAccess"
+    groups               = ["jdoe@example.com"]
+    group_attribute_path = "UserName"
+    target_accounts      = ["123456789012"]
+  }
+
+  assert {
+    condition     = data.aws_identitystore_group.this["jdoe@example.com"].alternate_identifier[0].unique_attribute[0].attribute_path == "UserName"
+    error_message = "group_attribute_path should be forwarded to the data source's alternate_identifier.unique_attribute.attribute_path."
+  }
+}
+
 run "mixed_groups_and_group_ids" {
   command = plan
 
