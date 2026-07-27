@@ -51,14 +51,22 @@ variable "disk_iops_configuration" {
 
 variable "endpoint_ip_address_range" {
   type        = string
-  description = "(Optional) The IP address range in which the endpoints to access the file system are created. Only supported on MULTI_AZ deployment types; must be outside the VPC CIDR. Defaults to null."
+  description = "(Optional) The IPv4 CIDR range in which the endpoints to access the file system are created. Only supported on MULTI_AZ deployment types; must be outside the VPC CIDR. When null, FSx selects an unused range from 198.19.0.0/16. Defaults to null."
   default     = null
+  validation {
+    condition     = var.endpoint_ip_address_range == null ? true : can(cidrnetmask(var.endpoint_ip_address_range))
+    error_message = "endpoint_ip_address_range must be null or a valid IPv4 CIDR block (for example 198.19.0.0/24)."
+  }
 }
 
 variable "fsx_admin_password" {
   type        = string
-  description = "(Optional) The ONTAP administrative password for the fsxadmin user used to administer the file system via the ONTAP CLI/REST API. Stored in Terraform state in plaintext; supply from a secret store. Defaults to null."
+  description = "(Optional) The ONTAP administrative password for the fsxadmin user used to administer the file system via the ONTAP CLI/REST API. Between 8 and 50 characters. Stored in Terraform state in plaintext; supply from a secret store. Defaults to null."
   default     = null
+  validation {
+    condition     = var.fsx_admin_password == null ? true : length(var.fsx_admin_password) >= 8 && length(var.fsx_admin_password) <= 50
+    error_message = "The value of fsx_admin_password must be null or between 8 and 50 characters."
+  }
 }
 
 variable "ha_pairs" {
@@ -79,18 +87,34 @@ variable "name" {
 variable "preferred_subnet_id" {
   type        = string
   description = "(Required) The subnet in which the preferred file server is located. Must be one of the subnets listed in subnet_ids."
+  validation {
+    condition     = can(regex("^subnet-[0-9a-f]{8,}$", var.preferred_subnet_id))
+    error_message = "preferred_subnet_id must be a valid subnet ID (subnet- followed by at least 8 hexadecimal characters)."
+  }
 }
 
 variable "route_table_ids" {
   type        = list(string)
-  description = "(Optional) A list of route table IDs that are associated with the file system. Used by MULTI_AZ deployments so traffic to the floating endpoint IPs is routed correctly. Defaults to null."
+  description = "(Optional) A list of route table IDs that are associated with the file system. Used by MULTI_AZ deployments so traffic to the floating endpoint IPs is routed correctly. A maximum of 50 route tables. Defaults to null."
   default     = null
+  validation {
+    condition     = var.route_table_ids == null ? true : alltrue([for id in var.route_table_ids : can(regex("^rtb-[0-9a-f]{8,}$", id))])
+    error_message = "Each route_table_ids entry must be a valid route table ID (rtb- followed by at least 8 hexadecimal characters)."
+  }
+  validation {
+    condition     = var.route_table_ids == null ? true : length(var.route_table_ids) <= 50
+    error_message = "route_table_ids accepts a maximum of 50 route tables."
+  }
 }
 
 variable "security_group_ids" {
   type        = list(string)
   description = "(Optional) A list of IDs for the security groups that apply to the network interfaces created for file system access. Defaults to null."
   default     = null
+  validation {
+    condition     = var.security_group_ids == null ? true : alltrue([for id in var.security_group_ids : can(regex("^sg-[0-9a-f]{8,}$", id))])
+    error_message = "Each security_group_ids entry must be a valid security group ID (sg- followed by at least 8 hexadecimal characters)."
+  }
 }
 
 variable "storage_capacity" {
@@ -115,6 +139,10 @@ variable "storage_type" {
 variable "subnet_ids" {
   type        = list(string)
   description = "(Required) A list of subnet IDs the file system will be accessible from. Provide one subnet for SINGLE_AZ deployments and two for MULTI_AZ deployments (with preferred_subnet_id set)."
+  validation {
+    condition     = alltrue([for id in var.subnet_ids : can(regex("^subnet-[0-9a-f]{8,}$", id))])
+    error_message = "Each subnet_ids entry must be a valid subnet ID (subnet- followed by at least 8 hexadecimal characters)."
+  }
 }
 
 variable "tags" {
@@ -125,21 +153,29 @@ variable "tags" {
 
 variable "throughput_capacity" {
   type        = number
-  description = "(Optional) The sustained throughput (MB/s) of the file system. Valid values are 128, 256, 512, 1024, 2048, and 4096. Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
+  description = "(Optional) The total sustained throughput (MB/s) of the file system, across all HA pairs. Must divide evenly by ha_pairs into a per-HA-pair value valid for the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
   default     = null
+
+  # Only the API's absolute range is checked here. The valid values depend on deployment_type
+  # and ha_pairs, which a variable validation cannot reference on this module's
+  # required_version, so the exact set is enforced by a precondition in main.tf.
   validation {
-    condition     = var.throughput_capacity == null ? true : contains([128, 256, 512, 1024, 2048, 4096], var.throughput_capacity)
-    error_message = "The value of throughput_capacity must be one of 128, 256, 512, 1024, 2048, or 4096 MB/s."
+    condition     = var.throughput_capacity == null ? true : var.throughput_capacity >= 8 && var.throughput_capacity <= 100000
+    error_message = "The value of throughput_capacity must be between 8 and 100000 MB/s."
   }
 }
 
 variable "throughput_capacity_per_ha_pair" {
   type        = number
-  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required for Gen 2 deployment types and when ha_pairs is greater than 1. Valid values are 128, 256, 512, 1024, 2048, 3072, 4096, and 6144. Conflicts with throughput_capacity; set exactly one. Defaults to null."
+  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required for Gen 2 deployment types and when ha_pairs is greater than 1. Valid values depend on the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity; set exactly one. Defaults to null."
   default     = null
+
+  # Union of every documented per-HA-pair value, so an obvious typo fails here. The subset
+  # valid for the chosen deployment_type is enforced by a precondition in main.tf, since a
+  # variable validation cannot reference another variable on this module's required_version.
   validation {
-    condition     = var.throughput_capacity_per_ha_pair == null ? true : contains([128, 256, 512, 1024, 2048, 3072, 4096, 6144], var.throughput_capacity_per_ha_pair)
-    error_message = "The value of throughput_capacity_per_ha_pair must be one of 128, 256, 512, 1024, 2048, 3072, 4096, or 6144 MB/s."
+    condition     = var.throughput_capacity_per_ha_pair == null ? true : contains([128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144], var.throughput_capacity_per_ha_pair)
+    error_message = "The value of throughput_capacity_per_ha_pair must be one of 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, or 6144 MB/s."
   }
 }
 
@@ -179,6 +215,22 @@ variable "storage_virtual_machines" {
   validation {
     condition     = alltrue([for svm in values(var.storage_virtual_machines) : contains(["UNIX", "NTFS", "MIXED"], svm.root_volume_security_style)])
     error_message = "Each storage_virtual_machines root_volume_security_style must be one of UNIX, NTFS, or MIXED."
+  }
+
+  # Active Directory caps a computer object's NetBIOS name at 15 characters, and FSx rejects
+  # anything longer when it creates the SVM's computer object.
+  validation {
+    condition = alltrue([
+      for svm in values(var.storage_virtual_machines) : svm.active_directory_configuration == null ? true : length(svm.active_directory_configuration.netbios_name) >= 1 && length(svm.active_directory_configuration.netbios_name) <= 15
+    ])
+    error_message = "Each storage_virtual_machines active_directory_configuration netbios_name must be between 1 and 15 characters."
+  }
+
+  validation {
+    condition = alltrue([
+      for svm in values(var.storage_virtual_machines) : svm.svm_admin_password == null ? true : length(svm.svm_admin_password) >= 8 && length(svm.svm_admin_password) <= 50
+    ])
+    error_message = "Each storage_virtual_machines svm_admin_password must be null or between 8 and 50 characters."
   }
 }
 
@@ -282,6 +334,10 @@ variable "kms_key_id" {
   type        = string
   description = "(Optional) ARN of an existing KMS key used to encrypt the file system. Required when create_kms_key is false."
   default     = null
+  validation {
+    condition     = var.kms_key_id == null ? true : can(regex("^arn:[^:]+:kms:[^:]+:[0-9]{12}:key/.+$", var.kms_key_id))
+    error_message = "kms_key_id must be null or a KMS key ARN (arn:<partition>:kms:<region>:<account>:key/<key-id>)."
+  }
 }
 
 variable "kms_key_description" {
