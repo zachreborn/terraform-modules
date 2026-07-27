@@ -78,10 +78,10 @@ module "fsx_ontap" {
       active_directory_configuration = {
         netbios_name = "CORP-ONTAP"
         self_managed_active_directory_configuration = {
-          dns_ips                                 = ["10.11.1.100", "10.11.2.100"]
-          domain_name                             = "corp.example.com"
-          username                                = "FSxServiceAccount"
-          password                                = var.fsx_service_account_password
+          dns_ips                                = ["10.11.1.100", "10.11.2.100"]
+          domain_name                            = "corp.example.com"
+          username                               = "FSxServiceAccount"
+          password                               = var.fsx_service_account_password
           organizational_unit_distinguished_name = "OU=FSx,DC=corp,DC=example,DC=com"
         }
       }
