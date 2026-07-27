@@ -10,14 +10,22 @@ variable "activation_key" {
 
 variable "average_download_rate_limit_in_bits_per_sec" {
   type        = number
-  description = "(Optional) The average download bandwidth rate limit in bits per second. Defaults to null (no limit)."
+  description = "(Optional) The average download bandwidth rate limit in bits per second. Minimum 102400. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit)."
   default     = null
+  validation {
+    condition     = var.average_download_rate_limit_in_bits_per_sec == null ? true : var.average_download_rate_limit_in_bits_per_sec >= 102400
+    error_message = "The value of average_download_rate_limit_in_bits_per_sec must be null or at least 102400."
+  }
 }
 
 variable "average_upload_rate_limit_in_bits_per_sec" {
   type        = number
-  description = "(Optional) The average upload bandwidth rate limit in bits per second. Defaults to null (no limit)."
+  description = "(Optional) The average upload bandwidth rate limit in bits per second. Minimum 51200. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit)."
   default     = null
+  validation {
+    condition     = var.average_upload_rate_limit_in_bits_per_sec == null ? true : var.average_upload_rate_limit_in_bits_per_sec >= 51200
+    error_message = "The value of average_upload_rate_limit_in_bits_per_sec must be null or at least 51200."
+  }
 }
 
 variable "cloudwatch_log_group_arn" {
@@ -51,6 +59,10 @@ variable "gateway_timezone" {
   type        = string
   description = "(Optional) Time zone for the gateway, in the format GMT, GMT-hh:mm, or GMT+hh:mm (e.g. GMT-7:00). Defaults to GMT."
   default     = "GMT"
+  validation {
+    condition     = can(regex("^GMT([+-](0?[0-9]|1[0-2]):[0-5][0-9])?$", var.gateway_timezone))
+    error_message = "The value of gateway_timezone must be GMT, or GMT followed by an offset in the format GMT-hh:mm or GMT+hh:mm (for example GMT-7:00)."
+  }
 }
 
 variable "gateway_type" {
@@ -220,6 +232,20 @@ variable "s3_smb_file_shares" {
     ])
     error_message = "Each s3_smb_file_shares authentication must be null, ActiveDirectory, or GuestAccess."
   }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.case_sensitivity == null ? true : contains(["ClientSpecified", "CaseSensitive"], share.case_sensitivity)
+    ])
+    error_message = "Each s3_smb_file_shares case_sensitivity must be null, ClientSpecified, or CaseSensitive."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.default_storage_class == null ? true : contains(["S3_STANDARD", "S3_INTELLIGENT_TIERING", "S3_STANDARD_IA", "S3_ONEZONE_IA"], share.default_storage_class)
+    ])
+    error_message = "Each s3_smb_file_shares default_storage_class must be null, S3_STANDARD, S3_INTELLIGENT_TIERING, S3_STANDARD_IA, or S3_ONEZONE_IA."
+  }
 }
 
 variable "s3_nfs_file_shares" {
@@ -257,6 +283,13 @@ variable "s3_nfs_file_shares" {
       for share in var.s3_nfs_file_shares : share.squash == null ? true : contains(["RootSquash", "NoSquash", "AllSquash"], share.squash)
     ])
     error_message = "Each s3_nfs_file_shares squash must be null, RootSquash, NoSquash, or AllSquash."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.default_storage_class == null ? true : contains(["S3_STANDARD", "S3_INTELLIGENT_TIERING", "S3_STANDARD_IA", "S3_ONEZONE_IA"], share.default_storage_class)
+    ])
+    error_message = "Each s3_nfs_file_shares default_storage_class must be null, S3_STANDARD, S3_INTELLIGENT_TIERING, S3_STANDARD_IA, or S3_ONEZONE_IA."
   }
 }
 

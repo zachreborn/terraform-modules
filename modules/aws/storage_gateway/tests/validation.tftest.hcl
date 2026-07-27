@@ -212,6 +212,122 @@ run "rejects_invalid_s3_nfs_file_share_squash" {
 # CloudWatch retention
 ###########################
 
+run "rejects_invalid_s3_smb_file_share_case_sensitivity" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn     = "arn:aws:s3:::corp-gateway-data/finance"
+        case_sensitivity = "CaseInsensitive"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+run "rejects_invalid_s3_smb_file_share_default_storage_class" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn          = "arn:aws:s3:::corp-gateway-data/finance"
+        default_storage_class = "GLACIER"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+run "rejects_invalid_s3_nfs_file_share_default_storage_class" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn          = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list           = ["10.0.0.0/16"]
+        default_storage_class = "DEEP_ARCHIVE"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+###########################
+# gateway_timezone
+###########################
+
+run "rejects_malformed_gateway_timezone" {
+  command = plan
+
+  variables {
+    gateway_timezone = "UTC-7"
+  }
+
+  expect_failures = [var.gateway_timezone]
+}
+
+run "rejects_gateway_timezone_offset_beyond_twelve_hours" {
+  command = plan
+
+  variables {
+    gateway_timezone = "GMT-13:00"
+  }
+
+  expect_failures = [var.gateway_timezone]
+}
+
+run "accepts_a_positive_gateway_timezone_offset" {
+  command = plan
+
+  variables {
+    gateway_timezone = "GMT+5:30"
+  }
+
+  assert {
+    condition     = aws_storagegateway_gateway.this[0].gateway_timezone == "GMT+5:30"
+    error_message = "Expected a GMT+hh:mm offset to be accepted."
+  }
+}
+
+###########################
+# Bandwidth rate limits
+###########################
+
+run "rejects_download_rate_limit_below_the_api_minimum" {
+  command = plan
+
+  variables {
+    average_download_rate_limit_in_bits_per_sec = 102399
+  }
+
+  expect_failures = [var.average_download_rate_limit_in_bits_per_sec]
+}
+
+run "rejects_upload_rate_limit_below_the_api_minimum" {
+  command = plan
+
+  variables {
+    average_upload_rate_limit_in_bits_per_sec = 51199
+  }
+
+  expect_failures = [var.average_upload_rate_limit_in_bits_per_sec]
+}
+
 run "rejects_invalid_cloudwatch_retention_in_days" {
   command = plan
 

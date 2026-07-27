@@ -61,9 +61,9 @@
 module "storage_gateway" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/storage_gateway"
 
-  gateway_name     = "corp-file-gateway"
-  gateway_type     = "FILE_FSX_SMB"
-  gateway_timezone = "GMT-7:00"
+  gateway_name       = "corp-file-gateway"
+  gateway_type       = "FILE_FSX_SMB"
+  gateway_timezone   = "GMT-7:00"
   gateway_ip_address = "10.20.30.40" # or supply activation_key instead
 
   smb_active_directory_settings = {
@@ -320,6 +320,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **The bucket is external by design.** This module does not create the S3 bucket — pass its ARN as each share's `location_arn`. Manage the bucket (versioning, encryption, lifecycle, replication, deletion protection) with the `s3/bucket` module so the data store's lifecycle is decoupled from the gateway.
 - **IAM role by composition, with BYO override.** When `create_iam_role = true` (and `role_arn` is unset), the module composes `../iam/role` + `../iam/policy` to create a role the file shares assume, scoped to `s3_bucket_arns`. Supply `role_arn` to bring your own role instead; it becomes the default for any share that does not set its own `role_arn`.
 - **Logging by composition.** When `create_cloudwatch_log_group = true`, a log group is created via the `../cloudwatch/log_group` child module and, when `create_kms_key = true`, encrypted with a key from the `../kms` child module. Supply `cloudwatch_log_group_arn` to use an existing log group instead.
+- **Bandwidth rate limits do not apply to file gateways.** `average_download_rate_limit_in_bits_per_sec` and `average_upload_rate_limit_in_bits_per_sec` are exposed because the provider resource accepts them, but AWS supports [`UpdateBandwidthRateLimit`](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_UpdateBandwidthRateLimit.html) only for stored volume, cached volume, and tape gateways. S3 file gateways instead require a bandwidth rate limit *schedule* (`UpdateBandwidthRateLimitSchedule`), which this resource does not expose, and FSx file gateways support neither. Setting either variable has no effect on the gateway types this module manages.
 - **Credentials in state.** `activation_key`, `smb_guest_password`, the AD service-account password, and each association password are persisted in Terraform state in plaintext. Supply them from a secret store and protect state access accordingly.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -368,8 +369,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_activation_key"></a> [activation\_key](#input\_activation\_key) | (Optional) Gateway activation key obtained after deploying and powering on the on-premises gateway VM. Mutually exclusive with gateway\_ip\_address; supply exactly one. Use this when you have already retrieved the activation key out of band. Stored in Terraform state in plaintext. | `string` | `null` | no |
-| <a name="input_average_download_rate_limit_in_bits_per_sec"></a> [average\_download\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_download\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average download bandwidth rate limit in bits per second. Defaults to null (no limit). | `number` | `null` | no |
-| <a name="input_average_upload_rate_limit_in_bits_per_sec"></a> [average\_upload\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_upload\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average upload bandwidth rate limit in bits per second. Defaults to null (no limit). | `number` | `null` | no |
+| <a name="input_average_download_rate_limit_in_bits_per_sec"></a> [average\_download\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_download\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average download bandwidth rate limit in bits per second. Minimum 102400. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit). | `number` | `null` | no |
+| <a name="input_average_upload_rate_limit_in_bits_per_sec"></a> [average\_upload\_rate\_limit\_in\_bits\_per\_sec](#input\_average\_upload\_rate\_limit\_in\_bits\_per\_sec) | (Optional) The average upload bandwidth rate limit in bits per second. Minimum 51200. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit). | `number` | `null` | no |
 | <a name="input_cache_disk_ids"></a> [cache\_disk\_ids](#input\_cache\_disk\_ids) | (Optional) Set of local disk IDs (as reported by the gateway, e.g. via the aws\_storagegateway\_local\_disk data source) to allocate as cache storage. Defaults to an empty set. Note: cache allocation is write-once (the API cannot remove or resize cache), and some hypervisors re-identify allocated disks by UUID, causing permanent replacement diffs - for externally activated gateways (gateway\_arn), prefer allocating cache out of band with add-cache and leaving this empty. | `set(string)` | `[]` | no |
 | <a name="input_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#input\_cloudwatch\_log\_group\_arn) | (Optional) ARN of an existing CloudWatch log group to use for gateway health logs. When null and create\_cloudwatch\_log\_group is true, this module creates one. Defaults to null. | `string` | `null` | no |
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional) Name prefix for the CloudWatch log group created for gateway health logs. Defaults to /aws/storagegateway/. | `string` | `"/aws/storagegateway/"` | no |
