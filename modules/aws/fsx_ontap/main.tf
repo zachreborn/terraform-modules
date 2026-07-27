@@ -26,6 +26,25 @@ locals {
   # created by this module or a caller-supplied key.
   kms_key_arn = var.create_kms_key ? module.kms_key[0].arn : var.kms_key_id
 
+  # Per-HA-pair throughput values AWS accepts, by deployment type. Gen 2 types run on
+  # different hardware than Gen 1, so the sets do not overlap.
+  valid_throughput_per_ha_pair = {
+    SINGLE_AZ_1 = [128, 256, 512, 1024, 2048, 4096]
+    MULTI_AZ_1  = [128, 256, 512, 1024, 2048, 4096]
+    SINGLE_AZ_2 = [1536, 3072, 6144]
+    MULTI_AZ_2  = [384, 768, 1536, 3072, 6144]
+  }
+
+  # ha_pairs defaults to 1 at the service when unset.
+  ha_pairs = coalesce(var.ha_pairs, 1)
+
+  # throughput_capacity is a total across all HA pairs, so it is the per-pair value that has
+  # to be valid. Guarded against a non-integer result so the contains() check below is
+  # meaningful rather than accidentally true.
+  throughput_per_ha_pair = var.throughput_capacity_per_ha_pair != null ? var.throughput_capacity_per_ha_pair : (
+    var.throughput_capacity != null && var.throughput_capacity % local.ha_pairs == 0 ? var.throughput_capacity / local.ha_pairs : null
+  )
+
   # SVM IDs keyed by their logical name. Volumes resolve their parent SVM through
   # this map with lookup() rather than indexing the resource directly, so a
   # mistyped storage_virtual_machine_key surfaces as the volume's precondition
@@ -122,6 +141,25 @@ resource "aws_fsx_ontap_file_system" "this" {
     precondition {
       condition     = contains(var.subnet_ids, var.preferred_subnet_id)
       error_message = "preferred_subnet_id must be one of the subnets listed in subnet_ids."
+    }
+
+    # AWS returns a 400 when ha_pairs is greater than 1 on any deployment type other than
+    # SINGLE_AZ_2, which is the only type built from multiple HA pairs.
+    precondition {
+      condition     = local.ha_pairs == 1 || var.deployment_type == "SINGLE_AZ_2"
+      error_message = "ha_pairs may only exceed 1 when deployment_type is SINGLE_AZ_2; ${var.deployment_type} file systems run on a single HA pair."
+    }
+
+    precondition {
+      condition     = local.throughput_per_ha_pair != null
+      error_message = "throughput_capacity (${coalesce(var.throughput_capacity, 0)}) must divide evenly by ha_pairs (${local.ha_pairs}); AWS validates the resulting per-HA-pair throughput, not the total."
+    }
+
+    # Null-safe: every precondition is evaluated even when an earlier one fails, and the
+    # divide-evenly check above leaves throughput_per_ha_pair null in that case.
+    precondition {
+      condition     = local.throughput_per_ha_pair == null ? true : contains(local.valid_throughput_per_ha_pair[var.deployment_type], local.throughput_per_ha_pair)
+      error_message = "Throughput per HA pair resolves to ${coalesce(local.throughput_per_ha_pair, 0)} MB/s, which ${var.deployment_type} does not support. Valid values are ${join(", ", [for v in local.valid_throughput_per_ha_pair[var.deployment_type] : tostring(v)])} MB/s."
     }
   }
 }

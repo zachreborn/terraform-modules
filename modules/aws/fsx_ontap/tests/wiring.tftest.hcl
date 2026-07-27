@@ -45,7 +45,7 @@ variables {
   name                = "corp-ontap"
   storage_capacity    = 2048
   deployment_type     = "MULTI_AZ_1"
-  subnet_ids          = ["subnet-0a1b2c3d", "subnet-4e5f6g7h"]
+  subnet_ids          = ["subnet-0a1b2c3d", "subnet-4e5f6a7b"]
   preferred_subnet_id = "subnet-0a1b2c3d"
   route_table_ids     = ["rtb-0123456789abcdef0"]
   throughput_capacity = 512

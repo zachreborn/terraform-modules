@@ -45,7 +45,7 @@ variables {
   name                = "corp-ontap"
   storage_capacity    = 2048
   deployment_type     = "MULTI_AZ_1"
-  subnet_ids          = ["subnet-0a1b2c3d", "subnet-4e5f6g7h"]
+  subnet_ids          = ["subnet-0a1b2c3d", "subnet-4e5f6a7b"]
   preferred_subnet_id = "subnet-0a1b2c3d"
   route_table_ids     = ["rtb-0123456789abcdef0"]
   throughput_capacity = 512
@@ -86,18 +86,28 @@ run "single_az_baseline_plans_successfully" {
   }
 }
 
+# SINGLE_AZ_2 is the only deployment type built from more than one HA pair, and its valid
+# per-HA-pair throughput values are 1536, 3072, and 6144. The earlier version of this case
+# paired ha_pairs = 2 with MULTI_AZ_1 and 512 MB/s, which AWS rejects with a 400.
 run "throughput_per_ha_pair_plans_successfully" {
   command = plan
 
   variables {
+    deployment_type                 = "SINGLE_AZ_2"
+    subnet_ids                      = ["subnet-0a1b2c3d"]
     throughput_capacity             = null
-    throughput_capacity_per_ha_pair = 512
+    throughput_capacity_per_ha_pair = 1536
     ha_pairs                        = 2
   }
 
   assert {
     condition     = aws_fsx_ontap_file_system.this.id != null
     error_message = "Expected a file system using throughput_capacity_per_ha_pair to plan successfully."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_file_system.this.throughput_capacity_per_ha_pair == 1536
+    error_message = "Expected the per-HA-pair throughput to flow to the file system."
   }
 }
 
