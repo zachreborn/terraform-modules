@@ -14,7 +14,7 @@ variable "activation_key" {
 
 variable "average_download_rate_limit_in_bits_per_sec" {
   type        = number
-  description = "(Optional) The average download bandwidth rate limit in bits per second. Minimum 102400. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit)."
+  description = "(Optional) The average download bandwidth rate limit in bits per second. Minimum 102400. NO-OP on the gateway types this module manages: AWS honors UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways; S3 file gateways instead require a bandwidth rate limit schedule (UpdateBandwidthRateLimitSchedule), which the provider does not expose on this resource, and FSx file gateways support neither. Retained for provider completeness and so the input exists if rate limiting is extended to file gateways later. Acting on it would require further work in this module, not just setting this variable. Defaults to null (no limit)."
   default     = null
   validation {
     condition     = var.average_download_rate_limit_in_bits_per_sec == null ? true : var.average_download_rate_limit_in_bits_per_sec >= 102400
@@ -24,7 +24,7 @@ variable "average_download_rate_limit_in_bits_per_sec" {
 
 variable "average_upload_rate_limit_in_bits_per_sec" {
   type        = number
-  description = "(Optional) The average upload bandwidth rate limit in bits per second. Minimum 51200. Has no effect on the gateway types this module manages: AWS supports UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways, and S3 file gateways instead require a bandwidth rate limit schedule, which this resource does not expose. Exposed for provider completeness only. Defaults to null (no limit)."
+  description = "(Optional) The average upload bandwidth rate limit in bits per second. Minimum 51200. NO-OP on the gateway types this module manages: AWS honors UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways; S3 file gateways instead require a bandwidth rate limit schedule (UpdateBandwidthRateLimitSchedule), which the provider does not expose on this resource, and FSx file gateways support neither. Retained for provider completeness and so the input exists if rate limiting is extended to file gateways later. Acting on it would require further work in this module, not just setting this variable. Defaults to null (no limit)."
   default     = null
   validation {
     condition     = var.average_upload_rate_limit_in_bits_per_sec == null ? true : var.average_upload_rate_limit_in_bits_per_sec >= 51200

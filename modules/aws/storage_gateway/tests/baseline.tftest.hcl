@@ -538,10 +538,12 @@ run "maintenance_window_and_domain_join_flow_to_the_gateway" {
   }
 }
 
-# Asserts Terraform-level pass-through only. AWS honors bandwidth rate limits solely on
-# stored volume, cached volume, and tape gateways, none of which this module manages, so
-# these two arguments have no effect on a live file gateway. See their variable
-# descriptions in variables.tf.
+# Asserts Terraform-level pass-through only, NOT that throttling takes effect. AWS honors
+# bandwidth rate limits solely on stored volume, cached volume, and tape gateways, none of
+# which this module manages, so these two arguments are a no-op on a live file gateway. They
+# are kept as reserved surface; see their variable descriptions in variables.tf and the
+# design note in README.md. If the provider ever exposes a bandwidth rate limit schedule for
+# file gateways, this case should be replaced by one that asserts real throttling behavior.
 run "bandwidth_limits_and_vpc_endpoint_flow_to_the_gateway" {
   command = plan
 
