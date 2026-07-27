@@ -136,7 +136,44 @@ module "inline_permissions" {
 }
 ```
 
+### Same-Apply Example (group_ids)
+
+By default, `groups` resolves group display names via an `aws_identitystore_group` data source lookup at plan time, which requires the group to already exist in AWS Identity Store. If you create a new group and want to assign a permission set to it in the *same* apply (e.g. from the `modules/aws/identity_center` module's own group resources), pass the group's ID directly through `group_ids` instead -- this skips the data source lookup entirely for that group, so a same-apply plan no longer fails with `ResourceNotFoundException: GROUP not found`. This is the fix for [issue #456](https://github.com/zachreborn/terraform-modules/issues/456); it is also how `modules/aws/identity_center`'s own `permission_sets` composition wires newly-created groups in automatically via its `group_keys` input -- see that module's README for the fully composed pattern.
+
+```hcl
+resource "aws_identitystore_group" "readonly" {
+  display_name      = "readonly"
+  identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+}
+
+module "readonly_permissions" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
+
+  name        = "ReadOnlyAccess"
+  description = "Read-only permissions for a group created in this same apply"
+
+  # group_ids bypasses the name-based lookup entirely -- readonly's ID is known only after apply,
+  # but that's fine since it flows through as a resource-argument value, not a for_each key.
+  # Note: use group_id (the Identity Store principal ID), not id (aws_identitystore_group's own
+  # resource id is the composite "<identity_store_id>/<group_id>", which is not a valid principal ID).
+  group_ids = {
+    readonly = aws_identitystore_group.readonly.group_id
+  }
+
+  managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  target_accounts = [
+    module.organization.id
+  ]
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+## Notes / Design Decisions
+
+### `assignment_ids` output key changed (breaking)
+
+`assignment_ids` is now keyed by `"<group_name>_<account_id>"` (the same key already used by the underlying `aws_ssoadmin_account_assignment` `for_each`) instead of `"<principal_id>_<account_id>"` (parsed from the assignment resource's own runtime `id`). The old derivation re-parsed a value from the resource's `id` to build a map key, which could collide if two assignments ever resolved to the same parsed key, and made it impossible to write native `tofu test` coverage of multiple assignments together, since mocked resource attributes are not unique per instance. If you index this output by the old `<principal_id>_<account_id>` shape, update those references to the new `<group_name>_<account_id>` key before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -146,14 +183,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -163,7 +200,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ssoadmin_account_assignment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment) | resource |
 | [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
 | [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
@@ -175,12 +212,13 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_customer_managed_iam_policy_name"></a> [customer\_managed\_iam\_policy\_name](#input\_customer\_managed\_iam\_policy\_name) | (Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer\_managed\_policy\_attachment. | `string` | `null` | no |
 | <a name="input_customer_managed_iam_policy_path"></a> [customer\_managed\_iam\_policy\_path](#input\_customer\_managed\_iam\_policy\_path) | (Optional) The path of the customer managed IAM policy to attach to a Permission Set. | `string` | `"/"` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the permission set. | `string` | `null` | no |
 | <a name="input_group_attribute_path"></a> [group\_attribute\_path](#input\_group\_attribute\_path) | (Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO. | `string` | `"DisplayName"` | no |
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The group names to lookup and associate with the permission set. | `set(string)` | n/a | yes |
+| <a name="input_group_ids"></a> [group\_ids](#input\_group\_ids) | (Optional) Pre-resolved Identity Store group IDs keyed by the same logical group name used in<br/>groups / the assignment keys. Use this to bypass the name-based data source lookup entirely --<br/>e.g. pass a group's id output so a new group and its permission set can be created in one apply.<br/>Values may be known-only-after-apply. If the same key appears in both groups and group\_ids,<br/>group\_ids wins and the data source lookup is skipped for it. | `map(string)` | `{}` | no |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Optional) Group display names to resolve via the aws\_identitystore\_group data source and<br/>associate with the permission set. Names supplied here must already exist in AWS Identity Store<br/>at plan time. Keys present in group\_ids are resolved from that map instead and skipped here. | `set(string)` | `[]` | no |
 | <a name="input_inline_policy"></a> [inline\_policy](#input\_inline\_policy) | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline\_policy. | `string` | `null` | no |
 | <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) List of ARNs of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `list(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the permission set. | `string` | n/a | yes |
@@ -192,10 +230,12 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
-| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration |
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group\_name>\_<account\_id>' -- the same key already used by the underlying for\_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id). |
 | <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
+| <a name="output_group_attribute_path"></a> [group\_attribute\_path](#output\_group\_attribute\_path) | The group attribute path actually used for the name-based aws\_identitystore\_group data source lookup (var.group\_attribute\_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly). |
+| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group\_ids input. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->
 

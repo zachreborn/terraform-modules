@@ -35,6 +35,11 @@ locals {
       ]
     ]) : entry.key => entry
   }
+
+  # Group display name -> Identity Store group ID, sourced directly from this module's own group
+  # resources (a resource attribute, never a data source). Used to resolve permission_sets[*].group_keys
+  # without ever triggering the eager aws_identitystore_group lookup that causes issue #456.
+  group_id_map = { for k, v in aws_identitystore_group.this : k => v.group_id }
 }
 
 ###########################
@@ -90,4 +95,40 @@ resource "aws_identitystore_group_membership" "this" {
   group_id          = aws_identitystore_group.this[each.value.group].group_id
   identity_store_id = local.identity_store_id
   member_id         = aws_identitystore_user.this[each.value.member].user_id
+}
+
+###########################
+# Permission Sets
+###########################
+
+module "permission_sets" {
+  source = "./permission_set"
+
+  for_each = var.permission_sets
+
+  name                 = coalesce(each.value.name, each.key)
+  description          = each.value.description
+  groups               = toset(coalesce(each.value.groups, []))
+  group_attribute_path = each.value.group_attribute_path
+  # Caller-supplied group_ids (for externally managed groups) is merged with group_keys resolved
+  # against this module's own groups -- group_keys wins on key overlap. A group_keys entry not found
+  # in var.groups is filtered out here (rather than passed through as a null value) so the
+  # permission_set submodule's own generic group_ids validation never trips on it -- the
+  # permission_set_resolved_group_keys output (outputs.tf) carries a precondition that is solely
+  # responsible for surfacing that misconfiguration, with one clear, actionable message.
+  group_ids = merge(
+    coalesce(each.value.group_ids, {}),
+    {
+      for k in coalesce(each.value.group_keys, []) : k => local.group_id_map[k]
+      if contains(keys(local.group_id_map), k)
+    }
+  )
+  customer_managed_iam_policy_name = each.value.customer_managed_iam_policy_name
+  customer_managed_iam_policy_path = each.value.customer_managed_iam_policy_path
+  inline_policy                    = each.value.inline_policy
+  managed_policy_arns              = each.value.managed_policy_arns
+  relay_state                      = each.value.relay_state
+  session_duration                 = each.value.session_duration
+  target_accounts                  = each.value.target_accounts
+  tags                             = each.value.tags
 }

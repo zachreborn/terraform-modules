@@ -14,9 +14,9 @@ output "id" {
 }
 
 output "assignment_ids" {
-  description = "Map of the IDs of the permission set assignments and their corresponding configuration"
+  description = "Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group_name>_<account_id>' -- the same key already used by the underlying for_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id)."
   value = {
-    for assignment in aws_ssoadmin_account_assignment.this : "${split(",", assignment.id)[0]}_${split(",", assignment.id)[2]}" => {
+    for key, assignment in aws_ssoadmin_account_assignment.this : key => {
       principal_id       = split(",", assignment.id)[0]
       principal_type     = split(",", assignment.id)[1]
       target_id          = split(",", assignment.id)[2]
@@ -25,4 +25,14 @@ output "assignment_ids" {
       instance_arn       = split(",", assignment.id)[5]
     }
   }
+}
+
+output "group_ids" {
+  description = "Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group_ids input."
+  value       = local.group_id_map
+}
+
+output "group_attribute_path" {
+  description = "The group attribute path actually used for the name-based aws_identitystore_group data source lookup (var.group_attribute_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly)."
+  value       = var.group_attribute_path
 }
