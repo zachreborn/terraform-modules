@@ -1,20 +1,28 @@
 mock_provider "aws" {
   mock_resource "aws_fsx_ontap_file_system" {
     defaults = {
-      id  = "fs-0123456789abcdef0"
-      arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+      id                    = "fs-0123456789abcdef0"
+      arn                   = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+      dns_name              = "management.fs-0123456789abcdef0.fsx.us-east-1.amazonaws.com"
+      network_interface_ids = ["eni-0123456789abcdef0", "eni-0fedcba9876543210"]
+      owner_id              = "123456789012"
+      vpc_id                = "vpc-0123456789abcdef0"
     }
   }
 
   mock_resource "aws_fsx_ontap_storage_virtual_machine" {
     defaults = {
-      id = "svm-0123456789abcdef0"
+      id   = "svm-0123456789abcdef0"
+      arn  = "arn:aws:fsx:us-east-1:123456789012:storage-virtual-machine/fs-0123456789abcdef0/svm-0123456789abcdef0"
+      uuid = "abcd1234-abcd-1234-abcd-abcd1234abcd"
     }
   }
 
   mock_resource "aws_fsx_ontap_volume" {
     defaults = {
-      id = "fsvol-0123456789abcdef0"
+      id   = "fsvol-0123456789abcdef0"
+      arn  = "arn:aws:fsx:us-east-1:123456789012:volume/fs-0123456789abcdef0/fsvol-0123456789abcdef0"
+      uuid = "efab5678-efab-5678-efab-efab5678efab"
     }
   }
 
@@ -59,6 +67,47 @@ run "generated_kms_key_flows_to_file_system_outputs" {
   assert {
     condition     = output.kms_key_id == module.kms_key[0].key_id
     error_message = "Expected the module's kms_key_id output to reuse the kms child module's key_id output."
+  }
+}
+
+run "file_system_attributes_flow_to_outputs" {
+  command = plan
+
+  assert {
+    condition     = output.id == "fs-0123456789abcdef0"
+    error_message = "Expected the id output to expose the file system's id attribute."
+  }
+
+  assert {
+    condition     = output.arn == "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+    error_message = "Expected the arn output to expose the file system's arn attribute."
+  }
+
+  assert {
+    condition     = output.dns_name == "management.fs-0123456789abcdef0.fsx.us-east-1.amazonaws.com"
+    error_message = "Expected the dns_name output to expose the file system's dns_name attribute."
+  }
+
+  assert {
+    condition     = output.owner_id == "123456789012"
+    error_message = "Expected the owner_id output to expose the file system's owner_id attribute."
+  }
+
+  assert {
+    condition     = output.vpc_id == "vpc-0123456789abcdef0"
+    error_message = "Expected the vpc_id output to expose the file system's vpc_id attribute."
+  }
+
+  # Compared via join rather than a tuple literal: the provider types this attribute as
+  # list(string), which never compares equal to an HCL tuple even with identical elements.
+  assert {
+    condition     = join(",", output.network_interface_ids) == "eni-0123456789abcdef0,eni-0fedcba9876543210"
+    error_message = "Expected the network_interface_ids output to expose the file system's network_interface_ids attribute."
+  }
+
+  assert {
+    condition     = output.endpoints == aws_fsx_ontap_file_system.this.endpoints
+    error_message = "Expected the endpoints output to expose the file system's endpoints attribute."
   }
 }
 
@@ -128,6 +177,53 @@ run "volumes_are_wired_to_their_storage_virtual_machine" {
   assert {
     condition     = contains(keys(output.volume_ids), "data")
     error_message = "Expected the volume_ids output to contain the data volume."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_volume.this["data"].storage_virtual_machine_id == aws_fsx_ontap_storage_virtual_machine.this["smb"].id
+    error_message = "Expected the data volume to be wired to the smb SVM's id via storage_virtual_machine_key."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_storage_virtual_machine.this["smb"].file_system_id == aws_fsx_ontap_file_system.this.id
+    error_message = "Expected the smb SVM to be wired to the file system created by this module."
+  }
+
+  # Every SVM and volume output is keyed by the caller's logical name and carries the
+  # corresponding resource attribute, so callers can index them by that same name.
+  assert {
+    condition     = output.storage_virtual_machine_arns["smb"] == aws_fsx_ontap_storage_virtual_machine.this["smb"].arn
+    error_message = "Expected the storage_virtual_machine_arns output to expose the smb SVM's arn."
+  }
+
+  assert {
+    condition     = output.storage_virtual_machine_uuids["smb"] == aws_fsx_ontap_storage_virtual_machine.this["smb"].uuid
+    error_message = "Expected the storage_virtual_machine_uuids output to expose the smb SVM's uuid."
+  }
+
+  assert {
+    condition     = output.storage_virtual_machine_endpoints["smb"] == aws_fsx_ontap_storage_virtual_machine.this["smb"].endpoints
+    error_message = "Expected the storage_virtual_machine_endpoints output to expose the smb SVM's endpoints."
+  }
+
+  assert {
+    condition     = output.storage_virtual_machine_ids["smb"] == aws_fsx_ontap_storage_virtual_machine.this["smb"].id
+    error_message = "Expected the storage_virtual_machine_ids output to expose the smb SVM's id."
+  }
+
+  assert {
+    condition     = output.volume_arns["data"] == aws_fsx_ontap_volume.this["data"].arn
+    error_message = "Expected the volume_arns output to expose the data volume's arn."
+  }
+
+  assert {
+    condition     = output.volume_uuids["data"] == aws_fsx_ontap_volume.this["data"].uuid
+    error_message = "Expected the volume_uuids output to expose the data volume's uuid."
+  }
+
+  assert {
+    condition     = output.volume_ids["data"] == aws_fsx_ontap_volume.this["data"].id
+    error_message = "Expected the volume_ids output to expose the data volume's id."
   }
 }
 
