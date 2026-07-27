@@ -78,6 +78,37 @@ variable "maintenance_start_time" {
   })
   description = "(Optional) Weekly or monthly maintenance window. hour_of_day (0-23) and minute_of_hour (0-59); day_of_week (0-6, Sunday=0) for a weekly window or day_of_month (1-28) for a monthly window. Defaults to null, which lets the gateway pick a window."
   default     = null
+
+  # The provider types day_of_week and day_of_month as strings and enforces no ranges, so
+  # out-of-range values are only rejected by the UpdateMaintenanceStartTime API at apply
+  # time. These validations surface the documented ranges during plan instead.
+  validation {
+    condition     = var.maintenance_start_time == null ? true : var.maintenance_start_time.hour_of_day >= 0 && var.maintenance_start_time.hour_of_day <= 23
+    error_message = "The value of maintenance_start_time.hour_of_day must be between 0 and 23."
+  }
+
+  validation {
+    condition     = try(var.maintenance_start_time.minute_of_hour, null) == null ? true : var.maintenance_start_time.minute_of_hour >= 0 && var.maintenance_start_time.minute_of_hour <= 59
+    error_message = "The value of maintenance_start_time.minute_of_hour must be between 0 and 59."
+  }
+
+  validation {
+    condition     = try(var.maintenance_start_time.day_of_week, null) == null ? true : var.maintenance_start_time.day_of_week >= 0 && var.maintenance_start_time.day_of_week <= 6
+    error_message = "The value of maintenance_start_time.day_of_week must be between 0 (Sunday) and 6 (Saturday)."
+  }
+
+  # AWS cannot schedule maintenance on days 29-31, so the monthly window stops at 28.
+  validation {
+    condition     = try(var.maintenance_start_time.day_of_month, null) == null ? true : var.maintenance_start_time.day_of_month >= 1 && var.maintenance_start_time.day_of_month <= 28
+    error_message = "The value of maintenance_start_time.day_of_month must be between 1 and 28; AWS cannot start maintenance on days 29 through 31."
+  }
+
+  # A window is either weekly or monthly, never both. The provider forwards both fields
+  # without complaint, so catch the contradiction here rather than letting the API pick.
+  validation {
+    condition     = var.maintenance_start_time == null ? true : !(try(var.maintenance_start_time.day_of_week, null) != null && try(var.maintenance_start_time.day_of_month, null) != null)
+    error_message = "Set only one of maintenance_start_time.day_of_week (weekly window) or maintenance_start_time.day_of_month (monthly window), not both."
+  }
 }
 
 variable "smb_active_directory_settings" {
