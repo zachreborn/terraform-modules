@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.0.0](https://github.com/zachreborn/terraform-modules/compare/v12.5.0...v13.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center:** `permission_set`'s `assignment_ids` output is now keyed by `<group_name>_<account_id>` instead of `<principal_id>_<account_id>`.
+
+### Features
+
+* **identity_center:** compose permission_set as a child module ([#458](https://github.com/zachreborn/terraform-modules/issues/458)) ([9c77d02](https://github.com/zachreborn/terraform-modules/commit/9c77d024ecc0c21914358be3edd89932bbc345bd))
+
 ## [12.5.0](https://github.com/zachreborn/terraform-modules/compare/v12.4.0...v12.5.0) (2026-07-26)
 
 
