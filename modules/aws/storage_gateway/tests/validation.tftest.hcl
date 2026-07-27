@@ -445,6 +445,307 @@ run "rejects_maintenance_window_with_both_day_of_week_and_day_of_month" {
 }
 
 ###########################
+# ARN formats
+###########################
+
+run "rejects_malformed_role_arn" {
+  command = plan
+
+  variables {
+    role_arn = "arn:aws:iam:us-east-1:123456789012:role/byo-gateway-role"
+  }
+
+  expect_failures = [var.role_arn]
+}
+
+run "rejects_non_role_iam_arn" {
+  command = plan
+
+  variables {
+    role_arn = "arn:aws:iam::123456789012:user/somebody"
+  }
+
+  expect_failures = [var.role_arn]
+}
+
+run "rejects_bucket_arn_with_a_prefix" {
+  command = plan
+
+  variables {
+    create_iam_role = true
+    s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data/finance"]
+  }
+
+  expect_failures = [var.s3_bucket_arns]
+}
+
+run "rejects_bucket_arn_with_a_trailing_slash" {
+  command = plan
+
+  variables {
+    create_iam_role = true
+    s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data/"]
+  }
+
+  expect_failures = [var.s3_bucket_arns]
+}
+
+run "rejects_malformed_cloudwatch_log_group_arn" {
+  command = plan
+
+  variables {
+    cloudwatch_log_group_arn = "arn:aws:logs:us-east-1:123456789012:/existing/gateway-logs"
+  }
+
+  expect_failures = [var.cloudwatch_log_group_arn]
+}
+
+run "rejects_kms_alias_for_the_log_group_key" {
+  command = plan
+
+  variables {
+    create_kms_key = false
+    kms_key_id     = "alias/my-log-key"
+  }
+
+  expect_failures = [var.kms_key_id]
+}
+
+run "rejects_malformed_file_system_association_location_arn" {
+  command = plan
+
+  variables {
+    file_system_associations = {
+      corp = {
+        location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-nothex!"
+        username     = "svc_gateway"
+        password     = "testpass" # gitleaks:allow
+      }
+    }
+  }
+
+  expect_failures = [var.file_system_associations]
+}
+
+run "rejects_malformed_share_role_arn" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/finance"
+        role_arn     = "not-an-arn"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+# A share may be encrypted with an alias rather than a key ID, but it must be given in ARN
+# form: the provider runs its own ARN check and rejects a bare alias/<name> even though the
+# CreateSMBFileShare API accepts one.
+run "accepts_a_kms_alias_arn_on_a_share" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn  = "arn:aws:s3:::corp-gateway-data/finance"
+        kms_encrypted = true
+        kms_key_arn   = "arn:aws:kms:us-east-1:123456789012:alias/corp-gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_storagegateway_smb_file_share.this["finance"].kms_key_arn == "arn:aws:kms:us-east-1:123456789012:alias/corp-gateway"
+    error_message = "Expected a KMS alias ARN to be accepted as a share's kms_key_arn."
+  }
+}
+
+run "rejects_a_bare_kms_alias_on_a_share" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn  = "arn:aws:s3:::corp-gateway-data/finance"
+        kms_encrypted = true
+        kms_key_arn   = "alias/corp-gateway"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+# The CreateSMBFileShare API documents an access point ARN as a valid LocationARN alongside a
+# bucket ARN, so the validation must not assume the bucket form.
+run "accepts_an_access_point_arn_as_a_share_location" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn    = "arn:aws:s3:us-east-1:123456789012:accesspoint/corp-ap/finance/"
+        file_share_name = "finance"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_storagegateway_smb_file_share.this["finance"].location_arn == "arn:aws:s3:us-east-1:123456789012:accesspoint/corp-ap/finance/"
+    error_message = "Expected an S3 access point ARN to be accepted as a share location_arn."
+  }
+}
+
+# The API accepts a bare access point alias, but the provider's own ARN check rejects it, so
+# the module rejects it during plan with an actionable message rather than at apply.
+run "rejects_an_access_point_alias_as_a_share_location" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn    = "test-ap-ab123cdef4gehijklmn5opqrstuvuse1a-s3alias"
+        file_share_name = "finance"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+###########################
+# Other formats
+###########################
+
+run "rejects_object_acl_that_is_not_a_canned_acl" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/finance"
+        object_acl   = "bucket-owner-write"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+run "accepts_aws_exec_read_object_acl" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.0.0/16"]
+        object_acl   = "aws-exec-read"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_storagegateway_nfs_file_share.this["archive"].object_acl == "aws-exec-read"
+    error_message = "Expected aws-exec-read to be an accepted object_acl."
+  }
+}
+
+run "rejects_nfs_client_list_entry_that_is_not_an_ip_or_cidr" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["clients.corp.example.com"]
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+run "accepts_a_single_ipv4_address_in_the_nfs_client_list" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.1.25"]
+      }
+    }
+  }
+
+  assert {
+    condition     = contains(aws_storagegateway_nfs_file_share.this["archive"].client_list, "10.0.1.25")
+    error_message = "Expected a bare IPv4 address to be accepted in client_list."
+  }
+}
+
+run "rejects_malformed_gateway_ip_address" {
+  command = plan
+
+  variables {
+    gateway_ip_address = "10.0.1.256"
+  }
+
+  expect_failures = [var.gateway_ip_address]
+}
+
+run "rejects_single_character_gateway_name" {
+  command = plan
+
+  variables {
+    gateway_name = "g"
+  }
+
+  expect_failures = [var.gateway_name]
+}
+
+run "rejects_activation_key_longer_than_the_api_maximum" {
+  command = plan
+
+  variables {
+    gateway_ip_address = null
+    activation_key     = "ABCDE-12345-FGHIJ-67890-KLMNO-PQRST-UVWXY-Z1234-56789"
+  }
+
+  expect_failures = [var.activation_key]
+}
+
+###########################
 # Resource preconditions
 ###########################
 

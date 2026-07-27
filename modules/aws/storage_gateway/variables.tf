@@ -6,6 +6,10 @@ variable "activation_key" {
   type        = string
   description = "(Optional) Gateway activation key obtained after deploying and powering on the on-premises gateway VM. Mutually exclusive with gateway_ip_address; supply exactly one. Use this when you have already retrieved the activation key out of band. Stored in Terraform state in plaintext."
   default     = null
+  validation {
+    condition     = var.activation_key == null ? true : length(var.activation_key) >= 1 && length(var.activation_key) <= 50
+    error_message = "The value of activation_key must be null or between 1 and 50 characters, per the ActivateGateway API."
+  }
 }
 
 variable "average_download_rate_limit_in_bits_per_sec" {
@@ -32,6 +36,10 @@ variable "cloudwatch_log_group_arn" {
   type        = string
   description = "(Optional) ARN of an existing CloudWatch log group to use for gateway health logs. When null and create_cloudwatch_log_group is true, this module creates one. Defaults to null."
   default     = null
+  validation {
+    condition     = var.cloudwatch_log_group_arn == null ? true : can(regex("^arn:[^:]+:logs:[^:]+:[0-9]{12}:log-group:.+$", var.cloudwatch_log_group_arn))
+    error_message = "cloudwatch_log_group_arn must be null or a valid CloudWatch Logs log group ARN (arn:<partition>:logs:<region>:<account>:log-group:<name>)."
+  }
 }
 
 variable "gateway_arn" {
@@ -48,11 +56,19 @@ variable "gateway_ip_address" {
   type        = string
   description = "(Optional) IP address of the gateway VM, used to fetch the activation key automatically during apply. Mutually exclusive with activation_key; supply exactly one. The VM must be reachable from where Terraform runs. Defaults to null."
   default     = null
+  validation {
+    condition     = var.gateway_ip_address == null ? true : can(regex("^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$", var.gateway_ip_address))
+    error_message = "gateway_ip_address must be null or a valid IPv4 address."
+  }
 }
 
 variable "gateway_name" {
   type        = string
-  description = "(Required) Name of the gateway. Also used as the Name tag."
+  description = "(Required) Name of the gateway. Also used as the Name tag. Between 2 and 255 characters."
+  validation {
+    condition     = length(var.gateway_name) >= 2 && length(var.gateway_name) <= 255
+    error_message = "The value of gateway_name must be between 2 and 255 characters, per the ActivateGateway API."
+  }
 }
 
 variable "gateway_timezone" {
@@ -190,6 +206,22 @@ variable "file_system_associations" {
   }))
   description = "(Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system; password is stored in state in plaintext), optional audit_destination_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache_attributes block with cache_stale_timeout_in_seconds. Requires gateway_type FILE_FSX_SMB. Defaults to {}."
   default     = {}
+
+  # Unlike a file share's location_arn (which may also be an access point ARN or an access
+  # point alias), an association's location_arn is always an FSx file system ARN.
+  validation {
+    condition = alltrue([
+      for association in var.file_system_associations : can(regex("^arn:[^:]+:fsx:[^:]+:[0-9]{12}:file-system/fs-[0-9a-f]+$", association.location_arn))
+    ])
+    error_message = "Each file_system_associations location_arn must be an FSx file system ARN (arn:<partition>:fsx:<region>:<account>:file-system/fs-XXXXXXXX)."
+  }
+
+  validation {
+    condition = alltrue([
+      for association in var.file_system_associations : association.audit_destination_arn == null ? true : can(regex("^arn:[^:]+:logs:[^:]+:[0-9]{12}:log-group:.+$", association.audit_destination_arn))
+    ])
+    error_message = "Each file_system_associations audit_destination_arn must be null or a CloudWatch Logs log group ARN."
+  }
 }
 
 ###########################
@@ -233,6 +265,16 @@ variable "s3_smb_file_shares" {
     error_message = "Each s3_smb_file_shares authentication must be null, ActiveDirectory, or GuestAccess."
   }
 
+  # A bucket ARN (optionally with a /prefix) or an S3 access point ARN. The CreateSMBFileShare
+  # API also accepts a bare access point alias, but the provider runs its own ARN check on this
+  # argument and rejects any non-ARN value, so an alias cannot be used here.
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : can(regex("^arn:[^:]+:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", share.location_arn)) || can(regex("^arn:[^:]+:s3:[^:]+:[0-9]{12}:accesspoint/[^/]+(/.*)?$", share.location_arn))
+    ])
+    error_message = "Each s3_smb_file_shares location_arn must be an S3 bucket ARN (arn:aws:s3:::my-bucket, optionally with a /prefix) or an S3 access point ARN. The provider rejects bare access point aliases."
+  }
+
   validation {
     condition = alltrue([
       for share in var.s3_smb_file_shares : share.case_sensitivity == null ? true : contains(["ClientSpecified", "CaseSensitive"], share.case_sensitivity)
@@ -245,6 +287,30 @@ variable "s3_smb_file_shares" {
       for share in var.s3_smb_file_shares : share.default_storage_class == null ? true : contains(["S3_STANDARD", "S3_INTELLIGENT_TIERING", "S3_STANDARD_IA", "S3_ONEZONE_IA"], share.default_storage_class)
     ])
     error_message = "Each s3_smb_file_shares default_storage_class must be null, S3_STANDARD, S3_INTELLIGENT_TIERING, S3_STANDARD_IA, or S3_ONEZONE_IA."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.object_acl == null ? true : contains(["private", "public-read", "public-read-write", "authenticated-read", "bucket-owner-read", "bucket-owner-full-control", "aws-exec-read"], share.object_acl)
+    ])
+    error_message = "Each s3_smb_file_shares object_acl must be null or one of the canned ACLs Storage Gateway accepts: private, public-read, public-read-write, authenticated-read, bucket-owner-read, bucket-owner-full-control, aws-exec-read."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.role_arn == null ? true : can(regex("^arn:[^:]+:iam::[0-9]{12}:role/.+$", share.role_arn))
+    ])
+    error_message = "Each s3_smb_file_shares role_arn must be null or a valid IAM role ARN (arn:<partition>:iam::<account>:role/<name>)."
+  }
+
+  # The CreateSMBFileShare API also accepts a bare alias/<name>, but the provider runs its own
+  # ARN check on this argument and rejects anything that is not a full ARN, so an alias must be
+  # given in ARN form.
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.kms_key_arn == null ? true : can(regex("^arn:[^:]+:kms:[^:]+:[0-9]{12}:(key|alias)/.+$", share.kms_key_arn))
+    ])
+    error_message = "Each s3_smb_file_shares kms_key_arn must be null or a KMS key or alias ARN. The provider rejects a bare alias/<name>, so give an alias as arn:<partition>:kms:<region>:<account>:alias/<name>."
   }
 }
 
@@ -285,11 +351,50 @@ variable "s3_nfs_file_shares" {
     error_message = "Each s3_nfs_file_shares squash must be null, RootSquash, NoSquash, or AllSquash."
   }
 
+  # See the equivalent validation on s3_smb_file_shares for why aliases are not accepted.
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : can(regex("^arn:[^:]+:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", share.location_arn)) || can(regex("^arn:[^:]+:s3:[^:]+:[0-9]{12}:accesspoint/[^/]+(/.*)?$", share.location_arn))
+    ])
+    error_message = "Each s3_nfs_file_shares location_arn must be an S3 bucket ARN (arn:aws:s3:::my-bucket, optionally with a /prefix) or an S3 access point ARN. The provider rejects bare access point aliases."
+  }
+
   validation {
     condition = alltrue([
       for share in var.s3_nfs_file_shares : share.default_storage_class == null ? true : contains(["S3_STANDARD", "S3_INTELLIGENT_TIERING", "S3_STANDARD_IA", "S3_ONEZONE_IA"], share.default_storage_class)
     ])
     error_message = "Each s3_nfs_file_shares default_storage_class must be null, S3_STANDARD, S3_INTELLIGENT_TIERING, S3_STANDARD_IA, or S3_ONEZONE_IA."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.object_acl == null ? true : contains(["private", "public-read", "public-read-write", "authenticated-read", "bucket-owner-read", "bucket-owner-full-control", "aws-exec-read"], share.object_acl)
+    ])
+    error_message = "Each s3_nfs_file_shares object_acl must be null or one of the canned ACLs Storage Gateway accepts: private, public-read, public-read-write, authenticated-read, bucket-owner-read, bucket-owner-full-control, aws-exec-read."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.role_arn == null ? true : can(regex("^arn:[^:]+:iam::[0-9]{12}:role/.+$", share.role_arn))
+    ])
+    error_message = "Each s3_nfs_file_shares role_arn must be null or a valid IAM role ARN (arn:<partition>:iam::<account>:role/<name>)."
+  }
+
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.kms_key_arn == null ? true : can(regex("^arn:[^:]+:kms:[^:]+:[0-9]{12}:(key|alias)/.+$", share.kms_key_arn))
+    ])
+    error_message = "Each s3_nfs_file_shares kms_key_arn must be null or a KMS key or alias ARN. The provider rejects a bare alias/<name>, so give an alias as arn:<partition>:kms:<region>:<account>:alias/<name>."
+  }
+
+  # client_list entries are CIDR blocks or bare IPv4 addresses that may mount the share.
+  validation {
+    condition = alltrue(flatten([
+      for share in var.s3_nfs_file_shares : [
+        for client in share.client_list : can(cidrnetmask(client)) || can(regex("^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$", client))
+      ]
+    ]))
+    error_message = "Each s3_nfs_file_shares client_list entry must be an IPv4 CIDR block (e.g. 10.0.0.0/16) or a single IPv4 address."
   }
 }
 
@@ -307,12 +412,26 @@ variable "role_arn" {
   type        = string
   description = "(Optional) ARN of an existing IAM role for S3 file shares to assume when accessing their backing buckets. Takes precedence over create_iam_role. Used as the default role_arn for any share that does not set its own. Defaults to null."
   default     = null
+  validation {
+    condition     = var.role_arn == null ? true : can(regex("^arn:[^:]+:iam::[0-9]{12}:role/.+$", var.role_arn))
+    error_message = "role_arn must be null or a valid IAM role ARN (arn:<partition>:iam::<account>:role/<name>). Note IAM ARNs carry no region."
+  }
 }
 
 variable "s3_bucket_arns" {
   type        = list(string)
   description = "(Optional) Bucket ARNs the module-created IAM role is granted read/write access to. Required (non-empty) when create_iam_role is true; ignored otherwise. Grant the bucket root ARN (e.g. arn:aws:s3:::my-bucket) even when shares use a prefix. Defaults to []."
   default     = []
+
+  # Deliberately stricter than each share's location_arn: this list builds the IAM policy's
+  # Resource elements, where the module appends "/*" for object-level actions, so each entry
+  # must be a bucket root ARN with no trailing slash or prefix.
+  validation {
+    condition = alltrue([
+      for arn in var.s3_bucket_arns : can(regex("^arn:[^:]+:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$", arn))
+    ])
+    error_message = "Each s3_bucket_arns entry must be a bucket root ARN with no prefix or trailing slash (e.g. arn:aws:s3:::my-bucket)."
+  }
 }
 
 variable "iam_name_prefix" {
@@ -361,6 +480,12 @@ variable "kms_key_id" {
   type        = string
   description = "(Optional) ARN of an existing KMS key used to encrypt the CloudWatch log group. Used only when create_kms_key is false. Defaults to null (the log group is unencrypted by a customer-managed key)."
   default     = null
+
+  # CloudWatch Logs requires a key ARN here; an alias or bare key ID is rejected by the API.
+  validation {
+    condition     = var.kms_key_id == null ? true : can(regex("^arn:[^:]+:kms:[^:]+:[0-9]{12}:key/.+$", var.kms_key_id))
+    error_message = "kms_key_id must be null or a KMS key ARN (arn:<partition>:kms:<region>:<account>:key/<key-id>). CloudWatch Logs does not accept an alias or a bare key ID."
+  }
 }
 
 variable "kms_key_description" {
