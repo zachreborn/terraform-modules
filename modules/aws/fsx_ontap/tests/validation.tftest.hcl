@@ -312,6 +312,36 @@ run "rejects_single_az_with_two_subnets" {
   expect_failures = [aws_fsx_ontap_file_system.this]
 }
 
+run "rejects_preferred_subnet_id_outside_subnet_ids" {
+  command = plan
+  variables {
+    preferred_subnet_id = "subnet-99999999"
+  }
+  expect_failures = [aws_fsx_ontap_file_system.this]
+}
+
+# A mistyped storage_virtual_machine_key must surface as this precondition rather than a
+# bare "Invalid index" raised while the volume's arguments are evaluated, which is why
+# main.tf resolves the SVM through lookup() instead of indexing the resource directly.
+run "rejects_volume_referencing_an_unknown_storage_virtual_machine_key" {
+  command = plan
+  variables {
+    storage_virtual_machines = {
+      smb = {
+        svm_admin_password = "testpass" # gitleaks:allow
+      }
+    }
+    volumes = {
+      data = {
+        storage_virtual_machine_key = "typo"
+        junction_path               = "/data"
+        size_in_megabytes           = 1024
+      }
+    }
+  }
+  expect_failures = [aws_fsx_ontap_volume.this]
+}
+
 # Do NOT delete, skip, or loosen an expect_failures case (or any assertion above) just to
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # validation {} / precondition {} block in variables.tf / main.tf has a bug, or the test's

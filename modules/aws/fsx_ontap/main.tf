@@ -25,6 +25,12 @@ locals {
   # Resolve the KMS key ARN used to encrypt the file system: either the key
   # created by this module or a caller-supplied key.
   kms_key_arn = var.create_kms_key ? module.kms_key[0].arn : var.kms_key_id
+
+  # SVM IDs keyed by their logical name. Volumes resolve their parent SVM through
+  # this map with lookup() rather than indexing the resource directly, so a
+  # mistyped storage_virtual_machine_key surfaces as the volume's precondition
+  # error instead of a bare "Invalid index" while the argument is evaluated.
+  storage_virtual_machine_ids = { for key, svm in aws_fsx_ontap_storage_virtual_machine.this : key => svm.id }
 }
 
 ###########################
@@ -112,6 +118,11 @@ resource "aws_fsx_ontap_file_system" "this" {
       condition     = startswith(var.deployment_type, "MULTI_AZ") || length(var.subnet_ids) == 1
       error_message = "SINGLE_AZ deployment types require exactly one subnet_id."
     }
+
+    precondition {
+      condition     = contains(var.subnet_ids, var.preferred_subnet_id)
+      error_message = "preferred_subnet_id must be one of the subnets listed in subnet_ids."
+    }
   }
 }
 
@@ -163,7 +174,7 @@ resource "aws_fsx_ontap_volume" "this" {
   skip_final_backup                    = each.value.skip_final_backup
   snapshot_policy                      = each.value.snapshot_policy
   storage_efficiency_enabled           = each.value.storage_efficiency_enabled
-  storage_virtual_machine_id           = aws_fsx_ontap_storage_virtual_machine.this[each.value.storage_virtual_machine_key].id
+  storage_virtual_machine_id           = lookup(local.storage_virtual_machine_ids, each.value.storage_virtual_machine_key, null)
   tags                                 = merge(tomap({ Name = coalesce(each.value.name, each.key) }), var.tags)
   volume_style                         = each.value.volume_style
   volume_type                          = each.value.volume_type
@@ -228,6 +239,13 @@ resource "aws_fsx_ontap_volume" "this" {
     content {
       cooling_period = tiering_policy.value.cooling_period
       name           = tiering_policy.value.name
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = contains(keys(var.storage_virtual_machines), each.value.storage_virtual_machine_key)
+      error_message = "Volume \"${each.key}\" sets storage_virtual_machine_key to \"${each.value.storage_virtual_machine_key}\", which is not a key in storage_virtual_machines."
     }
   }
 }
