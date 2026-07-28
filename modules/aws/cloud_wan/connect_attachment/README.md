@@ -154,14 +154,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -171,13 +171,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_networkmanager_connect_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_connect_attachments"></a> [connect\_attachments](#input\_connect\_attachments) | (Required) Map of connect attachments to create. The key is the attachment name. | <pre>map(object({<br/>    transport_attachment_id = string<br/>    edge_location           = string<br/>    protocol                = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_core_network_id"></a> [core\_network\_id](#input\_core\_network\_id) | (Required) The ID of the core network for the connect attachment. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to the resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
@@ -185,7 +185,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_attachment_arns"></a> [attachment\_arns](#output\_attachment\_arns) | Map of connect attachment ARNs |
 | <a name="output_attachment_ids"></a> [attachment\_ids](#output\_attachment\_ids) | Map of connect attachment IDs |
 | <a name="output_attachment_states"></a> [attachment\_states](#output\_attachment\_states) | Map of connect attachment states |

@@ -59,7 +59,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
 
 ## Modules
 

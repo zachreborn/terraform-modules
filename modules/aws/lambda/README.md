@@ -88,14 +88,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -105,13 +105,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_lambda_function.lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Description of what your Lambda Function does. | `string` | n/a | yes |
 | <a name="input_filename"></a> [filename](#input\_filename) | (Optional) The path to the function's deployment package within the local filesystem. If defined, The s3\_-prefixed options cannot be used. | `string` | n/a | yes |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | (Required) A unique name for your Lambda Function. | `string` | n/a | yes |
@@ -126,7 +126,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | n/a |
 <!-- END_TF_DOCS -->
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## [14.0.0](https://github.com/zachreborn/terraform-modules/compare/v13.0.0...v14.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **scalr:** compose root module from environment/workspace/vcs_provider/provider_configuration submodules ([#462](https://github.com/zachreborn/terraform-modules/issues/462))
+
+### Features
+
+* **scalr:** compose root module from environment/workspace/vcs_provider/provider_configuration submodules ([#462](https://github.com/zachreborn/terraform-modules/issues/462)) ([4573302](https://github.com/zachreborn/terraform-modules/commit/45733023994f48de2c88ef0aa65d72c861d3c4e9))
+
 ## [13.0.0](https://github.com/zachreborn/terraform-modules/compare/v12.5.0...v13.0.0) (2026-07-27)
 
 

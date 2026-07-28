@@ -213,7 +213,65 @@ See `example_azurerm_provider_config.yaml`, `example_google_provider_config.yaml
 
 ### Outputs
 
-The module exposes `environment_ids`, `workspace_ids`, `vcs_provider_ids`, `provider_configuration_ids` (AWS), `provider_configuration_azurerm_ids`, `provider_configuration_google_ids`, and `provider_configuration_custom_ids` -- maps of the YAML-defined name (or, for `workspace_ids`, the `<environment>.<workspace>` composite key) to the corresponding Scalr resource ID.
+The module exposes `environment_ids`, `workspace_ids`, `vcs_provider_ids`, and `provider_configuration_ids` (a single unified map of **every** provider configuration name across all AWS, AzureRM, Google, and custom types), plus the per-type subset maps `provider_configuration_aws_ids`, `provider_configuration_azurerm_ids`, `provider_configuration_google_ids`, and `provider_configuration_custom_ids` -- maps of the YAML-defined name (or, for `workspace_ids`, the `<environment>.<workspace>` composite key) to the corresponding Scalr resource ID.
+
+### Upgrading from the inline-resource version (state migration)
+
+Earlier versions of this module declared every Scalr resource directly in the root module (`scalr_environment.this`, `scalr_workspace.this`, `scalr_vcs_provider.this`, and the four `scalr_provider_configuration.<type>` resources). Starting with the release that composes the `./environment`, `./workspace`, `./vcs_provider`, and `./provider_configuration` submodules, those resources now live inside the child modules, which **changes their state addresses**.
+
+This is a breaking change for existing state: if you upgrade without migrating, your next `plan` will show every environment, workspace, VCS provider, and provider configuration being **destroyed and recreated**. Instance keys are unchanged (the YAML-defined names, and the `<environment>.<workspace>` composite key for workspaces), so every object maps 1:1 to its new address. This module intentionally does **not** ship `moved` blocks; migrate your own state once, using either option below, before applying the upgrade. Replace `module.scalr` with the name you gave this module in your configuration.
+
+**Option A — `moved` blocks (recommended; no state surgery).** Add these to your own configuration, run `apply` once, then delete them:
+
+```hcl
+moved {
+  from = module.scalr.scalr_environment.this
+  to   = module.scalr.module.environment.scalr_environment.this
+}
+moved {
+  from = module.scalr.scalr_workspace.this
+  to   = module.scalr.module.workspace.scalr_workspace.this
+}
+moved {
+  from = module.scalr.scalr_vcs_provider.this
+  to   = module.scalr.module.vcs_provider.scalr_vcs_provider.this
+}
+# The four provider_configuration.<type> resources all collapse into the single
+# scalr_provider_configuration.this map inside ./provider_configuration. This is safe only because
+# provider-configuration names are unique across the aws/azurerm/google/custom YAML files (already
+# required by the module). Include only the block(s) for the provider types you actually use.
+moved {
+  from = module.scalr.scalr_provider_configuration.aws
+  to   = module.scalr.module.provider_configuration.scalr_provider_configuration.this
+}
+moved {
+  from = module.scalr.scalr_provider_configuration.azurerm
+  to   = module.scalr.module.provider_configuration.scalr_provider_configuration.this
+}
+moved {
+  from = module.scalr.scalr_provider_configuration.google
+  to   = module.scalr.module.provider_configuration.scalr_provider_configuration.this
+}
+moved {
+  from = module.scalr.scalr_provider_configuration.custom
+  to   = module.scalr.module.provider_configuration.scalr_provider_configuration.this
+}
+```
+
+**Option B — `tofu state mv` (imperative).** Run once per existing instance key. For example, for an environment named `production` and a workspace `production.app`:
+
+```sh
+tofu state mv 'module.scalr.scalr_environment.this["production"]' \
+  'module.scalr.module.environment.scalr_environment.this["production"]'
+
+tofu state mv 'module.scalr.scalr_workspace.this["production.app"]' \
+  'module.scalr.module.workspace.scalr_workspace.this["production.app"]'
+
+tofu state mv 'module.scalr.scalr_provider_configuration.aws["aws_provider_1"]' \
+  'module.scalr.module.provider_configuration.scalr_provider_configuration.this["aws_provider_1"]'
+```
+
+After migrating, `plan` should report **no changes** for the relocated resources. Two other behavior changes in this release to be aware of: `provider_configuration_ids` is now a single map spanning **all** provider types (use `provider_configuration_aws_ids` for the previous AWS-only behavior), and the module now requires OpenTofu >= 1.9 / Terraform >= 1.9 (`required_version = ">= 1.9.0"`; the `>= 1.9.0` floor is driven by the composed `provider_configuration` submodule's cross-variable validation, which OpenTofu supports from 1.9.0 onward).
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -226,30 +284,28 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 | <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_environment"></a> [environment](#module\_environment) | ./environment | n/a |
+| <a name="module_provider_configuration"></a> [provider\_configuration](#module\_provider\_configuration) | ./provider_configuration | n/a |
+| <a name="module_vcs_provider"></a> [vcs\_provider](#module\_vcs\_provider) | ./vcs_provider | n/a |
+| <a name="module_workspace"></a> [workspace](#module\_workspace) | ./workspace | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
-| scalr_environment.this | resource |
-| scalr_provider_configuration.aws | resource |
-| scalr_provider_configuration.azurerm | resource |
-| scalr_provider_configuration.custom | resource |
-| scalr_provider_configuration.google | resource |
-| scalr_vcs_provider.this | resource |
-| scalr_workspace.this | resource |
 | scalr_current_account.account | data source |
 
 ## Inputs
@@ -322,7 +378,7 @@ No modules.
 | <a name="input_workspace_auto_apply"></a> [workspace\_auto\_apply](#input\_workspace\_auto\_apply) | Whether to automatically apply runs when they are queued. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_workspace_auto_queue_runs"></a> [workspace\_auto\_queue\_runs](#input\_workspace\_auto\_queue\_runs) | Whether to automatically queue runs when a workspace's configuration changes. Can be overridden per workspace in the YAML file. Valid values are 'skip\_first', 'always', 'never', and 'on\_create\_only'. | `string` | `"always"` | no |
 | <a name="input_workspace_deletion_protection_enabled"></a> [workspace\_deletion\_protection\_enabled](#input\_workspace\_deletion\_protection\_enabled) | Whether to enable deletion protection for the workspace. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
-| <a name="input_workspace_execution_mode"></a> [workspace\_execution\_mode](#input\_workspace\_execution\_mode) | The execution mode for the workspace. Can be overridden per workspace in the YAML file. Valid values are 'remote' and 'local'. | `string` | `"remote"` | no |
+| <a name="input_workspace_execution_mode"></a> [workspace\_execution\_mode](#input\_workspace\_execution\_mode) | The execution mode for the workspace. Can be overridden per workspace in the YAML file. Valid values are 'remote' and 'local'. Left unset (null) by default so the provider default (remote) applies and the deprecated per-workspace `operations` field can still select the mode. | `string` | `null` | no |
 | <a name="input_workspace_force_latest_run"></a> [workspace\_force\_latest\_run](#input\_workspace\_force\_latest\_run) | Whether to force a new run to be created for the workspace. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_workspace_iac_platform"></a> [workspace\_iac\_platform](#input\_workspace\_iac\_platform) | The Infrastructure as Code platform for the workspace. Valid values are 'terraform' or 'opentofu'. | `string` | `"opentofu"` | no |
 | <a name="input_workspace_module_version_id"></a> [workspace\_module\_version\_id](#input\_workspace\_module\_version\_id) | The Module Version ID to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'modver-<RANDOM STRING>'. This cannot be set when using a vcs repository as the source for the workspace. | `string` | `null` | no |
@@ -341,12 +397,15 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_environment_ids"></a> [environment\_ids](#output\_environment\_ids) | Map of Environment names to their Scalr Environment IDs. |
+| <a name="output_provider_configuration_aws_ids"></a> [provider\_configuration\_aws\_ids](#output\_provider\_configuration\_aws\_ids) | Map of AWS Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_azurerm_ids"></a> [provider\_configuration\_azurerm\_ids](#output\_provider\_configuration\_azurerm\_ids) | Map of AzureRM Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_custom"></a> [provider\_configuration\_custom](#output\_provider\_configuration\_custom) | Resolved, non-sensitive custom provider configuration blocks (provider\_name + arguments) passed to the ./provider\_configuration submodule, keyed by configuration name. Exposed to verify the root's YAML-to-submodule wiring for custom providers. Sensitive custom argument values are routed separately via provider\_configuration\_secrets and are never included here (sensitive arguments carry value = null with sensitive = true). |
 | <a name="output_provider_configuration_custom_ids"></a> [provider\_configuration\_custom\_ids](#output\_provider\_configuration\_custom\_ids) | Map of custom Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_google_ids"></a> [provider\_configuration\_google\_ids](#output\_provider\_configuration\_google\_ids) | Map of Google Provider Configuration names to their Scalr Provider Configuration IDs. |
-| <a name="output_provider_configuration_ids"></a> [provider\_configuration\_ids](#output\_provider\_configuration\_ids) | Map of AWS Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_ids"></a> [provider\_configuration\_ids](#output\_provider\_configuration\_ids) | Map of every Provider Configuration name (across all AWS, AzureRM, Google, and custom types) to its Scalr Provider Configuration ID. |
 | <a name="output_vcs_provider_ids"></a> [vcs\_provider\_ids](#output\_vcs\_provider\_ids) | Map of VCS Provider names to their Scalr VCS Provider IDs. |
 | <a name="output_workspace_ids"></a> [workspace\_ids](#output\_workspace\_ids) | Map of Workspace composite keys ('<environment>.<workspace>') to their Scalr Workspace IDs. |
+| <a name="output_workspace_provider_configurations"></a> [workspace\_provider\_configurations](#output\_workspace\_provider\_configurations) | Map of each workspace's resolved provider\_configuration list (id + alias) as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's name-to-ID resolution and ordering. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

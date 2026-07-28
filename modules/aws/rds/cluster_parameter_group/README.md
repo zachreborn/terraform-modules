@@ -89,14 +89,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -106,13 +106,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_rds_cluster_parameter_group.group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster_parameter_group) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the DB parameter group. Defaults to 'Managed by Terraform'. | `string` | n/a | yes |
 | <a name="input_family"></a> [family](#input\_family) | (Required) The family of the DB parameter group. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | (Optional, Forces new resource) The name of the DB parameter group. If omitted, Terraform will assign a random, unique name. | `string` | n/a | yes |
@@ -121,7 +121,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the db parameter group. |
 | <a name="output_id"></a> [id](#output\_id) | The db parameter group name. |
 <!-- END_TF_DOCS -->

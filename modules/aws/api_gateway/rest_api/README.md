@@ -217,15 +217,15 @@ _For more comprehensive examples including request validation, authorizers, and 
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.14.1 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -234,7 +234,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_api_gateway_api_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_api_key) | resource |
 | [aws_api_gateway_authorizer.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_authorizer) | resource |
 | [aws_api_gateway_base_path_mapping.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_base_path_mapping) | resource |
@@ -262,7 +262,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_log_settings"></a> [access\_log\_settings](#input\_access\_log\_settings) | Access log settings for the stage | <pre>object({<br/>    destination_arn = string # ARN of CloudWatch Logs log group or Kinesis Data Firehose delivery stream<br/>    format          = string # Log format<br/>  })</pre> | `null` | no |
 | <a name="input_api_key_source"></a> [api\_key\_source](#input\_api\_key\_source) | The source of the API key for metering requests. Valid values are 'HEADER' and 'AUTHORIZER'. | `string` | `"HEADER"` | no |
 | <a name="input_api_keys"></a> [api\_keys](#input\_api\_keys) | A map of API keys | <pre>map(object({<br/>    name        = string<br/>    description = optional(string)<br/>    enabled     = optional(bool, true)<br/>    value       = optional(string) # Custom key value, generated if not provided<br/>  }))</pre> | `{}` | no |
@@ -314,7 +314,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_api_id"></a> [api\_id](#output\_api\_id) | ID of the REST API |
 | <a name="output_api_key_values"></a> [api\_key\_values](#output\_api\_key\_values) | API key values (sensitive) - only use when necessary |
 | <a name="output_api_keys"></a> [api\_keys](#output\_api\_keys) | API Gateway API keys created |

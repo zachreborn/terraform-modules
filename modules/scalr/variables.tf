@@ -450,12 +450,12 @@ variable "workspace_deletion_protection_enabled" {
 }
 
 variable "workspace_execution_mode" {
-  description = "The execution mode for the workspace. Can be overridden per workspace in the YAML file. Valid values are 'remote' and 'local'."
+  description = "The execution mode for the workspace. Can be overridden per workspace in the YAML file. Valid values are 'remote' and 'local'. Left unset (null) by default so the provider default (remote) applies and the deprecated per-workspace `operations` field can still select the mode."
   type        = string
-  default     = "remote"
+  default     = null
   validation {
-    condition     = contains(["remote", "local"], var.workspace_execution_mode)
-    error_message = "The execution_mode must be one of 'remote' or 'local'."
+    condition     = var.workspace_execution_mode == null || contains(["remote", "local"], var.workspace_execution_mode)
+    error_message = "The execution_mode must be null, 'remote', or 'local'."
   }
 }
 

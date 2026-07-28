@@ -195,26 +195,26 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_ram"></a> [ram](#module\_ram) | ../ram | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_vpc_ipam.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_ipam) | resource |
 | [aws_vpc_ipam_organization_admin_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_ipam_organization_admin_account) | resource |
 | [aws_vpc_ipam_pool.level_0](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_ipam_pool) | resource |
@@ -227,7 +227,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_private_scopes"></a> [additional\_private\_scopes](#input\_additional\_private\_scopes) | (Optional) Additional private scopes to create, keyed by logical name. Reference a scope from a pool via its key in `scope_key`. | <pre>map(object({<br/>    description = optional(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_allocations"></a> [allocations](#input\_allocations) | (Optional) Reserved/static CIDR allocations from a pool, keyed by logical name. Fields:<br/>  - pool\_key:         Logical key of the pool to allocate from (required).<br/>  - cidr:             A specific CIDR to allocate. Conflicts with netmask\_length.<br/>  - netmask\_length:   Netmask length to allocate from the pool. Conflicts with cidr.<br/>  - description:      Description of the allocation.<br/>  - disallowed\_cidrs: CIDRs that should not be allocated from when using netmask\_length.<br/>  - tags:             Tags for the allocation. | <pre>map(object({<br/>    pool_key         = string<br/>    cidr             = optional(string)<br/>    netmask_length   = optional(number)<br/>    description      = optional(string)<br/>    disallowed_cidrs = optional(list(string))<br/>    tags             = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_cascade"></a> [cascade](#input\_cascade) | (Optional) Enables you to quickly delete an IPAM, its scopes, pools, and any allocations in the pools. Defaults to false to protect against accidental deletion. | `bool` | `false` | no |
@@ -249,7 +249,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_allocation_cidrs"></a> [allocation\_cidrs](#output\_allocation\_cidrs) | Map of allocation key to the allocated CIDR block, suitable for feeding into the VPC module. |
 | <a name="output_ipam_arn"></a> [ipam\_arn](#output\_ipam\_arn) | The ARN of the IPAM. |
 | <a name="output_ipam_id"></a> [ipam\_id](#output\_ipam\_id) | The ID of the IPAM. |

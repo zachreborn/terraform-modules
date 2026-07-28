@@ -4,7 +4,7 @@
 
 Manages [`scalr_provider_configuration`](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/provider_configuration) resources with full multi-cloud coverage (`aws`, `azurerm`, `google`, `scalr`, and `custom` provider blocks), and composes the companion [`./default`](./default) submodule to optionally manage [`scalr_provider_configuration_default`](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/provider_configuration_default) resources.
 
-This is a standalone superset of the AWS-only, inline `scalr_provider_configuration` resource in the `modules/scalr` root module. It does not replace or modify the root module; use this submodule directly when you need AzureRM, Google, Scalr, or custom provider configurations, or full AWS argument coverage (e.g. `credentials_source`, `default_tags`).
+This submodule implements the `scalr_provider_configuration` resource for the `modules/scalr` root module, which composes it to manage all of its AWS, AzureRM, Google, and custom provider configurations. You can also call it directly when you need those provider configurations, or full AWS argument coverage (e.g. `credentials_source`, `default_tags`), outside the root module's YAML interface.
 
 ### Prerequisites
 
@@ -96,7 +96,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
 
 ## Modules
 

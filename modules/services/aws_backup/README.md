@@ -85,27 +85,27 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 4.0.0 |
 | <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 4.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_organization_backup_plan"></a> [organization\_backup\_plan](#module\_organization\_backup\_plan) | ../../aws/organizations/delegated_resource_policy | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_backup_plan.ec2_plan](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_plan) | resource |
 | [aws_backup_plan.plan](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_plan) | resource |
 | [aws_backup_selection.all_ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection) | resource |
@@ -136,7 +136,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_backup_plan_completion_window"></a> [backup\_plan\_completion\_window](#input\_backup\_plan\_completion\_window) | (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error. Default is set to 24 hours. | `number` | `1440` | no |
 | <a name="input_backup_plan_name"></a> [backup\_plan\_name](#input\_backup\_plan\_name) | (Required) The display name of a backup plan. | `string` | `"prod_backups"` | no |
 | <a name="input_backup_plan_start_window"></a> [backup\_plan\_start\_window](#input\_backup\_plan\_start\_window) | (Optional) The amount of time in minutes before beginning a backup. | `number` | `60` | no |
@@ -174,7 +174,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_organization_backup_plan_policy_id"></a> [organization\_backup\_plan\_policy\_id](#output\_organization\_backup\_plan\_policy\_id) | The id of the AWS Organizations resource policy created for the organization backup plan, or null when enable\_organization\_backup is false. |
 | <a name="output_vault_daily_arn"></a> [vault\_daily\_arn](#output\_vault\_daily\_arn) | n/a |
 | <a name="output_vault_disaster_recovery_arn"></a> [vault\_disaster\_recovery\_arn](#output\_vault\_disaster\_recovery\_arn) | n/a |

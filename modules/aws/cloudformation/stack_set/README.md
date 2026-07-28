@@ -121,15 +121,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -138,14 +138,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudformation_stack_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_set) | resource |
 | [aws_cloudformation_stack_set_instance.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack_set_instance) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_account_filter_type"></a> [account\_filter\_type](#input\_account\_filter\_type) | Limit deployment targets to a specific type of account. Valid values are: DIFFERENCE, INTERSECTION, NONE, UNION. | `string` | `null` | no |
 | <a name="input_accounts"></a> [accounts](#input\_accounts) | A list of AWS account IDs to deploy the stack set instances to. | `list(string)` | `null` | no |
 | <a name="input_accounts_url"></a> [accounts\_url](#input\_accounts\_url) | S3 URL of a file which contains a list of accounts to deploy the stack set instances to. | `string` | `null` | no |
@@ -175,7 +175,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the stack set. |
 | <a name="output_id"></a> [id](#output\_id) | The unique ID of the stack set. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the stack set. |

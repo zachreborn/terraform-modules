@@ -112,7 +112,7 @@ output "web_client_token" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_datadog"></a> [datadog](#provider\_datadog) | 4.13.0 |
+| <a name="provider_datadog"></a> [datadog](#provider\_datadog) | >= 4.0.0 |
 
 ## Modules
 
