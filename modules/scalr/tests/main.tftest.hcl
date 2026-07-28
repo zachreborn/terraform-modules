@@ -434,6 +434,30 @@ run "rejects_duplicate_provider_configuration_name_across_types" {
   expect_failures = [data.scalr_current_account.account]
 }
 
+run "aws_access_key_module_wide_fallback_plans_successfully" {
+  command = plan
+
+  variables {
+    aws_provider_config = <<-YAML
+      ---
+      aws_provider_1:
+        credentials_type: "access_keys"
+    YAML
+
+    # No per-entry access_key override -- this exercises the module-wide fallback
+    # (try(cfg.access_key, var.aws_access_key)) with the sensitive aws_access_key variable, which
+    # must not taint local.provider_configurations in a way that breaks the composed
+    # ./provider_configuration submodule's for_each (for_each only requires known, non-sensitive
+    # map KEYS -- a sensitive leaf attribute value does not prevent it).
+    aws_access_key = "my-module-wide-fallback-key"
+  }
+
+  assert {
+    condition     = output.provider_configuration_ids["aws_provider_1"] != null
+    error_message = "A provider configuration relying solely on the module-wide aws_access_key fallback should plan successfully."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails, treat it
 # as a signal that the module code has a bug and fix the root cause in main.tf / variables.tf /
 # outputs.tf, then re-run `tofu test` until it passes for the right reason.
