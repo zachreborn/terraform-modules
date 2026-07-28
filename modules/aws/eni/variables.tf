@@ -14,7 +14,7 @@ variable "private_ips" {
 }
 
 variable "private_ips_count" {
-  description = "(Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default."
+  description = "(Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assigned to an ENI by default."
   type        = number
   default     = 1
 }

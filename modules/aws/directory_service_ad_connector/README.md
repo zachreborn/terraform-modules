@@ -96,14 +96,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -113,13 +113,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_directory_service_directory.connector](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/directory_service_directory) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `"default_value"` | no |
 | <a name="input_customer_dns_ips"></a> [customer\_dns\_ips](#input\_customer\_dns\_ips) | (Required) The DNS IP addresses of the domain to connect to. | `list(string)` | `[]` | no |
 | <a name="input_customer_username"></a> [customer\_username](#input\_customer\_username) | (Required) The username corresponding to the password provided. | `string` | n/a | yes |
@@ -135,7 +135,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 

@@ -294,26 +294,26 @@ Before using this module, ensure the following are in place:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_domain_join_log_group"></a> [domain\_join\_log\_group](#module\_domain\_join\_log\_group) | ../cloudwatch/log_group | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_role_policy.cloudwatch_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.secret_read](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_ssm_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association) | resource |
@@ -322,7 +322,7 @@ Before using this module, ensure the following are in place:
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_apply_only_at_cron_interval"></a> [apply\_only\_at\_cron\_interval](#input\_apply\_only\_at\_cron\_interval) | (Optional) When true, the association runs only at the cron interval specified by schedule\_expression and not on instance start. | `bool` | `false` | no |
 | <a name="input_association_name"></a> [association\_name](#input\_association\_name) | (Optional) Descriptive name for the SSM association. If null, AWS assigns a default name. | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_class"></a> [cloudwatch\_log\_group\_class](#input\_cloudwatch\_log\_group\_class) | (Optional) Log class of the CloudWatch Logs log group. Valid values are STANDARD and INFREQUENT\_ACCESS. | `string` | `"STANDARD"` | no |
@@ -358,7 +358,7 @@ Before using this module, ensure the following are in place:
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | ARN of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Logs log group, or null if CloudWatch logging is disabled. |
 | <a name="output_iam_cloudwatch_logs_policy_name"></a> [iam\_cloudwatch\_logs\_policy\_name](#output\_iam\_cloudwatch\_logs\_policy\_name) | Name of the inline IAM policy granting CloudWatch Logs write access, or null when CloudWatch logging is disabled. |

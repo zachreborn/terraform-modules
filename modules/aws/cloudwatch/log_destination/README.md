@@ -114,14 +114,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -131,14 +131,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_log_destination.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_destination) | resource |
 | [aws_cloudwatch_log_destination_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_destination_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_destination_name"></a> [destination\_name](#input\_destination\_name) | (Required) A name for the log destination. | `string` | n/a | yes |
 | <a name="input_destination_policy_access_policy"></a> [destination\_policy\_access\_policy](#input\_destination\_policy\_access\_policy) | (Optional) The cross-account access policy document (JSON) attached to the log destination via aws\_cloudwatch\_log\_destination\_policy. When null, no destination policy resource is created. | `string` | `null` | no |
 | <a name="input_destination_policy_force_update"></a> [destination\_policy\_force\_update](#input\_destination\_policy\_force\_update) | (Optional) Whether to update the access policy on the log destination even if the destination is currently in use. Maps to the force\_update argument of aws\_cloudwatch\_log\_destination\_policy. | `bool` | `null` | no |
@@ -149,7 +149,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_access_policy"></a> [access\_policy](#output\_access\_policy) | The effective cross-account access policy attached to the log destination, or null when no destination policy is created. |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the CloudWatch log destination. Used by other accounts as the destination\_arn of a subscription filter. |
 | <a name="output_id"></a> [id](#output\_id) | The ID (name) of the CloudWatch log destination. |
