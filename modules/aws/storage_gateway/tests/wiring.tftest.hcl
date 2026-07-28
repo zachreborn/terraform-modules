@@ -3,8 +3,10 @@ mock_provider "aws" {
     defaults = {
       id               = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12A3456B"
       arn              = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12A3456B"
+      gateway_id       = "sgw-12A3456B"
       ec2_instance_id  = "i-0123456789abcdef0"
       host_environment = "VMWARE"
+      endpoint_type    = "STANDARD"
     }
   }
 
@@ -258,9 +260,16 @@ run "created_gateway_attributes_flow_to_outputs" {
     error_message = "Expected the gateway_arn output to expose the created gateway's arn."
   }
 
+  # For a module-created gateway this comes from the provider's own gateway_id attribute
+  # rather than string-splitting the ARN.
   assert {
     condition     = output.gateway_id == "sgw-12A3456B"
-    error_message = "Expected the gateway_id output to be the gateway ID parsed out of the created gateway's ARN."
+    error_message = "Expected the gateway_id output to expose the created gateway's gateway_id attribute."
+  }
+
+  assert {
+    condition     = output.endpoint_type == "STANDARD"
+    error_message = "Expected the endpoint_type output to expose the created gateway's endpoint_type."
   }
 
   assert {
@@ -279,7 +288,9 @@ run "created_gateway_attributes_flow_to_outputs" {
   }
 }
 
-run "cache_associations_and_shares_flow_to_their_outputs" {
+# Split from the FSx association case below: a single gateway is either FILE_S3 or
+# FILE_FSX_SMB, so one run block cannot legitimately exercise both.
+run "cache_and_s3_shares_flow_to_their_outputs" {
   command = plan
 
   variables {
@@ -287,14 +298,6 @@ run "cache_associations_and_shares_flow_to_their_outputs" {
     create_iam_role = true
     s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data"]
     cache_disk_ids  = ["SCSI-0:0"]
-
-    file_system_associations = {
-      corp = {
-        location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
-        username     = "svc_gateway"
-        password     = "testpass" # gitleaks:allow
-      }
-    }
 
     s3_smb_file_shares = {
       finance = {
@@ -315,13 +318,8 @@ run "cache_associations_and_shares_flow_to_their_outputs" {
     error_message = "Expected the cache_disk_ids output to list the disk IDs allocated as cache."
   }
 
-  # Every share/association output is keyed by the caller's logical name so callers can
-  # index them by the same key they supplied.
-  assert {
-    condition     = output.file_system_association_arns["corp"] == aws_storagegateway_file_system_association.this["corp"].arn
-    error_message = "Expected the file_system_association_arns output to expose the association's arn under its map key."
-  }
-
+  # Every share output is keyed by the caller's logical name so callers can index them
+  # by the same key they supplied.
   assert {
     condition     = output.smb_file_share_arns["finance"] == aws_storagegateway_smb_file_share.this["finance"].arn
     error_message = "Expected the smb_file_share_arns output to expose the SMB share's arn under its map key."
@@ -353,6 +351,35 @@ run "cache_associations_and_shares_flow_to_their_outputs" {
   }
 }
 
+run "fsx_association_flows_to_its_output" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_FSX_SMB"
+
+    file_system_associations = {
+      corp = {
+        location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+        username     = "svc_gateway"
+        password     = "testpass" # gitleaks:allow
+      }
+    }
+  }
+
+  assert {
+    condition     = output.file_system_association_arns["corp"] == aws_storagegateway_file_system_association.this["corp"].arn
+    error_message = "Expected the file_system_association_arns output to expose the association's arn under its map key."
+  }
+
+  assert {
+    condition     = aws_storagegateway_file_system_association.this["corp"].gateway_arn == aws_storagegateway_gateway.this[0].arn
+    error_message = "Expected the association to attach to the gateway created by this module."
+  }
+}
+
+# Adopted-gateway mode is the one place associations and S3 shares can appear together in
+# a single call, because the module cannot read the adopted gateway's type and therefore
+# skips the pairing guards. This asserts wiring only, not that such a gateway is valid.
 run "existing_gateway_arn_flows_to_cache_associations_and_shares" {
   command = plan
 

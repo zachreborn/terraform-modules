@@ -3,8 +3,10 @@ mock_provider "aws" {
     defaults = {
       id               = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12A3456B"
       arn              = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12A3456B"
+      gateway_id       = "sgw-12A3456B"
       ec2_instance_id  = "i-0123456789abcdef0"
       host_environment = "VMWARE"
+      endpoint_type    = "STANDARD"
     }
   }
 
@@ -100,14 +102,23 @@ run "default_baseline_plans_successfully" {
     error_message = "Expected the module to create a gateway when gateway_arn is null."
   }
 
+  # FILE_S3 is the default because Amazon FSx File Gateway (FILE_FSX_SMB) is closed to
+  # new AWS customers, so defaulting to it would hand new callers an unprovisionable type.
   assert {
-    condition     = aws_storagegateway_gateway.this[0].gateway_type == "FILE_FSX_SMB"
-    error_message = "Expected gateway_type to default to FILE_FSX_SMB."
+    condition     = aws_storagegateway_gateway.this[0].gateway_type == "FILE_S3"
+    error_message = "Expected gateway_type to default to FILE_S3."
   }
 
   assert {
     condition     = aws_storagegateway_gateway.this[0].gateway_timezone == "GMT"
     error_message = "Expected gateway_timezone to default to GMT."
+  }
+
+  # Secure-by-default: SMB signing is enforced rather than left to client negotiation,
+  # which is what AWS's own ClientSpecified default would do.
+  assert {
+    condition     = aws_storagegateway_gateway.this[0].smb_security_strategy == "MandatorySigning"
+    error_message = "Expected smb_security_strategy to default to MandatorySigning."
   }
 
   assert {
@@ -190,6 +201,19 @@ run "byo_cloudwatch_log_group_skips_the_log_group_module" {
   assert {
     condition     = length(module.cloudwatch_log_group) == 0
     error_message = "Expected no cloudwatch/log_group child module when cloudwatch_log_group_arn is supplied."
+  }
+
+  # Regression test: create_kms_key defaults to true, so before this was gated on
+  # cloudwatch_log_group_arn the module built a customer-managed key and alias that no
+  # resource consumed - a billable, unmanaged orphan on the documented BYO-log-group path.
+  assert {
+    condition     = length(module.kms_key) == 0
+    error_message = "Expected no kms child module when the log group is caller-supplied; a key created here would be an orphan."
+  }
+
+  assert {
+    condition     = output.kms_key_arn == null && output.kms_key_id == null
+    error_message = "Expected the KMS outputs to be null when no key is created for a caller-supplied log group."
   }
 
   assert {
@@ -298,6 +322,8 @@ run "file_system_associations_plan_successfully" {
   command = plan
 
   variables {
+    gateway_type = "FILE_FSX_SMB"
+
     file_system_associations = {
       corp = {
         location_arn          = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
@@ -336,6 +362,8 @@ run "file_system_association_omits_cache_attributes_when_unset" {
   command = plan
 
   variables {
+    gateway_type = "FILE_FSX_SMB"
+
     file_system_associations = {
       corp = {
         location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
@@ -538,30 +566,12 @@ run "maintenance_window_and_domain_join_flow_to_the_gateway" {
   }
 }
 
-# Asserts Terraform-level pass-through only, NOT that throttling takes effect. AWS honors
-# bandwidth rate limits solely on stored volume, cached volume, and tape gateways, none of
-# which this module manages, so these two arguments are a no-op on a live file gateway. They
-# are kept as reserved surface; see their variable descriptions in variables.tf and the
-# design note in README.md. If the provider ever exposes a bandwidth rate limit schedule for
-# file gateways, this case should be replaced by one that asserts real throttling behavior.
-run "bandwidth_limits_and_vpc_endpoint_flow_to_the_gateway" {
+run "vpc_endpoint_and_timezone_flow_to_the_gateway" {
   command = plan
 
   variables {
-    average_download_rate_limit_in_bits_per_sec = 104857600
-    average_upload_rate_limit_in_bits_per_sec   = 52428800
-    gateway_vpc_endpoint                        = "vpce-0123456789abcdef0.storagegateway.us-east-1.vpce.amazonaws.com"
-    gateway_timezone                            = "GMT-7:00"
-  }
-
-  assert {
-    condition     = aws_storagegateway_gateway.this[0].average_download_rate_limit_in_bits_per_sec == 104857600
-    error_message = "Expected the download rate limit to flow to the gateway."
-  }
-
-  assert {
-    condition     = aws_storagegateway_gateway.this[0].average_upload_rate_limit_in_bits_per_sec == 52428800
-    error_message = "Expected the upload rate limit to flow to the gateway."
+    gateway_vpc_endpoint = "vpce-0123456789abcdef0.storagegateway.us-east-1.vpce.amazonaws.com"
+    gateway_timezone     = "GMT-7:00"
   }
 
   assert {
@@ -572,6 +582,31 @@ run "bandwidth_limits_and_vpc_endpoint_flow_to_the_gateway" {
   assert {
     condition     = aws_storagegateway_gateway.this[0].gateway_timezone == "GMT-7:00"
     error_message = "Expected a caller-supplied gateway_timezone to override the default."
+  }
+}
+
+# The gateway_type guards are skipped for an adopted gateway, because the module cannot
+# read the type of a gateway it did not create.
+run "adopted_gateway_skips_the_gateway_type_guards" {
+  command = plan
+
+  variables {
+    gateway_arn        = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-98F7654E"
+    gateway_ip_address = null
+    gateway_type       = "FILE_FSX_SMB"
+    role_arn           = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.0.0/16"]
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_storagegateway_nfs_file_share.this["archive"].gateway_arn == "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-98F7654E"
+    error_message = "Expected an S3 share on an adopted gateway to plan even though gateway_type says FILE_FSX_SMB."
   }
 }
 

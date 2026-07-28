@@ -4,31 +4,12 @@
 
 variable "activation_key" {
   type        = string
-  description = "(Optional) Gateway activation key obtained after deploying and powering on the on-premises gateway VM. Mutually exclusive with gateway_ip_address; supply exactly one. Use this when you have already retrieved the activation key out of band. Stored in Terraform state in plaintext."
+  description = "(Optional) Gateway activation key obtained after deploying and powering on the on-premises gateway VM. Mutually exclusive with gateway_ip_address; supply exactly one. Use this when you have already retrieved the activation key out of band. Marked sensitive: unlike the gateway's password arguments, the provider does not flag activation_key as sensitive, so without this it would render in plan output and CI logs. It is still persisted in Terraform state in plaintext - supply it from a secret store and protect state access accordingly."
   default     = null
+  sensitive   = true
   validation {
     condition     = var.activation_key == null ? true : length(var.activation_key) >= 1 && length(var.activation_key) <= 50
     error_message = "The value of activation_key must be null or between 1 and 50 characters, per the ActivateGateway API."
-  }
-}
-
-variable "average_download_rate_limit_in_bits_per_sec" {
-  type        = number
-  description = "(Optional) The average download bandwidth rate limit in bits per second. Minimum 102400. NO-OP on the gateway types this module manages: AWS honors UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways; S3 file gateways instead require a bandwidth rate limit schedule (UpdateBandwidthRateLimitSchedule), which the provider does not expose on this resource, and FSx file gateways support neither. Retained for provider completeness and so the input exists if rate limiting is extended to file gateways later. Acting on it would require further work in this module, not just setting this variable. Defaults to null (no limit)."
-  default     = null
-  validation {
-    condition     = var.average_download_rate_limit_in_bits_per_sec == null ? true : var.average_download_rate_limit_in_bits_per_sec >= 102400
-    error_message = "The value of average_download_rate_limit_in_bits_per_sec must be null or at least 102400."
-  }
-}
-
-variable "average_upload_rate_limit_in_bits_per_sec" {
-  type        = number
-  description = "(Optional) The average upload bandwidth rate limit in bits per second. Minimum 51200. NO-OP on the gateway types this module manages: AWS honors UpdateBandwidthRateLimit only for stored volume, cached volume, and tape gateways; S3 file gateways instead require a bandwidth rate limit schedule (UpdateBandwidthRateLimitSchedule), which the provider does not expose on this resource, and FSx file gateways support neither. Retained for provider completeness and so the input exists if rate limiting is extended to file gateways later. Acting on it would require further work in this module, not just setting this variable. Defaults to null (no limit)."
-  default     = null
-  validation {
-    condition     = var.average_upload_rate_limit_in_bits_per_sec == null ? true : var.average_upload_rate_limit_in_bits_per_sec >= 51200
-    error_message = "The value of average_upload_rate_limit_in_bits_per_sec must be null or at least 51200."
   }
 }
 
@@ -44,10 +25,10 @@ variable "cloudwatch_log_group_arn" {
 
 variable "gateway_arn" {
   type        = string
-  description = "(Optional) ARN of an existing, externally activated gateway for this module to manage cache disks and file shares on, instead of creating one. Use for on-premises appliances, which only honor an activation for a short window after the activation key is generated - too short for pipeline-driven applies - so they must be activated out of band. When set, the module creates no gateway and the gateway-level arguments (activation_key, gateway_ip_address, gateway_vpc_endpoint, gateway_timezone, smb_active_directory_settings, maintenance_start_time, rate limits, SMB settings, cloudwatch_log_group_arn wiring) are not applied; configure those on the gateway out of band. Defaults to null."
+  description = "(Optional) ARN of an existing, externally activated gateway for this module to manage cache disks and file shares on, instead of creating one. Use for on-premises appliances, which only honor an activation for a short window after the activation key is generated - too short for pipeline-driven applies - so they must be activated out of band. When set, the module creates no gateway and the gateway-level arguments (activation_key, gateway_ip_address, gateway_vpc_endpoint, gateway_timezone, smb_active_directory_settings, maintenance_start_time, SMB settings, cloudwatch_log_group_arn wiring) are not applied; configure those on the gateway out of band. The module also cannot see an adopted gateway's type, so the gateway_type checks on file shares and file system associations are skipped in this mode. Defaults to null."
   default     = null
   validation {
-    condition     = var.gateway_arn == null ? true : can(regex("^arn:[^:]+:storagegateway:[^:]+:[0-9]{12}:gateway/sgw-[0-9A-F]+$", var.gateway_arn))
+    condition     = var.gateway_arn == null ? true : can(regex("^arn:[^:]+:storagegateway:[^:]+:[0-9]{12}:gateway/sgw-[0-9A-Fa-f]+$", var.gateway_arn))
     error_message = "gateway_arn must be null or a valid Storage Gateway gateway ARN (arn:<partition>:storagegateway:<region>:<account>:gateway/sgw-XXXXXXXX)."
   }
 }
@@ -73,18 +54,22 @@ variable "gateway_name" {
 
 variable "gateway_timezone" {
   type        = string
-  description = "(Optional) Time zone for the gateway, in the format GMT, GMT-hh:mm, or GMT+hh:mm (e.g. GMT-7:00). Defaults to GMT."
+  description = "(Optional) Time zone for the gateway, in the format GMT, GMT-hh:mm, or GMT+hh:mm (e.g. GMT-7:00). Offsets run from GMT-12:00 to GMT+14:00, matching the range of real-world time zones. Defaults to GMT."
   default     = "GMT"
+
+  # Positive offsets reach +14:00 (Line Islands) and negative offsets stop at
+  # -12:00. The API documents only the GMT[+-]hh:mm shape and a 10-character
+  # length cap, so the real-world range is enforced here.
   validation {
-    condition     = can(regex("^GMT([+-](0?[0-9]|1[0-2]):[0-5][0-9])?$", var.gateway_timezone))
-    error_message = "The value of gateway_timezone must be GMT, or GMT followed by an offset in the format GMT-hh:mm or GMT+hh:mm (for example GMT-7:00)."
+    condition     = can(regex("^GMT([+](0?[0-9]|1[0-4]):[0-5][0-9]|[-](0?[0-9]|1[0-2]):[0-5][0-9])?$", var.gateway_timezone))
+    error_message = "The value of gateway_timezone must be GMT, or GMT followed by an offset from GMT-12:00 to GMT+14:00 in the format GMT-hh:mm or GMT+hh:mm (for example GMT-7:00)."
   }
 }
 
 variable "gateway_type" {
   type        = string
-  description = "(Optional) Type of the gateway. This module manages file gateways, so valid values are FILE_FSX_SMB and FILE_S3. Defaults to FILE_FSX_SMB. File system associations require FILE_FSX_SMB."
-  default     = "FILE_FSX_SMB"
+  description = "(Optional) Type of the gateway. This module manages file gateways, so valid values are FILE_S3 and FILE_FSX_SMB. Defaults to FILE_S3. S3 SMB/NFS file shares require FILE_S3; FSx file system associations require FILE_FSX_SMB. Note that Amazon FSx File Gateway (FILE_FSX_SMB) is no longer available to new AWS customers - existing customers can continue to use it, which is why it remains a supported value but is not the default."
+  default     = "FILE_S3"
   validation {
     condition     = contains(["FILE_FSX_SMB", "FILE_S3"], var.gateway_type)
     error_message = "The value of gateway_type must be one of FILE_FSX_SMB or FILE_S3."
@@ -107,9 +92,11 @@ variable "maintenance_start_time" {
   description = "(Optional) Weekly or monthly maintenance window. hour_of_day (0-23) and minute_of_hour (0-59); day_of_week (0-6, Sunday=0) for a weekly window or day_of_month (1-28) for a monthly window. Defaults to null, which lets the gateway pick a window."
   default     = null
 
-  # The provider types day_of_week and day_of_month as strings and enforces no ranges, so
-  # out-of-range values are only rejected by the UpdateMaintenanceStartTime API at apply
-  # time. These validations surface the documented ranges during plan instead.
+  # The provider does range-check day_of_week (0-6) and day_of_month (1-28) with its
+  # nullable-int validators, but it reports failures against the nested resource block.
+  # These validations fail against the module's own variable with a message naming the
+  # module input, and additionally cover the weekly-xor-monthly rule below, which the
+  # provider does not enforce at all.
   validation {
     condition     = var.maintenance_start_time == null ? true : var.maintenance_start_time.hour_of_day >= 0 && var.maintenance_start_time.hour_of_day <= 23
     error_message = "The value of maintenance_start_time.hour_of_day must be between 0 and 23."
@@ -148,8 +135,9 @@ variable "smb_active_directory_settings" {
     organizational_unit = optional(string)
     timeout_in_seconds  = optional(number)
   })
-  description = "(Optional) Microsoft Active Directory join settings for SMB access. Required to associate an FSx for Windows file system on a FILE_FSX_SMB gateway. domain_name, username, and password are the join credentials; domain_controllers, organizational_unit, and timeout_in_seconds are optional. The password is stored in Terraform state in plaintext. Defaults to null."
+  description = "(Optional) Microsoft Active Directory join settings for SMB access. Required to associate an FSx for Windows file system on a FILE_FSX_SMB gateway. domain_name, username, and password are the join credentials; domain_controllers, organizational_unit, and timeout_in_seconds are optional. This entire object is marked sensitive because it carries the join password, so its values are redacted from plan/apply output. The password is still stored in Terraform state in plaintext - the provider offers no write-only alternative for this argument - so supply it from a secret store and protect state access accordingly. Defaults to null."
   default     = null
+  sensitive   = true
 }
 
 variable "smb_file_share_visibility" {
@@ -160,14 +148,15 @@ variable "smb_file_share_visibility" {
 
 variable "smb_guest_password" {
   type        = string
-  description = "(Optional) Guest password for guest access to SMB file shares. Stored in Terraform state in plaintext. Defaults to null."
+  description = "(Optional) Guest password for guest access to SMB file shares. Marked sensitive so it is redacted from plan/apply output. Still stored in Terraform state in plaintext - supply it from a secret store and protect state access accordingly. Defaults to null."
   default     = null
+  sensitive   = true
 }
 
 variable "smb_security_strategy" {
   type        = string
-  description = "(Optional) Specifies the type of security strategy for the gateway. Valid values are ClientSpecified, MandatorySigning, and MandatoryEncryption. Defaults to null, which uses the service default."
-  default     = null
+  description = "(Optional) Specifies the type of security strategy for the gateway. Defaults to MandatorySigning, which requires SMB signing on every connection and protects against tampering and relay attacks. AWS's own default is ClientSpecified, which enforces nothing and leaves signing to client negotiation - set it explicitly if you must support legacy clients that cannot sign. MandatoryEncryption is stricter still (it requires SMB3 encryption) but rejects clients that cannot negotiate SMB3. Set to null to defer entirely to the service default."
+  default     = "MandatorySigning"
   validation {
     condition     = var.smb_security_strategy == null ? true : contains(["ClientSpecified", "MandatorySigning", "MandatoryEncryption"], var.smb_security_strategy)
     error_message = "The value of smb_security_strategy must be null, ClientSpecified, MandatorySigning, or MandatoryEncryption."
@@ -204,7 +193,7 @@ variable "file_system_associations" {
       cache_stale_timeout_in_seconds = optional(number)
     }))
   }))
-  description = "(Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system; password is stored in state in plaintext), optional audit_destination_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache_attributes block with cache_stale_timeout_in_seconds. Requires gateway_type FILE_FSX_SMB. Defaults to {}."
+  description = "(Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system), optional audit_destination_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache_attributes block with cache_stale_timeout_in_seconds. Requires gateway_type FILE_FSX_SMB. Defaults to {}. This variable is deliberately NOT marked sensitive: it drives a resource for_each, and Terraform forbids sensitive values there because the map keys become resource instance addresses. Each password is still redacted in plan output because the provider marks the underlying password argument sensitive, but it is stored in Terraform state in plaintext - supply it from a secret store and protect state access accordingly."
   default     = {}
 
   # Unlike a file share's location_arn (which may also be an access point ARN or an access
@@ -472,7 +461,7 @@ variable "cloudwatch_retention_in_days" {
 
 variable "create_kms_key" {
   type        = bool
-  description = "(Optional) Determines whether this module creates a dedicated KMS key (via the kms child module) to encrypt the CloudWatch log group. Used only when create_cloudwatch_log_group is true. Set to false to supply your own key via kms_key_id. Defaults to true."
+  description = "(Optional) Determines whether this module creates a dedicated KMS key (via the kms child module) to encrypt the CloudWatch log group. Used only when this module actually creates the log group, so it is ignored both when create_cloudwatch_log_group is false and when cloudwatch_log_group_arn supplies an existing log group (which already carries its own encryption configuration). Set to false to supply your own key via kms_key_id. Defaults to true."
   default     = true
 }
 

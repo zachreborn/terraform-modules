@@ -208,10 +208,6 @@ run "rejects_invalid_s3_nfs_file_share_squash" {
   expect_failures = [var.s3_nfs_file_shares]
 }
 
-###########################
-# CloudWatch retention
-###########################
-
 run "rejects_invalid_s3_smb_file_share_case_sensitivity" {
   command = plan
 
@@ -281,11 +277,22 @@ run "rejects_malformed_gateway_timezone" {
   expect_failures = [var.gateway_timezone]
 }
 
-run "rejects_gateway_timezone_offset_beyond_twelve_hours" {
+# Real-world offsets run from GMT-12:00 to GMT+14:00, so the two ends are asymmetric.
+run "rejects_negative_gateway_timezone_offset_beyond_twelve_hours" {
   command = plan
 
   variables {
     gateway_timezone = "GMT-13:00"
+  }
+
+  expect_failures = [var.gateway_timezone]
+}
+
+run "rejects_positive_gateway_timezone_offset_beyond_fourteen_hours" {
+  command = plan
+
+  variables {
+    gateway_timezone = "GMT+15:00"
   }
 
   expect_failures = [var.gateway_timezone]
@@ -304,29 +311,24 @@ run "accepts_a_positive_gateway_timezone_offset" {
   }
 }
 
-###########################
-# Bandwidth rate limits
-###########################
-
-run "rejects_download_rate_limit_below_the_api_minimum" {
+# GMT+13:00 (Samoa/Tonga) and GMT+14:00 (Line Islands) are real zones the AWS console
+# offers; an offset cap of 12 would wrongly reject them.
+run "accepts_the_maximum_positive_gateway_timezone_offset" {
   command = plan
 
   variables {
-    average_download_rate_limit_in_bits_per_sec = 102399
+    gateway_timezone = "GMT+14:00"
   }
 
-  expect_failures = [var.average_download_rate_limit_in_bits_per_sec]
-}
-
-run "rejects_upload_rate_limit_below_the_api_minimum" {
-  command = plan
-
-  variables {
-    average_upload_rate_limit_in_bits_per_sec = 51199
+  assert {
+    condition     = aws_storagegateway_gateway.this[0].gateway_timezone == "GMT+14:00"
+    error_message = "Expected GMT+14:00 to be accepted; it is a real time zone offset."
   }
-
-  expect_failures = [var.average_upload_rate_limit_in_bits_per_sec]
 }
+
+###########################
+# CloudWatch retention
+###########################
 
 run "rejects_invalid_cloudwatch_retention_in_days" {
   command = plan
@@ -792,6 +794,76 @@ run "rejects_nfs_file_share_with_no_resolvable_role" {
 
   variables {
     gateway_type = "FILE_S3"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.0.0/16"]
+      }
+    }
+  }
+
+  expect_failures = [aws_storagegateway_nfs_file_share.this]
+}
+
+# The provider declares activation_key and gateway_ip_address ExactlyOneOf, so supplying
+# both is as invalid as supplying neither.
+run "rejects_supplying_both_activation_key_and_gateway_ip_address" {
+  command = plan
+
+  variables {
+    activation_key     = "ABCDE-12345-FGHIJ-67890-KLMNO"
+    gateway_ip_address = "206.7.1.205"
+  }
+
+  expect_failures = [aws_storagegateway_gateway.this]
+}
+
+###########################
+# gateway_type pairing
+###########################
+
+run "rejects_file_system_association_on_an_s3_gateway" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+
+    file_system_associations = {
+      corp = {
+        location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+        username     = "svc_gateway"
+        password     = "testpass" # gitleaks:allow
+      }
+    }
+  }
+
+  expect_failures = [aws_storagegateway_file_system_association.this]
+}
+
+run "rejects_s3_smb_share_on_an_fsx_gateway" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_FSX_SMB"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/finance"
+      }
+    }
+  }
+
+  expect_failures = [aws_storagegateway_smb_file_share.this]
+}
+
+run "rejects_s3_nfs_share_on_an_fsx_gateway" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_FSX_SMB"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
 
     s3_nfs_file_shares = {
       archive = {

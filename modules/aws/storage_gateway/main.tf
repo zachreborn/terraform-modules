@@ -23,9 +23,16 @@ data "aws_region" "current" {}
 ###########################
 
 locals {
+  # Whether this module creates the KMS key for the gateway log group. Gated on
+  # the module also creating the log group: a caller-supplied
+  # cloudwatch_log_group_arn arrives with its own encryption configuration, so
+  # creating a key alongside it would leave an orphaned, billable CMK that no
+  # resource consumes.
+  create_kms_key = var.create_cloudwatch_log_group && var.cloudwatch_log_group_arn == null && var.create_kms_key
+
   # Resolve the KMS key ARN used to encrypt the gateway log group: either the
   # key created by this module or a caller-supplied key.
-  kms_key_arn = var.create_cloudwatch_log_group && var.create_kms_key ? module.kms_key[0].arn : var.kms_key_id
+  kms_key_arn = local.create_kms_key ? module.kms_key[0].arn : var.kms_key_id
 
   # Resolve the CloudWatch log group ARN wired to the gateway: a caller-supplied
   # ARN takes precedence over one created by this module.
@@ -50,7 +57,7 @@ locals {
 ###########################
 
 module "kms_key" {
-  count  = var.create_cloudwatch_log_group && var.create_kms_key ? 1 : 0
+  count  = local.create_kms_key ? 1 : 0
   source = "../kms"
 
   deletion_window_in_days = var.kms_key_deletion_window_in_days
@@ -205,19 +212,17 @@ resource "aws_storagegateway_gateway" "this" {
   # reliably meet - activate out of band and pass the resulting ARN instead.
   count = var.gateway_arn == null ? 1 : 0
 
-  activation_key                              = var.activation_key
-  average_download_rate_limit_in_bits_per_sec = var.average_download_rate_limit_in_bits_per_sec
-  average_upload_rate_limit_in_bits_per_sec   = var.average_upload_rate_limit_in_bits_per_sec
-  cloudwatch_log_group_arn                    = local.cloudwatch_log_group_arn
-  gateway_ip_address                          = var.gateway_ip_address
-  gateway_name                                = var.gateway_name
-  gateway_timezone                            = var.gateway_timezone
-  gateway_type                                = var.gateway_type
-  gateway_vpc_endpoint                        = var.gateway_vpc_endpoint
-  smb_file_share_visibility                   = var.smb_file_share_visibility
-  smb_guest_password                          = var.smb_guest_password
-  smb_security_strategy                       = var.smb_security_strategy
-  tags                                        = merge(tomap({ Name = var.gateway_name }), var.tags)
+  activation_key            = var.activation_key
+  cloudwatch_log_group_arn  = local.cloudwatch_log_group_arn
+  gateway_ip_address        = var.gateway_ip_address
+  gateway_name              = var.gateway_name
+  gateway_timezone          = var.gateway_timezone
+  gateway_type              = var.gateway_type
+  gateway_vpc_endpoint      = var.gateway_vpc_endpoint
+  smb_file_share_visibility = var.smb_file_share_visibility
+  smb_guest_password        = var.smb_guest_password
+  smb_security_strategy     = var.smb_security_strategy
+  tags                      = merge(tomap({ Name = var.gateway_name }), var.tags)
 
   dynamic "maintenance_start_time" {
     for_each = var.maintenance_start_time != null ? [var.maintenance_start_time] : []
@@ -242,9 +247,12 @@ resource "aws_storagegateway_gateway" "this" {
   }
 
   lifecycle {
+    # The provider declares activation_key and gateway_ip_address ExactlyOneOf,
+    # so supplying both is as invalid as supplying neither. Catch both cases
+    # here with a message that names the module's own inputs.
     precondition {
-      condition     = var.activation_key != null || var.gateway_ip_address != null
-      error_message = "One of activation_key or gateway_ip_address is required when the module creates the gateway (gateway_arn is null)."
+      condition     = (var.activation_key != null) != (var.gateway_ip_address != null)
+      error_message = "Exactly one of activation_key or gateway_ip_address is required when the module creates the gateway (gateway_arn is null)."
     }
   }
 }
@@ -278,6 +286,16 @@ resource "aws_storagegateway_file_system_association" "this" {
     for_each = each.value.cache_attributes != null ? [each.value.cache_attributes] : []
     content {
       cache_stale_timeout_in_seconds = cache_attributes.value.cache_stale_timeout_in_seconds
+    }
+  }
+
+  lifecycle {
+    # Only a FILE_FSX_SMB gateway can front an FSx for Windows file system.
+    # Skipped when gateway_arn adopts an existing gateway, whose type this
+    # module cannot see.
+    precondition {
+      condition     = var.gateway_arn != null || var.gateway_type == "FILE_FSX_SMB"
+      error_message = "File system association \"${each.key}\" requires gateway_type = \"FILE_FSX_SMB\"; S3 file gateways cannot associate an FSx file system."
     }
   }
 }
@@ -329,6 +347,13 @@ resource "aws_storagegateway_smb_file_share" "this" {
     precondition {
       condition     = each.value.role_arn != null || local.role_arn != null
       error_message = "S3 SMB file share \"${each.key}\" has no IAM role to assume: set its role_arn, the module-level role_arn, or create_iam_role = true."
+    }
+
+    # Only a FILE_S3 gateway can serve S3-backed file shares. Skipped when
+    # gateway_arn adopts an existing gateway, whose type this module cannot see.
+    precondition {
+      condition     = var.gateway_arn != null || var.gateway_type == "FILE_S3"
+      error_message = "S3 SMB file share \"${each.key}\" requires gateway_type = \"FILE_S3\"; FSx file gateways cannot serve S3-backed shares."
     }
   }
 }
@@ -383,6 +408,13 @@ resource "aws_storagegateway_nfs_file_share" "this" {
     precondition {
       condition     = each.value.role_arn != null || local.role_arn != null
       error_message = "S3 NFS file share \"${each.key}\" has no IAM role to assume: set its role_arn, the module-level role_arn, or create_iam_role = true."
+    }
+
+    # Only a FILE_S3 gateway can serve S3-backed file shares. Skipped when
+    # gateway_arn adopts an existing gateway, whose type this module cannot see.
+    precondition {
+      condition     = var.gateway_arn != null || var.gateway_type == "FILE_S3"
+      error_message = "S3 NFS file share \"${each.key}\" requires gateway_type = \"FILE_S3\"; FSx file gateways cannot serve S3-backed shares."
     }
   }
 }

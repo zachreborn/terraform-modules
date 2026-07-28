@@ -3,8 +3,8 @@
 ###########################
 
 output "gateway_id" {
-  description = "The identifier of the Storage Gateway (created or caller-supplied)."
-  value       = local.gateway_arn != null ? element(split("/", local.gateway_arn), 1) : null
+  description = "The identifier of the Storage Gateway (created or caller-supplied). Read from the gateway resource when this module creates it, and parsed out of the ARN when an existing gateway is adopted via gateway_arn."
+  value       = var.gateway_arn == null ? one(aws_storagegateway_gateway.this[*].gateway_id) : element(split("/", var.gateway_arn), 1)
 }
 
 output "gateway_arn" {
@@ -25,6 +25,11 @@ output "gateway_network_interface" {
 output "host_environment" {
   description = "The type of hypervisor environment used by the gateway host. Null when gateway_arn is supplied."
   value       = one(aws_storagegateway_gateway.this[*].host_environment)
+}
+
+output "endpoint_type" {
+  description = "The endpoint type the gateway is activated against (for example STANDARD or a VPC endpoint type). Null when gateway_arn is supplied."
+  value       = one(aws_storagegateway_gateway.this[*].endpoint_type)
 }
 
 output "cache_disk_ids" {
@@ -89,7 +94,7 @@ output "cloudwatch_log_group_arn" {
 
 output "kms_key_id" {
   description = "The key ID of the KMS key created by this module, or null when none is created."
-  value       = var.create_cloudwatch_log_group && var.create_kms_key ? module.kms_key[0].key_id : null
+  value       = local.create_kms_key ? module.kms_key[0].key_id : null
 }
 
 output "kms_key_arn" {
