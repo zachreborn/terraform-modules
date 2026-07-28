@@ -6,7 +6,7 @@
 ###########################################################
 
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.9.0"
   required_providers {
     scalr = {
       source  = "registry.scalr.io/scalr/scalr"

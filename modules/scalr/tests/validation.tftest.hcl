@@ -1,15 +1,15 @@
-# Validation coverage for every `validation {}` block declared in variables.tf.
-# Each variable-level validation is exercised with one valid baseline and one
-# expect_failures case. These runs only need to reach the variable-validation
-# phase, so `scalr_config` is kept minimal and vcs_repo-free where possible.
+# Validation coverage for every `validation {}` block declared in the root variables.tf.
+# Each variable-level validation is exercised with one valid baseline and one expect_failures case.
+# These runs only need to reach the variable-validation phase, so `scalr_config` is kept minimal.
+#
+# The root still declares these variable validations even though the composed submodules also
+# validate their own inputs -- keeping them means callers get a clear error attributed to the root
+# variable they set, before the value is ever threaded into a submodule.
 
 mock_provider "scalr" {}
 
-# aws_provider_config must be a non-null (even empty) map: main.tf's existing
-# scalr_provider_configuration.aws resource sets `for_each = local.aws_provider_config`
-# with no null-guard, so an unset aws_provider_config would error on `for_each`
-# before any variable validation runs. That resource block is out of scope for
-# this change, so every run below supplies an empty map instead.
+# aws_provider_config is supplied as an empty map so the baseline reaches the variable-validation
+# phase without requiring any real provider configuration.
 variables {
   scalr_config = <<-YAML
     ---
@@ -26,7 +26,7 @@ run "valid_baseline_does_not_fail" {
   command = plan
 
   assert {
-    condition     = length(scalr_environment.this) == 1
+    condition     = length(output.environment_ids) == 1
     error_message = "Expected exactly one environment to be planned."
   }
 }
