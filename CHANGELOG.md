@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.1.0](https://github.com/zachreborn/terraform-modules/compare/v14.0.0...v14.1.0) (2026-07-28)
+
+
+### Features
+
+* **fsx_ontap:** add FSx for NetApp ONTAP module ([#368](https://github.com/zachreborn/terraform-modules/issues/368)) ([fe35c3d](https://github.com/zachreborn/terraform-modules/commit/fe35c3d90aa40afde8eb2c08396c50a48f1439c3))
+
 ## [14.0.0](https://github.com/zachreborn/terraform-modules/compare/v13.0.0...v14.0.0) (2026-07-28)
 
 
