@@ -271,7 +271,7 @@ tofu state mv 'module.scalr.scalr_provider_configuration.aws["aws_provider_1"]' 
   'module.scalr.module.provider_configuration.scalr_provider_configuration.this["aws_provider_1"]'
 ```
 
-After migrating, `plan` should report **no changes** for the relocated resources. Two other behavior changes in this release to be aware of: `provider_configuration_ids` is now a single map spanning **all** provider types (use `provider_configuration_aws_ids` for the previous AWS-only behavior), and the module now requires OpenTofu >= 1.6 / Terraform >= 1.9 (`required_version = ">= 1.9.0"`).
+After migrating, `plan` should report **no changes** for the relocated resources. Two other behavior changes in this release to be aware of: `provider_configuration_ids` is now a single map spanning **all** provider types (use `provider_configuration_aws_ids` for the previous AWS-only behavior), and the module now requires OpenTofu >= 1.9 / Terraform >= 1.9 (`required_version = ">= 1.9.0"`; the `>= 1.9.0` floor is driven by the composed `provider_configuration` submodule's cross-variable validation, which OpenTofu supports from 1.9.0 onward).
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -399,11 +399,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_environment_ids"></a> [environment\_ids](#output\_environment\_ids) | Map of Environment names to their Scalr Environment IDs. |
 | <a name="output_provider_configuration_aws_ids"></a> [provider\_configuration\_aws\_ids](#output\_provider\_configuration\_aws\_ids) | Map of AWS Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_azurerm_ids"></a> [provider\_configuration\_azurerm\_ids](#output\_provider\_configuration\_azurerm\_ids) | Map of AzureRM Provider Configuration names to their Scalr Provider Configuration IDs. |
+| <a name="output_provider_configuration_custom"></a> [provider\_configuration\_custom](#output\_provider\_configuration\_custom) | Resolved, non-sensitive custom provider configuration blocks (provider\_name + arguments) passed to the ./provider\_configuration submodule, keyed by configuration name. Exposed to verify the root's YAML-to-submodule wiring for custom providers. Sensitive custom argument values are routed separately via provider\_configuration\_secrets and are never included here (sensitive arguments carry value = null with sensitive = true). |
 | <a name="output_provider_configuration_custom_ids"></a> [provider\_configuration\_custom\_ids](#output\_provider\_configuration\_custom\_ids) | Map of custom Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_google_ids"></a> [provider\_configuration\_google\_ids](#output\_provider\_configuration\_google\_ids) | Map of Google Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_ids"></a> [provider\_configuration\_ids](#output\_provider\_configuration\_ids) | Map of every Provider Configuration name (across all AWS, AzureRM, Google, and custom types) to its Scalr Provider Configuration ID. |
 | <a name="output_vcs_provider_ids"></a> [vcs\_provider\_ids](#output\_vcs\_provider\_ids) | Map of VCS Provider names to their Scalr VCS Provider IDs. |
 | <a name="output_workspace_ids"></a> [workspace\_ids](#output\_workspace\_ids) | Map of Workspace composite keys ('<environment>.<workspace>') to their Scalr Workspace IDs. |
+| <a name="output_workspace_provider_configurations"></a> [workspace\_provider\_configurations](#output\_workspace\_provider\_configurations) | Map of each workspace's resolved provider\_configuration list (id + alias) as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's name-to-ID resolution and ordering. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

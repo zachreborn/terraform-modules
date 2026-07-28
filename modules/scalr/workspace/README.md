@@ -4,7 +4,7 @@
 
 Manages [`scalr_workspace`](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/workspace) resources with full argument coverage, including VCS-driven, module-driven, and CLI-driven workspaces, custom hooks, multiple provider configurations, and Terragrunt settings.
 
-This is a standalone superset of the inline `scalr_workspace` resource in the `modules/scalr` root module. It does not replace or modify the root module; use this submodule directly when you need a dedicated, scalable `map(object({...}))` interface for workspaces, or full argument coverage (e.g. `terragrunt`, `operations`, `hooks`).
+This submodule implements the `scalr_workspace` resource for the `modules/scalr` root module, which composes it (alongside the `environment`, `vcs_provider`, and `provider_configuration` submodules) to manage workspaces from its YAML interface. You can also call it directly when you need a dedicated, scalable `map(object({...}))` interface for workspaces, or full argument coverage (e.g. `terragrunt`, `operations`, `hooks`), outside the root module.
 
 ### Prerequisites
 

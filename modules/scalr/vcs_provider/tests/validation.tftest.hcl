@@ -46,3 +46,21 @@ run "rejects_entry_with_invalid_vcs_type" {
 
   expect_failures = [var.vcs_providers]
 }
+
+run "rejects_provider_without_matching_token" {
+  command = plan
+
+  variables {
+    vcs_providers = {
+      github_main = {
+        account_id = "acc-xxxxxxxxxx"
+        vcs_type   = "github"
+      }
+    }
+    # Intentionally omit the token for "github_main" so the resource precondition fires with a clear,
+    # actionable message instead of a cryptic "Invalid index" error.
+    vcs_provider_tokens = {}
+  }
+
+  expect_failures = [scalr_vcs_provider.this]
+}

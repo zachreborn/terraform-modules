@@ -40,3 +40,21 @@ output "provider_configuration_custom_ids" {
   description = "Map of custom Provider Configuration names to their Scalr Provider Configuration IDs."
   value       = { for name in keys(local.custom_provider_config) : name => local.provider_configuration_ids[name] }
 }
+
+###########################
+# Composition Wiring (verification)
+###########################
+# These outputs surface the non-sensitive, resolved inputs the root passes to its child modules so
+# callers (and tests) can verify the YAML-to-submodule transformation without reaching into child
+# module internals. They mirror the ./provider_configuration submodule's own resolved_defaults
+# output. Sensitive credentials are never included here -- those are routed separately through each
+# submodule's dedicated *_secrets / *_tokens map.
+output "provider_configuration_custom" {
+  description = "Resolved, non-sensitive custom provider configuration blocks (provider_name + arguments) passed to the ./provider_configuration submodule, keyed by configuration name. Exposed to verify the root's YAML-to-submodule wiring for custom providers. Sensitive custom argument values are routed separately via provider_configuration_secrets and are never included here (sensitive arguments carry value = null with sensitive = true)."
+  value       = { for name, cfg in local.provider_configurations : name => cfg.custom if cfg.custom != null }
+}
+
+output "workspace_provider_configurations" {
+  description = "Map of each workspace's resolved provider_configuration list (id + alias) as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's name-to-ID resolution and ordering."
+  value       = { for key, workspace in local.workspace_inputs : key => workspace.provider_configuration }
+}

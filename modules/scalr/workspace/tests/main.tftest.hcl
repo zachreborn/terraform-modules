@@ -1,7 +1,15 @@
 mock_provider "scalr" {
   mock_resource "scalr_workspace" {
     defaults = {
-      id = "ws-mock00000000"
+      id            = "ws-mock00000000"
+      has_resources = false
+      created_by = [
+        {
+          email     = "creator@example.com"
+          full_name = "Creator Name"
+          username  = "creator"
+        }
+      ]
     }
   }
 }
@@ -23,18 +31,18 @@ run "baseline_minimal_workspace_plans_successfully" {
   }
 
   assert {
-    condition     = output.ids["minimal"] != null
-    error_message = "Expected the ids output to contain the minimal workspace."
+    condition     = output.ids["minimal"] == "ws-mock00000000"
+    error_message = "Expected the ids output to surface the mocked workspace ID for the minimal workspace."
   }
 
   assert {
-    condition     = output.has_resources["minimal"] != null
-    error_message = "Expected the has_resources output to contain the minimal workspace."
+    condition     = output.has_resources["minimal"] == false
+    error_message = "Expected the has_resources output to surface the mocked value (false) for the minimal workspace."
   }
 
   assert {
-    condition     = output.created_by["minimal"] != null
-    error_message = "Expected the created_by output to contain the minimal workspace."
+    condition     = output.created_by["minimal"][0].username == "creator"
+    error_message = "Expected the created_by output to surface the mocked creator username for the minimal workspace."
   }
 
   assert {

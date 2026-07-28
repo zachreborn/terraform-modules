@@ -90,8 +90,8 @@ run "plan_succeeds_with_valid_input" {
   }
 
   assert {
-    condition     = output.policy_groups["production"] != null
-    error_message = "Expected the mocked policy_groups attribute to be surfaced via the policy_groups output."
+    condition     = length(output.policy_groups["production"]) == 0
+    error_message = "Expected the policy_groups output to surface the mocked empty list exactly."
   }
 }
 

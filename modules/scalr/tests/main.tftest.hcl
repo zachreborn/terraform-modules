@@ -296,6 +296,24 @@ run "provider_configuration_ids_unifies_all_provider_types" {
     condition     = length(output.provider_configuration_custom_ids) == 1 && output.provider_configuration_custom_ids["kubernetes"] != null
     error_message = "Expected exactly one custom provider configuration in the per-type subset."
   }
+
+  # Wiring: prove the root's YAML-to-submodule transformation forwards the custom provider_name and
+  # arguments correctly (the ./provider_configuration submodule's own tests cover secret-value
+  # resolution; these assertions cover this wrapper's transformation, which those cannot).
+  assert {
+    condition     = output.provider_configuration_custom["kubernetes"].provider_name == "kubernetes"
+    error_message = "The custom provider_name should be forwarded from the YAML into the ./provider_configuration submodule input."
+  }
+
+  assert {
+    condition     = [for a in output.provider_configuration_custom["kubernetes"].arguments : a.value if a.name == "host"][0] == "https://kubernetes.example.com"
+    error_message = "A non-sensitive custom argument's value should be forwarded from the YAML into the submodule's custom.arguments."
+  }
+
+  assert {
+    condition     = [for a in output.provider_configuration_custom["kubernetes"].arguments : a.sensitive if a.name == "password"][0] == true
+    error_message = "A custom argument marked sensitive in the YAML should carry sensitive=true into the submodule input (its value is routed via provider_configuration_secrets, asserted in the submodule's own tests)."
+  }
 }
 
 run "workspace_provider_configuration_resolves_non_aws_provider" {
@@ -362,6 +380,24 @@ run "workspace_provider_configuration_supports_multiple_entries" {
   assert {
     condition     = output.workspace_ids["environment-1.multi_provider_workspace"] != null
     error_message = "A workspace should support multiple provider_configuration entries, each resolving to a created provider configuration."
+  }
+
+  # Wiring: prove BOTH resolved entries (with their aliases and resolved IDs, in order) are forwarded
+  # to the ./workspace submodule, not collapsed to one. The child module's direct-input test cannot
+  # cover this wrapper's name-to-ID list transformation.
+  assert {
+    condition     = length(output.workspace_provider_configurations["environment-1.multi_provider_workspace"]) == 2
+    error_message = "Both provider_configuration entries should be forwarded to the ./workspace submodule (not collapsed to one)."
+  }
+
+  assert {
+    condition     = [for pc in output.workspace_provider_configurations["environment-1.multi_provider_workspace"] : pc.alias] == ["us_east_1", "us_east_2"]
+    error_message = "Both provider_configuration aliases should be preserved, in order, when forwarded to the ./workspace submodule."
+  }
+
+  assert {
+    condition     = alltrue([for pc in output.workspace_provider_configurations["environment-1.multi_provider_workspace"] : pc.id != null])
+    error_message = "Each provider_configuration entry's YAML name should resolve to a created provider configuration ID."
   }
 }
 

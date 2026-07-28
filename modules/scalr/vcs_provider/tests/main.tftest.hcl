@@ -131,3 +131,33 @@ run "no_providers_when_map_is_empty" {
     error_message = "Expected no VCS providers to be planned when vcs_providers is empty."
   }
 }
+
+run "comment_control_flags_are_wired_through" {
+  command = plan
+
+  variables {
+    vcs_providers = {
+      github_comments = {
+        account_id                = "acc-xxxxxxxxxx"
+        comments_enabled          = true
+        pr_merge_comments_enabled = true
+      }
+    }
+    vcs_provider_tokens = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      github_comments = "my-github-token"
+    }
+  }
+
+  # comments_enabled and pr_merge_comments_enabled both default to null (unset), so setting them to
+  # true is a distinct, non-default value that proves each is wired to the correct resource argument.
+  assert {
+    condition     = scalr_vcs_provider.this["github_comments"].comments_enabled == true
+    error_message = "Expected comments_enabled to be wired through to the scalr_vcs_provider resource."
+  }
+
+  assert {
+    condition     = scalr_vcs_provider.this["github_comments"].pr_merge_comments_enabled == true
+    error_message = "Expected pr_merge_comments_enabled to be wired through to the scalr_vcs_provider resource."
+  }
+}
