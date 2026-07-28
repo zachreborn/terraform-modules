@@ -1,8 +1,20 @@
 ###########################
 # Provider Configuration
 ###########################
+#
+# Both floors are derived from what this module actually uses:
+#
+#   >= 1.3.0  optional() attributes in object type constraints, which variables.tf
+#             relies on throughout. These became generally available in Terraform
+#             1.3; on 1.0 through 1.2 they are an opt-in experiment and this module
+#             fails to load. Lifecycle preconditions (1.2) and one() (0.15) are also
+#             used, and are covered by the same floor. Every OpenTofu release meets
+#             this, since OpenTofu 1.6 forked from Terraform 1.5.
+#
+#   >= 6.0.0  data.aws_region.current.region. AWS provider 6.0 deprecated the name
+#             and id attributes on that data source in favour of region.
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
