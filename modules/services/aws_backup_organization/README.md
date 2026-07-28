@@ -100,14 +100,14 @@ resource "aws_instance" "example" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
@@ -117,7 +117,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_backup_global_settings.organization](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_global_settings) | resource |
 | [aws_cloudwatch_event_rule.organization_changes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
 | [aws_cloudwatch_event_target.vault_deployment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
@@ -141,7 +141,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_aws_dr_region"></a> [aws\_dr\_region](#input\_aws\_dr\_region) | AWS disaster recovery region where DR backup vaults will be created | `string` | `"us-east-2"` | no |
 | <a name="input_aws_prod_region"></a> [aws\_prod\_region](#input\_aws\_prod\_region) | AWS production region where primary backup vaults will be created | `string` | `"us-west-2"` | no |
 | <a name="input_backup_plan_completion_window"></a> [backup\_plan\_completion\_window](#input\_backup\_plan\_completion\_window) | (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error | `number` | `1440` | no |
@@ -174,7 +174,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_active_accounts"></a> [active\_accounts](#output\_active\_accounts) | List of active accounts in the organization |
 | <a name="output_backup_configuration"></a> [backup\_configuration](#output\_backup\_configuration) | Summary of backup configuration |
 | <a name="output_backup_failure_alarm_arn"></a> [backup\_failure\_alarm\_arn](#output\_backup\_failure\_alarm\_arn) | ARN of the CloudWatch alarm for backup failures |

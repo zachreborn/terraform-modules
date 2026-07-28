@@ -228,9 +228,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.46.0 |
-| <a name="provider_aws.organization_config_account"></a> [aws.organization\_config\_account](#provider\_aws.organization\_config\_account) | 6.46.0 |
-| <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | 6.46.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws.organization_config_account"></a> [aws.organization\_config\_account](#provider\_aws.organization\_config\_account) | >= 6.0.0 |
+| <a name="provider_aws.organization_management_account"></a> [aws.organization\_management\_account](#provider\_aws.organization\_management\_account) | >= 6.0.0 |
 
 ## Modules
 

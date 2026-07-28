@@ -101,7 +101,7 @@ None. Feed the `ids` output into `modules/aws/workspaces/directory`'s `ip_group_
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.54.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 

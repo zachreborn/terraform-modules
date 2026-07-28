@@ -98,14 +98,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -115,14 +115,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_user_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
 | [aws_iam_policy.lookup](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_policy_arn"></a> [policy\_arn](#input\_policy\_arn) | (Optional) - The ARN of the policy you want to apply. Mutually exclusive with 'policy\_name'; exactly one of the two must be set. | `string` | `null` | no |
 | <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name) | (Optional) - The name of an AWS managed or customer-managed policy (as shown in IAM) to look up via the aws\_iam\_policy data source and attach. Mutually exclusive with 'policy\_arn'; exactly one of the two must be set. | `string` | `null` | no |
 | <a name="input_user"></a> [user](#input\_user) | (Required) - The user the policy should be applied to | `string` | n/a | yes |
@@ -130,7 +130,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the aws\_iam\_user\_policy\_attachment resource. |
 | <a name="output_policy_arn"></a> [policy\_arn](#output\_policy\_arn) | The ARN of the policy that was attached, resolved from either 'policy\_arn' or the 'policy\_name' lookup. |
 <!-- END_TF_DOCS -->
