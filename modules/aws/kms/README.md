@@ -148,7 +148,11 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_alias_name_prefix"></a> [alias\_name\_prefix](#output\_alias\_name\_prefix) | n/a |
 | <a name="output_arn"></a> [arn](#output\_arn) | Outputs |
+| <a name="output_deletion_window_in_days"></a> [deletion\_window\_in\_days](#output\_deletion\_window\_in\_days) | n/a |
+| <a name="output_description"></a> [description](#output\_description) | n/a |
+| <a name="output_enable_key_rotation"></a> [enable\_key\_rotation](#output\_enable\_key\_rotation) | n/a |
 | <a name="output_key_id"></a> [key\_id](#output\_key\_id) | n/a |
 <!-- END_TF_DOCS -->
 
