@@ -59,9 +59,11 @@ variable "gateway_timezone" {
 
   # Positive offsets reach +14:00 (Line Islands) and negative offsets stop at
   # -12:00. The API documents only the GMT[+-]hh:mm shape and a 10-character
-  # length cap, so the real-world range is enforced here.
+  # length cap, so the real-world range is enforced here. The two endpoint hours
+  # are special-cased to minute 00 so GMT+14:59 and GMT-12:59, which are past the
+  # documented bounds, are not accepted.
   validation {
-    condition     = can(regex("^GMT([+](0?[0-9]|1[0-4]):[0-5][0-9]|[-](0?[0-9]|1[0-2]):[0-5][0-9])?$", var.gateway_timezone))
+    condition     = can(regex("^GMT([+](0?[0-9]|1[0-3]):[0-5][0-9]|[+]14:00|[-](0?[0-9]|1[0-1]):[0-5][0-9]|[-]12:00)?$", var.gateway_timezone))
     error_message = "The value of gateway_timezone must be GMT, or GMT followed by an offset from GMT-12:00 to GMT+14:00 in the format GMT-hh:mm or GMT+hh:mm (for example GMT-7:00)."
   }
 }
@@ -85,11 +87,11 @@ variable "gateway_vpc_endpoint" {
 variable "maintenance_start_time" {
   type = object({
     hour_of_day    = number
-    minute_of_hour = optional(number)
+    minute_of_hour = number
     day_of_week    = optional(number)
     day_of_month   = optional(number)
   })
-  description = "(Optional) Weekly or monthly maintenance window. hour_of_day (0-23) and minute_of_hour (0-59); day_of_week (0-6, Sunday=0) for a weekly window or day_of_month (1-28) for a monthly window. Defaults to null, which lets the gateway pick a window."
+  description = "(Optional) Weekly or monthly maintenance window. Supply hour_of_day (0-23) and minute_of_hour (0-59), plus exactly one of day_of_week (0-6, Sunday=0) for a weekly window or day_of_month (1-28) for a monthly window. UpdateMaintenanceStartTime rejects an incomplete schedule outright, so all four pieces are enforced here rather than at apply. Defaults to null, which lets the gateway pick its own window."
   default     = null
 
   # The provider does range-check day_of_week (0-6) and day_of_month (1-28) with its
@@ -103,7 +105,7 @@ variable "maintenance_start_time" {
   }
 
   validation {
-    condition     = try(var.maintenance_start_time.minute_of_hour, null) == null ? true : var.maintenance_start_time.minute_of_hour >= 0 && var.maintenance_start_time.minute_of_hour <= 59
+    condition     = var.maintenance_start_time == null ? true : var.maintenance_start_time.minute_of_hour >= 0 && var.maintenance_start_time.minute_of_hour <= 59
     error_message = "The value of maintenance_start_time.minute_of_hour must be between 0 and 59."
   }
 
@@ -118,11 +120,13 @@ variable "maintenance_start_time" {
     error_message = "The value of maintenance_start_time.day_of_month must be between 1 and 28; AWS cannot start maintenance on days 29 through 31."
   }
 
-  # A window is either weekly or monthly, never both. The provider forwards both fields
-  # without complaint, so catch the contradiction here rather than letting the API pick.
+  # A window is weekly or monthly - exactly one, never both and never neither. AWS
+  # documents that a complete schedule requires MinuteOfHour, HourOfDay, and either
+  # DayOfMonth or DayOfWeek, and rejects the whole request if the schedule is
+  # incomplete. The provider forwards whatever it is given, so enforce the XOR here.
   validation {
-    condition     = var.maintenance_start_time == null ? true : !(try(var.maintenance_start_time.day_of_week, null) != null && try(var.maintenance_start_time.day_of_month, null) != null)
-    error_message = "Set only one of maintenance_start_time.day_of_week (weekly window) or maintenance_start_time.day_of_month (monthly window), not both."
+    condition     = var.maintenance_start_time == null ? true : (try(var.maintenance_start_time.day_of_week, null) != null) != (try(var.maintenance_start_time.day_of_month, null) != null)
+    error_message = "Set exactly one of maintenance_start_time.day_of_week (weekly window) or maintenance_start_time.day_of_month (monthly window); AWS rejects a maintenance schedule that specifies both or neither."
   }
 }
 
@@ -301,6 +305,16 @@ variable "s3_smb_file_shares" {
     ])
     error_message = "Each s3_smb_file_shares kms_key_arn must be null or a KMS key or alias ARN. The provider rejects a bare alias/<name>, so give an alias as arn:<partition>:kms:<region>:<account>:alias/<name>."
   }
+
+  # AWS ignores KMSKey unless KMSEncrypted is true and silently falls back to SSE-S3,
+  # so a share configured with a key but without kms_encrypted would look encrypted
+  # with a customer key while it is not.
+  validation {
+    condition = alltrue([
+      for share in var.s3_smb_file_shares : share.kms_key_arn == null ? true : share.kms_encrypted == true
+    ])
+    error_message = "Each s3_smb_file_shares share that sets kms_key_arn must also set kms_encrypted = true; AWS ignores the key otherwise and encrypts with SSE-S3."
+  }
 }
 
 variable "s3_nfs_file_shares" {
@@ -376,6 +390,15 @@ variable "s3_nfs_file_shares" {
     error_message = "Each s3_nfs_file_shares kms_key_arn must be null or a KMS key or alias ARN. The provider rejects a bare alias/<name>, so give an alias as arn:<partition>:kms:<region>:<account>:alias/<name>."
   }
 
+  # See the equivalent validation on s3_smb_file_shares: a key without kms_encrypted
+  # is silently ignored by AWS in favour of SSE-S3.
+  validation {
+    condition = alltrue([
+      for share in var.s3_nfs_file_shares : share.kms_key_arn == null ? true : share.kms_encrypted == true
+    ])
+    error_message = "Each s3_nfs_file_shares share that sets kms_key_arn must also set kms_encrypted = true; AWS ignores the key otherwise and encrypts with SSE-S3."
+  }
+
   # client_list entries are CIDR blocks or bare IPv4 addresses that may mount the share.
   validation {
     condition = alltrue(flatten([
@@ -393,7 +416,7 @@ variable "s3_nfs_file_shares" {
 
 variable "create_iam_role" {
   type        = bool
-  description = "(Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3_bucket_arns must list the buckets the role may access. Ignored when role_arn is supplied. Defaults to false."
+  description = "(Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3_bucket_arns must list the buckets the role may access, and the generated policy additionally grants KMS permissions on any key referenced by a share's kms_key_arn. The generated policy is scoped to bucket ARNs only, so it cannot serve a share whose location_arn is an S3 access point - supply role_arn for those. Ignored when role_arn is supplied. Defaults to false."
   default     = false
 }
 
@@ -450,8 +473,8 @@ variable "cloudwatch_retention_in_days" {
   description = "(Optional) Number of days to retain gateway log events in the CloudWatch log group. Set to 0 to retain indefinitely. Defaults to 90."
   default     = 90
   validation {
-    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_retention_in_days)
-    error_message = "The value of cloudwatch_retention_in_days must be one of the valid CloudWatch log retention periods: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653."
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_retention_in_days)
+    error_message = "The value of cloudwatch_retention_in_days must be one of the valid CloudWatch log retention periods: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653."
   }
 }
 

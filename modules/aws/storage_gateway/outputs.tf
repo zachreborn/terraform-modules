@@ -34,7 +34,7 @@ output "endpoint_type" {
 
 output "cache_disk_ids" {
   description = "The set of local disk IDs allocated as cache storage on the gateway."
-  value       = [for cache in aws_storagegateway_cache.this : cache.disk_id]
+  value       = toset([for cache in aws_storagegateway_cache.this : cache.disk_id])
 }
 
 output "file_system_association_arns" {

@@ -90,6 +90,14 @@ mock_provider "aws" {
 variables {
   gateway_name       = "corp-file-gateway"
   gateway_ip_address = "10.0.1.50"
+
+  # SMB shares default to ActiveDirectory authentication and FSx associations are
+  # served over SMB, so both require a domain-joined gateway.
+  smb_active_directory_settings = {
+    domain_name = "corp.example.com"
+    username    = "svc_join"
+    password    = "testpass" # gitleaks:allow
+  }
 }
 
 run "generated_kms_key_flows_to_the_log_group_and_outputs" {
@@ -163,14 +171,40 @@ run "kms_and_cloudwatch_settings_pass_through_to_child_modules" {
     cloudwatch_retention_in_days    = 30
   }
 
+  # Assert the values actually reached the child module, not merely that the child
+  # exists: a non-null ARN would still pass if every argument assignment were deleted.
   assert {
-    condition     = module.kms_key[0].arn != null
-    error_message = "Expected the kms child module to expose a non-null arn under custom settings."
+    condition     = module.kms_key[0].deletion_window_in_days == 10
+    error_message = "Expected kms_key_deletion_window_in_days to reach the kms child module."
   }
 
   assert {
+    condition     = module.kms_key[0].enable_key_rotation == false
+    error_message = "Expected kms_key_enable_key_rotation to reach the kms child module."
+  }
+
+  assert {
+    condition     = module.kms_key[0].description == "custom description"
+    error_message = "Expected kms_key_description to reach the kms child module."
+  }
+
+  # The kms child module prepends "alias/" when the caller's prefix omits it.
+  assert {
+    condition     = module.kms_key[0].alias_name_prefix == "alias/custom_prefix"
+    error_message = "Expected kms_key_name_prefix to reach the kms child module."
+  }
+
+  # cloudwatch/log_group exposes only arn/id/name, so cloudwatch_retention_in_days and
+  # cloudwatch_name_prefix cannot be asserted from here without adding outputs to that
+  # shared child module. The KMS key it receives is asserted instead.
+  assert {
     condition     = module.cloudwatch_log_group[0].arn != null
     error_message = "Expected the cloudwatch/log_group child module to expose a non-null arn under custom settings."
+  }
+
+  assert {
+    condition     = output.kms_key_arn == module.kms_key[0].arn
+    error_message = "Expected the module-created key to be the one reported as encrypting the log group."
   }
 }
 

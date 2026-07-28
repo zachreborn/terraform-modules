@@ -23,16 +23,36 @@ data "aws_region" "current" {}
 ###########################
 
 locals {
-  # Whether this module creates the KMS key for the gateway log group. Gated on
-  # the module also creating the log group: a caller-supplied
-  # cloudwatch_log_group_arn arrives with its own encryption configuration, so
-  # creating a key alongside it would leave an orphaned, billable CMK that no
-  # resource consumes.
-  create_kms_key = var.create_cloudwatch_log_group && var.cloudwatch_log_group_arn == null && var.create_kms_key
+  # Whether this module creates the gateway log group. A caller-supplied
+  # cloudwatch_log_group_arn takes precedence over creating one.
+  create_log_group = var.create_cloudwatch_log_group && var.cloudwatch_log_group_arn == null
 
-  # Resolve the KMS key ARN used to encrypt the gateway log group: either the
-  # key created by this module or a caller-supplied key.
-  kms_key_arn = local.create_kms_key ? module.kms_key[0].arn : var.kms_key_id
+  # Whether this module creates the KMS key for the gateway log group. Gated on
+  # the module also creating the log group: a caller-supplied log group arrives
+  # with its own encryption configuration, so creating a key alongside it would
+  # leave an orphaned, billable CMK that no resource consumes.
+  create_kms_key = local.create_log_group && var.create_kms_key
+
+  # Resolve the KMS key ARN encrypting the gateway log group. Null unless this
+  # module actually creates a log group, so the kms_key_arn output never reports
+  # a key that encrypts nothing: kms_key_id is ignored when there is no log group
+  # for it to apply to.
+  kms_key_arn = local.create_log_group ? (local.create_kms_key ? module.kms_key[0].arn : var.kms_key_id) : null
+
+  # Customer-managed keys referenced by the file shares. The role a share assumes
+  # needs KMS permissions on these keys, otherwise SSE-KMS reads and writes through
+  # the share fail even though the S3 permissions are correct.
+  share_kms_key_arns = distinct(concat(
+    [for share in values(var.s3_smb_file_shares) : share.kms_key_arn if share.kms_key_arn != null],
+    [for share in values(var.s3_nfs_file_shares) : share.kms_key_arn if share.kms_key_arn != null],
+  ))
+
+  # The SMB and NFS share objects have different attribute sets, so reduce both to
+  # the two fields the shared role checks need before combining them.
+  share_role_locations = concat(
+    [for share in values(var.s3_smb_file_shares) : { role_arn = share.role_arn, location_arn = share.location_arn }],
+    [for share in values(var.s3_nfs_file_shares) : { role_arn = share.role_arn, location_arn = share.location_arn }],
+  )
 
   # Resolve the CloudWatch log group ARN wired to the gateway: a caller-supplied
   # ARN takes precedence over one created by this module.
@@ -91,9 +111,13 @@ module "kms_key" {
           "kms:ReEncrypt*"
         ],
         "Resource" = "*",
+        # Scoped to log groups under this module's own name prefix rather than
+        # every log group in the account and Region, so unrelated log groups
+        # cannot reuse this dedicated key. ArnEquals supports wildcards and
+        # behaves identically to ArnLike.
         "Condition" = {
           "ArnEquals" = {
-            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"
+            "kms:EncryptionContext:aws:logs:arn" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.cloudwatch_name_prefix}*"
           }
         }
       }
@@ -106,7 +130,7 @@ module "kms_key" {
 ###########################
 
 module "cloudwatch_log_group" {
-  count  = var.create_cloudwatch_log_group && var.cloudwatch_log_group_arn == null ? 1 : 0
+  count  = local.create_log_group ? 1 : 0
   source = "../cloudwatch/log_group"
 
   kms_key_id        = local.kms_key_arn
@@ -172,10 +196,41 @@ data "aws_iam_policy_document" "s3_access" {
     resources = [for arn in var.s3_bucket_arns : "${arn}/*"]
   }
 
+  # Shares encrypted with a customer-managed key need KMS permissions on that key
+  # in addition to the S3 permissions above; without them SSE-KMS reads and writes
+  # through the share fail. Scoped to the keys the shares actually reference.
+  dynamic "statement" {
+    for_each = length(local.share_kms_key_arns) > 0 ? [1] : []
+    content {
+      sid    = "AllowKMSForEncryptedShares"
+      effect = "Allow"
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:ReEncryptFrom",
+        "kms:ReEncryptTo",
+      ]
+      resources = local.share_kms_key_arns
+    }
+  }
+
   lifecycle {
     precondition {
       condition     = length(var.s3_bucket_arns) > 0
       error_message = "s3_bucket_arns must contain at least one bucket ARN when create_iam_role is true; an IAM policy cannot be created with no resources."
+    }
+
+    # The generated policy is scoped to bucket ARNs, which does not cover access
+    # through an S3 access point. Rather than silently produce a role that cannot
+    # serve such a share, require the caller to bring their own role.
+    precondition {
+      condition = alltrue([
+        for share in local.share_role_locations :
+        share.role_arn != null || !can(regex("^arn:[^:]+:s3:[^:]+:[0-9]{12}:accesspoint/", share.location_arn))
+      ])
+      error_message = "create_iam_role cannot serve an access point-backed share: the generated policy is scoped to bucket ARNs and grants no access point permissions. Supply role_arn (module-level or per-share) with a role scoped to the access point instead."
     }
   }
 }
@@ -297,6 +352,14 @@ resource "aws_storagegateway_file_system_association" "this" {
       condition     = var.gateway_arn != null || var.gateway_type == "FILE_FSX_SMB"
       error_message = "File system association \"${each.key}\" requires gateway_type = \"FILE_FSX_SMB\"; S3 file gateways cannot associate an FSx file system."
     }
+
+    # An FSx File Gateway serves the file system over SMB, so it must be joined to
+    # the domain before an association can be created. Skipped for an adopted
+    # gateway, which may have been joined out of band.
+    precondition {
+      condition     = var.gateway_arn != null || var.smb_active_directory_settings != null
+      error_message = "File system association \"${each.key}\" requires the gateway to be domain joined: set smb_active_directory_settings, or adopt an already-joined gateway with gateway_arn."
+    }
   }
 }
 
@@ -354,6 +417,15 @@ resource "aws_storagegateway_smb_file_share" "this" {
     precondition {
       condition     = var.gateway_arn != null || var.gateway_type == "FILE_S3"
       error_message = "S3 SMB file share \"${each.key}\" requires gateway_type = \"FILE_S3\"; FSx file gateways cannot serve S3-backed shares."
+    }
+
+    # authentication defaults to ActiveDirectory in the provider, which requires a
+    # domain-joined gateway; creating the share fails otherwise. GuestAccess is not
+    # checked here: that share creates successfully without smb_guest_password, it
+    # is simply unusable until one is set. Skipped for an adopted gateway.
+    precondition {
+      condition     = var.gateway_arn != null || coalesce(each.value.authentication, "ActiveDirectory") != "ActiveDirectory" || var.smb_active_directory_settings != null
+      error_message = "S3 SMB file share \"${each.key}\" uses ActiveDirectory authentication (the default), which requires the gateway to be domain joined: set smb_active_directory_settings, choose authentication = \"GuestAccess\", or adopt an already-joined gateway with gateway_arn."
     }
   }
 }

@@ -312,9 +312,11 @@ run "cache_disks_attach_to_the_gateway" {
     error_message = "Expected cache disks to attach to the gateway created by this module."
   }
 
+  # Set equality, not a subset check: a subset check also passes for an empty output
+  # or one that dropped a disk.
   assert {
-    condition     = length(setsubtract(toset(output.cache_disk_ids), ["SCSI-0:0", "SCSI-0:1"])) == 0
-    error_message = "Expected the cache_disk_ids output to list the allocated disk IDs."
+    condition     = output.cache_disk_ids == toset(["SCSI-0:0", "SCSI-0:1"])
+    error_message = "Expected the cache_disk_ids output to list exactly the allocated disk IDs."
   }
 }
 
@@ -323,6 +325,12 @@ run "file_system_associations_plan_successfully" {
 
   variables {
     gateway_type = "FILE_FSX_SMB"
+
+    smb_active_directory_settings = {
+      domain_name = "corp.example.com"
+      username    = "svc_join"
+      password    = "testpass" # gitleaks:allow
+    }
 
     file_system_associations = {
       corp = {
@@ -364,6 +372,12 @@ run "file_system_association_omits_cache_attributes_when_unset" {
   variables {
     gateway_type = "FILE_FSX_SMB"
 
+    smb_active_directory_settings = {
+      domain_name = "corp.example.com"
+      username    = "svc_join"
+      password    = "testpass" # gitleaks:allow
+    }
+
     file_system_associations = {
       corp = {
         location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
@@ -386,6 +400,12 @@ run "s3_file_shares_use_the_module_created_iam_role" {
     gateway_type    = "FILE_S3"
     create_iam_role = true
     s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data"]
+
+    smb_active_directory_settings = {
+      domain_name = "corp.example.com"
+      username    = "svc_join"
+      password    = "testpass" # gitleaks:allow
+    }
 
     s3_smb_file_shares = {
       finance = {
@@ -471,6 +491,12 @@ run "per_share_role_arn_overrides_the_module_role" {
     gateway_type    = "FILE_S3"
     create_iam_role = true
     s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data"]
+
+    smb_active_directory_settings = {
+      domain_name = "corp.example.com"
+      username    = "svc_join"
+      password    = "testpass" # gitleaks:allow
+    }
 
     s3_smb_file_shares = {
       finance = {

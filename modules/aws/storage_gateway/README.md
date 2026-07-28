@@ -187,16 +187,7 @@ aws storagegateway join-domain \
   --domain-controllers {{dc_ip_1}} {{dc_ip_2}}
 ```
 
-**4. Attach the CloudWatch log group** (module output `cloudwatch_log_group_arn`):
-
-```bash
-aws storagegateway update-gateway-information \
-  --region {{region}} \
-  --gateway-arn {{gateway_arn_from_step_2}} \
-  --cloud-watch-log-group-arn {{log_group_arn}}
-```
-
-**5. Allocate the cache disk** (write-once — there is no API to remove or
+**4. Allocate the cache disk** (write-once — there is no API to remove or
 change cache, so allocate it during bootstrap rather than in Terraform; on
 some hypervisors the gateway re-identifies allocated disks by UUID, which
 makes a Terraform-managed cache diff forever):
@@ -206,8 +197,23 @@ aws storagegateway list-local-disks --region {{region}} --gateway-arn {{gateway_
 aws storagegateway add-cache --region {{region}} --gateway-arn {{gateway_arn_from_step_2}} --disk-ids {{disk_id_from_list_local_disks}}
 ```
 
-**6.** Set `gateway_arn` on the module call to the ARN from step 2, leave
-`cache_disk_ids` empty, and apply.
+**5.** Set `gateway_arn` on the module call to the ARN from step 2, leave
+`cache_disk_ids` empty, and apply. This is what creates the log group.
+
+**6. Attach the CloudWatch log group** — run this *after* the apply, because
+the log group is name-prefixed and does not exist until Terraform creates it.
+Take the ARN from the module's `cloudwatch_log_group_arn` output:
+
+```bash
+aws storagegateway update-gateway-information \
+  --region {{region}} \
+  --gateway-arn {{gateway_arn_from_step_2}} \
+  --cloud-watch-log-group-arn {{cloudwatch_log_group_arn_output}}
+```
+
+If you would rather attach the log group before the gateway serves traffic,
+create it out of band and pass it as `cloudwatch_log_group_arn` instead; the
+module then skips creating both the log group and its KMS key.
 
 #### Manual teardown / replacement commands (existing-gateway mode)
 
@@ -215,8 +221,8 @@ aws storagegateway add-cache --region {{region}} --gateway-arn {{gateway_arn_fro
 that previously held a live registration cannot be re-activated in place —
 deploy a fresh VM from the image, run bootstrap steps 1-4 on it, then point
 `gateway_arn` at the new ARN and apply (Terraform replaces the cache
-assignment and file shares onto the new gateway). Delete the old record
-afterward (step 2 below).
+assignment and file shares onto the new gateway). Re-attach the log group
+(bootstrap step 6) afterward, and delete the old record (step 2 below).
 
 **Decommissioning entirely** — in this order:
 
@@ -310,7 +316,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 > - retrieve its **activation key** (from the VM's local web UI or by letting AWS connect to it) and pass it as `activation_key`, **or**
 > - pass the VM's reachable IP as `gateway_ip_address` and let the provider fetch the activation key during apply.
 >
-> Exactly one of `activation_key` or `gateway_ip_address` must be supplied.
+> Exactly one of `activation_key` or `gateway_ip_address` must be supplied **when this
+> module creates the gateway**. In existing-gateway mode you supply `gateway_arn` instead
+> and neither activation input applies — see the existing-gateway example above.
 
 - One or more local disks presented to the gateway VM to serve as cache, identified via the `aws_storagegateway_local_disk` data source.
 - **For FSx file gateways (`FILE_FSX_SMB`):** an Amazon FSx for Windows File Server file system to associate (its ARN feeds `file_system_associations[*].location_arn` — e.g. the `arn` output of the `fsx` module), a domain user with access to it for each association, and Active Directory join settings via `smb_active_directory_settings`.
@@ -318,7 +326,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **AWS-side only.** This module manages the AWS resources: gateway registration/activation, cache disk allocation, FSx file system associations, S3 SMB/NFS file shares, an optional IAM role for S3 access, and an optional CloudWatch log group (with KMS) for gateway health logs. Deploying and activating the on-premises VM is a manual prerequisite by design.
+- **AWS-side only.** This module manages the AWS resources: gateway registration/activation, cache disk allocation, FSx file system associations, S3 SMB/NFS file shares, an optional IAM role for S3 access, and an optional CloudWatch log group (with KMS) for gateway health logs. **Deploying and powering on the on-premises VM is always a manual prerequisite**; activation is not. In the primary mode the module activates and registers the gateway itself from `activation_key` or `gateway_ip_address`. Only existing-gateway mode (`gateway_arn`) requires you to activate out of band, because an on-premises appliance honors an activation key for too short a window for a pipeline-driven apply.
 - **One gateway per module call.** This module manages a single gateway by design, so `gateway_name`, `gateway_type`, and the other gateway-level inputs are scalars rather than a map. Everything that hangs off the gateway — cache disks, file system associations, and S3 SMB/NFS file shares — is keyed by a logical name via `for_each` maps, so a single call scales to as many shares as you need. To manage several gateways, call the module once per gateway.
 - **File gateways only.** `gateway_type` is restricted to `FILE_S3` and `FILE_FSX_SMB`. TAPE/VTL gateway arguments (`tape_drive_type`, `medium_changer_type`) are intentionally out of scope for this module.
 - **`FILE_S3` is the default gateway type.** AWS has closed **Amazon FSx File Gateway** (`FILE_FSX_SMB`) to new customers; existing customers can continue to use it. Defaulting to `FILE_FSX_SMB` would hand a new caller a type they cannot provision, so the default is `FILE_S3` and `FILE_FSX_SMB` remains available as an explicit opt-in.
@@ -326,6 +334,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **SMB signing is required by default.** `smb_security_strategy` defaults to `MandatorySigning` rather than deferring to AWS's `ClientSpecified`, which enforces nothing. Set it explicitly to `ClientSpecified` if you must support legacy clients that cannot sign, or to `MandatoryEncryption` to additionally require SMB3 encryption (which rejects clients that cannot negotiate SMB3).
 - **The bucket is external by design.** This module does not create the S3 bucket — pass its ARN as each share's `location_arn`. Manage the bucket (versioning, encryption, lifecycle, replication, deletion protection) with the `s3/bucket` module so the data store's lifecycle is decoupled from the gateway.
 - **IAM role by composition, with BYO override.** When `create_iam_role = true` (and `role_arn` is unset), the module composes `../iam/role` + `../iam/policy` to create a role the file shares assume, scoped to `s3_bucket_arns`. Supply `role_arn` to bring your own role instead; it becomes the default for any share that does not set its own `role_arn`.
+
+  The generated policy also grants `kms:Decrypt`, `kms:DescribeKey`, `kms:Encrypt`, `kms:GenerateDataKey`, and `kms:ReEncrypt*` on every key referenced by a share's `kms_key_arn` — without those, an SSE-KMS share fails on read and write even though its S3 permissions are correct. Give those shares a **key** ARN rather than an alias ARN: an alias ARN in an IAM `Resource` does not grant access to the underlying key.
+
+  The generated policy is scoped to bucket ARNs and therefore cannot serve a share whose `location_arn` is an **S3 access point**, which needs access point-scoped permissions the module has no input for. That combination is rejected at plan time; supply `role_arn` with a suitably scoped role for access point-backed shares.
 - **Logging by composition.** When `create_cloudwatch_log_group = true`, a log group is created via the `../cloudwatch/log_group` child module and, when `create_kms_key = true`, encrypted with a key from the `../kms` child module. Supply `cloudwatch_log_group_arn` to use an existing log group instead. The KMS key exists only to encrypt a log group this module creates, so it is skipped both when `create_cloudwatch_log_group = false` and when you bring your own log group — otherwise the module would leave behind a billable customer-managed key that nothing consumes.
 - **No bandwidth rate limit inputs — deliberately omitted.** `aws_storagegateway_gateway` exposes `average_download_rate_limit_in_bits_per_sec` and `average_upload_rate_limit_in_bits_per_sec`, but this module does not surface them, because on file gateways they are worse than inert.
 
@@ -385,7 +397,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_cloudwatch_name_prefix"></a> [cloudwatch\_name\_prefix](#input\_cloudwatch\_name\_prefix) | (Optional) Name prefix for the CloudWatch log group created for gateway health logs. Defaults to /aws/storagegateway/. | `string` | `"/aws/storagegateway/"` | no |
 | <a name="input_cloudwatch_retention_in_days"></a> [cloudwatch\_retention\_in\_days](#input\_cloudwatch\_retention\_in\_days) | (Optional) Number of days to retain gateway log events in the CloudWatch log group. Set to 0 to retain indefinitely. Defaults to 90. | `number` | `90` | no |
 | <a name="input_create_cloudwatch_log_group"></a> [create\_cloudwatch\_log\_group](#input\_create\_cloudwatch\_log\_group) | (Optional) Determines whether this module creates a CloudWatch log group (via the cloudwatch/log\_group child module) for gateway health logs and wires it to the gateway. Ignored when cloudwatch\_log\_group\_arn is supplied. Defaults to true. | `bool` | `true` | no |
-| <a name="input_create_iam_role"></a> [create\_iam\_role](#input\_create\_iam\_role) | (Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3\_bucket\_arns must list the buckets the role may access. Ignored when role\_arn is supplied. Defaults to false. | `bool` | `false` | no |
+| <a name="input_create_iam_role"></a> [create\_iam\_role](#input\_create\_iam\_role) | (Optional) Determines whether this module creates the IAM role (and policy) that S3 file shares assume to read and write objects in their backing buckets. When true, s3\_bucket\_arns must list the buckets the role may access, and the generated policy additionally grants KMS permissions on any key referenced by a share's kms\_key\_arn. The generated policy is scoped to bucket ARNs only, so it cannot serve a share whose location\_arn is an S3 access point - supply role\_arn for those. Ignored when role\_arn is supplied. Defaults to false. | `bool` | `false` | no |
 | <a name="input_create_kms_key"></a> [create\_kms\_key](#input\_create\_kms\_key) | (Optional) Determines whether this module creates a dedicated KMS key (via the kms child module) to encrypt the CloudWatch log group. Used only when this module actually creates the log group, so it is ignored both when create\_cloudwatch\_log\_group is false and when cloudwatch\_log\_group\_arn supplies an existing log group (which already carries its own encryption configuration). Set to false to supply your own key via kms\_key\_id. Defaults to true. | `bool` | `true` | no |
 | <a name="input_file_system_associations"></a> [file\_system\_associations](#input\_file\_system\_associations) | (Optional) Map of FSx for Windows File Server associations keyed by a logical name. Per association: location\_arn (the FSx for Windows file system ARN — e.g. the arn output of the fsx module), username/password (a domain user with access to the file system), optional audit\_destination\_arn (CloudWatch log group ARN for SMB audit logs), and an optional cache\_attributes block with cache\_stale\_timeout\_in\_seconds. Requires gateway\_type FILE\_FSX\_SMB. Defaults to {}. This variable is deliberately NOT marked sensitive: it drives a resource for\_each, and Terraform forbids sensitive values there because the map keys become resource instance addresses. Each password is still redacted in plan output because the provider marks the underlying password argument sensitive, but it is stored in Terraform state in plaintext - supply it from a secret store and protect state access accordingly. | <pre>map(object({<br/>    location_arn          = string<br/>    password              = string<br/>    username              = string<br/>    audit_destination_arn = optional(string)<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_gateway_arn"></a> [gateway\_arn](#input\_gateway\_arn) | (Optional) ARN of an existing, externally activated gateway for this module to manage cache disks and file shares on, instead of creating one. Use for on-premises appliances, which only honor an activation for a short window after the activation key is generated - too short for pipeline-driven applies - so they must be activated out of band. When set, the module creates no gateway and the gateway-level arguments (activation\_key, gateway\_ip\_address, gateway\_vpc\_endpoint, gateway\_timezone, smb\_active\_directory\_settings, maintenance\_start\_time, SMB settings, cloudwatch\_log\_group\_arn wiring) are not applied; configure those on the gateway out of band. The module also cannot see an adopted gateway's type, so the gateway\_type checks on file shares and file system associations are skipped in this mode. Defaults to null. | `string` | `null` | no |
@@ -400,7 +412,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_kms_key_enable_key_rotation"></a> [kms\_key\_enable\_key\_rotation](#input\_kms\_key\_enable\_key\_rotation) | (Optional) Specifies whether automatic key rotation is enabled on the KMS key created by this module. Defaults to true. | `bool` | `true` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | (Optional) ARN of an existing KMS key used to encrypt the CloudWatch log group. Used only when create\_kms\_key is false. Defaults to null (the log group is unencrypted by a customer-managed key). | `string` | `null` | no |
 | <a name="input_kms_key_name_prefix"></a> [kms\_key\_name\_prefix](#input\_kms\_key\_name\_prefix) | (Optional) Creates a unique KMS alias beginning with the specified prefix. The alias/ prefix is added automatically if omitted. | `string` | `"storage_gateway"` | no |
-| <a name="input_maintenance_start_time"></a> [maintenance\_start\_time](#input\_maintenance\_start\_time) | (Optional) Weekly or monthly maintenance window. hour\_of\_day (0-23) and minute\_of\_hour (0-59); day\_of\_week (0-6, Sunday=0) for a weekly window or day\_of\_month (1-28) for a monthly window. Defaults to null, which lets the gateway pick a window. | <pre>object({<br/>    hour_of_day    = number<br/>    minute_of_hour = optional(number)<br/>    day_of_week    = optional(number)<br/>    day_of_month   = optional(number)<br/>  })</pre> | `null` | no |
+| <a name="input_maintenance_start_time"></a> [maintenance\_start\_time](#input\_maintenance\_start\_time) | (Optional) Weekly or monthly maintenance window. Supply hour\_of\_day (0-23) and minute\_of\_hour (0-59), plus exactly one of day\_of\_week (0-6, Sunday=0) for a weekly window or day\_of\_month (1-28) for a monthly window. UpdateMaintenanceStartTime rejects an incomplete schedule outright, so all four pieces are enforced here rather than at apply. Defaults to null, which lets the gateway pick its own window. | <pre>object({<br/>    hour_of_day    = number<br/>    minute_of_hour = number<br/>    day_of_week    = optional(number)<br/>    day_of_month   = optional(number)<br/>  })</pre> | `null` | no |
 | <a name="input_role_arn"></a> [role\_arn](#input\_role\_arn) | (Optional) ARN of an existing IAM role for S3 file shares to assume when accessing their backing buckets. Takes precedence over create\_iam\_role. Used as the default role\_arn for any share that does not set its own. Defaults to null. | `string` | `null` | no |
 | <a name="input_s3_bucket_arns"></a> [s3\_bucket\_arns](#input\_s3\_bucket\_arns) | (Optional) Bucket ARNs the module-created IAM role is granted read/write access to. Required (non-empty) when create\_iam\_role is true; ignored otherwise. Grant the bucket root ARN (e.g. arn:aws:s3:::my-bucket) even when shares use a prefix. Defaults to []. | `list(string)` | `[]` | no |
 | <a name="input_s3_nfs_file_shares"></a> [s3\_nfs\_file\_shares](#input\_s3\_nfs\_file\_shares) | (Optional) Map of S3 NFS file shares keyed by a logical name (used as the Name tag). Requires gateway\_type FILE\_S3. Per share: location\_arn (the S3 bucket ARN, optionally with a /prefix, that this share exposes); client\_list (set of CIDRs/IPs allowed to mount the share); role\_arn (an IAM role the gateway assumes to access the bucket — defaults to the role this module creates when create\_iam\_role is true); squash (RootSquash, NoSquash, or AllSquash); notification\_policy (JSON notification policy); an optional nfs\_file\_share\_defaults block (POSIX directory\_mode/file\_mode/group\_id/owner\_id for new objects); and the usual share tunables (read\_only, object\_acl, default\_storage\_class, cache\_attributes, etc.). Defaults to {}. | <pre>map(object({<br/>    location_arn            = string<br/>    client_list             = set(string)<br/>    role_arn                = optional(string)<br/>    audit_destination_arn   = optional(string)<br/>    bucket_region           = optional(string)<br/>    default_storage_class   = optional(string)<br/>    file_share_name         = optional(string)<br/>    guess_mime_type_enabled = optional(bool)<br/>    kms_encrypted           = optional(bool)<br/>    kms_key_arn             = optional(string)<br/>    notification_policy     = optional(string)<br/>    object_acl              = optional(string)<br/>    read_only               = optional(bool)<br/>    requester_pays          = optional(bool)<br/>    squash                  = optional(string)<br/>    vpc_endpoint_dns_name   = optional(string)<br/>    nfs_file_share_defaults = optional(object({<br/>      directory_mode = optional(string)<br/>      file_mode      = optional(string)<br/>      group_id       = optional(number)<br/>      owner_id       = optional(number)<br/>    }))<br/>    cache_attributes = optional(object({<br/>      cache_stale_timeout_in_seconds = optional(number)<br/>    }))<br/>  }))</pre> | `{}` | no |

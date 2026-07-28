@@ -64,6 +64,15 @@ mock_provider "aws" {
 variables {
   gateway_name       = "corp-file-gateway"
   gateway_ip_address = "10.0.1.50"
+
+  # SMB shares default to ActiveDirectory authentication and FSx associations are
+  # served over SMB, so both require a domain-joined gateway. Supplied globally here
+  # so each run exercises the validation it is named for rather than this precondition.
+  smb_active_directory_settings = {
+    domain_name = "corp.example.com"
+    username    = "svc_join"
+    password    = "testpass" # gitleaks:allow
+  }
 }
 
 run "valid_baseline_does_not_fail" {
@@ -381,12 +390,16 @@ run "rejects_kms_key_deletion_window_above_maximum" {
 # maintenance_start_time
 ###########################
 
+# Each case below is otherwise a complete, valid schedule so that exactly the rule
+# under test is what fails. AWS requires hour, minute, and one cadence field.
 run "rejects_maintenance_hour_of_day_out_of_range" {
   command = plan
 
   variables {
     maintenance_start_time = {
-      hour_of_day = 24
+      hour_of_day    = 24
+      minute_of_hour = 0
+      day_of_week    = 1
     }
   }
 
@@ -400,6 +413,7 @@ run "rejects_maintenance_minute_of_hour_out_of_range" {
     maintenance_start_time = {
       hour_of_day    = 3
       minute_of_hour = 60
+      day_of_week    = 1
     }
   }
 
@@ -411,8 +425,9 @@ run "rejects_maintenance_day_of_week_out_of_range" {
 
   variables {
     maintenance_start_time = {
-      hour_of_day = 3
-      day_of_week = 7
+      hour_of_day    = 3
+      minute_of_hour = 0
+      day_of_week    = 7
     }
   }
 
@@ -424,8 +439,9 @@ run "rejects_maintenance_day_of_month_out_of_range" {
 
   variables {
     maintenance_start_time = {
-      hour_of_day  = 3
-      day_of_month = 29
+      hour_of_day    = 3
+      minute_of_hour = 0
+      day_of_month   = 29
     }
   }
 
@@ -437,13 +453,46 @@ run "rejects_maintenance_window_with_both_day_of_week_and_day_of_month" {
 
   variables {
     maintenance_start_time = {
-      hour_of_day  = 3
-      day_of_week  = 6
-      day_of_month = 15
+      hour_of_day    = 3
+      minute_of_hour = 0
+      day_of_week    = 6
+      day_of_month   = 15
     }
   }
 
   expect_failures = [var.maintenance_start_time]
+}
+
+# AWS rejects an incomplete schedule outright, so neither cadence field is as
+# invalid as both.
+run "rejects_maintenance_window_with_neither_day_of_week_nor_day_of_month" {
+  command = plan
+
+  variables {
+    maintenance_start_time = {
+      hour_of_day    = 3
+      minute_of_hour = 30
+    }
+  }
+
+  expect_failures = [var.maintenance_start_time]
+}
+
+run "accepts_a_monthly_maintenance_window" {
+  command = plan
+
+  variables {
+    maintenance_start_time = {
+      hour_of_day    = 3
+      minute_of_hour = 30
+      day_of_month   = 28
+    }
+  }
+
+  assert {
+    condition     = one(aws_storagegateway_gateway.this[0].maintenance_start_time).day_of_month == "28"
+    error_message = "Expected a monthly maintenance window to be accepted and passed through."
+  }
 }
 
 ###########################
@@ -874,6 +923,285 @@ run "rejects_s3_nfs_share_on_an_fsx_gateway" {
   }
 
   expect_failures = [aws_storagegateway_nfs_file_share.this]
+}
+
+###########################
+# Previously uncovered validation paths
+###########################
+
+run "rejects_malformed_file_system_association_audit_destination_arn" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_FSX_SMB"
+
+    file_system_associations = {
+      corp = {
+        location_arn          = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+        username              = "svc_gateway"
+        password              = "testpass" # gitleaks:allow
+        audit_destination_arn = "arn:aws:s3:::not-a-log-group"
+      }
+    }
+  }
+
+  expect_failures = [var.file_system_associations]
+}
+
+run "rejects_malformed_nfs_share_location_arn" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "corp-gateway-data"
+        client_list  = ["10.0.0.0/16"]
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+run "rejects_malformed_nfs_share_role_arn" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.0.0/16"]
+        role_arn     = "arn:aws:iam::123456789012:user/somebody"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+run "rejects_a_bare_kms_alias_on_an_nfs_share" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn  = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list   = ["10.0.0.0/16"]
+        kms_encrypted = true
+        kms_key_arn   = "alias/my-share-key"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+run "rejects_nfs_object_acl_that_is_not_a_canned_acl" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list  = ["10.0.0.0/16"]
+        object_acl   = "everyone-full-control"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+# A key without kms_encrypted is silently ignored by AWS in favour of SSE-S3, which
+# would leave the caller believing their customer key is in use.
+run "rejects_smb_share_kms_key_without_kms_encrypted" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/finance"
+        kms_key_arn  = "arn:aws:kms:us-east-1:123456789012:key/abcd1234-abcd-1234-abcd-abcd1234abcd"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_smb_file_shares]
+}
+
+run "rejects_nfs_share_kms_key_without_kms_encrypted" {
+  command = plan
+
+  variables {
+    gateway_type = "FILE_S3"
+    role_arn     = "arn:aws:iam::123456789012:role/byo-gateway-role"
+
+    s3_nfs_file_shares = {
+      archive = {
+        location_arn  = "arn:aws:s3:::corp-gateway-data/archive"
+        client_list   = ["10.0.0.0/16"]
+        kms_encrypted = false
+        kms_key_arn   = "arn:aws:kms:us-east-1:123456789012:key/abcd1234-abcd-1234-abcd-abcd1234abcd"
+      }
+    }
+  }
+
+  expect_failures = [var.s3_nfs_file_shares]
+}
+
+run "accepts_the_three_year_cloudwatch_retention" {
+  command = plan
+
+  variables {
+    cloudwatch_retention_in_days = 1096
+  }
+
+  assert {
+    condition     = length(module.cloudwatch_log_group) == 1
+    error_message = "Expected 1096 days (three years) to be accepted; CloudWatch Logs supports it."
+  }
+}
+
+run "rejects_positive_timezone_offset_past_the_endpoint_minute" {
+  command = plan
+
+  variables {
+    gateway_timezone = "GMT+14:59"
+  }
+
+  expect_failures = [var.gateway_timezone]
+}
+
+run "rejects_negative_timezone_offset_past_the_endpoint_minute" {
+  command = plan
+
+  variables {
+    gateway_timezone = "GMT-12:59"
+  }
+
+  expect_failures = [var.gateway_timezone]
+}
+
+run "accepts_a_lowercase_gateway_id_in_the_gateway_arn" {
+  command = plan
+
+  variables {
+    gateway_arn        = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12a3456b"
+    gateway_ip_address = null
+  }
+
+  assert {
+    condition     = output.gateway_id == "sgw-12a3456b"
+    error_message = "Expected the gateway_arn validation to accept a lowercase hexadecimal gateway ID."
+  }
+}
+
+run "rejects_gateway_name_longer_than_the_api_maximum" {
+  command = plan
+
+  variables {
+    # 300 characters, comfortably past the documented 255-character maximum.
+    gateway_name = join("", [for i in range(30) : "0123456789"])
+  }
+
+  expect_failures = [var.gateway_name]
+}
+
+###########################
+# Prerequisite preconditions
+###########################
+
+run "rejects_create_iam_role_for_an_access_point_backed_share" {
+  command = plan
+
+  variables {
+    gateway_type    = "FILE_S3"
+    create_iam_role = true
+    s3_bucket_arns  = ["arn:aws:s3:::corp-gateway-data"]
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:us-east-1:123456789012:accesspoint/corp-ap"
+      }
+    }
+  }
+
+  expect_failures = [data.aws_iam_policy_document.s3_access]
+}
+
+run "rejects_fsx_association_without_domain_join" {
+  command = plan
+
+  variables {
+    gateway_type                  = "FILE_FSX_SMB"
+    smb_active_directory_settings = null
+
+    file_system_associations = {
+      corp = {
+        location_arn = "arn:aws:fsx:us-east-1:123456789012:file-system/fs-0123456789abcdef0"
+        username     = "svc_gateway"
+        password     = "testpass" # gitleaks:allow
+      }
+    }
+  }
+
+  expect_failures = [aws_storagegateway_file_system_association.this]
+}
+
+run "rejects_active_directory_smb_share_without_domain_join" {
+  command = plan
+
+  variables {
+    gateway_type                  = "FILE_S3"
+    role_arn                      = "arn:aws:iam::123456789012:role/byo-gateway-role"
+    smb_active_directory_settings = null
+
+    s3_smb_file_shares = {
+      finance = {
+        location_arn = "arn:aws:s3:::corp-gateway-data/finance"
+      }
+    }
+  }
+
+  expect_failures = [aws_storagegateway_smb_file_share.this]
+}
+
+# GuestAccess does not need a domain join, so the same share planning without AD
+# settings proves the precondition is scoped to ActiveDirectory only.
+run "accepts_a_guest_access_smb_share_without_domain_join" {
+  command = plan
+
+  variables {
+    gateway_type                  = "FILE_S3"
+    role_arn                      = "arn:aws:iam::123456789012:role/byo-gateway-role"
+    smb_active_directory_settings = null
+
+    s3_smb_file_shares = {
+      guest = {
+        location_arn   = "arn:aws:s3:::corp-gateway-data/guest"
+        authentication = "GuestAccess"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_storagegateway_smb_file_share.this["guest"].authentication == "GuestAccess"
+    error_message = "Expected a GuestAccess share to plan without smb_active_directory_settings."
+  }
 }
 
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a
