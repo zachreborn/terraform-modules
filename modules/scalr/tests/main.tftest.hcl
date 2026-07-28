@@ -401,6 +401,39 @@ run "workspace_provider_configuration_supports_multiple_entries" {
   }
 }
 
+run "rejects_duplicate_provider_configuration_name_across_types" {
+  command = plan
+
+  variables {
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          workspace-1: {}
+    YAML
+
+    aws_provider_config = <<-YAML
+      ---
+      shared:
+        credentials_type: "access_keys"
+        access_key: "my-access-key"
+    YAML
+
+    azurerm_provider_config = <<-YAML
+      ---
+      shared:
+        auth_type: "oidc"
+        audience: "api://AzureADTokenExchange"
+        client_id: "00000000-0000-0000-0000-000000000000"
+        tenant_id: "11111111-1111-1111-1111-111111111111"
+    YAML
+  }
+
+  # "shared" is defined in both aws_provider_config and azurerm_provider_config; merge() would
+  # silently drop one. The data source precondition must reject the duplicate name across types.
+  expect_failures = [data.scalr_current_account.account]
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails, treat it
 # as a signal that the module code has a bug and fix the root cause in main.tf / variables.tf /
 # outputs.tf, then re-run `tofu test` until it passes for the right reason.

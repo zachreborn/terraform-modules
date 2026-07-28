@@ -174,3 +174,31 @@ run "workspace_without_vcs_repo_hooks_or_terragrunt_renders_no_blocks" {
     error_message = "Expected zero terragrunt blocks when terragrunt is omitted."
   }
 }
+
+run "operations_selects_mode_when_execution_mode_unset" {
+  command = plan
+
+  variables {
+    workspaces = {
+      state_only = {
+        environment_id = "env-xxxxxxxxxx"
+        operations     = false
+      }
+    }
+  }
+
+  # execution_mode is unset by default, so a caller can set the deprecated operations field without
+  # the module forcing a conflicting execution_mode = "remote". The plan succeeding (a populated ids
+  # output) proves the combination is accepted; operations is asserted to confirm it is wired
+  # through. (execution_mode is optional+computed, so its unset value is not deterministic under
+  # mock_provider and is intentionally not asserted here.)
+  assert {
+    condition     = output.ids["state_only"] != null
+    error_message = "A workspace setting operations with execution_mode left unset should plan successfully."
+  }
+
+  assert {
+    condition     = scalr_workspace.this["state_only"].operations == false
+    error_message = "operations should be forwarded to the resource."
+  }
+}

@@ -64,3 +64,23 @@ run "rejects_provider_without_matching_token" {
 
   expect_failures = [scalr_vcs_provider.this]
 }
+
+run "rejects_provider_with_null_token" {
+  command = plan
+
+  variables {
+    vcs_providers = {
+      github_main = {
+        account_id = "acc-xxxxxxxxxx"
+        vcs_type   = "github"
+      }
+    }
+    # A present-but-null token (as the composing root can produce when no token is configured) must
+    # also fail the precondition, not merely an absent key.
+    vcs_provider_tokens = {
+      github_main = null
+    }
+  }
+
+  expect_failures = [scalr_vcs_provider.this]
+}

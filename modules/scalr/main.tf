@@ -18,7 +18,25 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-data "scalr_current_account" "account" {}
+data "scalr_current_account" "account" {
+  lifecycle {
+    # Provider-configuration names must be unique across the four provider-type YAML files: they are
+    # merged into a single map (local.provider_configurations) that shares one ID namespace. merge()
+    # would otherwise silently drop a duplicate (last file wins), changing that name's provider type
+    # and making the per-type *_ids outputs point at the wrong configuration. Fail loudly instead --
+    # any collision makes the merged map smaller than the sum of the four parts.
+    # Computed from the raw decoded YAML maps (not the pc_* locals, which carry account_id from this
+    # very data source -- referencing those here would create a dependency cycle). If any name is
+    # shared across files, the merged map is smaller than the sum of the four key sets.
+    precondition {
+      condition = (
+        length(keys(local.aws_provider_config)) + length(keys(local.azurerm_provider_config)) + length(keys(local.google_provider_config)) + length(keys(local.custom_provider_config))
+        == length(merge(local.aws_provider_config, local.azurerm_provider_config, local.google_provider_config, local.custom_provider_config))
+      )
+      error_message = "Provider-configuration names must be unique across aws_provider_config, azurerm_provider_config, google_provider_config, and custom_provider_config. A name is defined in more than one of these files."
+    }
+  }
+}
 
 ###########################
 # Locals
@@ -62,6 +80,7 @@ locals {
   pc_aws = {
     for name, cfg in local.aws_provider_config : name => {
       account_id             = local.account_id
+      apply_only             = try(cfg.apply_only, false)
       environments           = try(cfg.environments, var.aws_environments)
       export_shell_variables = try(cfg.export_shell_variables, var.aws_export_shell_variables)
       owners                 = try(cfg.owners, var.aws_owners)
@@ -87,6 +106,7 @@ locals {
   pc_azurerm = {
     for name, cfg in local.azurerm_provider_config : name => {
       account_id             = local.account_id
+      apply_only             = false
       environments           = try(cfg.environments, var.azurerm_environments)
       export_shell_variables = try(cfg.export_shell_variables, var.azurerm_export_shell_variables)
       owners                 = try(cfg.owners, var.azurerm_owners)
@@ -108,6 +128,7 @@ locals {
   pc_google = {
     for name, cfg in local.google_provider_config : name => {
       account_id             = local.account_id
+      apply_only             = false
       environments           = try(cfg.environments, var.google_environments)
       export_shell_variables = try(cfg.export_shell_variables, var.google_export_shell_variables)
       owners                 = try(cfg.owners, var.google_owners)
@@ -133,6 +154,7 @@ locals {
   pc_custom = {
     for name, cfg in local.custom_provider_config : name => {
       account_id             = local.account_id
+      apply_only             = false
       environments           = try(cfg.environments, var.custom_environments)
       export_shell_variables = try(cfg.export_shell_variables, var.custom_export_shell_variables)
       owners                 = try(cfg.owners, var.custom_owners)

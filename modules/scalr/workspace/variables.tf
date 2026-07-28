@@ -11,7 +11,9 @@ variable "workspaces" {
       - auto_apply:                   (Optional) Whether "apply" runs automatically when "plan" ends without error. Default false.
       - auto_queue_runs:              (Optional) One of "skip_first", "always", "never", "on_create_only". Default "always".
       - deletion_protection_enabled:  (Optional) Whether the workspace is protected from accidental state loss. Default true.
-      - execution_mode:               (Optional) One of "remote", "local". Default "remote".
+      - execution_mode:               (Optional) One of "remote", "local". Left unset by default so the
+                                      upstream provider default (remote) applies and the deprecated
+                                      operations field can still select the mode; set explicitly to override.
       - force_latest_run:             (Optional) Whether the latest new run is automatically raised in priority. Default false.
       - iac_platform:                 (Optional) One of "terraform", "opentofu". Default "opentofu".
       - module_version_id:            (Optional) ID of a module version, in the format "modver-<RANDOM STRING>". Conflicts with
@@ -75,7 +77,7 @@ variable "workspaces" {
     auto_apply                  = optional(bool, false)
     auto_queue_runs             = optional(string, "always")
     deletion_protection_enabled = optional(bool, true)
-    execution_mode              = optional(string, "remote")
+    execution_mode              = optional(string)
     force_latest_run            = optional(bool, false)
     iac_platform                = optional(string, "opentofu")
     module_version_id           = optional(string)
@@ -132,9 +134,9 @@ variable "workspaces" {
 
   validation {
     condition = alltrue([
-      for k, v in var.workspaces : contains(["remote", "local"], v.execution_mode)
+      for k, v in var.workspaces : v.execution_mode == null || contains(["remote", "local"], v.execution_mode)
     ])
-    error_message = "Each workspaces entry's execution_mode must be one of \"remote\" or \"local\"."
+    error_message = "Each workspaces entry's execution_mode must be null, \"remote\", or \"local\"."
   }
 
   validation {

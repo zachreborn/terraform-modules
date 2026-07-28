@@ -2,7 +2,7 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.9.0"
   required_providers {
     scalr = {
       source  = "registry.scalr.io/scalr/scalr"
@@ -36,8 +36,11 @@ resource "scalr_vcs_provider" "this" {
     # the separate var.vcs_provider_tokens map. Fail fast with an actionable message naming the key
     # that is missing its token rather than letting a null token reach the provider.
     precondition {
-      condition     = contains(keys(var.vcs_provider_tokens), each.key)
-      error_message = "vcs_providers[\"${each.key}\"] has no matching entry in var.vcs_provider_tokens. Every VCS provider requires a token; add an entry keyed \"${each.key}\" to vcs_provider_tokens."
+      # Check the looked-up value is non-null, not merely that the key exists: a caller (or the
+      # composing root module, which builds a token entry for every provider) can supply a present
+      # but null token, which would otherwise slip past a key-presence check and reach the provider.
+      condition     = lookup(var.vcs_provider_tokens, each.key, null) != null
+      error_message = "vcs_providers[\"${each.key}\"] has no non-null token in var.vcs_provider_tokens. Every VCS provider requires a token; add a non-null entry keyed \"${each.key}\" to vcs_provider_tokens."
     }
   }
 }
