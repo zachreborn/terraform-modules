@@ -166,6 +166,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_fsx_ontap_storage_virtual_machine.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/fsx_ontap_storage_virtual_machine) | resource |
 | [aws_fsx_ontap_volume.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/fsx_ontap_volume) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
 
 ## Inputs
 
@@ -186,6 +187,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_kms_key_name_prefix"></a> [kms\_key\_name\_prefix](#input\_kms\_key\_name\_prefix) | (Optional) Creates a unique KMS alias beginning with the specified prefix. The alias/ prefix is added automatically if omitted. | `string` | `"fsx_ontap"` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The value of the Name tag applied to the file system and used as a friendly identifier. | `string` | n/a | yes |
 | <a name="input_preferred_subnet_id"></a> [preferred\_subnet\_id](#input\_preferred\_subnet\_id) | (Required) The subnet in which the preferred file server is located. Must be one of the subnets listed in subnet\_ids. | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | (Optional) Region where the file system, Storage Virtual Machines, volumes, and the KMS key created by this module are managed. Defaults to the Region set in the provider configuration. | `string` | `null` | no |
 | <a name="input_route_table_ids"></a> [route\_table\_ids](#input\_route\_table\_ids) | (Optional) A list of route table IDs that are associated with the file system. Used by MULTI\_AZ deployments so traffic to the floating endpoint IPs is routed correctly. A maximum of 50 route tables. Defaults to null. | `list(string)` | `null` | no |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | (Optional) A list of IDs for the security groups that apply to the network interfaces created for file system access. Defaults to null. | `list(string)` | `null` | no |
 | <a name="input_storage_capacity"></a> [storage\_capacity](#input\_storage\_capacity) | (Required) The storage capacity (GiB) of the file system. Valid values are between 1024 and 1048576 GiB. | `number` | n/a | yes |
@@ -213,8 +215,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_storage_virtual_machine_arns"></a> [storage\_virtual\_machine\_arns](#output\_storage\_virtual\_machine\_arns) | Map of Storage Virtual Machine logical names to their ARNs. |
 | <a name="output_storage_virtual_machine_endpoints"></a> [storage\_virtual\_machine\_endpoints](#output\_storage\_virtual\_machine\_endpoints) | Map of Storage Virtual Machine logical names to their endpoints (iSCSI, management, NFS, and SMB DNS names and IP addresses). |
 | <a name="output_storage_virtual_machine_ids"></a> [storage\_virtual\_machine\_ids](#output\_storage\_virtual\_machine\_ids) | Map of Storage Virtual Machine logical names to their IDs. |
+| <a name="output_storage_virtual_machine_subtypes"></a> [storage\_virtual\_machine\_subtypes](#output\_storage\_virtual\_machine\_subtypes) | Map of Storage Virtual Machine logical names to their subtypes (DEFAULT, DP\_DESTINATION, or SYNC\_DESTINATION). |
 | <a name="output_storage_virtual_machine_uuids"></a> [storage\_virtual\_machine\_uuids](#output\_storage\_virtual\_machine\_uuids) | Map of Storage Virtual Machine logical names to their UUIDs. |
 | <a name="output_volume_arns"></a> [volume\_arns](#output\_volume\_arns) | Map of volume logical names to their ARNs. |
+| <a name="output_volume_flexcache_endpoint_types"></a> [volume\_flexcache\_endpoint\_types](#output\_volume\_flexcache\_endpoint\_types) | Map of volume logical names to their FlexCache endpoint types (NONE, ORIGIN, or CACHE). |
 | <a name="output_volume_ids"></a> [volume\_ids](#output\_volume\_ids) | Map of volume logical names to their IDs. |
 | <a name="output_volume_uuids"></a> [volume\_uuids](#output\_volume\_uuids) | Map of volume logical names to their UUIDs. |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The identifier of the Virtual Private Cloud for the file system. |

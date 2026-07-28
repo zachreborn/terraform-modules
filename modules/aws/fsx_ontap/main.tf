@@ -16,6 +16,7 @@ terraform {
 ###########################
 
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 ###########################
 # Locals
@@ -50,6 +51,12 @@ locals {
   # mistyped storage_virtual_machine_key surfaces as the volume's precondition
   # error instead of a bare "Invalid index" while the argument is evaluated.
   storage_virtual_machine_ids = { for key, svm in aws_fsx_ontap_storage_virtual_machine.this : key => svm.id }
+
+  # automatic_backup_retention_days = 0 is the provider's own documented way to disable
+  # automatic backups. daily_automatic_backup_start_time still defaults to a non-null value
+  # though, so null it out here rather than always shipping a start time alongside a
+  # disabled backup schedule.
+  daily_automatic_backup_start_time = var.automatic_backup_retention_days == 0 ? null : var.daily_automatic_backup_start_time
 }
 
 ###########################
@@ -64,6 +71,7 @@ module "kms_key" {
   description             = var.kms_key_description
   enable_key_rotation     = var.kms_key_enable_key_rotation
   name_prefix             = var.kms_key_name_prefix
+  region                  = var.region
   tags                    = merge(tomap({ Name = "${var.name}-kms" }), var.tags)
   # Matches the ../transfer_family composition pattern: FSx does not require a
   # service-principal statement to use the key. FSx creates its own KMS grants
@@ -77,7 +85,7 @@ module "kms_key" {
         "Sid"    = "Enable IAM User Permissions",
         "Effect" = "Allow",
         "Principal" = {
-          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         },
         "Action"   = "kms:*",
         "Resource" = "*"
@@ -92,13 +100,14 @@ module "kms_key" {
 
 resource "aws_fsx_ontap_file_system" "this" {
   automatic_backup_retention_days   = var.automatic_backup_retention_days
-  daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
+  daily_automatic_backup_start_time = local.daily_automatic_backup_start_time
   deployment_type                   = var.deployment_type
   endpoint_ip_address_range         = var.endpoint_ip_address_range
   fsx_admin_password                = var.fsx_admin_password
   ha_pairs                          = var.ha_pairs
   kms_key_id                        = local.kms_key_arn
   preferred_subnet_id               = var.preferred_subnet_id
+  region                            = var.region
   route_table_ids                   = var.route_table_ids
   security_group_ids                = var.security_group_ids
   storage_capacity                  = var.storage_capacity
@@ -143,6 +152,18 @@ resource "aws_fsx_ontap_file_system" "this" {
       error_message = "preferred_subnet_id must be one of the subnets listed in subnet_ids."
     }
 
+    # Both are documented as "(Multi-AZ only)" by the CreateFileSystemOntapConfiguration API
+    # reference; AWS returns a 400 for either on a SINGLE_AZ deployment type.
+    precondition {
+      condition     = startswith(var.deployment_type, "MULTI_AZ") || var.route_table_ids == null
+      error_message = "route_table_ids is only supported on MULTI_AZ deployment types."
+    }
+
+    precondition {
+      condition     = startswith(var.deployment_type, "MULTI_AZ") || var.endpoint_ip_address_range == null
+      error_message = "endpoint_ip_address_range is only supported on MULTI_AZ deployment types."
+    }
+
     # AWS returns a 400 when ha_pairs is greater than 1 on any deployment type other than
     # SINGLE_AZ_2, which is the only type built from multiple HA pairs.
     precondition {
@@ -150,8 +171,11 @@ resource "aws_fsx_ontap_file_system" "this" {
       error_message = "ha_pairs may only exceed 1 when deployment_type is SINGLE_AZ_2; ${var.deployment_type} file systems run on a single HA pair."
     }
 
+    # Skipped when throughput_capacity is null: that's either the per-HA-pair variant (which
+    # has no total to divide) or neither option set, which the "exactly one" precondition
+    # above already reports clearly on its own.
     precondition {
-      condition     = local.throughput_per_ha_pair != null
+      condition     = var.throughput_capacity == null || local.throughput_per_ha_pair != null
       error_message = "throughput_capacity (${coalesce(var.throughput_capacity, 0)}) must divide evenly by ha_pairs (${local.ha_pairs}); AWS validates the resulting per-HA-pair throughput, not the total."
     }
 
@@ -173,6 +197,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "this" {
 
   file_system_id             = aws_fsx_ontap_file_system.this.id
   name                       = coalesce(each.value.name, each.key)
+  region                     = var.region
   root_volume_security_style = each.value.root_volume_security_style
   svm_admin_password         = each.value.svm_admin_password
   tags                       = merge(tomap({ Name = coalesce(each.value.name, each.key) }), var.tags)
@@ -206,6 +231,7 @@ resource "aws_fsx_ontap_volume" "this" {
   junction_path                        = each.value.junction_path
   name                                 = coalesce(each.value.name, each.key)
   ontap_volume_type                    = each.value.ontap_volume_type
+  region                               = var.region
   security_style                       = each.value.security_style
   size_in_bytes                        = each.value.size_in_bytes
   size_in_megabytes                    = each.value.size_in_megabytes

@@ -12,17 +12,19 @@ mock_provider "aws" {
 
   mock_resource "aws_fsx_ontap_storage_virtual_machine" {
     defaults = {
-      id   = "svm-0123456789abcdef0"
-      arn  = "arn:aws:fsx:us-east-1:123456789012:storage-virtual-machine/fs-0123456789abcdef0/svm-0123456789abcdef0"
-      uuid = "abcd1234-abcd-1234-abcd-abcd1234abcd"
+      id      = "svm-0123456789abcdef0"
+      arn     = "arn:aws:fsx:us-east-1:123456789012:storage-virtual-machine/fs-0123456789abcdef0/svm-0123456789abcdef0"
+      uuid    = "abcd1234-abcd-1234-abcd-abcd1234abcd"
+      subtype = "DEFAULT"
     }
   }
 
   mock_resource "aws_fsx_ontap_volume" {
     defaults = {
-      id   = "fsvol-0123456789abcdef0"
-      arn  = "arn:aws:fsx:us-east-1:123456789012:volume/fs-0123456789abcdef0/fsvol-0123456789abcdef0"
-      uuid = "efab5678-efab-5678-efab-efab5678efab"
+      id                      = "fsvol-0123456789abcdef0"
+      arn                     = "arn:aws:fsx:us-east-1:123456789012:volume/fs-0123456789abcdef0/fsvol-0123456789abcdef0"
+      uuid                    = "efab5678-efab-5678-efab-efab5678efab"
+      flexcache_endpoint_type = "NONE"
     }
   }
 
@@ -224,6 +226,51 @@ run "volumes_are_wired_to_their_storage_virtual_machine" {
   assert {
     condition     = output.volume_ids["data"] == aws_fsx_ontap_volume.this["data"].id
     error_message = "Expected the volume_ids output to expose the data volume's id."
+  }
+
+  assert {
+    condition     = output.storage_virtual_machine_subtypes["smb"] == aws_fsx_ontap_storage_virtual_machine.this["smb"].subtype
+    error_message = "Expected the storage_virtual_machine_subtypes output to expose the smb SVM's subtype."
+  }
+
+  assert {
+    condition     = output.volume_flexcache_endpoint_types["data"] == aws_fsx_ontap_volume.this["data"].flexcache_endpoint_type
+    error_message = "Expected the volume_flexcache_endpoint_types output to expose the data volume's flexcache_endpoint_type."
+  }
+}
+
+run "region_flows_to_every_resource" {
+  command = plan
+
+  variables {
+    region = "us-west-2"
+    storage_virtual_machines = {
+      smb = {
+        svm_admin_password = "testpass" # gitleaks:allow
+      }
+    }
+    volumes = {
+      data = {
+        storage_virtual_machine_key = "smb"
+        junction_path               = "/data"
+        size_in_megabytes           = 1024
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_file_system.this.region == "us-west-2"
+    error_message = "Expected region to reach the file system resource."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_storage_virtual_machine.this["smb"].region == "us-west-2"
+    error_message = "Expected region to reach the storage_virtual_machine resource."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_volume.this["data"].region == "us-west-2"
+    error_message = "Expected region to reach the volume resource."
   }
 }
 

@@ -49,7 +49,7 @@ output "kms_key_arn" {
 
 output "storage_virtual_machine_ids" {
   description = "Map of Storage Virtual Machine logical names to their IDs."
-  value       = { for key, svm in aws_fsx_ontap_storage_virtual_machine.this : key => svm.id }
+  value       = local.storage_virtual_machine_ids
 }
 
 output "storage_virtual_machine_arns" {
@@ -67,6 +67,11 @@ output "storage_virtual_machine_uuids" {
   value       = { for key, svm in aws_fsx_ontap_storage_virtual_machine.this : key => svm.uuid }
 }
 
+output "storage_virtual_machine_subtypes" {
+  description = "Map of Storage Virtual Machine logical names to their subtypes (DEFAULT, DP_DESTINATION, or SYNC_DESTINATION)."
+  value       = { for key, svm in aws_fsx_ontap_storage_virtual_machine.this : key => svm.subtype }
+}
+
 output "volume_ids" {
   description = "Map of volume logical names to their IDs."
   value       = { for key, vol in aws_fsx_ontap_volume.this : key => vol.id }
@@ -80,4 +85,9 @@ output "volume_arns" {
 output "volume_uuids" {
   description = "Map of volume logical names to their UUIDs."
   value       = { for key, vol in aws_fsx_ontap_volume.this : key => vol.uuid }
+}
+
+output "volume_flexcache_endpoint_types" {
+  description = "Map of volume logical names to their FlexCache endpoint types (NONE, ORIGIN, or CACHE)."
+  value       = { for key, vol in aws_fsx_ontap_volume.this : key => vol.flexcache_endpoint_type }
 }

@@ -93,6 +93,12 @@ variable "preferred_subnet_id" {
   }
 }
 
+variable "region" {
+  type        = string
+  description = "(Optional) Region where the file system, Storage Virtual Machines, volumes, and the KMS key created by this module are managed. Defaults to the Region set in the provider configuration."
+  default     = null
+}
+
 variable "route_table_ids" {
   type        = list(string)
   description = "(Optional) A list of route table IDs that are associated with the file system. Used by MULTI_AZ deployments so traffic to the floating endpoint IPs is routed correctly. A maximum of 50 route tables. Defaults to null."

@@ -173,6 +173,7 @@ run "rejects_per_ha_pair_throughput_not_valid_for_the_deployment_type" {
   variables {
     deployment_type                 = "SINGLE_AZ_2"
     subnet_ids                      = ["subnet-0a1b2c3d"]
+    route_table_ids                 = null
     throughput_capacity             = null
     throughput_capacity_per_ha_pair = 512
   }
@@ -186,6 +187,7 @@ run "accepts_a_multi_ha_pair_total_that_divides_into_a_valid_per_pair_value" {
   variables {
     deployment_type     = "SINGLE_AZ_2"
     subnet_ids          = ["subnet-0a1b2c3d"]
+    route_table_ids     = null
     ha_pairs            = 2
     throughput_capacity = 3072
   }
@@ -201,6 +203,7 @@ run "rejects_a_total_that_does_not_divide_evenly_by_ha_pairs" {
   variables {
     deployment_type     = "SINGLE_AZ_2"
     subnet_ids          = ["subnet-0a1b2c3d"]
+    route_table_ids     = null
     ha_pairs            = 5
     throughput_capacity = 3072
   }
@@ -398,6 +401,31 @@ run "rejects_single_az_with_two_subnets" {
   variables {
     deployment_type = "SINGLE_AZ_1"
     subnet_ids      = ["subnet-0a1b2c3d", "subnet-4e5f6a7b"]
+  }
+  expect_failures = [aws_fsx_ontap_file_system.this]
+}
+
+# route_table_ids and endpoint_ip_address_range are documented as "(Multi-AZ only)" by the
+# CreateFileSystemOntapConfiguration API reference; AWS returns a 400 for either on a
+# SINGLE_AZ deployment type.
+run "rejects_route_table_ids_on_single_az" {
+  command = plan
+  variables {
+    deployment_type     = "SINGLE_AZ_1"
+    subnet_ids          = ["subnet-0a1b2c3d"]
+    preferred_subnet_id = "subnet-0a1b2c3d"
+  }
+  expect_failures = [aws_fsx_ontap_file_system.this]
+}
+
+run "rejects_endpoint_ip_address_range_on_single_az" {
+  command = plan
+  variables {
+    deployment_type           = "SINGLE_AZ_1"
+    subnet_ids                = ["subnet-0a1b2c3d"]
+    preferred_subnet_id       = "subnet-0a1b2c3d"
+    route_table_ids           = null
+    endpoint_ip_address_range = "203.0.113.0/24"
   }
   expect_failures = [aws_fsx_ontap_file_system.this]
 }
