@@ -112,6 +112,29 @@ run "throughput_per_ha_pair_plans_successfully" {
   }
 }
 
+# The AWS provider only copies throughput_capacity_per_ha_pair into the CreateFileSystem
+# request inside its own internal GetOk("ha_pairs") branch, so this module must always pass
+# an explicit ha_pairs value (never a bare null) or a caller-supplied per-HA-pair throughput
+# would be silently dropped at apply even though it reached this resource's configuration.
+run "ha_pairs_is_forwarded_explicitly_even_when_left_unset" {
+  command = plan
+
+  variables {
+    throughput_capacity             = null
+    throughput_capacity_per_ha_pair = 128
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_file_system.this.ha_pairs == 1
+    error_message = "Expected ha_pairs to be forwarded as 1 (not left null) when the caller doesn't set it."
+  }
+
+  assert {
+    condition     = aws_fsx_ontap_file_system.this.throughput_capacity_per_ha_pair == 128
+    error_message = "Expected throughput_capacity_per_ha_pair to reach the file system resource."
+  }
+}
+
 run "user_provisioned_disk_iops_plans_successfully" {
   command = plan
 

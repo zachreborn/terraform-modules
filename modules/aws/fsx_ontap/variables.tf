@@ -159,7 +159,7 @@ variable "tags" {
 
 variable "throughput_capacity" {
   type        = number
-  description = "(Optional) The total sustained throughput (MB/s) of the file system, across all HA pairs. Must divide evenly by ha_pairs into a per-HA-pair value valid for the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
+  description = "(Optional) The sustained throughput (MB/s) of the file system. Only usable when ha_pairs resolves to 1 (the default for every deployment type except SINGLE_AZ_2 with more than one HA pair) -- the AWS provider validates this argument against a fixed set of values with no ha_pairs-aware scaling, so it cannot express a genuine multi-HA-pair total. Set throughput_capacity_per_ha_pair instead when ha_pairs is greater than 1. Valid values depend on the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity_per_ha_pair; set exactly one. Defaults to null."
   default     = null
 
   # Only the API's absolute range is checked here. The valid values depend on deployment_type
@@ -173,7 +173,7 @@ variable "throughput_capacity" {
 
 variable "throughput_capacity_per_ha_pair" {
   type        = number
-  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required for Gen 2 deployment types and when ha_pairs is greater than 1. Valid values depend on the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity; set exactly one. Defaults to null."
+  description = "(Optional) The sustained throughput (MB/s) per HA pair. Required whenever ha_pairs is greater than 1 (only possible when deployment_type is SINGLE_AZ_2), since throughput_capacity cannot express a multi-HA-pair total on this provider version. For a single HA pair, throughput_capacity_per_ha_pair and throughput_capacity are interchangeable. Valid values depend on the deployment type: 128, 256, 512, 1024, 2048, or 4096 for SINGLE_AZ_1 and MULTI_AZ_1; 1536, 3072, or 6144 for SINGLE_AZ_2; 384, 768, 1536, 3072, or 6144 for MULTI_AZ_2. Conflicts with throughput_capacity; set exactly one. Defaults to null."
   default     = null
 
   # Union of every documented per-HA-pair value, so an obvious typo fails here. The subset

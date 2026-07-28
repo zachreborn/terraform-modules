@@ -53,6 +53,21 @@ run "plan_succeeds_with_valid_input" {
     condition     = output.key_id == "mock-key-id"
     error_message = "key_id output should expose the mocked key id."
   }
+
+  assert {
+    condition     = output.deletion_window_in_days == 30
+    error_message = "deletion_window_in_days output should expose the key's deletion_window_in_days attribute."
+  }
+
+  assert {
+    condition     = output.enable_key_rotation == true
+    error_message = "enable_key_rotation output should expose the key's enable_key_rotation attribute."
+  }
+
+  assert {
+    condition     = output.alias_name_prefix == "alias/example-key"
+    error_message = "alias_name_prefix output should expose the alias resource's name_prefix attribute."
+  }
 }
 
 run "overrides_are_honored" {
@@ -95,6 +110,11 @@ run "overrides_are_honored" {
   assert {
     condition     = aws_kms_key.this.description == "Custom key description"
     error_message = "description override should be honored."
+  }
+
+  assert {
+    condition     = output.description == "Custom key description"
+    error_message = "description output should expose the key's description attribute."
   }
 
   assert {

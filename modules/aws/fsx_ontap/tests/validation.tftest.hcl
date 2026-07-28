@@ -180,9 +180,10 @@ run "rejects_per_ha_pair_throughput_not_valid_for_the_deployment_type" {
   expect_failures = [aws_fsx_ontap_file_system.this]
 }
 
-# A multi-HA-pair total must divide evenly into a valid per-pair value. 3072 / 2 = 1536,
-# which SINGLE_AZ_2 supports.
-run "accepts_a_multi_ha_pair_total_that_divides_into_a_valid_per_pair_value" {
+# throughput_capacity shares the provider's fixed, ha_pairs-agnostic set of valid values with
+# throughput_capacity_per_ha_pair (see main.tf), so it cannot express a genuine multi-HA-pair
+# total even when the total happens to divide evenly into a valid per-pair value.
+run "rejects_total_throughput_capacity_with_multiple_ha_pairs" {
   command = plan
   variables {
     deployment_type     = "SINGLE_AZ_2"
@@ -191,11 +192,7 @@ run "accepts_a_multi_ha_pair_total_that_divides_into_a_valid_per_pair_value" {
     ha_pairs            = 2
     throughput_capacity = 3072
   }
-
-  assert {
-    condition     = aws_fsx_ontap_file_system.this.ha_pairs == 2
-    error_message = "Expected a 2 HA pair file system with a valid total throughput to plan."
-  }
+  expect_failures = [aws_fsx_ontap_file_system.this]
 }
 
 run "rejects_a_total_that_does_not_divide_evenly_by_ha_pairs" {
@@ -445,6 +442,12 @@ run "rejects_malformed_preferred_subnet_id" {
 run "rejects_malformed_route_table_id" {
   command = plan
   variables { route_table_ids = ["route-table-0123456789abcdef0"] }
+  expect_failures = [var.route_table_ids]
+}
+
+run "rejects_more_than_fifty_route_table_ids" {
+  command = plan
+  variables { route_table_ids = [for i in range(51) : format("rtb-%08x", i)] }
   expect_failures = [var.route_table_ids]
 }
 

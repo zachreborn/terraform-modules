@@ -104,19 +104,23 @@ resource "aws_fsx_ontap_file_system" "this" {
   deployment_type                   = var.deployment_type
   endpoint_ip_address_range         = var.endpoint_ip_address_range
   fsx_admin_password                = var.fsx_admin_password
-  ha_pairs                          = var.ha_pairs
-  kms_key_id                        = local.kms_key_arn
-  preferred_subnet_id               = var.preferred_subnet_id
-  region                            = var.region
-  route_table_ids                   = var.route_table_ids
-  security_group_ids                = var.security_group_ids
-  storage_capacity                  = var.storage_capacity
-  storage_type                      = var.storage_type
-  subnet_ids                        = var.subnet_ids
-  tags                              = merge(tomap({ Name = var.name }), var.tags)
-  throughput_capacity               = var.throughput_capacity
-  throughput_capacity_per_ha_pair   = var.throughput_capacity_per_ha_pair
-  weekly_maintenance_start_time     = var.weekly_maintenance_start_time
+  # Always an explicit value, never a bare null: the AWS provider only copies
+  # throughput_capacity_per_ha_pair into the CreateFileSystem/UpdateFileSystem request inside
+  # its own internal GetOk("ha_pairs") branch, so leaving ha_pairs unset in this resource's
+  # config would silently drop a caller-supplied per-HA-pair throughput at apply.
+  ha_pairs                        = local.ha_pairs
+  kms_key_id                      = local.kms_key_arn
+  preferred_subnet_id             = var.preferred_subnet_id
+  region                          = var.region
+  route_table_ids                 = var.route_table_ids
+  security_group_ids              = var.security_group_ids
+  storage_capacity                = var.storage_capacity
+  storage_type                    = var.storage_type
+  subnet_ids                      = var.subnet_ids
+  tags                            = merge(tomap({ Name = var.name }), var.tags)
+  throughput_capacity             = var.throughput_capacity
+  throughput_capacity_per_ha_pair = var.throughput_capacity_per_ha_pair
+  weekly_maintenance_start_time   = var.weekly_maintenance_start_time
 
   dynamic "disk_iops_configuration" {
     for_each = var.disk_iops_configuration != null ? [var.disk_iops_configuration] : []
@@ -169,6 +173,19 @@ resource "aws_fsx_ontap_file_system" "this" {
     precondition {
       condition     = local.ha_pairs == 1 || var.deployment_type == "SINGLE_AZ_2"
       error_message = "ha_pairs may only exceed 1 when deployment_type is SINGLE_AZ_2; ${var.deployment_type} file systems run on a single HA pair."
+    }
+
+    # The AWS provider's throughput_capacity and throughput_capacity_per_ha_pair arguments
+    # share the exact same client-side ValidateFunc: a fixed set of 11 discrete values
+    # (128..6144), applied to the raw configured number with no ha_pairs-aware scaling.
+    # throughput_capacity therefore cannot express a genuine multi-HA-pair total (e.g. 12288
+    # for two pairs at 6144 each) -- Terraform rejects it before the value ever reaches AWS,
+    # regardless of what the CreateFileSystemOntapConfiguration API itself would accept.
+    # throughput_capacity_per_ha_pair does not have this problem, so it is the only usable
+    # form once ha_pairs is greater than 1.
+    precondition {
+      condition     = local.ha_pairs == 1 || var.throughput_capacity == null
+      error_message = "throughput_capacity cannot be used when ha_pairs is greater than 1; set throughput_capacity_per_ha_pair instead. The AWS provider validates throughput_capacity against a fixed set of values that does not scale with ha_pairs, so a multi-HA-pair total generally cannot be expressed through it."
     }
 
     # Skipped when throughput_capacity is null: that's either the per-HA-pair variant (which

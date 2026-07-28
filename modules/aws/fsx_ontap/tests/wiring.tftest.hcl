@@ -151,6 +151,29 @@ run "kms_key_settings_pass_through_to_child_module" {
     condition     = module.kms_key[0].arn != null
     error_message = "Expected the kms child module to expose a non-null arn."
   }
+
+  # The two assertions above pass even if the parent drops all four custom settings and the
+  # kms child module falls back to its own defaults. Observe the child module's own outputs
+  # (added alongside this test) so a regression that stops forwarding a setting is caught.
+  assert {
+    condition     = module.kms_key[0].deletion_window_in_days == 10
+    error_message = "Expected kms_key_deletion_window_in_days to reach the kms child module."
+  }
+
+  assert {
+    condition     = module.kms_key[0].enable_key_rotation == false
+    error_message = "Expected kms_key_enable_key_rotation to reach the kms child module."
+  }
+
+  assert {
+    condition     = module.kms_key[0].description == "custom description"
+    error_message = "Expected kms_key_description to reach the kms child module."
+  }
+
+  assert {
+    condition     = module.kms_key[0].alias_name_prefix == "alias/custom_prefix"
+    error_message = "Expected kms_key_name_prefix to reach the kms child module's alias resource."
+  }
 }
 
 run "volumes_are_wired_to_their_storage_virtual_machine" {
