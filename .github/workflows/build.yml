@@ -36,13 +36,43 @@ jobs:
         with:
           persist-credentials: false
 
+      # The terraform-docs/gh-actions action is not used here because its latest release (v1.4.1)
+      # still bundles terraform-docs v0.20.0, whereas this repo standardizes on v0.24.0 (whose
+      # Providers-table rendering differs, e.g. ">= 3.17.0" instead of "3.17.0"). We install the
+      # pinned binary directly and verify it against the upstream-published SHA256 so the
+      # supply-chain posture matches the SHA-pinned-actions policy in AGENTS.md.
+      - name: Install terraform-docs (pinned)
+        env:
+          TERRAFORM_DOCS_VERSION: v0.24.0
+          TERRAFORM_DOCS_SHA256: 9005daf969de0b50134493a2c00078b49f5f5b39d021cda7c89bf4d4f3d776d3
+        run: |
+          set -euo pipefail
+          tarball="terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+          curl -fsSL -o "${tarball}" \
+            "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/${tarball}"
+          echo "${TERRAFORM_DOCS_SHA256}  ${tarball}" | sha256sum --check --status
+          tar -xzf "${tarball}" terraform-docs
+          sudo install -m 0755 terraform-docs /usr/local/bin/terraform-docs
+          rm -f "${tarball}" terraform-docs
+          terraform-docs --version
+
+      # Mirror the previous action's find-dir behavior: regenerate the injected block in the
+      # README.md of every module directory (any directory under ./modules containing *.tf files)
+      # using the shared config at ./modules/.terraform-docs.yml. Only directories that already
+      # have a README.md are processed, so test-fixture directories (e.g. tests/wiring/) that
+      # contain *.tf but intentionally have no README are left untouched (create-file-if-not-exist
+      # is effectively false, matching the repo's existing layout).
       - name: Regenerate terraform-docs (in place)
-        uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1
-        with:
-          config-file: ./modules/.terraform-docs.yml
-          find-dir: ./modules
-          output-method: inject
-          git-push: false
+        run: |
+          set -euo pipefail
+          find ./modules -type f -name '*.tf' -print0 \
+            | xargs -0 -n1 dirname \
+            | sort -u \
+            | while read -r dir; do
+                if [ -f "${dir}/README.md" ]; then
+                  terraform-docs --config ./modules/.terraform-docs.yml "${dir}"
+                fi
+              done
 
       - name: Fail if terraform-docs output is stale
         run: |

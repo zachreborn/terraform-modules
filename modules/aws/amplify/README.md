@@ -139,27 +139,27 @@ applies to every entry in `var.branches`; branches that do not set
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_amplify_notifications_event"></a> [amplify\_notifications\_event](#module\_amplify\_notifications\_event) | ../cloudwatch/event | n/a |
 | <a name="module_amplify_notifications_sns"></a> [amplify\_notifications\_sns](#module\_amplify\_notifications\_sns) | ../sns | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_amplify_app.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_app) | resource |
 | [aws_amplify_branch.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_branch) | resource |
 | [aws_amplify_domain_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_domain_association) | resource |
@@ -169,7 +169,7 @@ applies to every entry in `var.branches`; branches that do not set
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_token"></a> [access\_token](#input\_access\_token) | Access token for the Amplify App. | `string` | `null` | no |
 | <a name="input_auto_branch_creation_config"></a> [auto\_branch\_creation\_config](#input\_auto\_branch\_creation\_config) | Auto branch creation config for the Amplify App. | <pre>object({<br/>    basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch. Must be input as "username:password".<br/>    build_spec                    = optional(string)      # Build spec for the branch.<br/>    enable_auto_build             = optional(bool)        # Enable auto build for the branch.<br/>    enable_basic_auth             = optional(bool)        # Enable basic auth for the branch.<br/>    enable_performance_mode       = optional(bool)        # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)        # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string)) # Map of environment variables for the branch.<br/>    framework                     = optional(string)      # The framework for the branch.<br/>    pull_request_environment_name = optional(string)      # The name of the pull request environment.<br/>    stage                         = optional(string)      # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>  })</pre> | `null` | no |
 | <a name="input_auto_branch_creation_patterns"></a> [auto\_branch\_creation\_patterns](#input\_auto\_branch\_creation\_patterns) | Patterns for auto branch creation. | `list(string)` | `null` | no |
@@ -199,7 +199,7 @@ applies to every entry in `var.branches`; branches that do not set
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_app_arn"></a> [app\_arn](#output\_app\_arn) | The ARN of the Amplify app. |
 | <a name="output_app_id"></a> [app\_id](#output\_app\_id) | The unique ID of the Amplify app. |
 | <a name="output_default_domain"></a> [default\_domain](#output\_default\_domain) | The default domain of the Amplify app. |

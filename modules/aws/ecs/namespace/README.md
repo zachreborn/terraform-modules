@@ -95,15 +95,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -112,13 +112,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_service_discovery_http_namespace.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_http_namespace) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the namespace. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the Cloud Map HTTP namespace used for ECS Service Connect. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the namespace. A `Name` tag is merged automatically. | `map(string)` | `{}` | no |
@@ -126,7 +126,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the Cloud Map HTTP namespace. Referenced by the cluster (service\_connect\_defaults) and services (service\_connect\_configuration). |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Cloud Map HTTP namespace. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Cloud Map HTTP namespace. |

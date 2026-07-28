@@ -83,14 +83,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
@@ -100,7 +100,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_apigatewayv2_api.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
 | [aws_apigatewayv2_authorizer.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_authorizer) | resource |
 | [aws_apigatewayv2_domain_name.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_domain_name) | resource |
@@ -117,7 +117,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_api_key_selection_expression"></a> [api\_key\_selection\_expression](#input\_api\_key\_selection\_expression) | API key selection expression for the API Gateway | `string` | `"$request.header.x-api-key"` | no |
 | <a name="input_api_version"></a> [api\_version](#input\_api\_version) | Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null. | `string` | `null` | no |
 | <a name="input_authorizers"></a> [authorizers](#input\_authorizers) | Map of authorizers to create for the API Gateway | <pre>map(object({<br/>    authorizer_credentials_arn  = optional(string)       # ARN of the credentials to use for the authorizer.<br/>    authorizer_result_ttl       = optional(number)       # TTL in seconds for the authorizer.<br/>    authorizer_type             = optional(string)       # Type of the authorizer. Valid values are "REQUEST" and "JWT".<br/>    authorizer_uri              = optional(string)       # URI of the authorizer.<br/>    identity_sources            = optional(list(string)) # List of identity sources for the authorizer.<br/>    name                        = optional(string)       # Name of the authorizer.<br/>    provider_arns               = optional(list(string)) # List of provider ARNs for the authorizer.<br/>    scopes                      = optional(list(string)) # List of scopes for the authorizer.<br/>    token_validation_expression = optional(string)       # Validation expression for the token.<br/>  }))</pre> | `{}` | no |
@@ -147,7 +147,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_api_endpoint"></a> [api\_endpoint](#output\_api\_endpoint) | The URI of the API |
 | <a name="output_api_key_selection_expression"></a> [api\_key\_selection\_expression](#output\_api\_key\_selection\_expression) | The API key selection expression for the API |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the API |

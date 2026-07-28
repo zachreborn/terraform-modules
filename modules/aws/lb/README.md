@@ -208,14 +208,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -225,7 +225,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_lb.load_balancer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
 | [aws_lb_listener.listener](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener_rule.listener_rule](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_rule) | resource |
@@ -234,7 +234,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_logs"></a> [access\_logs](#input\_access\_logs) | Access logs configuration for the LB | <pre>map(object({<br/>    bucket  = string<br/>    prefix  = string<br/>    enabled = bool<br/>  }))</pre> | `null` | no |
 | <a name="input_client_keep_alive"></a> [client\_keep\_alive](#input\_client\_keep\_alive) | (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds. | `number` | `3600` | no |
 | <a name="input_connection_logs"></a> [connection\_logs](#input\_connection\_logs) | (Optional) Connection Logs block. See below. Only valid for Load Balancers of type application. | <pre>map(object({<br/>    bucket  = string<br/>    prefix  = string<br/>    enabled = bool<br/>  }))</pre> | `null` | no |
@@ -267,7 +267,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the load balancer |
 | <a name="output_arn_suffix"></a> [arn\_suffix](#output\_arn\_suffix) | The ARN suffix for use with CloudWatch Metrics |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the load balancer |

@@ -58,3 +58,37 @@ fleets manageable at scale:
 This example references placeholder directory/subnet IDs and will not apply successfully as-is. Replace
 `directories.yaml`'s `directory_id`/`subnet_ids` values with real resources (or module outputs, e.g.
 `module.simple_ad.id`) before running `tofu init` and `tofu plan`.
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+No providers.
+
+## Modules
+
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_workspaces"></a> [workspaces](#module\_workspaces) | ../.. | n/a |
+
+## Resources
+
+No resources.
+
+## Inputs
+
+No inputs.
+
+## Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_directory_ids"></a> [directory\_ids](#output\_directory\_ids) | Map of WorkSpaces directory IDs, keyed by the same keys as directories.yaml. |
+| <a name="output_workspace_ids"></a> [workspace\_ids](#output\_workspace\_ids) | Map of WorkSpaces desktop IDs, keyed by "<directory\_key>-<username>". |
+<!-- END_TF_DOCS -->
