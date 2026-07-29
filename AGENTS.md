@@ -21,7 +21,7 @@ For each provider, prefer the GitHub source repository (most authoritative schem
 | TFE (Terraform Cloud/Enterprise) | https://github.com/hashicorp/terraform-provider-tfe | https://registry.terraform.io/providers/hashicorp/tfe/latest/docs |
 | Scalr (`source = "registry.scalr.io/scalr/scalr"`) | https://github.com/Scalr/terraform-provider-scalr | https://docs.scalr.io/terraform-provider |
 
-**Why this matters**: provider schemas evolve with each release. A module written without consulting current docs may silently omit newly added arguments, use deprecated attribute names, or set defaults that conflict with provider-enforced constraints. Checking the source before writing variables ensures the module stays in sync with `aws >= 6.0.0` (and equivalent versions for other providers).
+**Why this matters**: provider schemas evolve with each release. A module written without consulting current docs may silently omit newly added arguments, use deprecated attribute names, or set defaults that conflict with provider-enforced constraints. Checking the source before writing variables also tells you the exact provider release that introduced each resource/attribute the module uses — that release, not just the repo's baseline floor (`aws >= 6.0.0` and equivalent versions for other providers), is what the module's `required_providers` version constraint should reflect. See [Module Design Specifications § 7. Provider and Tool Version Constraints](#7-provider-and-tool-version-constraints).
 
 ## Key Commands
 
@@ -239,9 +239,20 @@ Tests must run **offline** — use `mock_provider` / `mock_resource` blocks so `
 
 **Never weaken a test to make it pass.** Do not narrow an `assert` condition, delete or skip a `run` block, loosen an `expect_failures` case, or mock away the exact behavior under test merely to turn a failing test green. A failing test is a signal that something is wrong — find and fix the root cause in the module's `.tf` code. Only change the test itself if the test's logic is demonstrably incorrect (e.g., it asserts the wrong expected value), and even then, fix the assertion to be *correct*, not weaker. Re-run `tofu test` until every case passes for the right reason.
 
+### 7. Provider and Tool Version Constraints
+
+Every module's `required_version` and provider `version` constraint (in the `terraform { required_providers { ... } }` block) are a **floor scoped to that specific module** — not a fixed value to copy unchanged from `modules/module_template/main.tf`. The template's `required_version = ">= 1.0.0"` and `aws version = ">= 6.0.0"` are the repo-wide **baseline minimums** for a module that only uses long-stable resources and HCL language features; they are a starting point, not a target to leave untouched.
+
+When a module actually uses:
+
+- A resource, attribute, or block introduced or changed in a specific provider release, bump that provider's `version` constraint to the release that introduced it, and leave a one-line comment citing why. Example: `modules/aws/security_hub/v2/main.tf` sets `version = ">= 6.46.0"` because `aws_securityhub_account_v2`, `aws_securityhub_aggregator_v2`, and `aws_securityhub_automation_rule_v2` do not exist in earlier `hashicorp/aws` releases.
+- A Terraform/OpenTofu language feature newer than 1.0.0 (e.g., `optional()` attributes in object type constraints, `moved` blocks, `precondition`/`postcondition`), bump `required_version` to the release that introduced it, with the same kind of comment. Example: `modules/aws/ecs/service/main.tf` sets `required_version = ">= 1.3.0"` because `optional()` attributes are used in the `load_balancers` and `service_connect_configuration` variable types.
+
+Never lower a constraint below what the module's resources/features actually require. Just as importantly, never raise it above the true minimum "to be safe" — an inflated floor needlessly blocks callers running an older, otherwise-compatible toolchain. Determine the correct minimum by checking the provider's GitHub source/changelog or the Terraform/OpenTofu changelog for the release that introduced the resource, attribute, or language feature in question (see [Provider Documentation Sources](#provider-documentation-sources)), and set the constraint to that release — not to whatever the newest available version happens to be.
+
 ## Code Conventions
 
-**Tool version requirements**: All modules require `opentofu >= 1.6.0` **or** `terraform >= 1.0.0` (the `required_version = ">= 1.0.0"` constraint in each module's `terraform {}` block satisfies both, since OpenTofu 1.6.x ≥ 1.0.0). For AWS modules, `aws >= 6.0.0` is also required.
+**Tool version requirements**: `opentofu >= 1.6.0` **or** `terraform >= 1.0.0` (the `required_version = ">= 1.0.0"` constraint in each module's `terraform {}` block satisfies both, since OpenTofu 1.6.x ≥ 1.0.0) and, for AWS modules, `aws >= 6.0.0` are repo-wide **baseline floors**, not fixed values every module must declare unchanged. Each module's actual `required_version` and provider `version` constraints must match the specific resources, attributes, and HCL language features it uses, bumped above the floor whenever a feature demands a newer release — see [Module Design Specifications § 7. Provider and Tool Version Constraints](#7-provider-and-tool-version-constraints).
 
 **Dual-tool compatibility**: Modules must not use HCL features that are exclusive to one tool post-fork. All standard HCL constructs (`for_each`, `dynamic`, `locals`, `count`, `moved`, etc.) are identical between OpenTofu 1.6+ and Terraform 1.5+.
 
@@ -414,7 +425,7 @@ This is a **module library** — security enforcement is the caller's responsibi
 
 1. **Consult provider documentation first.** Before writing any code, look up the target resource in the provider's GitHub source and registry docs (see [Provider Documentation Sources](#provider-documentation-sources)). Note every argument, its type, constraints, and whether it is required or optional — this is your checklist for `variables.tf` and `outputs.tf`.
 2. Copy `modules/module_template/` to the appropriate provider subdirectory (this brings along the `tests/` scaffolding described in [Module Design Specifications § 6. Native Test Coverage](#6-native-test-coverage)).
-3. Implement resources in `main.tf`, declare variables in `variables.tf`, and expose outputs in `outputs.tf`.
+3. Implement resources in `main.tf` — setting `required_providers`/`required_version` to the actual minimum needed by the resources, attributes, and HCL features you use (see [Module Design Specifications § 7. Provider and Tool Version Constraints](#7-provider-and-tool-version-constraints)), not just the template's default — declare variables in `variables.tf`, and expose outputs in `outputs.tf`.
 4. Write the module's `tests/*.tftest.hcl` per § 6 (valid baseline, one case per validation rule, one case per conditional branch, output assertions, wiring tests for wrapper modules), then run `tofu -chdir=<module_path> init -backend=false` and `tofu -chdir=<module_path> test` until every case passes. If a test fails, fix the root cause in the module code (or the test's logic, if the test itself is wrong) — never weaken the assertion just to get a pass.
 5. Update `README.md` — make sure the `<!-- BEGIN_TF_DOCS --> … <!-- END_TF_DOCS -->` markers exist; their contents will be regenerated by `terraform-docs` (run locally via pre-commit or by hand — CI verifies but does not auto-commit).
 6. Run `pre-commit run --all-files` (or, manually, `tofu fmt -recursive` followed by `terraform-docs markdown table --output-file README.md --output-mode inject <module_path>` for the new module) before committing so the `Build` and `Test` jobs pass on the first push.
