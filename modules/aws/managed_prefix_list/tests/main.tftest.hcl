@@ -57,8 +57,8 @@ run "plan_succeeds_with_valid_input_and_no_entries" {
   }
 
   assert {
-    condition     = output.tags_all != null
-    error_message = "tags_all output should expose the resource's tags_all attribute."
+    condition     = output.tags_all == aws_ec2_managed_prefix_list.this.tags_all
+    error_message = "tags_all output should equal the resource's tags_all attribute."
   }
 }
 
