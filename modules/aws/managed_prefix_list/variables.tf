@@ -36,13 +36,19 @@ variable "name" {
   type        = string
 }
 
+variable "region" {
+  description = "(Optional) Region where this prefix list is managed. Defaults to the Region set in the provider configuration."
+  type        = string
+  default     = null
+}
+
 ###########################
 # General Variables
 ###########################
 
 variable "tags" {
   description = "(Optional) Map of tags to assign to this resource."
-  type        = map(any)
+  type        = map(string)
   default = {
     created_by  = "terraform"
     terraform   = "true"
