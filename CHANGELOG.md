@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.2.0](https://github.com/zachreborn/terraform-modules/compare/v14.1.0...v14.2.0) (2026-07-29)
+
+
+### Features
+
+* **storage_gateway:** add Storage Gateway File Gateway module ([#367](https://github.com/zachreborn/terraform-modules/issues/367)) ([5a76741](https://github.com/zachreborn/terraform-modules/commit/5a767415d78c53864b19c402bd678334f7228c88))
+
 ## [14.1.0](https://github.com/zachreborn/terraform-modules/compare/v14.0.0...v14.1.0) (2026-07-28)
 
 
