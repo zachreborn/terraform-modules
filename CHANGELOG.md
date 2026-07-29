@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.3.0](https://github.com/zachreborn/terraform-modules/compare/v14.2.0...v14.3.0) (2026-07-29)
+
+
+### Features
+
+* **aws/managed_prefix_list:** add managed prefix list module ([#237](https://github.com/zachreborn/terraform-modules/issues/237)) ([9552df2](https://github.com/zachreborn/terraform-modules/commit/9552df2b52e76187c677794acd988b30cf771072))
+
 ## [14.2.0](https://github.com/zachreborn/terraform-modules/compare/v14.1.0...v14.2.0) (2026-07-29)
 
 
