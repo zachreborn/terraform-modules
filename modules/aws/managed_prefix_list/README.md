@@ -38,6 +38,8 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -164,20 +166,33 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Prerequisites
+
+- No upstream module or resource is required. `aws_ec2_managed_prefix_list` is a standalone EC2-level resource; simply reference `module.<name>.id` from any resource that accepts a prefix list ID (security group rules, route tables, VPC endpoint policies, etc.).
+- Callers that reference the prefix list in a security group rule or route table need the appropriate IAM permissions to read the prefix list (`ec2:DescribeManagedPrefixLists`, `ec2:GetManagedPrefixListEntries`).
+
+## Notes / Design Decisions
+
+- **Inline entries over standalone entry resources.** CIDR entries are managed via the inline `dynamic "entry"` block rather than standalone `aws_ec2_managed_prefix_list_entry` resources, per AWS guidance for lists with 100 or fewer entries. Mixing the two approaches on the same prefix list causes entry conflicts.
+- **`address_family` forces replacement.** Changing `address_family` after creation destroys and recreates the prefix list, since AWS does not support in-place address family changes.
+- **Tags always include `Name`.** Tags are merged with `merge(tomap({ Name = var.name }), var.tags)`, following this repository's standard tagging convention.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -187,23 +202,24 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ec2_managed_prefix_list.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_managed_prefix_list) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_address_family"></a> [address\_family](#input\_address\_family) | (Optional) Address family (IPv4 or IPv6) of this prefix list. Changing this forces a new resource to be created. | `string` | `"IPv4"` | no |
 | <a name="input_entries"></a> [entries](#input\_entries) | (Optional) List of CIDR entry objects to add to the prefix list. Each object requires a 'cidr' key and accepts an optional 'description' key. | <pre>list(object({<br/>    cidr        = string<br/>    description = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_max_entries"></a> [max\_entries](#input\_max\_entries) | (Optional) Maximum number of entries that this prefix list can contain. | `number` | `10` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Name of this prefix list. The name must not start with 'com.amazonaws'. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to this resource. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_region"></a> [region](#input\_region) | (Optional) Region where this prefix list is managed. Defaults to the Region set in the provider configuration. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags to assign to this resource. | `map(string)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the managed prefix list. |
 | <a name="output_id"></a> [id](#output\_id) | ID of the managed prefix list. Use this value to reference the prefix list in security groups, route tables, and other resources. |
 | <a name="output_owner_id"></a> [owner\_id](#output\_owner\_id) | ID of the AWS account that owns this prefix list. |
