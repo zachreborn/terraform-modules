@@ -29,6 +29,22 @@ variable "skip_destroy" {
   default     = true
 }
 
+variable "provider_name" {
+  type        = string
+  description = "(Optional) The name of the service provider associated with the connection."
+  default     = null
+}
+
+variable "encryption_mode" {
+  type        = string
+  description = "(Optional) The MACsec encryption mode for the connection. Valid values are must_encrypt, should_encrypt, or no_encrypt. Only applicable when request_macsec is true; defaults to AWS's standard behavior when unset."
+  default     = null
+  validation {
+    condition     = var.encryption_mode == null || can(index(["must_encrypt", "should_encrypt", "no_encrypt"], var.encryption_mode))
+    error_message = "encryption_mode must be must_encrypt, should_encrypt, or no_encrypt."
+  }
+}
+
 variable "tags" {
   type        = map(any)
   description = "(Optional) A map of tags to assign to the connection."

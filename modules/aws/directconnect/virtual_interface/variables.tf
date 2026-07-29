@@ -71,14 +71,37 @@ variable "route_filter_prefixes" {
 
 variable "vpn_gateway_id" {
   type        = string
-  description = "(Optional) The ID of the virtual private gateway to which the VIF is attached. Required if vif_type is 'private'."
+  description = "(Optional) The ID of the virtual private gateway to which the VIF is attached. For vif_type 'private', specify exactly one of vpn_gateway_id or direct_connect_gateway_id."
   default     = null
 }
 
 variable "direct_connect_gateway_id" {
   type        = string
-  description = "(Optional) The ID of the Direct Connect Gateway to which the VIF is attached. Required if vif_type is 'transit'."
+  description = "(Optional) The ID of the Direct Connect Gateway to which the VIF is attached. Required if vif_type is 'transit'. For vif_type 'private', specify exactly one of vpn_gateway_id or direct_connect_gateway_id."
   default     = null
+}
+
+variable "mtu" {
+  type        = number
+  description = "(Optional) The maximum transmission unit (MTU) for private/transit VIFs. Valid values are 1500 or 9001 (jumbo frames). Not applicable to public VIFs. Defaults to 1500."
+  default     = 1500
+  validation {
+    condition     = can(index([1500, 9001], var.mtu))
+    error_message = "mtu must be 1500 or 9001."
+  }
+}
+
+variable "sitelink_enabled" {
+  type        = bool
+  description = "(Optional) Whether to enable AWS Direct Connect SiteLink for private/transit VIFs. Not applicable to public VIFs. Defaults to false."
+  default     = false
+}
+
+variable "bgp_auth_key" {
+  type        = string
+  description = "(Optional) The authentication key for the BGP configuration. If omitted, AWS generates one automatically."
+  default     = null
+  sensitive   = true
 }
 
 ###########################

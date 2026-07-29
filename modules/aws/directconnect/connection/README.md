@@ -53,14 +53,14 @@
 
 ### Dedicated 10 Gbps Connection with MACsec
 
-Create a dedicated Direct Connect connection at a supported location with MACsec encryption.
+Create a dedicated Direct Connect connection at a supported location with MACsec encryption. The `location` argument must be a Direct Connect location code (from `aws dx describe-locations`, e.g. `EqDC2` for Equinix Ashburn DC2), not an AWS region.
 
 ```hcl
 module "dx_connection" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/connection"
 
   connection_name = "my-dx-connection"
-  location        = "us-east-1"  # Use locationCode from AWS
+  location        = "EqDC2" # Direct Connect locationCode, e.g. Equinix Ashburn DC2
   bandwidth       = "10Gbps"
   request_macsec  = true
 
@@ -80,9 +80,10 @@ module "dx_hosted_connection" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/connection"
 
   connection_name = "partner-hosted-connection"
-  location        = "us-west-2"
+  location        = "EqSE2" # Direct Connect locationCode, e.g. Equinix Seattle SE2
   bandwidth       = "5Gbps"
   request_macsec  = false
+  provider_name   = "Example Partner"
 
   tags = {
     Environment = "production"
@@ -97,6 +98,62 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+
+## Providers
+
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+| ---- | ---- |
+| [aws_dx_connection.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dx_connection) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_bandwidth"></a> [bandwidth](#input\_bandwidth) | (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps, 100Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps. | `string` | n/a | yes |
+| <a name="input_connection_name"></a> [connection\_name](#input\_connection\_name) | (Required) The name of the connection. | `string` | n/a | yes |
+| <a name="input_encryption_mode"></a> [encryption\_mode](#input\_encryption\_mode) | (Optional) The MACsec encryption mode for the connection. Valid values are must\_encrypt, should\_encrypt, or no\_encrypt. Only applicable when request\_macsec is true; defaults to AWS's standard behavior when unset. | `string` | `null` | no |
+| <a name="input_location"></a> [location](#input\_location) | (Required) The AWS Direct Connect location where the connection is located. See DescribeLocations for the list of AWS Direct Connect locations. Use locationCode. | `string` | n/a | yes |
+| <a name="input_provider_name"></a> [provider\_name](#input\_provider\_name) | (Optional) The name of the service provider associated with the connection. | `string` | `null` | no |
+| <a name="input_request_macsec"></a> [request\_macsec](#input\_request\_macsec) | (Optional) Request MACsec encryption on the connection. MACsec is available only on dedicated connections. Defaults to false. | `bool` | `false` | no |
+| <a name="input_skip_destroy"></a> [skip\_destroy](#input\_skip\_destroy) | (Optional) Set to true to prevent Terraform from deleting the connection if there are virtual interfaces. The connection may only be deleted when empty. | `bool` | `true` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the connection. | `map(any)` | <pre>{<br/>  "created_by": "terraform",<br/>  "terraform": "true"<br/>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the Direct Connect connection. |
+| <a name="output_aws_device"></a> [aws\_device](#output\_aws\_device) | The Direct Connect endpoint on which the physical connection terminates. |
+| <a name="output_bandwidth"></a> [bandwidth](#output\_bandwidth) | The bandwidth of the Direct Connect connection. |
+| <a name="output_encryption_mode"></a> [encryption\_mode](#output\_encryption\_mode) | The MACsec encryption mode of the connection. |
+| <a name="output_has_logical_redundancy"></a> [has\_logical\_redundancy](#output\_has\_logical\_redundancy) | Indicates whether the connection has logical redundancy. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Direct Connect connection. |
+| <a name="output_jumbo_frame_capable"></a> [jumbo\_frame\_capable](#output\_jumbo\_frame\_capable) | Boolean value indicating whether jumbo frames (9000 MTU) are supported. |
+| <a name="output_location"></a> [location](#output\_location) | The location of the Direct Connect connection. |
+| <a name="output_macsec_capable"></a> [macsec\_capable](#output\_macsec\_capable) | Boolean value indicating whether the connection supports MACsec. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the Direct Connect connection. |
+| <a name="output_owner_account_id"></a> [owner\_account\_id](#output\_owner\_account\_id) | The ID of the AWS account that owns the connection. |
+| <a name="output_partner_name"></a> [partner\_name](#output\_partner\_name) | The name of the AWS Direct Connect service provider associated with the connection. |
+| <a name="output_port_encryption_status"></a> [port\_encryption\_status](#output\_port\_encryption\_status) | The MACsec port link status of the connection. |
+| <a name="output_provider_name"></a> [provider\_name](#output\_provider\_name) | The name of the service provider associated with the connection. |
+| <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | A map of tags assigned to the resource, including those inherited from the provider default\_tags configuration block. |
+| <a name="output_vlan_id"></a> [vlan\_id](#output\_vlan\_id) | The VLAN ID of the connection. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
