@@ -173,7 +173,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Notes / Design Decisions
 
-- **Inline entries over standalone entry resources.** CIDR entries are managed via the inline `dynamic "entry"` block rather than standalone `aws_ec2_managed_prefix_list_entry` resources, per AWS guidance for lists with 100 or fewer entries. Mixing the two approaches on the same prefix list causes entry conflicts.
+- **Inline entries over standalone entry resources.** CIDR entries are managed via the inline `dynamic "entry"` block rather than standalone `aws_ec2_managed_prefix_list_entry` resources. AWS recommends the inline `entry` block specifically for lists with more than 100 entries, to improve execution time on larger updates. Mixing the two approaches on the same prefix list causes entry conflicts.
 - **`address_family` forces replacement.** Changing `address_family` after creation destroys and recreates the prefix list, since AWS does not support in-place address family changes.
 - **Tags always include `Name`.** Tags are merged with `merge(tomap({ Name = var.name }), var.tags)`, following this repository's standard tagging convention.
 
