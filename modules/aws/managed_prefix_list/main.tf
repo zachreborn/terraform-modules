@@ -30,4 +30,20 @@ resource "aws_ec2_managed_prefix_list" "this" {
       description = entry.value.description
     }
   }
+
+  lifecycle {
+    precondition {
+      condition     = length(var.entries) <= var.max_entries
+      error_message = "The number of entries (${length(var.entries)}) must not exceed max_entries (${var.max_entries}); AWS rejects a create/update once the entry count exceeds the list's capacity."
+    }
+
+    precondition {
+      # A cidr is treated as IPv6-shaped when it contains a colon. AWS rejects a
+      # prefix list whose entries mix address families with its address_family.
+      condition = alltrue([
+        for e in var.entries : can(regex(":", e.cidr)) == (var.address_family == "IPv6")
+      ])
+      error_message = "All entries must match address_family: IPv4 CIDRs are required when address_family is IPv4, and IPv6 CIDRs when address_family is IPv6."
+    }
+  }
 }

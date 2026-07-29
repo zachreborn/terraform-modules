@@ -19,6 +19,10 @@ variable "entries" {
     description = optional(string)
   }))
   default = []
+  validation {
+    condition     = length(var.entries) == length(distinct([for e in var.entries : e.cidr]))
+    error_message = "entries must not contain duplicate cidr values; AWS rejects a prefix list where the same CIDR appears more than once."
+  }
 }
 
 variable "max_entries" {
@@ -34,6 +38,10 @@ variable "max_entries" {
 variable "name" {
   description = "(Required) Name of this prefix list. The name must not start with 'com.amazonaws'."
   type        = string
+  validation {
+    condition     = !can(regex("^com\\.amazonaws", var.name))
+    error_message = "name must not start with 'com.amazonaws'; that prefix is reserved for AWS-managed prefix lists."
+  }
 }
 
 variable "region" {
