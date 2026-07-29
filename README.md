@@ -249,6 +249,10 @@ Every new or significantly updated module **must ship a `tests/` directory** of 
 
 Tests must never be weakened to force a pass — a failing test means the module code (or, rarely, the test itself) has a bug that needs fixing, not an assertion to loosen.
 
+### Provider and Tool Version Constraints
+
+Each module's `required_version` and provider `version` constraint start from the baseline floor in `modules/module_template/main.tf` (`terraform >= 1.0.0`, `aws >= 6.0.0`), but that floor is not a fixed value to copy into every module unchanged. If a module uses a resource, attribute, or HCL language feature introduced in a later provider or Terraform/OpenTofu release, its constraint must be bumped to that release — with a short comment explaining why — and never inflated beyond the true minimum just to be cautious.
+
 For the full specification including examples and enforcement rules, see [`AGENTS.md § Module Design Specifications`](./AGENTS.md#module-design-specifications).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -351,7 +355,7 @@ You are always free to skip the pipeline and submit a PR the traditional way. Th
 
 1. Fork the project.
 2. Create your feature branch: `git switch -c feat/short-description` (or `fix/...`).
-3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `tofu fmt -recursive` (or `terraform fmt -recursive`), the tagging pattern, and tfsec/Checkov suppression style.
+3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `tofu fmt -recursive` (or `terraform fmt -recursive`), the tagging pattern, tfsec/Checkov suppression style, and provider/tool version constraints scoped to the features you actually use.
 4. Validate locally: `tofu -chdir=<module_path> init -backend=false` then `tofu -chdir=<module_path> validate` (or use `terraform` equivalents).
 5. Write or update `tests/*.tftest.hcl` for full coverage (see [Native Test Coverage](#native-test-coverage)) and run `tofu -chdir=<module_path> test` until every case passes for the right reason — do not weaken a test just to make it pass.
 6. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
