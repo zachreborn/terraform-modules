@@ -71,26 +71,6 @@ module "dx_connection" {
 }
 ```
 
-### Hosted Connection (Partner-Provisioned)
-
-Create a hosted connection provisioned by a Direct Connect partner.
-
-```hcl
-module "dx_hosted_connection" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/connection"
-
-  connection_name = "partner-hosted-connection"
-  location        = "EqSE2" # Direct Connect locationCode, e.g. Equinix Seattle SE2
-  bandwidth       = "5Gbps"
-  request_macsec  = false
-  provider_name   = "Example Partner"
-
-  tags = {
-    Environment = "production"
-  }
-}
-```
-
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

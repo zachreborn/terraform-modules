@@ -3,32 +3,32 @@
 ###########################
 
 variable "customer_gateways" {
-  type = list(object({
-    name             = string
+  type = map(object({
     ip_address       = optional(string)
     bgp_asn          = optional(number)
     bgp_asn_extended = optional(number)
     certificate_arn  = optional(string)
     device_name      = optional(string)
   }))
-  description = "(Required) List of customer gateway configurations. Each entry must specify either ip_address or certificate_arn for authentication, and may specify at most one of bgp_asn (1-2147483647) or bgp_asn_extended (2147483648-4294967295); if neither is set, AWS applies its default ASN of 65000."
+  description = "(Required) Map of customer gateway configurations keyed by logical gateway name. Each entry must specify either ip_address or certificate_arn for authentication, and may specify at most one of bgp_asn (1-2147483647) or bgp_asn_extended (2147483648-4294967295); if neither is set, AWS applies its default ASN of 65000."
+  default     = {}
   validation {
     condition = alltrue([
-      for gw in var.customer_gateways :
-      gw.ip_address == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", gw.ip_address))
+      for gw in values(var.customer_gateways) :
+      gw.ip_address == null || can(cidrhost("${gw.ip_address}/32", 0))
     ])
     error_message = "When set, customer gateway ip_address must be a valid IPv4 address."
   }
   validation {
     condition = alltrue([
-      for gw in var.customer_gateways :
+      for gw in values(var.customer_gateways) :
       gw.ip_address != null || gw.certificate_arn != null
     ])
     error_message = "Each customer gateway must specify either ip_address or certificate_arn."
   }
   validation {
     condition = alltrue([
-      for gw in var.customer_gateways :
+      for gw in values(var.customer_gateways) :
       !(gw.bgp_asn != null && gw.bgp_asn_extended != null)
     ])
     error_message = "Specify at most one of bgp_asn or bgp_asn_extended per customer gateway; they are mutually exclusive."
@@ -126,6 +126,26 @@ variable "tunnel_startup_action" {
   }
 }
 
+variable "tunnel_bandwidth" {
+  type        = string
+  description = "(Optional) Desired bandwidth specification for the VPN tunnel(s). Valid values are standard | large. standard supports up to 1.25 Gbps per tunnel; large supports up to 5 Gbps per tunnel. Defaults to standard."
+  default     = "standard"
+  validation {
+    condition     = can(index(["standard", "large"], var.tunnel_bandwidth))
+    error_message = "tunnel_bandwidth must be standard or large."
+  }
+}
+
+variable "tunnel_inside_ip_version" {
+  type        = string
+  description = "(Optional) Whether the VPN tunnel(s) process IPv4 or IPv6 traffic. Valid values are ipv4 | ipv6. ipv6 requires the VPN connection to also be attached to an EC2 Transit Gateway (managed outside of this module). Defaults to ipv4."
+  default     = "ipv4"
+  validation {
+    condition     = can(index(["ipv4", "ipv6"], var.tunnel_inside_ip_version))
+    error_message = "tunnel_inside_ip_version must be ipv4 or ipv6."
+  }
+}
+
 variable "local_ipv4_network_cidr" {
   type        = string
   description = "(Optional) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection(s). Defaults to the wildcard IPv4 CIDR (all addresses) when unset."
@@ -189,6 +209,18 @@ variable "tunnel1_inside_cidr" {
 variable "tunnel2_inside_cidr" {
   type        = string
   description = "(Optional) The CIDR block of the inside IP addresses for the second VPN tunnel. Must be a /30 from the AWS-reserved link-local range for VPN tunnels (169 dot 254 dot 0 dot 0 slash 16)."
+  default     = null
+}
+
+variable "tunnel1_inside_ipv6_cidr" {
+  type        = string
+  description = "(Optional) The range of inside IPv6 addresses for the first VPN tunnel. Only applicable when tunnel_inside_ip_version is ipv6 and the VPN connection is also attached to an EC2 Transit Gateway (managed outside of this module). Must be a /126 from the local fd00::/8 range."
+  default     = null
+}
+
+variable "tunnel2_inside_ipv6_cidr" {
+  type        = string
+  description = "(Optional) The range of inside IPv6 addresses for the second VPN tunnel. Only applicable when tunnel_inside_ip_version is ipv6 and the VPN connection is also attached to an EC2 Transit Gateway (managed outside of this module). Must be a /126 from the local fd00::/8 range."
   default     = null
 }
 

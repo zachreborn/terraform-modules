@@ -47,12 +47,14 @@ variable "address_family" {
 
 variable "customer_address" {
   type        = string
-  description = "(Required) The IPv4 CIDR address to use to tag the customer side of the connection."
+  description = "(Optional) The IPv4 CIDR address to use to tag the customer side of the connection. If omitted, AWS auto-assigns an address."
+  default     = null
 }
 
 variable "amazon_address" {
   type        = string
-  description = "(Required) The IPv4 CIDR address to use to tag the Amazon side of the connection."
+  description = "(Optional) The IPv4 CIDR address to use to tag the Amazon side of the connection. If omitted, AWS auto-assigns an address."
+  default     = null
 }
 
 ###########################

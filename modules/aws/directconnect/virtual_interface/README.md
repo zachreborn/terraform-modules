@@ -90,9 +90,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_address_family"></a> [address\_family](#input\_address\_family) | (Optional) The address family for the BGP peer. ipv4 or ipv6. Defaults to ipv4. | `string` | `"ipv4"` | no |
-| <a name="input_amazon_address"></a> [amazon\_address](#input\_amazon\_address) | (Required) The IPv4 CIDR address to use to tag the Amazon side of the connection. | `string` | n/a | yes |
+| <a name="input_amazon_address"></a> [amazon\_address](#input\_amazon\_address) | (Optional) The IPv4 CIDR address to use to tag the Amazon side of the connection. If omitted, AWS auto-assigns an address. | `string` | `null` | no |
 | <a name="input_bgp_auth_key"></a> [bgp\_auth\_key](#input\_bgp\_auth\_key) | (Optional) The authentication key for the BGP configuration. If omitted, AWS generates one automatically. | `string` | `null` | no |
-| <a name="input_customer_address"></a> [customer\_address](#input\_customer\_address) | (Required) The IPv4 CIDR address to use to tag the customer side of the connection. | `string` | n/a | yes |
+| <a name="input_customer_address"></a> [customer\_address](#input\_customer\_address) | (Optional) The IPv4 CIDR address to use to tag the customer side of the connection. If omitted, AWS auto-assigns an address. | `string` | `null` | no |
 | <a name="input_customer_bgp_asn"></a> [customer\_bgp\_asn](#input\_customer\_bgp\_asn) | (Required) The ASN used by the customer on the customer side of the connection. | `number` | n/a | yes |
 | <a name="input_direct_connect_gateway_id"></a> [direct\_connect\_gateway\_id](#input\_direct\_connect\_gateway\_id) | (Optional) The ID of the Direct Connect Gateway to which the VIF is attached. Required if vif\_type is 'transit'. For vif\_type 'private', specify exactly one of vpn\_gateway\_id or direct\_connect\_gateway\_id. | `string` | `null` | no |
 | <a name="input_dx_connection_id"></a> [dx\_connection\_id](#input\_dx\_connection\_id) | (Required) The ID of the Direct Connect connection. | `string` | n/a | yes |
