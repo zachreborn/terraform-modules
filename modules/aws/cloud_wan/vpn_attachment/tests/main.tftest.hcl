@@ -235,6 +235,45 @@ run "rejects_invalid_outside_ip_address_type" {
   expect_failures = [var.outside_ip_address_type]
 }
 
+run "rejects_invalid_tunnel_startup_action" {
+  command = plan
+
+  variables {
+    customer_gateways = {
+      "corporate-office" = { ip_address = join(".", [192, 0, 2, 24]), bgp_asn = 65001 }
+    }
+    tunnel_startup_action = "restart"
+  }
+
+  expect_failures = [var.tunnel_startup_action]
+}
+
+run "rejects_invalid_tunnel1_dpd_timeout_action" {
+  command = plan
+
+  variables {
+    customer_gateways = {
+      "corporate-office" = { ip_address = join(".", [192, 0, 2, 25]), bgp_asn = 65001 }
+    }
+    tunnel1_dpd_timeout_action = "reboot"
+  }
+
+  expect_failures = [var.tunnel1_dpd_timeout_action]
+}
+
+run "rejects_invalid_tunnel2_dpd_timeout_action" {
+  command = plan
+
+  variables {
+    customer_gateways = {
+      "corporate-office" = { ip_address = join(".", [192, 0, 2, 26]), bgp_asn = 65001 }
+    }
+    tunnel2_dpd_timeout_action = "reboot"
+  }
+
+  expect_failures = [var.tunnel2_dpd_timeout_action]
+}
+
 ###########################
 # large bandwidth
 ###########################
@@ -252,6 +291,69 @@ run "plan_succeeds_with_large_tunnel_bandwidth" {
   assert {
     condition     = aws_vpn_connection.this["corporate-office"].tunnel_bandwidth == "large"
     error_message = "tunnel_bandwidth should be forwarded to the resource."
+  }
+}
+
+###########################
+# tunnel log options (dynamic blocks)
+###########################
+
+run "plan_succeeds_with_tunnel_log_options" {
+  command = plan
+
+  variables {
+    customer_gateways = {
+      "corporate-office" = { ip_address = join(".", [192, 0, 2, 27]), bgp_asn = 65001 }
+    }
+    tunnel1_log_options = {
+      cloudwatch_log_options = {
+        log_enabled       = true
+        log_group_arn     = "arn:aws:logs:us-east-1:123456789012:log-group:vpn-tunnel1"
+        log_output_format = "json"
+      }
+    }
+    tunnel2_log_options = {
+      cloudwatch_log_options = {
+        log_enabled       = true
+        log_group_arn     = "arn:aws:logs:us-east-1:123456789012:log-group:vpn-tunnel2"
+        log_output_format = "text"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpn_connection.this["corporate-office"].tunnel1_log_options[0].cloudwatch_log_options[0].log_enabled == true
+    error_message = "tunnel1_log_options.cloudwatch_log_options.log_enabled should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = aws_vpn_connection.this["corporate-office"].tunnel1_log_options[0].cloudwatch_log_options[0].log_group_arn == "arn:aws:logs:us-east-1:123456789012:log-group:vpn-tunnel1"
+    error_message = "tunnel1_log_options.cloudwatch_log_options.log_group_arn should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = aws_vpn_connection.this["corporate-office"].tunnel2_log_options[0].cloudwatch_log_options[0].log_output_format == "text"
+    error_message = "tunnel2_log_options.cloudwatch_log_options.log_output_format should be forwarded to the resource."
+  }
+}
+
+run "plan_succeeds_without_tunnel_log_options" {
+  command = plan
+
+  variables {
+    customer_gateways = {
+      "corporate-office" = { ip_address = join(".", [192, 0, 2, 28]), bgp_asn = 65001 }
+    }
+  }
+
+  assert {
+    condition     = length(aws_vpn_connection.this["corporate-office"].tunnel1_log_options) == 0
+    error_message = "tunnel1_log_options should be omitted entirely when the variable is left at its default (null)."
+  }
+
+  assert {
+    condition     = length(aws_vpn_connection.this["corporate-office"].tunnel2_log_options) == 0
+    error_message = "tunnel2_log_options should be omitted entirely when the variable is left at its default (null)."
   }
 }
 
@@ -332,7 +434,11 @@ run "outputs_are_populated" {
 
   variables {
     customer_gateways = {
-      "corporate-office" = { ip_address = join(".", [192, 0, 2, 23]), bgp_asn = 65001 }
+      "corporate-office" = {
+        ip_address  = join(".", [192, 0, 2, 23])
+        bgp_asn     = 65001
+        device_name = "branch-router-01"
+      }
     }
     create_cloud_wan_attachment = true
     core_network_id             = "core-network-0123456789abcdef0"
@@ -341,6 +447,16 @@ run "outputs_are_populated" {
   assert {
     condition     = output.customer_gateway_ids["corporate-office"] == "cgw-0123456789abcdef0"
     error_message = "customer_gateway_ids should be keyed by gateway name."
+  }
+
+  assert {
+    condition     = output.customer_gateways["corporate-office"].bgp_asn == "65001"
+    error_message = "customer_gateways output should include bgp_asn from the input configuration."
+  }
+
+  assert {
+    condition     = output.customer_gateways["corporate-office"].device_name == "branch-router-01"
+    error_message = "customer_gateways output should include device_name from the input configuration."
   }
 
   assert {
@@ -356,6 +472,21 @@ run "outputs_are_populated" {
   assert {
     condition     = output.vpn_connections["corporate-office"].tunnel1_address != null
     error_message = "vpn_connections output should include tunnel telemetry."
+  }
+
+  assert {
+    condition     = output.cloud_wan_attachments["corporate-office"].attachment_type == "SITE_TO_SITE_VPN"
+    error_message = "cloud_wan_attachments output should include attachment_type."
+  }
+
+  assert {
+    condition     = output.cloud_wan_attachments["corporate-office"].state == "available"
+    error_message = "cloud_wan_attachments output should include state."
+  }
+
+  assert {
+    condition     = output.cloud_wan_attachments["corporate-office"].core_network_arn != null
+    error_message = "cloud_wan_attachments output should include core_network_arn."
   }
 }
 
