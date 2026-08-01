@@ -108,20 +108,11 @@ module "secrets_manager" {
 }
 ```
 
-### Zero-state secret value via ephemeral write-only argument
+### Write-only secret values (recommended for real secret material)
 
-Requires OpenTofu or Terraform >= 1.11 and `hashicorp/random` >= 3.7.0. The generated password
-never appears in the plan, state, or Scalr/CI run output -- see
-[Secret Payload Management](#secret-payload-management) below for the full decision tree.
-
-`secret_values` is a plain `sensitive` variable, not an `ephemeral` one, so an ephemeral value
-cannot be passed into it directly -- OpenTofu/Terraform rejects an ephemeral value at any module
-boundary unless the receiving variable is itself declared `ephemeral = true` (and doing that here
-would also prevent using `secret_string`/`secret_binary`, since a variable's ephemeral-ness is
-all-or-nothing for every value that flows through it). Instead, let this module manage only the
-secret's metadata, and create the `aws_secretsmanager_secret_version` resource directly at the
-caller root, where the ephemeral value can flow straight into its `secret_string_wo` argument
-without crossing a module boundary:
+Use `secret_values_wo` instead of `secret_values` for anything genuinely sensitive. The value is
+sent straight to AWS and never lands in the state file, a saved plan file, or CLI output. Because
+the variable is declared `ephemeral`, it accepts values from `ephemeral` resources directly:
 
 ```hcl
 ephemeral "random_password" "app_token" {
@@ -135,14 +126,64 @@ module "secrets_manager" {
   secrets = {
     internal_service_token = {}
   }
-}
 
-resource "aws_secretsmanager_secret_version" "internal_service_token" {
-  secret_id                = module.secrets_manager.arns["internal_service_token"]
-  secret_string_wo         = ephemeral.random_password.app_token.result
-  secret_string_wo_version = 1 # bump only when you intend to rotate the value
+  secret_values_wo = {
+    internal_service_token = ephemeral.random_password.app_token.result
+  }
+
+  # Write-only values produce no plan diff, so this counter is what pushes a new value.
+  secret_values_wo_versions = {
+    internal_service_token = 1 # bump only when you intend to rotate the value
+  }
 }
 ```
+
+The same works for a secret you supply yourself -- declare the input `ephemeral` at your root so it
+is excluded from plan files too:
+
+```hcl
+variable "vendor_api_key" {
+  type      = string
+  sensitive = true
+  ephemeral = true # keeps the value out of saved plan files
+}
+
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets                   = { vendor_api_key = {} }
+  secret_values_wo          = { vendor_api_key = var.vendor_api_key }
+  secret_values_wo_versions = { vendor_api_key = 1 }
+}
+```
+
+For a multi-field secret, build the JSON in a `local` from ephemeral parts. The local is
+automatically ephemeral too, so it can only ever flow into a write-only argument:
+
+```hcl
+ephemeral "random_password" "db" {
+  length = 24
+}
+
+locals {
+  db_credentials = jsonencode({
+    username = "app_user"
+    password = ephemeral.random_password.db.result
+  })
+}
+
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets                   = { db_credentials = {} }
+  secret_values_wo          = { db_credentials = local.db_credentials }
+  secret_values_wo_versions = { db_credentials = 1 }
+}
+```
+
+**Rotating a write-only value:** change the value *and* increment its counter in
+`secret_values_wo_versions`. Changing the value alone does nothing, because a write-only argument
+has no prior state to diff against.
 
 ### Standalone resource policy with public-access blocking
 
@@ -183,7 +224,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - **One module call, many secrets.** All inputs are keyed maps (`secrets`, `secret_values`) so a single module call can manage any number of secrets, following this repo's scalable-input convention.
 - **KMS by composition.** A dedicated customer-managed key is only created when `create_kms_key = true`, via the `../kms` child module -- never inline. The generated key policy is the standard "Enable IAM User Permissions" statement, which delegates all access control to IAM policies in the account; it does not itself restrict usage to Secrets Manager, since KMS key policies are additive-only and a root-principal statement can't be meaningfully narrowed by a second, more specific statement on that same principal. To restrict a specific caller to using the key only through Secrets Manager, add a `kms:ViaService` condition to *that caller's* IAM policy (see [Consuming Secrets Safely](#consuming-secrets-safely)), not to the key policy. When `create_kms_key = false` and `kms_key_id` is unset, Secrets Manager falls back to the AWS managed key `aws/secretsmanager`.
-- **Metadata and value are separate inputs.** `secrets` manages secret metadata (name, KMS, rotation, policy, replication) and is not sensitive. `secret_values` manages the actual secret value and is marked `sensitive = true` as a whole, mirroring the provider's own split between `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version`. An entry in `secret_values` with no matching key in `secrets` is ignored rather than erroring, and a `secrets` entry with no matching `secret_values` entry simply has no version created (useful when the value is set out-of-band).
+- **Metadata and value are separate inputs.** `secrets` manages secret metadata (name, KMS, rotation, policy, replication) and is not sensitive. Values are supplied separately, mirroring the provider's own split between `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version`. An entry in `secret_values` with no matching key in `secrets` is ignored rather than erroring, and a `secrets` entry with no value at all simply has no version created (useful when the value is set out-of-band).
+- **Two value paths, deliberately separate.** `secret_values_wo` (ephemeral, write-only) is the secure path and should be the default for real secret material; `secret_values` (persisted) is retained for low-sensitivity values and binary payloads. They are separate variables rather than one because ephemeral-ness applies to an entire variable: a single combined input marked `ephemeral` would make `secret_string`/`secret_binary` unusable, since an ephemeral value may only be assigned to a write-only argument. The same constraint is why the version counter lives in its own non-ephemeral variable — ephemeral values cannot be used in `for_each`, so `secret_values_wo_versions` is what selects which secrets get a write-only version. Variable validation rejects a secret appearing in both paths, and rejects a value or counter supplied without its counterpart.
+- **Requires OpenTofu/Terraform >= 1.11.** Ephemeral variables and write-only arguments are the mechanism that keeps secret material out of state and plan files, and both were introduced in 1.11. This is a higher floor than most modules in this library, and it is intentional: a lower floor would mean silently persisting secret values.
+- **No unconditional STS call.** `aws_caller_identity` is only read when at least one secret sets `create_kms_key`, so plans in restricted or offline environments aren't forced through `sts:GetCallerIdentity`.
 - **`policy` vs. `manage_resource_policy`.** Both ultimately manage the same underlying secret resource policy attribute, so setting both for the same secret is rejected by variable validation. Use `policy` for a simple inline policy, or `manage_resource_policy` + `resource_policy` when you also need `block_public_policy`.
 - **Secure defaults.** `recovery_window_in_days` defaults to 30 (not immediate deletion), and `block_public_policy` defaults to `true` whenever a standalone resource policy is managed.
 
@@ -191,7 +235,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Secret Payload Management
 
-How you populate `secret_values` matters more for your security posture than any setting on this
+How you populate a secret's value matters more for your security posture than any setting on this
 module. Never commit a real secret value in a `.tf`/`.tfvars`/YAML file, and avoid storing
 application secret payloads as plain CI/CD platform variables (for example, Scalr workspace
 variables) -- neither approach gives you per-secret audit trails, rotation, or least-privilege
@@ -200,34 +244,39 @@ secret:
 
 1. **Let AWS own the value entirely (best).** For credentials AWS can manage end-to-end, such as
    an RDS/Aurora master password, use the database resource's own `manage_master_user_password`
-   feature instead of `secret_values`. Terraform/OpenTofu and your CI/CD platform never see the
+   feature instead of this module. Terraform/OpenTofu and your CI/CD platform never see the
    plaintext.
-2. **Ephemeral value + write-only argument (best for values Terraform must generate).** On
-   OpenTofu/Terraform >= 1.11 with `hashicorp/random` >= 3.7.0, generate the value with an
-   `ephemeral "random_password"` resource and pass it to a caller-managed
-   `aws_secretsmanager_secret_version` resource's `secret_string_wo` / `secret_string_wo_version`
-   arguments, using this module only for the secret's metadata (see the usage example above). The
-   ephemeral value must flow directly into that resource at the caller root -- `secret_values` is a
-   `sensitive`, non-`ephemeral` variable, so OpenTofu/Terraform rejects an ephemeral value passed
-   into it at the module boundary. The value is never written to the plan or state file. For
-   multi-field secrets (e.g. a username/password pair), combine several ephemeral values in a
-   `local` before calling `jsonencode()` on it -- the resulting local is automatically treated as
-   ephemeral too, so OpenTofu blocks it from leaking into any non-write-only argument or a root
-   output.
+2. **`secret_values_wo` (best for values Terraform supplies or generates).** Pair it with
+   `secret_values_wo_versions` and feed it either an `ephemeral "random_password"` result or your
+   own `ephemeral` root variable. The value reaches AWS without being written to state, saved plan
+   files, or CLI output. See the usage examples above.
 3. **Out-of-band population (for human-supplied secrets, e.g. third-party API keys).** Create the
-   `secrets` entry with no matching `secret_values` entry -- this produces an empty secret
-   container with no sensitive content in the diff or commit history. Populate the value once,
-   out-of-band, with `aws secretsmanager put-secret-value`, authorized by a narrowly scoped IAM
-   policy (ideally temporary SSO credentials) restricted to that one secret's ARN. This never
-   touches Git, Terraform state, or CI/CD platform variables.
-4. **`secret_string` (acceptable, not ideal).** A plain `secret_string` is the simplest option but
-   is persisted to Terraform/OpenTofu state in plaintext. Only use this for low-sensitivity values,
-   and pair it with state encryption (OpenTofu's native `encryption` block, or your remote backend's
-   encryption-at-rest) plus tightly scoped read access to that state.
+   `secrets` entry with no value at all -- this produces an empty secret container with no
+   sensitive content in the diff or commit history. Populate the value once, out-of-band, with
+   `aws secretsmanager put-secret-value`, authorized by a narrowly scoped IAM policy (ideally
+   temporary SSO credentials) restricted to that one secret's ARN. This never touches Git,
+   Terraform state, or CI/CD platform variables.
+4. **`secret_values` (acceptable only for low-sensitivity values).** The simplest option, but the
+   value is persisted to state *and* to saved plan files in plaintext. Use it for non-secret
+   configuration payloads or throwaway values, and pair it with state/plan encryption (OpenTofu's
+   native `encryption` block, or your backend's encryption-at-rest) plus tightly scoped read access.
 
 Once a secret's rotation is handled by an AWS-provided Lambda rotation template
 (`enable_rotation`), AWS owns the value's lifecycle after the first rotation regardless of which
 option above was used to seed it.
+
+### Where each option leaks
+
+The distinction between options 2 and 4 is not theoretical. Write-only arguments keep a value out
+of resource state, but a value passed through a *non-ephemeral* root variable is still recorded in
+saved plan files under `.variables`. Only an `ephemeral` variable closes that gap:
+
+- `secret_values` (persisted) -- value appears in **state** and in the **plan file** (both as a
+  resource attribute and as a root variable).
+- `secret_values_wo` fed from a *non-ephemeral* root variable -- value is absent from state, but
+  still recorded in the **plan file** under `.variables`.
+- `secret_values_wo` fed from an `ephemeral` variable or `ephemeral` resource -- **absent
+  everywhere**: no state, no plan file, no CLI output.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -424,7 +473,7 @@ bounded interval if rotation is enabled.
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
@@ -447,13 +496,16 @@ bounded interval if rotation is enabled.
 | [aws_secretsmanager_secret_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_policy) | resource |
 | [aws_secretsmanager_secret_rotation.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_rotation) | resource |
 | [aws_secretsmanager_secret_version.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [aws_secretsmanager_secret_version.wo](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_secret_values"></a> [secret\_values](#input\_secret\_values) | (Optional) Map of secret values to store, keyed by the same logical name used in var.secrets. Entries<br/>without a corresponding var.secrets key are ignored. Defaults to an empty map (no secret versions<br/>created -- useful when the value will be set out-of-band via the console or CLI). Fields:<br/>  - secret\_string:            (Optional) Text data to store. Exactly one of secret\_string, secret\_string\_wo,<br/>                               or secret\_binary is required per entry.<br/>  - secret\_string\_wo:         (Optional) Write-only text data to store. Requires Terraform/OpenTofu >= 1.11.<br/>                               This variable is sensitive but not ephemeral, so an ephemeral value (e.g. from<br/>                               an ephemeral "random\_password" resource) cannot be passed into it -- OpenTofu/<br/>                               Terraform rejects ephemeral values at any module boundary whose receiving<br/>                               variable is not itself declared ephemeral. To use a caller-generated ephemeral<br/>                               value with secret\_string\_wo, create the aws\_secretsmanager\_secret\_version<br/>                               resource directly at the caller root instead (using this module only for the<br/>                               secret's metadata) so the ephemeral value never crosses a module boundary. See<br/>                               the "Zero-state secret value via ephemeral write-only argument" example in<br/>                               README.md.<br/>  - secret\_string\_wo\_version: (Optional) Increment to trigger an update when secret\_string\_wo changes.<br/>  - secret\_binary:            (Optional) Base64-encoded binary data to store.<br/>  - version\_stages:           (Optional) List of staging labels to attach to this version. | <pre>map(object({<br/>    secret_string            = optional(string)<br/>    secret_string_wo         = optional(string)<br/>    secret_string_wo_version = optional(number)<br/>    secret_binary            = optional(string)<br/>    version_stages           = optional(list(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_secret_values"></a> [secret\_values](#input\_secret\_values) | (Optional) Map of PERSISTED secret values to store, keyed by the same logical name used in var.secrets.<br/>Entries without a corresponding var.secrets key are ignored. Defaults to an empty map (no secret versions<br/>created -- useful when the value will be set out-of-band via the console or CLI).<br/><br/>WARNING: values supplied here are written to the Terraform/OpenTofu state file AND to saved plan files in<br/>plaintext. For secret material, prefer var.secret\_values\_wo, which keeps the value out of both. Reserve this<br/>variable for low-sensitivity values, and pair it with state/plan encryption when used.<br/><br/>Fields:<br/>  - secret\_string:  (Optional) Text data to store. Exactly one of secret\_string or secret\_binary is<br/>                     required per entry.<br/>  - secret\_binary:  (Optional) Base64-encoded binary data to store.<br/>  - version\_stages: (Optional) List of staging labels to attach to this version. | <pre>map(object({<br/>    secret_string  = optional(string)<br/>    secret_binary  = optional(string)<br/>    version_stages = optional(list(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_secret_values_wo"></a> [secret\_values\_wo](#input\_secret\_values\_wo) | (Optional) Map of WRITE-ONLY secret values to store, keyed by the same logical name used in var.secrets.<br/>Defaults to an empty map.<br/><br/>This is the secure path for real secret material: the value is sent straight to AWS and is never written to<br/>the state file, a saved plan file, or CLI output. The variable is declared `ephemeral`, so it accepts values<br/>from ephemeral resources (e.g. `ephemeral "random_password"`) and its value is not persisted in plan files.<br/><br/>Every key set here must also have a matching entry in var.secret\_values\_wo\_versions, which is the<br/>non-ephemeral counter that tells the provider when to push a new value. | `map(string)` | `{}` | no |
+| <a name="input_secret_values_wo_versions"></a> [secret\_values\_wo\_versions](#input\_secret\_values\_wo\_versions) | (Optional) Map of version counters for var.secret\_values\_wo, keyed by the same logical name. Defaults to an<br/>empty map.<br/><br/>Write-only values produce no plan diff (their prior state is always null), so this counter is what tells the<br/>provider to push a new value. Increment an entry to rotate that secret; leave it unchanged and the existing<br/>value is left alone even if secret\_values\_wo differs. Because this map is NOT ephemeral, its keys are what<br/>select which secrets receive a write-only version. | `map(number)` | `{}` | no |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | (Optional) Map of AWS Secrets Manager secrets to create, keyed by a caller-chosen logical name<br/>(e.g. "database\_credentials"). Defaults to an empty map (no secrets created).<br/>Fields:<br/>  - name:                             (Optional) Friendly name of the secret. Defaults to the entry's<br/>                                       map key when neither name nor name\_prefix is set. Conflicts with<br/>                                       name\_prefix.<br/>  - name\_prefix:                      (Optional) Creates a unique name beginning with the specified<br/>                                       prefix. Conflicts with name.<br/>  - description:                      (Optional) Description of the secret.<br/>  - recovery\_window\_in\_days:          (Optional) Number of days AWS Secrets Manager waits before it can<br/>                                       delete the secret. Must be 0 (force deletion without recovery) or<br/>                                       between 7 and 30 days. Defaults to 30.<br/>  - policy:                           (Optional) Valid JSON document representing a resource policy<br/>                                       managed inline on the secret. Conflicts with manage\_resource\_policy,<br/>                                       since both manage the same underlying resource policy.<br/>  - force\_overwrite\_replica\_secret:   (Optional) Whether to overwrite a secret with the same name in the<br/>                                       destination Region during replication. Defaults to false.<br/>  - replica:                          (Optional) List of Regions to replicate this secret to. Each entry<br/>                                       supports: region (Required), kms\_key\_id (Optional, defaults to the<br/>                                       replica Region's aws/secretsmanager managed key when unset).<br/>  - tags:                             (Optional) Additional tags for this secret, merged with var.tags.<br/>  - create\_kms\_key:                   (Optional) If true, this module creates a dedicated customer managed<br/>                                       KMS key (via modules/aws/kms) to encrypt this secret. Conflicts with<br/>                                       kms\_key\_id. Defaults to false, which lets Secrets Manager use the<br/>                                       AWS managed key (aws/secretsmanager) unless kms\_key\_id is set.<br/>  - kms\_key\_id:                       (Optional) ARN or ID of a caller-supplied KMS key to encrypt the<br/>                                       secret. Conflicts with create\_kms\_key.<br/>  - enable\_rotation:                  (Optional) Whether to manage automatic rotation for this secret.<br/>                                       Defaults to false. When true, rotation\_lambda\_arn is required, along<br/>                                       with exactly one of rotation\_automatically\_after\_days or<br/>                                       rotation\_schedule\_expression.<br/>  - rotation\_lambda\_arn:               (Optional) ARN of the Lambda function that rotates the secret.<br/>                                       Required when enable\_rotation is true. This module does not create<br/>                                       the rotation function itself -- rotation function code is specific<br/>                                       to the secret's credential type, so bring your own function (for<br/>                                       example, one deployed from an AWS-provided rotation template) and<br/>                                       pass its ARN here.<br/>  - rotate\_immediately:               (Optional) Whether to rotate the secret immediately upon enabling<br/>                                       rotation, rather than waiting for the next scheduled window. Defaults<br/>                                       to true.<br/>  - rotation\_automatically\_after\_days: (Optional) Number of days between automatic rotations. Conflicts<br/>                                       with rotation\_schedule\_expression; exactly one is required when<br/>                                       enable\_rotation is true.<br/>  - rotation\_duration:                (Optional) Length of the rotation window, for example "3h".<br/>  - rotation\_schedule\_expression:      (Optional) A cron() or rate() expression defining the rotation<br/>                                       schedule. Conflicts with rotation\_automatically\_after\_days; exactly<br/>                                       one is required when enable\_rotation is true.<br/>  - manage\_resource\_policy:           (Optional) Whether to manage this secret's resource policy via a<br/>                                       standalone aws\_secretsmanager\_secret\_policy resource (needed to set<br/>                                       block\_public\_policy). Defaults to false. Conflicts with policy, since<br/>                                       both manage the same underlying resource policy.<br/>  - resource\_policy:                  (Optional) Valid JSON document representing a resource policy.<br/>                                       Required when manage\_resource\_policy is true.<br/>  - block\_public\_policy:              (Optional) Validates the resource policy to help prevent broad<br/>                                       access to the secret. Only applies when manage\_resource\_policy is<br/>                                       true. Defaults to true. | <pre>map(object({<br/>    name                           = optional(string)<br/>    name_prefix                    = optional(string)<br/>    description                    = optional(string)<br/>    recovery_window_in_days        = optional(number, 30)<br/>    policy                         = optional(string)<br/>    force_overwrite_replica_secret = optional(bool, false)<br/>    replica = optional(list(object({<br/>      region     = string<br/>      kms_key_id = optional(string)<br/>    })), [])<br/>    tags = optional(map(string), {})<br/><br/>    create_kms_key = optional(bool, false)<br/>    kms_key_id     = optional(string)<br/><br/>    enable_rotation                   = optional(bool, false)<br/>    rotation_lambda_arn               = optional(string)<br/>    rotate_immediately                = optional(bool, true)<br/>    rotation_automatically_after_days = optional(number)<br/>    rotation_duration                 = optional(string)<br/>    rotation_schedule_expression      = optional(string)<br/><br/>    manage_resource_policy = optional(bool, false)<br/>    resource_policy        = optional(string)<br/>    block_public_policy    = optional(bool, true)<br/>  }))</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags applied to every secret and composed KMS key, merged with each entry's optional per-secret tags. If configured with a provider default\_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. | `map(any)` | `{}` | no |
 
@@ -465,7 +517,7 @@ bounded interval if rotation is enabled.
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of secret IDs (ARNs), keyed by the same logical name used in var.secrets. |
 | <a name="output_kms_key_arns"></a> [kms\_key\_arns](#output\_kms\_key\_arns) | Map of composed customer managed KMS key ARNs, keyed by the same logical name used in var.secrets. Only includes entries where create\_kms\_key is true. |
 | <a name="output_rotation_enabled"></a> [rotation\_enabled](#output\_rotation\_enabled) | Map indicating whether automatic rotation is enabled, keyed by the same logical name used in var.secrets. |
-| <a name="output_version_ids"></a> [version\_ids](#output\_version\_ids) | Map of secret version IDs, keyed by the same logical name used in var.secret\_values. |
+| <a name="output_version_ids"></a> [version\_ids](#output\_version\_ids) | Map of secret version IDs, keyed by logical name. Includes both persisted versions (from var.secret\_values) and write-only versions (from var.secret\_values\_wo). Version IDs are identifiers, not secret material, so this output is safe to consume. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

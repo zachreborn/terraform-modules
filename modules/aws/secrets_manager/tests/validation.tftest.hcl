@@ -170,3 +170,97 @@ run "rejects_secret_values_entry_with_two_values" {
 
   expect_failures = [var.secret_values]
 }
+
+run "valid_write_only_baseline_does_not_fail" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values_wo = {
+      database_credentials = "value"
+    }
+    secret_values_wo_versions = {
+      database_credentials = 1
+    }
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_version.wo) == 1
+    error_message = "Expected exactly one write-only secret version to be planned."
+  }
+}
+
+run "rejects_write_only_value_without_a_version" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values_wo = {
+      database_credentials = "value"
+    }
+    secret_values_wo_versions = {}
+  }
+
+  expect_failures = [var.secret_values_wo]
+}
+
+run "rejects_write_only_version_without_a_value" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values_wo = {}
+    secret_values_wo_versions = {
+      database_credentials = 1
+    }
+  }
+
+  expect_failures = [var.secret_values_wo]
+}
+
+run "rejects_write_only_version_key_missing_from_secrets" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values_wo = {
+      unrelated_entry = "value"
+    }
+    secret_values_wo_versions = {
+      unrelated_entry = 1
+    }
+  }
+
+  expect_failures = [var.secret_values_wo_versions]
+}
+
+run "rejects_same_secret_in_both_persisted_and_write_only" {
+  command = plan
+
+  variables {
+    secrets = {
+      database_credentials = {}
+    }
+    secret_values = {
+      database_credentials = {
+        secret_string = "value"
+      }
+    }
+    secret_values_wo = {
+      database_credentials = "value"
+    }
+    secret_values_wo_versions = {
+      database_credentials = 1
+    }
+  }
+
+  expect_failures = [var.secret_values_wo_versions]
+}

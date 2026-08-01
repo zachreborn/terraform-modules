@@ -13,8 +13,11 @@ output "ids" {
 }
 
 output "version_ids" {
-  description = "Map of secret version IDs, keyed by the same logical name used in var.secret_values."
-  value       = { for k, v in aws_secretsmanager_secret_version.this : k => v.version_id }
+  description = "Map of secret version IDs, keyed by logical name. Includes both persisted versions (from var.secret_values) and write-only versions (from var.secret_values_wo). Version IDs are identifiers, not secret material, so this output is safe to consume."
+  value = merge(
+    { for k, v in aws_secretsmanager_secret_version.this : k => v.version_id },
+    { for k, v in aws_secretsmanager_secret_version.wo : k => v.version_id },
+  )
 }
 
 output "rotation_enabled" {

@@ -142,40 +142,93 @@ variable "secrets" {
 
 variable "secret_values" {
   description = <<-EOT
-    (Optional) Map of secret values to store, keyed by the same logical name used in var.secrets. Entries
-    without a corresponding var.secrets key are ignored. Defaults to an empty map (no secret versions
-    created -- useful when the value will be set out-of-band via the console or CLI). Fields:
-      - secret_string:            (Optional) Text data to store. Exactly one of secret_string, secret_string_wo,
-                                   or secret_binary is required per entry.
-      - secret_string_wo:         (Optional) Write-only text data to store. Requires Terraform/OpenTofu >= 1.11.
-                                   This variable is sensitive but not ephemeral, so an ephemeral value (e.g. from
-                                   an ephemeral "random_password" resource) cannot be passed into it -- OpenTofu/
-                                   Terraform rejects ephemeral values at any module boundary whose receiving
-                                   variable is not itself declared ephemeral. To use a caller-generated ephemeral
-                                   value with secret_string_wo, create the aws_secretsmanager_secret_version
-                                   resource directly at the caller root instead (using this module only for the
-                                   secret's metadata) so the ephemeral value never crosses a module boundary. See
-                                   the "Zero-state secret value via ephemeral write-only argument" example in
-                                   README.md.
-      - secret_string_wo_version: (Optional) Increment to trigger an update when secret_string_wo changes.
-      - secret_binary:            (Optional) Base64-encoded binary data to store.
-      - version_stages:           (Optional) List of staging labels to attach to this version.
+    (Optional) Map of PERSISTED secret values to store, keyed by the same logical name used in var.secrets.
+    Entries without a corresponding var.secrets key are ignored. Defaults to an empty map (no secret versions
+    created -- useful when the value will be set out-of-band via the console or CLI).
+
+    WARNING: values supplied here are written to the Terraform/OpenTofu state file AND to saved plan files in
+    plaintext. For secret material, prefer var.secret_values_wo, which keeps the value out of both. Reserve this
+    variable for low-sensitivity values, and pair it with state/plan encryption when used.
+
+    Fields:
+      - secret_string:  (Optional) Text data to store. Exactly one of secret_string or secret_binary is
+                         required per entry.
+      - secret_binary:  (Optional) Base64-encoded binary data to store.
+      - version_stages: (Optional) List of staging labels to attach to this version.
   EOT
   type = map(object({
-    secret_string            = optional(string)
-    secret_string_wo         = optional(string)
-    secret_string_wo_version = optional(number)
-    secret_binary            = optional(string)
-    version_stages           = optional(list(string))
+    secret_string  = optional(string)
+    secret_binary  = optional(string)
+    version_stages = optional(list(string))
   }))
   default   = {}
   sensitive = true
 
   validation {
     condition = alltrue([
-      for k, v in var.secret_values : length([for x in [v.secret_string, v.secret_string_wo, v.secret_binary] : x if x != null]) == 1
+      for k, v in var.secret_values : length([for x in [v.secret_string, v.secret_binary] : x if x != null]) == 1
     ])
-    error_message = "Each secret_values entry must set exactly one of secret_string, secret_string_wo, or secret_binary."
+    error_message = "Each secret_values entry must set exactly one of secret_string or secret_binary."
+  }
+}
+
+variable "secret_values_wo" {
+  description = <<-EOT
+    (Optional) Map of WRITE-ONLY secret values to store, keyed by the same logical name used in var.secrets.
+    Defaults to an empty map.
+
+    This is the secure path for real secret material: the value is sent straight to AWS and is never written to
+    the state file, a saved plan file, or CLI output. The variable is declared `ephemeral`, so it accepts values
+    from ephemeral resources (e.g. `ephemeral "random_password"`) and its value is not persisted in plan files.
+
+    Every key set here must also have a matching entry in var.secret_values_wo_versions, which is the
+    non-ephemeral counter that tells the provider when to push a new value.
+  EOT
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+  ephemeral   = true
+
+  validation {
+    condition = alltrue([
+      for k in keys(var.secret_values_wo) : contains(keys(var.secret_values_wo_versions), k)
+    ])
+    error_message = "Every secret_values_wo key must have a matching entry in secret_values_wo_versions; without one the value would be silently ignored."
+  }
+
+  validation {
+    condition = alltrue([
+      for k in keys(var.secret_values_wo_versions) : contains(keys(var.secret_values_wo), k)
+    ])
+    error_message = "Every secret_values_wo_versions key must have a matching entry in secret_values_wo."
+  }
+}
+
+variable "secret_values_wo_versions" {
+  description = <<-EOT
+    (Optional) Map of version counters for var.secret_values_wo, keyed by the same logical name. Defaults to an
+    empty map.
+
+    Write-only values produce no plan diff (their prior state is always null), so this counter is what tells the
+    provider to push a new value. Increment an entry to rotate that secret; leave it unchanged and the existing
+    value is left alone even if secret_values_wo differs. Because this map is NOT ephemeral, its keys are what
+    select which secrets receive a write-only version.
+  EOT
+  type        = map(number)
+  default     = {}
+
+  validation {
+    condition = alltrue([
+      for k in keys(var.secret_values_wo_versions) : contains(keys(var.secrets), k)
+    ])
+    error_message = "Every secret_values_wo_versions key must match a key in var.secrets."
+  }
+
+  validation {
+    condition = alltrue([
+      for k in keys(var.secret_values_wo_versions) : !contains(keys(var.secret_values), k)
+    ])
+    error_message = "A secret cannot appear in both secret_values and secret_values_wo; choose the persisted path or the write-only path for each secret."
   }
 }
 

@@ -2,7 +2,10 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # 1.11.0 is required for ephemeral variables and write-only resource arguments, which
+  # this module uses to keep secret material out of state and plan files entirely. See the
+  # "Write-Only Secret Values" section in README.md.
+  required_version = ">= 1.11.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -15,13 +18,21 @@ terraform {
 # Data Sources
 ###########################
 
-data "aws_caller_identity" "current" {}
+# Only needed to build the key policy for composed KMS keys. Gated with count so callers
+# that don't set create_kms_key aren't forced into an sts:GetCallerIdentity call on every
+# plan (which would otherwise fail closed in restricted or offline environments).
+data "aws_caller_identity" "current" {
+  count = length(local.kms_key_secrets) > 0 ? 1 : 0
+}
 
 ###########################
 # Locals
 ###########################
 
 locals {
+  # Secrets that need a module-composed customer managed KMS key.
+  kms_key_secrets = { for k, v in var.secrets : k => v if v.create_kms_key }
+
   # Resolve the effective KMS key ID for each secret: the composed key's ARN when
   # create_kms_key is true, else the caller-supplied kms_key_id, else null (Secrets
   # Manager falls back to the AWS managed key aws/secretsmanager).
@@ -49,7 +60,7 @@ locals {
 module "kms_key" {
   source = "../kms"
 
-  for_each = { for k, v in var.secrets : k => v if v.create_kms_key }
+  for_each = local.kms_key_secrets
 
   name_prefix         = "secretsmanager-${each.key}-"
   description         = "Customer managed KMS key used to encrypt the ${each.key} Secrets Manager secret."
@@ -72,7 +83,7 @@ module "kms_key" {
         "Sid"    = "EnableIAMUserPermissions",
         "Effect" = "Allow",
         "Principal" = {
-          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current[0].account_id}:root"
         },
         "Action"   = "kms:*",
         "Resource" = "*"
@@ -113,12 +124,27 @@ resource "aws_secretsmanager_secret" "this" {
 resource "aws_secretsmanager_secret_version" "this" {
   for_each = local.secret_value_keys
 
+  secret_id      = aws_secretsmanager_secret.this[each.key].id
+  secret_string  = var.secret_values[each.key].secret_string
+  secret_binary  = var.secret_values[each.key].secret_binary
+  version_stages = var.secret_values[each.key].version_stages
+}
+
+###########################
+# Secrets Manager Secret Version (Write-Only)
+###########################
+
+# Separate from the persisted version resource above because write-only arguments and
+# ephemeral values cannot be mixed with normal ones on the same attribute set: an ephemeral
+# value may only be assigned to a write-only argument, never to secret_string/secret_binary.
+resource "aws_secretsmanager_secret_version" "wo" {
+  # for_each is driven by the NON-ephemeral versions map, because ephemeral values cannot be
+  # used in for_each. Its keys therefore select which secrets receive a write-only value.
+  for_each = var.secret_values_wo_versions
+
   secret_id                = aws_secretsmanager_secret.this[each.key].id
-  secret_string            = var.secret_values[each.key].secret_string
-  secret_string_wo         = var.secret_values[each.key].secret_string_wo
-  secret_string_wo_version = var.secret_values[each.key].secret_string_wo_version
-  secret_binary            = var.secret_values[each.key].secret_binary
-  version_stages           = var.secret_values[each.key].version_stages
+  secret_string_wo         = var.secret_values_wo[each.key]
+  secret_string_wo_version = each.value
 }
 
 ###########################

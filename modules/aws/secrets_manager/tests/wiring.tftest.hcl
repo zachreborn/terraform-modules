@@ -61,6 +61,11 @@ run "creates_secret_without_optional_resources" {
   }
 
   assert {
+    condition     = length(aws_secretsmanager_secret_version.wo) == 0
+    error_message = "Expected no write-only secret versions without secret_values_wo."
+  }
+
+  assert {
     condition     = length(aws_secretsmanager_secret_rotation.this) == 0
     error_message = "Expected no rotation resources without enable_rotation."
   }
@@ -121,24 +126,76 @@ run "creates_secret_version_when_value_provided" {
   }
 }
 
-run "creates_secret_version_using_write_only_argument" {
+run "creates_write_only_version_from_ephemeral_input" {
   command = plan
 
   variables {
     secrets = {
       database_credentials = {}
     }
+    secret_values_wo = {
+      database_credentials = "placeholder"
+    }
+    secret_values_wo_versions = {
+      database_credentials = 1
+    }
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_version.wo) == 1
+    error_message = "Expected exactly one write-only secret version to be planned."
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_version.this) == 0
+    error_message = "Expected no persisted secret version when only secret_values_wo is set."
+  }
+
+  assert {
+    condition     = aws_secretsmanager_secret_version.wo["database_credentials"].secret_string_wo_version == 1
+    error_message = "Expected the write-only version counter to be wired through from secret_values_wo_versions."
+  }
+
+  assert {
+    condition     = output.version_ids["database_credentials"] != null
+    error_message = "Expected the version_ids output to include the write-only secret version."
+  }
+}
+
+run "supports_persisted_and_write_only_secrets_side_by_side" {
+  command = plan
+
+  variables {
+    secrets = {
+      persisted_secret  = {}
+      write_only_secret = {}
+    }
     secret_values = {
-      database_credentials = {
-        secret_string_wo         = "placeholder"
-        secret_string_wo_version = 1
+      persisted_secret = {
+        secret_string = "placeholder"
       }
+    }
+    secret_values_wo = {
+      write_only_secret = "placeholder"
+    }
+    secret_values_wo_versions = {
+      write_only_secret = 1
     }
   }
 
   assert {
     condition     = length(aws_secretsmanager_secret_version.this) == 1
-    error_message = "Expected exactly one secret version to be planned when using secret_string_wo."
+    error_message = "Expected exactly one persisted secret version."
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_version.wo) == 1
+    error_message = "Expected exactly one write-only secret version."
+  }
+
+  assert {
+    condition     = length(output.version_ids) == 2
+    error_message = "Expected version_ids to merge both persisted and write-only versions."
   }
 }
 
