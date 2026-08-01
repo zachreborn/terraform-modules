@@ -57,7 +57,7 @@ Create a dedicated Direct Connect connection at a supported location with MACsec
 
 ```hcl
 module "dx_connection" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/connection"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/direct_connect/connection"
 
   connection_name = "my-dx-connection"
   location        = "EqDC2" # Direct Connect locationCode, e.g. Equinix Ashburn DC2

@@ -1,4 +1,4 @@
-# Native OpenTofu tests for the directconnect/virtual_interface module. All cases run
+# Native OpenTofu tests for the direct_connect/virtual_interface module. All cases run
 # fully offline via `mock_provider`/`mock_resource` -- no real credentials or backend
 # required:
 #   tofu init -backend=false && tofu test

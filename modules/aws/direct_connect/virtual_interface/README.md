@@ -15,7 +15,7 @@ Create a private virtual interface attached to a Virtual Private Gateway, with j
 
 ```hcl
 module "dx_vif" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/virtual_interface"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/direct_connect/virtual_interface"
 
   vif_type          = "private"
   vif_name          = "my-private-vif"
@@ -40,7 +40,7 @@ A private VIF may attach to either a Virtual Private Gateway (`vpn_gateway_id`, 
 
 ```hcl
 module "dx_vif_dxgw" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/directconnect/virtual_interface"
+  source = "github.com/zachreborn/terraform-modules//modules/aws/direct_connect/virtual_interface"
 
   vif_type                  = "private"
   vif_name                  = "my-private-vif-dxgw"
