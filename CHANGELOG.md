@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.5.0](https://github.com/zachreborn/terraform-modules/compare/v14.4.0...v14.5.0) (2026-08-01)
+
+
+### Features
+
+* Add Direct Connect and Cloud WAN VPN Attachment modules ([#266](https://github.com/zachreborn/terraform-modules/issues/266)) ([deb8721](https://github.com/zachreborn/terraform-modules/commit/deb8721bfcde6658138fab77d2afe74795fa482e))
+
 ## [14.4.0](https://github.com/zachreborn/terraform-modules/compare/v14.3.0...v14.4.0) (2026-08-01)
 
 
