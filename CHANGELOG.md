@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.4.0](https://github.com/zachreborn/terraform-modules/compare/v14.3.0...v14.4.0) (2026-08-01)
+
+
+### Features
+
+* **secrets_manager:** add AWS Secrets Manager module ([#372](https://github.com/zachreborn/terraform-modules/issues/372)) ([e0d68a4](https://github.com/zachreborn/terraform-modules/commit/e0d68a40c7f5cc807f53bd349b78884656a61d3e))
+
 ## [14.3.0](https://github.com/zachreborn/terraform-modules/compare/v14.2.0...v14.3.0) (2026-07-29)
 
 
