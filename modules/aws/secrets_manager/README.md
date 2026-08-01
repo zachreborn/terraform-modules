@@ -19,7 +19,7 @@
 
 <h3 align="center">Secrets Manager</h3>
   <p align="center">
-    This module creates one or more AWS Secrets Manager secrets, with optional dedicated KMS encryption keys, automatic rotation, cross-Region replication, and standalone resource policies.
+    This module creates one or more AWS Secrets Manager secrets, with write-only secret values that never touch state or plan files, plus optional dedicated KMS encryption keys, automatic rotation, cross-Region replication, and standalone resource policies.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -57,62 +57,11 @@
 
 ## Usage
 
-### Basic secret with a caller-supplied value
+### Write-only secret value (recommended)
 
-```hcl
-module "secrets_manager" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
-
-  secrets = {
-    database_credentials = {
-      description = "Application database credentials"
-    }
-  }
-
-  secret_values = {
-    database_credentials = {
-      secret_string = jsonencode({
-        username = "app_user"
-        password = var.database_password
-      })
-    }
-  }
-
-  tags = {
-    terraform   = "true"
-    environment = "prod"
-  }
-}
-```
-
-### Dedicated KMS key, automatic rotation, and cross-Region replication
-
-```hcl
-module "secrets_manager" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
-
-  secrets = {
-    payments_api_key = {
-      description    = "Third-party payments API key"
-      create_kms_key = true
-
-      enable_rotation                   = true
-      rotation_lambda_arn               = aws_lambda_function.rotate_payments_api_key.arn
-      rotation_automatically_after_days = 30
-
-      replica = [
-        { region = "us-west-2" }
-      ]
-    }
-  }
-}
-```
-
-### Write-only secret values (recommended for real secret material)
-
-Use `secret_values_wo` instead of `secret_values` for anything genuinely sensitive. The value is
-sent straight to AWS and never lands in the state file, a saved plan file, or CLI output. Because
-the variable is declared `ephemeral`, it accepts values from `ephemeral` resources directly:
+Use `secret_values_wo` for anything genuinely sensitive. The value is sent straight to AWS and never
+lands in the state file, a saved plan file, or CLI output. Because the variable is declared
+`ephemeral`, it accepts values from `ephemeral` resources directly:
 
 ```hcl
 ephemeral "random_password" "app_token" {
@@ -124,7 +73,9 @@ module "secrets_manager" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
 
   secrets = {
-    internal_service_token = {}
+    internal_service_token = {
+      description = "Token used for internal service-to-service auth"
+    }
   }
 
   secret_values_wo = {
@@ -134,6 +85,11 @@ module "secrets_manager" {
   # Write-only values produce no plan diff, so this counter is what pushes a new value.
   secret_values_wo_versions = {
     internal_service_token = 1 # bump only when you intend to rotate the value
+  }
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
   }
 }
 ```
@@ -185,6 +141,73 @@ module "secrets_manager" {
 `secret_values_wo_versions`. Changing the value alone does nothing, because a write-only argument
 has no prior state to diff against.
 
+### Dedicated KMS key, automatic rotation, and cross-Region replication
+
+```hcl
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    payments_api_key = {
+      description    = "Third-party payments API key"
+      create_kms_key = true
+
+      enable_rotation                   = true
+      rotation_lambda_arn               = aws_lambda_function.rotate_payments_api_key.arn
+      rotation_automatically_after_days = 30
+
+      replica = [
+        { region = "us-west-2" }
+      ]
+    }
+  }
+}
+```
+
+### Persisted secret value (low-sensitivity only)
+
+`secret_values` writes the value to the state file **and** to saved plan files in plaintext. Reserve
+it for values that are not truly secret -- configuration payloads, throwaway fixtures, or binary
+data -- and prefer `secret_values_wo` for anything else:
+
+```hcl
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    app_feature_config = {
+      description = "Non-secret application configuration payload"
+    }
+  }
+
+  secret_values = {
+    app_feature_config = {
+      secret_string = jsonencode({
+        feature_flags = ["beta_ui", "new_billing"]
+      })
+    }
+  }
+}
+```
+
+### Secret container with no value (populated out-of-band)
+
+Omit the value entirely to create just the secret container, then populate it once out-of-band (for
+example with `aws secretsmanager put-secret-value` using short-lived credentials). Nothing sensitive
+ever enters Git, state, or plan files:
+
+```hcl
+module "secrets_manager" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/secrets_manager"
+
+  secrets = {
+    stripe_api_key = {
+      description = "Stripe live API key -- value set out-of-band"
+    }
+  }
+}
+```
+
 ### Standalone resource policy with public-access blocking
 
 ```hcl
@@ -216,13 +239,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 ## Prerequisites
 
+- **OpenTofu >= 1.11.0 or Terraform >= 1.11.0.** This is a hard requirement, not a recommendation -- the module uses ephemeral variables and write-only arguments, which do not exist on older versions. See [Notes / Design Decisions](#notes--design-decisions) for why the floor is higher here than in most modules in this library.
+- To generate secret values in-config with `ephemeral "random_password"`, the `hashicorp/random` provider >= 3.7.0 in the **calling** configuration. This module does not require or configure the random provider itself.
 - If `enable_rotation = true`, an existing Lambda rotation function and its ARN. This module does not create the rotation function -- rotation function code is specific to the secret's credential type (for example, an AWS-provided rotation template deployed via the `modules/aws/lambda` module or the Serverless Application Repository).
 - If `create_kms_key = false` and encryption with a customer managed key is desired, an existing KMS key ARN to pass via `kms_key_id`.
 - Before replicating to additional Regions (`replica`), those Regions must already be enabled on the account.
 
 ## Notes / Design Decisions
 
-- **One module call, many secrets.** All inputs are keyed maps (`secrets`, `secret_values`) so a single module call can manage any number of secrets, following this repo's scalable-input convention.
+- **One module call, many secrets.** All inputs are keyed maps (`secrets`, `secret_values`, `secret_values_wo`, `secret_values_wo_versions`) sharing the same logical names, so a single module call can manage any number of secrets, following this repo's scalable-input convention.
 - **KMS by composition.** A dedicated customer-managed key is only created when `create_kms_key = true`, via the `../kms` child module -- never inline. The generated key policy is the standard "Enable IAM User Permissions" statement, which delegates all access control to IAM policies in the account; it does not itself restrict usage to Secrets Manager, since KMS key policies are additive-only and a root-principal statement can't be meaningfully narrowed by a second, more specific statement on that same principal. To restrict a specific caller to using the key only through Secrets Manager, add a `kms:ViaService` condition to *that caller's* IAM policy (see [Consuming Secrets Safely](#consuming-secrets-safely)), not to the key policy. When `create_kms_key = false` and `kms_key_id` is unset, Secrets Manager falls back to the AWS managed key `aws/secretsmanager`.
 - **Metadata and value are separate inputs.** `secrets` manages secret metadata (name, KMS, rotation, policy, replication) and is not sensitive. Values are supplied separately, mirroring the provider's own split between `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version`. An entry in `secret_values` with no matching key in `secrets` is ignored rather than erroring, and a `secrets` entry with no value at all simply has no version created (useful when the value is set out-of-band).
 - **Two value paths, deliberately separate.** `secret_values_wo` (ephemeral, write-only) is the secure path and should be the default for real secret material; `secret_values` (persisted) is retained for low-sensitivity values and binary payloads. They are separate variables rather than one because ephemeral-ness applies to an entire variable: a single combined input marked `ephemeral` would make `secret_string`/`secret_binary` unusable, since an ephemeral value may only be assigned to a write-only argument. The same constraint is why the version counter lives in its own non-ephemeral variable — ephemeral values cannot be used in `for_each`, so `secret_values_wo_versions` is what selects which secrets get a write-only version. Variable validation rejects a secret appearing in both paths, and rejects a value or counter supplied without its counterpart.
