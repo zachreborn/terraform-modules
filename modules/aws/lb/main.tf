@@ -174,14 +174,14 @@ resource "aws_lb_listener" "listener" {
     content {
       # Common settings
       type             = default_action.value.type
-      target_group_arn = default_action.value.type == "forward" ? aws_lb_target_group.target_group["main"].arn : null
+      target_group_arn = default_action.value.type == "forward" ? aws_lb_target_group.target_group[default_action.value.target_group_key].arn : null
 
       # Forward configuration (for both ALB and NLB)
       dynamic "forward" {
         for_each = default_action.value.type == "forward" ? [1] : []
         content {
           target_group {
-            arn    = aws_lb_target_group.target_group["main"].arn
+            arn    = aws_lb_target_group.target_group[default_action.value.target_group_key].arn
             weight = 0
           }
         }
@@ -251,7 +251,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
     for_each = [each.value.action]
     content {
       type             = action.value.type
-      target_group_arn = aws_lb_target_group.target_group["main"].arn
+      target_group_arn = action.value.type == "forward" ? aws_lb_target_group.target_group[action.value.target_group_key].arn : null
 
       # ALB fixed response action
       dynamic "fixed_response" {

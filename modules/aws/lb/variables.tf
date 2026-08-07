@@ -252,6 +252,7 @@ variable "listeners" {
 
     default_action = object({
       type             = string
+      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main"
       target_group_arn = optional(string)
 
       fixed_response = optional(object({
@@ -282,6 +283,7 @@ variable "listener_rules" {
 
     action = object({
       type             = string
+      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main"
       target_group_arn = optional(string)
 
       fixed_response = optional(object({
