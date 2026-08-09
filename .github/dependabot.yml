@@ -4,8 +4,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 10
@@ -19,20 +18,16 @@ updates:
       prefix: "chore"
       include: "scope"
     groups:
-      github-actions-minor-patch:
+      github-actions-monthly-batch:
         applies-to: version-updates
         patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
 
   # ─── Terraform / OpenTofu providers and registry modules ─────────────────────
   - package-ecosystem: "terraform"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 10
@@ -46,10 +41,7 @@ updates:
       prefix: "chore"
       include: "scope"
     groups:
-      terraform-minor-patch:
+      terraform-monthly-batch:
         applies-to: version-updates
         patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
