@@ -125,7 +125,7 @@ No modules.
 | <a name="input_customer_username"></a> [customer\_username](#input\_customer\_username) | (Required) The username corresponding to the password provided. | `string` | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `"default_value"` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
-| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator or connector user. | `string` | n/a | yes |
+| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the connector user. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so rotate it in Active Directory and in the Directory Service console, then leave this input at its original value. | `string` | n/a | yes |
 | <a name="input_size"></a> [size](#input\_size) | (Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values). | `string` | `"Small"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs). | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A mapping of tags to assign to the resource. | `map(any)` | `{}` | no |

@@ -17,7 +17,7 @@ variable "name" {
 
 variable "password" {
   type        = string
-  description = "(Required) The password for the directory administrator or connector user."
+  description = "(Required) The password for the directory administrator. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so reset it out of band and leave this input at its original value."
   sensitive   = true
 }
 

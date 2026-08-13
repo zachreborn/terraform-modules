@@ -124,7 +124,7 @@ No modules.
 | <a name="input_edition"></a> [edition](#input\_edition) | (Optional) The MicrosoftAD edition (Standard or Enterprise). Defaults to Enterprise (applies to MicrosoftAD type only). | `string` | `"Standard"` | no |
 | <a name="input_enable_sso"></a> [enable\_sso](#input\_enable\_sso) | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false. | `string` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
-| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator or connector user. | `string` | n/a | yes |
+| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so reset it out of band and leave this input at its original value. | `string` | n/a | yes |
 | <a name="input_short_name"></a> [short\_name](#input\_short\_name) | (Optional) The short name of the directory, such as CORP. | `string` | n/a | yes |
 | <a name="input_size"></a> [size](#input\_size) | (Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values). | `string` | `"Small"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs). | `list(string)` | `[]` | no |

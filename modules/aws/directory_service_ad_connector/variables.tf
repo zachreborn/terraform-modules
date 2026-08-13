@@ -17,7 +17,8 @@ variable "name" {
 
 variable "password" {
   type        = string
-  description = "(Required) The password for the directory administrator or connector user."
+  description = "(Required) The password for the connector user. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so rotate it in Active Directory and in the Directory Service console, then leave this input at its original value."
+  sensitive   = true
 }
 
 variable "size" {
