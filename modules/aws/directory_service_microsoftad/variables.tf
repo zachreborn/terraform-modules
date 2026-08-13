@@ -1,12 +1,12 @@
 variable "alias" {
   type        = string
-  description = "(Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable_sso."
+  description = "(Optional) The alias for the directory. Required for enable_sso. WARNING: an alias must be unique across every directory alias in the Region and is immutable -- it is ForceNew, so changing it replaces the directory and destroys anything registered against it. The default below is the shared literal \"default_value\", which means only ONE directory per Region can use the default: a second caller that leaves it unset will fail to create. Set an explicit, meaningful alias, or pass null to let AWS use the directory ID as the alias. The default is retained for backwards compatibility -- changing it is deferred to avoid surprising existing callers."
   default     = "default_value"
 }
 
 variable "description" {
   type        = string
-  description = "(Optional) A textual description for the directory."
+  description = "(Optional) A textual description for the directory. WARNING: this is ForceNew -- changing it on an existing directory replaces it and destroys anything registered against it. Treat it as set-once at creation. Note the default is the literal \"default_value\"; it is retained for backwards compatibility because flipping it to null would itself force replacement for existing callers who relied on the default."
   default     = "default_value"
 }
 

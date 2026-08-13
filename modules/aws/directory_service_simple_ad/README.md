@@ -115,8 +115,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `null` | no |
-| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `null` | no |
+| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory. Required for enable\_sso. WARNING: an alias must be unique across every directory alias in the Region and is immutable -- it is ForceNew, so changing it replaces the directory and destroys anything registered against it. Leave null (the default) to let AWS use the directory ID as the alias. | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. WARNING: this is ForceNew -- changing it on an existing directory replaces it and destroys anything registered against it. Treat it as set-once at creation. | `string` | `null` | no |
 | <a name="input_enable_sso"></a> [enable\_sso](#input\_enable\_sso) | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
 | <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so reset it out of band and leave this input at its original value. | `string` | n/a | yes |
