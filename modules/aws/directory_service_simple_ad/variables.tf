@@ -1,12 +1,12 @@
 variable "alias" {
   type        = string
-  description = "(Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable_sso."
+  description = "(Optional) The alias for the directory. Required for enable_sso. WARNING: an alias must be unique across every directory alias in the Region and is immutable -- it is ForceNew, so changing it replaces the directory and destroys anything registered against it. Leave null (the default) to let AWS use the directory ID as the alias."
   default     = null
 }
 
 variable "description" {
   type        = string
-  description = "(Optional) A textual description for the directory."
+  description = "(Optional) A textual description for the directory. WARNING: this is ForceNew -- changing it on an existing directory replaces it and destroys anything registered against it. Treat it as set-once at creation."
   default     = null
 }
 
@@ -17,7 +17,7 @@ variable "name" {
 
 variable "password" {
   type        = string
-  description = "(Required) The password for the directory administrator or connector user."
+  description = "(Required) The password for the directory administrator. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so reset it out of band and leave this input at its original value."
   sensitive   = true
 }
 

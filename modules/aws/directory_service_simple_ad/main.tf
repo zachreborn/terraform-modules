@@ -23,4 +23,21 @@ resource "aws_directory_service_directory" "this" {
     subnet_ids = var.subnet_ids
     vpc_id     = var.vpc_id
   }
+
+  lifecycle {
+    # AWS exposes no API for updating a directory's password: the entire
+    # Directory Service API surface has no UpdateDirectory / UpdateCredentials
+    # operation, and there is no `aws ds` CLI equivalent. Because there is no
+    # update path, the provider marks password as Required + ForceNew
+    # (internal/service/ds/directory.go), so any change to the value in config
+    # REPLACES the directory and silently destroys everything registered against
+    # it. See hashicorp/terraform-provider-aws#16745, open since 2020.
+    #
+    # Ignoring the diff costs no capability, since Terraform could never
+    # legitimately apply a password change in the first place. Reset the
+    # administrator password out of band instead, and leave the Terraform input
+    # alone. Callers who genuinely want a new directory must replace it
+    # deliberately.
+    ignore_changes = [password]
+  }
 }
