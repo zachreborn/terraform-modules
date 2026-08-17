@@ -70,6 +70,12 @@ variable "mtu" {
   }
 }
 
+variable "region" {
+  description = "(Optional) Region where this transit virtual interface is managed. Defaults to the Region set in the provider configuration."
+  type        = string
+  default     = null
+}
+
 variable "sitelink_enabled" {
   description = "(Optional) Whether to enable SiteLink on the virtual interface. SiteLink allows direct connectivity between Direct Connect locations."
   type        = bool

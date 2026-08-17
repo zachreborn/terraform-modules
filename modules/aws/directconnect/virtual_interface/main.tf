@@ -26,6 +26,7 @@ resource "aws_dx_transit_virtual_interface" "this" {
   customer_address = var.customer_address
   bgp_auth_key     = var.bgp_auth_key
   mtu              = var.mtu
+  region           = var.region
   sitelink_enabled = var.sitelink_enabled
   tags             = merge(tomap({ Name = var.name }), var.tags)
 }
