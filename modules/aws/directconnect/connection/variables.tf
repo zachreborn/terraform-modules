@@ -8,7 +8,7 @@ variable "name" {
 }
 
 variable "bandwidth" {
-  description = "(Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps, 100Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, 25Gbps. Case sensitive."
+  description = "(Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps, 100Gbps, 400Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, 25Gbps. Case sensitive."
   type        = string
 }
 
@@ -33,14 +33,14 @@ variable "provider_name" {
   default     = null
 }
 
-variable "request_macsec" {
-  description = "(Optional) Whether to request MAC Security (MACsec) on the connection. Only supported on dedicated connections."
-  type        = bool
-  default     = false
+variable "region" {
+  description = "(Optional) Region where this Direct Connect connection is managed. Defaults to the Region set in the provider configuration."
+  type        = string
+  default     = null
 }
 
-variable "skip_destroy" {
-  description = "(Optional) Set to true to remove the connection from Terraform state on destroy without deleting the physical circuit. Useful for decommissioning workflows where the circuit must be cancelled out-of-band."
+variable "request_macsec" {
+  description = "(Optional) Whether to request MAC Security (MACsec) on the connection. Only supported on dedicated connections."
   type        = bool
   default     = false
 }
