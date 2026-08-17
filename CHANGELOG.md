@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.5.1](https://github.com/zachreborn/terraform-modules/compare/v14.5.0...v14.5.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **directory_service:** ignore password changes to prevent directory replacement ([#473](https://github.com/zachreborn/terraform-modules/issues/473)) ([6de7851](https://github.com/zachreborn/terraform-modules/commit/6de785182d8f311a504590214801af69056c6221))
+
 ## [14.5.0](https://github.com/zachreborn/terraform-modules/compare/v14.4.0...v14.5.0) (2026-08-01)
 
 
