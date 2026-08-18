@@ -59,7 +59,7 @@ variable "permission_sets" {
     managed_policy_arns              = optional(list(string), [])      # (Optional) See permission_set submodule.
     relay_state                      = optional(string)                # (Optional) See permission_set submodule.
     session_duration                 = optional(string, "PT1H")        # (Optional) See permission_set submodule.
-    target_accounts                  = set(string)                     # (Required) AWS account IDs to assign the permission set to.
+    target_accounts                  = map(string)                     # (Required) Map of static caller-defined label -> AWS account ID. See permission_set submodule.
     tags                             = optional(map(string), {})       # (Optional) Additional tags for this permission set.
   }))
   default  = {}

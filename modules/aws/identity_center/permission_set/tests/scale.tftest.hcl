@@ -46,7 +46,7 @@ run "large_group_ids_map_scales_without_data_source_reads" {
   variables {
     name            = "LargeGroupIdsAccess"
     group_ids       = { for i in range(50) : format("group-%02d", i) => format("94481408-a061-70b9-9ae4-%012d", i) }
-    target_accounts = [for i in range(5) : format("1000000000%02d", i)]
+    target_accounts = { for i in range(5) : format("account-%02d", i) => format("1000000000%02d", i) }
   }
 
   assert {
@@ -71,7 +71,7 @@ run "large_groups_set_scales_via_data_source" {
   variables {
     name            = "LargeNameLookupAccess"
     groups          = toset([for i in range(50) : format("group-%02d", i)])
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -92,7 +92,7 @@ run "large_mixed_groups_and_group_ids_scales" {
     name            = "LargeMixedAccess"
     groups          = toset([for i in range(25) : format("existing-%02d", i)])
     group_ids       = { for i in range(25) : format("new-%02d", i) => format("94481408-a061-70b9-9ae4-%012d", i) }
-    target_accounts = [for i in range(4) : format("1000000000%02d", i)]
+    target_accounts = { for i in range(4) : format("account-%02d", i) => format("1000000000%02d", i) }
   }
 
   assert {

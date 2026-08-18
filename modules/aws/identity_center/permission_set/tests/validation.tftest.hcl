@@ -40,7 +40,7 @@ run "valid_baseline_name_lookup_plans_successfully" {
   variables {
     name            = "AdministratorAccess"
     groups          = ["admins"]
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -59,7 +59,7 @@ run "empty_groups_and_group_ids_plans_successfully" {
 
   variables {
     name            = "PolicyOnly"
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -74,7 +74,7 @@ run "rejects_empty_group_id_value" {
   variables {
     name            = "AdministratorAccess"
     group_ids       = { readonly = "" }
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   expect_failures = [var.group_ids]
@@ -86,7 +86,7 @@ run "rejects_null_group_id_value" {
   variables {
     name            = "AdministratorAccess"
     group_ids       = { readonly = null }
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   expect_failures = [var.group_ids]

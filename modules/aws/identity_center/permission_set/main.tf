@@ -44,22 +44,27 @@ locals {
 
   # Creates a map of objects with the following structure:
   # assignments = {
-  #   "group_name_account_id" = {
+  #   "group_name_label" = {
   #     group_name = group_name
   #     group_id   = group_id
   #     account_id = account_id
+  #     label      = label
   #   }
   # }
+  # Keyed by the caller-supplied target_accounts label (never the account_id itself), so the key
+  # stays known at plan time even when the account_id value is only known after apply -- e.g. a
+  # newly created aws_organizations_account's id. This is the fix for issue #121.
   assignments = {
     for item in flatten([
       for group in keys(local.group_id_map) : [
-        for account in var.target_accounts : {
+        for label, account in var.target_accounts : {
           group_name = group
           group_id   = local.group_id_map[group]
           account_id = account
+          label      = label
         }
       ]
-    ]) : "${item.group_name}_${item.account_id}" => item
+    ]) : "${item.group_name}_${item.label}" => item
   }
 }
 
