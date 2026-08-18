@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.6.1](https://github.com/zachreborn/terraform-modules/compare/v14.6.0...v14.6.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* **lb,waf:** add per-listener target_group_key and fix WAF captcha_config provider bug ([#445](https://github.com/zachreborn/terraform-modules/issues/445)) ([12fac8f](https://github.com/zachreborn/terraform-modules/commit/12fac8fdceef8f54656a64d77ee05b96003f5f48))
+
 ## [14.6.0](https://github.com/zachreborn/terraform-modules/compare/v14.5.1...v14.6.0) (2026-08-18)
 
 
