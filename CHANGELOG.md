@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.6.0](https://github.com/zachreborn/terraform-modules/compare/v14.5.1...v14.6.0) (2026-08-18)
+
+
+### Features
+
+* **directconnect:** add connection, gateway, and transit VIF modules ([#444](https://github.com/zachreborn/terraform-modules/issues/444)) ([bfb4c6c](https://github.com/zachreborn/terraform-modules/commit/bfb4c6cd223cead8142f77f398777d003e4ed2f6))
+
 ## [14.5.1](https://github.com/zachreborn/terraform-modules/compare/v14.5.0...v14.5.1) (2026-08-17)
 
 
