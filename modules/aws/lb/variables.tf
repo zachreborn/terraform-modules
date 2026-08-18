@@ -252,7 +252,8 @@ variable "listeners" {
 
     default_action = object({
       type             = string
-      target_group_arn = optional(string)
+      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main". Ignored when target_group_arn is set.
+      target_group_arn = optional(string)         # Explicit target group ARN (e.g. an externally managed target group); takes precedence over target_group_key when set.
 
       fixed_response = optional(object({
         content_type = string
@@ -282,7 +283,8 @@ variable "listener_rules" {
 
     action = object({
       type             = string
-      target_group_arn = optional(string)
+      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main". Ignored when target_group_arn is set.
+      target_group_arn = optional(string)         # Explicit target group ARN (e.g. an externally managed target group); takes precedence over target_group_key when set.
 
       fixed_response = optional(object({
         content_type = string
