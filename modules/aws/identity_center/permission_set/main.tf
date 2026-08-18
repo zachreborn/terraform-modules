@@ -54,6 +54,10 @@ locals {
   # Keyed by the caller-supplied target_accounts label (never the account_id itself), so the key
   # stays known at plan time even when the account_id value is only known after apply -- e.g. a
   # newly created aws_organizations_account's id. This is the fix for issue #121.
+  #
+  # "${group_name}_${label}" is guaranteed unique because var.target_accounts's own validation
+  # (variables.tf) rejects underscores in labels and rejects duplicate account_id values -- see that
+  # variable's validation blocks for the full rationale.
   assignments = {
     for item in flatten([
       for group in keys(local.group_id_map) : [

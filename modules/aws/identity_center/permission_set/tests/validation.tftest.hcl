@@ -92,6 +92,36 @@ run "rejects_null_group_id_value" {
   expect_failures = [var.group_ids]
 }
 
+run "rejects_duplicate_target_accounts_values" {
+  command = plan
+
+  variables {
+    name   = "AdministratorAccess"
+    groups = ["admins"]
+    # Two different labels pointing at the identical account ID would create two
+    # aws_ssoadmin_account_assignment resources managing the same AWS assignment under separate
+    # addresses -- rejected so callers get a clear error instead of a silent conflict.
+    target_accounts = { primary = "123456789012", duplicate = "123456789012" }
+  }
+
+  expect_failures = [var.target_accounts]
+}
+
+run "rejects_target_accounts_label_containing_underscore" {
+  command = plan
+
+  variables {
+    name   = "AdministratorAccess"
+    groups = ["admins"]
+    # This label, combined with a group named "admins_extra", would otherwise collide with group
+    # "admins" + label "extra_account" -- both concatenate to "admins_extra_account". Rejecting
+    # underscores in labels prevents that ambiguity regardless of what the group name turns out to be.
+    target_accounts = { "extra_account" = "123456789012" }
+  }
+
+  expect_failures = [var.target_accounts]
+}
+
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a signal that the
 # module code has a bug and fix the root cause in main.tf / variables.tf / outputs.tf, then re-run
 # `tofu test` until it passes for the right reason.

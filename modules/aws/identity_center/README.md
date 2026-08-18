@@ -205,7 +205,15 @@ The underlying `aws_identitystore_group` resource treats `description` as option
 
 ### `permission_sets[*].target_accounts` is now `map(string)` (breaking) -- fixes [issue #121](https://github.com/zachreborn/terraform-modules/issues/121)
 
-Each `permission_sets` entry's `target_accounts` field changed from `set(string)` to `map(string)`, mirroring the identical change in the `permission_set` submodule: the key is a static, caller-defined label known at plan time, and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). This is what allows a brand-new account (created by this same module call, or any other module in the same apply) and its permission set assignment to be created together, instead of failing with `The for_each value depends on resource attributes that cannot be determined until apply.`. See the `permission_set` submodule's own README for the full rationale and state-migration instructions (the underlying `aws_ssoadmin_account_assignment` `for_each` key and its `assignment_ids` output both re-key from `"<group_name>_<account_id>"` to `"<group_name>_<label>"`, and that migration must be applied here too since this module's `permission_set_assignment_ids` output simply forwards the submodule's own).
+Each `permission_sets` entry's `target_accounts` field changed from `set(string)` to `map(string)`, mirroring the identical change in the `permission_set` submodule: the key is a static, caller-defined label known at plan time (and must not contain an underscore -- see the submodule's README for why), and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). Account ID values must also be unique across labels within the same entry. This is what allows a brand-new account (created by this same module call, or any other module in the same apply) and its permission set assignment to be created together, instead of failing with `The for_each value depends on resource attributes that cannot be determined until apply.`. See the `permission_set` submodule's own README for the full rationale (the underlying `aws_ssoadmin_account_assignment` `for_each` key and its `assignment_ids` output both re-key from `"<group_name>_<account_id>"` to `"<group_name>_<label>"`).
+
+**State migration for composed instances:** the submodule's own README documents `state mv` addresses for a *direct* module call (e.g. `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]`). A `permission_sets` entry composed through *this* module is nested one level deeper -- through this module's own module call, then through the `permission_sets["<key>"]` submodule instance -- so the address to migrate has this shape instead:
+```sh
+tofu state mv \
+  'module.identity_center.module.permission_sets["admins"].aws_ssoadmin_account_assignment.this["admins_123456789012"]' \
+  'module.identity_center.module.permission_sets["admins"].aws_ssoadmin_account_assignment.this["admins_organization"]'
+```
+(Replace `module.identity_center` with whatever local name you gave this module's own call, and `"admins"` with the relevant `permission_sets` map key.)
 
 ### `permission_set`'s `assignment_ids` output key changed (breaking)
 

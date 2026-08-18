@@ -87,12 +87,15 @@ variable "tags" {
 variable "target_accounts" {
   description = <<-EOT
     (Required) Map of AWS accounts to assign the permission set to. The key is a static,
-    caller-defined label (e.g. an account name/alias) that must be known at plan time; the value is
-    the AWS account ID, which may be a computed reference (e.g. a newly created account's id) that is
-    only known after apply. Keying by a static label -- instead of the account ID itself -- keeps the
-    underlying aws_ssoadmin_account_assignment for_each key plan-time-known even when the account ID
-    is not, which is what allows a brand-new account and its permission set assignment to be created
-    together in the same apply.
+    caller-defined label (e.g. an account name/alias) that must be known at plan time and must not
+    contain an underscore ('_'); the value is the AWS account ID, which may be a computed reference
+    (e.g. a newly created account's id) that is only known after apply. Keying by a static label --
+    instead of the account ID itself -- keeps the underlying aws_ssoadmin_account_assignment for_each
+    key plan-time-known even when the account ID is not, which is what allows a brand-new account and
+    its permission set assignment to be created together in the same apply. Each account ID value
+    must also be unique across labels: the module assigns one aws_ssoadmin_account_assignment per
+    group x label pair, so reusing the same account ID under two labels would create two resources
+    managing the identical AWS assignment under separate addresses.
   EOT
   type        = map(string)
   # Example:
@@ -102,4 +105,21 @@ variable "target_accounts" {
   #   logging        = "123456789014"
   #   infrastructure = "123456789015"
   # }
+
+  validation {
+    condition     = length(distinct(values(var.target_accounts))) == length(var.target_accounts)
+    error_message = "Each value in target_accounts (the AWS account ID) must be unique. Assigning the same account ID under two different labels would create two aws_ssoadmin_account_assignment resources managing the identical AWS assignment under separate addresses, which can conflict on create and inconsistently revoke access if either address is later destroyed."
+  }
+
+  # Labels drive the "${group_name}_${label}" assignment key (main.tf). If a label could contain an
+  # underscore, two distinct (group, label) pairs could concatenate to the same string -- e.g. group
+  # "a" + label "b_c" collides with group "a_b" + label "c" -- which fails at plan time with a
+  # confusing "Duplicate object key" error instead of this clear, actionable message. Forbidding
+  # underscores in labels alone is sufficient to make the concatenation unambiguous regardless of what
+  # characters appear in group_name (which this module does not control -- it comes from AWS Identity
+  # Store display names or caller-supplied group_ids/group_keys names).
+  validation {
+    condition     = alltrue([for k in keys(var.target_accounts) : length(regexall("_", k)) == 0])
+    error_message = "target_accounts keys (labels) must not contain an underscore ('_'). The underlying aws_ssoadmin_account_assignment for_each key is derived as \"<group_name>_<label>\"; allowing an underscore in the label makes that concatenation ambiguous (e.g. group \"a\" + label \"b_c\" collides with group \"a_b\" + label \"c\"), which can fail at plan time with a duplicate object key error."
+  }
 }
