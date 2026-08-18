@@ -173,15 +173,26 @@ resource "aws_lb_listener" "listener" {
     for_each = [each.value.default_action]
     content {
       # Common settings
-      type             = default_action.value.type
-      target_group_arn = default_action.value.type == "forward" ? aws_lb_target_group.target_group[default_action.value.target_group_key].arn : null
+      type = default_action.value.type
+      # An explicit target_group_arn (e.g. for an externally managed target
+      # group not present in var.target_groups) takes precedence over
+      # target_group_key; only fall back to looking up target_group_key in
+      # the module-managed map when target_group_arn is not set.
+      target_group_arn = (
+        default_action.value.type != "forward" ? null :
+        default_action.value.target_group_arn != null ? default_action.value.target_group_arn :
+        aws_lb_target_group.target_group[default_action.value.target_group_key].arn
+      )
 
       # Forward configuration (for both ALB and NLB)
       dynamic "forward" {
         for_each = default_action.value.type == "forward" ? [1] : []
         content {
           target_group {
-            arn    = aws_lb_target_group.target_group[default_action.value.target_group_key].arn
+            arn = (
+              default_action.value.target_group_arn != null ? default_action.value.target_group_arn :
+              aws_lb_target_group.target_group[default_action.value.target_group_key].arn
+            )
             weight = 0
           }
         }
@@ -250,8 +261,15 @@ resource "aws_lb_listener_rule" "listener_rule" {
   dynamic "action" {
     for_each = [each.value.action]
     content {
-      type             = action.value.type
-      target_group_arn = action.value.type == "forward" ? aws_lb_target_group.target_group[action.value.target_group_key].arn : null
+      type = action.value.type
+      # Same target_group_arn/target_group_key precedence as default_action
+      # above: an explicit target_group_arn wins so listener rules can target
+      # an externally managed target group not present in var.target_groups.
+      target_group_arn = (
+        action.value.type != "forward" ? null :
+        action.value.target_group_arn != null ? action.value.target_group_arn :
+        aws_lb_target_group.target_group[action.value.target_group_key].arn
+      )
 
       # ALB fixed response action
       dynamic "fixed_response" {

@@ -194,6 +194,87 @@ run "listener_rule_action_with_explicit_target_group_key_routes_to_secondary" {
   }
 }
 
+# The direct regression test for the target_group_arn precedence bug: a caller
+# supplying an explicit target_group_arn (e.g. for an externally managed target
+# group) with target_groups left completely empty must plan successfully and
+# use that ARN verbatim, rather than crashing on an invalid index into an empty
+# map (the pre-fix behavior, since target_group_key defaults to "main").
+run "default_action_with_explicit_target_group_arn_ignores_missing_target_groups" {
+  command = plan
+
+  variables {
+    name               = "example-alb"
+    load_balancer_type = "application"
+
+    target_groups = {}
+
+    listeners = {
+      http = {
+        port     = 80
+        protocol = "HTTP"
+        default_action = {
+          type             = "forward"
+          target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/cccccccccccccccc"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_lb_listener.listener["http"].default_action[0].target_group_arn == "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/cccccccccccccccc"
+    error_message = "default_action with an explicit target_group_arn should use that ARN verbatim, even when target_groups has no matching key."
+  }
+
+  assert {
+    condition     = one(aws_lb_listener.listener["http"].default_action[0].forward[0].target_group).arn == "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/cccccccccccccccc"
+    error_message = "The default_action's forward.target_group block should also use the explicit target_group_arn verbatim."
+  }
+}
+
+# Same regression test for listener_rules[*].action.
+run "listener_rule_action_with_explicit_target_group_arn_ignores_missing_target_groups" {
+  command = plan
+
+  variables {
+    name               = "example-alb"
+    load_balancer_type = "application"
+
+    target_groups = {}
+
+    listeners = {
+      http = {
+        port     = 80
+        protocol = "HTTP"
+        default_action = {
+          type             = "forward"
+          target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/cccccccccccccccc"
+        }
+      }
+    }
+
+    listener_rules = {
+      route_to_external = {
+        listener_key = "http"
+        priority     = 10
+        action = {
+          type             = "forward"
+          target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/dddddddddddddddd"
+        }
+        conditions = [{
+          source_ip = {
+            values = [cidrsubnet("10.0.0.0/16", 8, 1)]
+          }
+        }]
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_lb_listener_rule.listener_rule["route_to_external"].action[0].target_group_arn == "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/dddddddddddddddd"
+    error_message = "listener_rules[*].action with an explicit target_group_arn should use that ARN verbatim, even when target_groups has no matching key."
+  }
+}
+
 # A non-forward listener_rule action (fixed-response) must leave target_group_arn
 # null rather than pointing at any target group.
 run "listener_rule_non_forward_action_leaves_target_group_arn_null" {
