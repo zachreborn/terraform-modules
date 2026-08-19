@@ -63,12 +63,18 @@ variable "default_action" {
 }
 
 variable "rule" {
-  description = "Map of rules to configure on the WAF WebACL. Use 'action' for IP set and regex rules; use 'override_action' for managed rule group rules."
+  description = "Map of rules to configure on the WAF WebACL. Use 'action' for IP set and regex rules; use 'override_action' for managed rule group rules. 'action' supports 'allow', 'block', 'count', 'captcha', or 'challenge'. 'custom_request_handling' inserts request headers when the rule's action fires and is not valid with action = 'block' or with override_action-only (managed rule group) rules."
   type = map(object({
     name            = string
     priority        = number
-    action          = optional(string) # "allow", "block", or "count" — used for non-managed-rule-group statements
+    action          = optional(string) # "allow", "block", "count", "captcha", or "challenge" — used for non-managed-rule-group statements
     override_action = optional(string) # "none" or "count" — used with managed_rule_group_statement
+    custom_request_handling = optional(object({
+      insert_header = list(object({
+        name  = string
+        value = string
+      }))
+    })) # headers WAF inserts into the request when this rule's action fires; valid only when action is "allow", "count", "captcha", or "challenge" — the provider does not accept it on "block"
     statement = object({
       managed_rule_group_statement = optional(object({
         name                  = string
@@ -101,6 +107,21 @@ variable "rule" {
     })
   }))
   default = {}
+
+  validation {
+    condition     = alltrue([for v in values(var.rule) : v.action == null || contains(["allow", "block", "count", "captcha", "challenge"], v.action)])
+    error_message = "rule[*].action must be one of 'allow', 'block', 'count', 'captcha', or 'challenge'."
+  }
+
+  validation {
+    condition     = alltrue([for v in values(var.rule) : v.custom_request_handling == null || contains(["allow", "count", "captcha", "challenge"], coalesce(v.action, "block"))])
+    error_message = "rule[*].custom_request_handling is only valid when action is 'allow', 'count', 'captcha', or 'challenge'."
+  }
+
+  validation {
+    condition     = alltrue([for v in values(var.rule) : v.custom_request_handling == null || length(v.custom_request_handling.insert_header) > 0])
+    error_message = "rule[*].custom_request_handling.insert_header must contain at least one entry when custom_request_handling is set."
+  }
 }
 
 ############################################
