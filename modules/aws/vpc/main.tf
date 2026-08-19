@@ -51,15 +51,25 @@ locals {
   )
   ipv6_newbits = 64 - local.ipv6_prefix_length
 
-  # Sequential per-tier offsets into the VPC's IPv6 CIDR so every subnet
-  # (across all tiers) gets a unique /64 block. Tiers are ordered private,
-  # public, dmz, db, mgmt, workspaces.
-  ipv6_private_offset    = 0
-  ipv6_public_offset     = local.ipv6_private_offset + length(var.private_subnets_list)
-  ipv6_dmz_offset        = local.ipv6_public_offset + length(var.public_subnets_list)
-  ipv6_db_offset         = local.ipv6_dmz_offset + length(var.dmz_subnets_list)
-  ipv6_mgmt_offset       = local.ipv6_db_offset + length(var.db_subnets_list)
-  ipv6_workspaces_offset = local.ipv6_mgmt_offset + length(var.mgmt_subnets_list)
+  # Reserve a fixed, non-overlapping range of /64 blocks per tier instead of
+  # cumulative running offsets. Running offsets meant appending a subnet to
+  # an earlier tier (e.g. private) shifted every later tier's computed
+  # ipv6_cidr_block; since that attribute forces aws_subnet replacement, a
+  # routine single-tier resize could unexpectedly replace every subnet in
+  # every other tier. ipv6_tier_bits reserves the top bits of the /64 index
+  # space to select one of up to 8 tiers (6 are used); the remaining
+  # ipv6_subnet_bits address /64s within that tier's own reserved range,
+  # independent of every other tier's subnet count.
+  ipv6_tier_bits   = 3
+  ipv6_subnet_bits = local.ipv6_newbits - local.ipv6_tier_bits
+  ipv6_tier_index = {
+    private    = 0
+    public     = 1
+    dmz        = 2
+    db         = 3
+    mgmt       = 4
+    workspaces = 5
+  }
 
   # Route table IDs grouped by tier, used to fan additional_routes out across
   # every route table this module manages in the caller-selected tiers.
@@ -132,18 +142,20 @@ resource "aws_vpc" "vpc" {
   tags                                 = merge(tomap({ Name = var.name }), var.tags)
 
   lifecycle {
-    # Every managed subnet needs a unique /64 out of the VPC's own IPv6
-    # prefix; if the combined subnet count across all tiers exceeds the
-    # number of /64 blocks the selected prefix can provide, the
+    # Each tier gets its own fixed, non-overlapping range of
+    # 2^ipv6_subnet_bits /64 blocks (see local.ipv6_tier_index); if any
+    # single tier's subnet count exceeds that per-tier capacity, the
     # cidrsubnet() calls on aws_subnet resources below fail with an opaque
     # "not enough remaining address space" error. Fail fast here instead
     # with a clear, specific message.
     precondition {
-      condition = !var.enable_ipv6 || (
-        length(var.private_subnets_list) + length(var.public_subnets_list) + length(var.dmz_subnets_list) +
-        length(var.db_subnets_list) + length(var.mgmt_subnets_list) + length(var.workspaces_subnets_list)
-      ) <= pow(2, local.ipv6_newbits)
-      error_message = "The combined subnet count across all tiers (private+public+dmz+db+mgmt+workspaces) exceeds the number of /64 blocks available from the selected IPv6 prefix length (ipv6_netmask_length, or the prefix derived from an explicit ipv6_cidr_block). Use a larger prefix (smaller netmask number) or reduce the total subnet count."
+      condition = !var.enable_ipv6 || alltrue([
+        for subnet_count in [
+          length(var.private_subnets_list), length(var.public_subnets_list), length(var.dmz_subnets_list),
+          length(var.db_subnets_list), length(var.mgmt_subnets_list), length(var.workspaces_subnets_list)
+        ] : subnet_count <= pow(2, local.ipv6_subnet_bits)
+      ])
+      error_message = "Each subnet tier (private, public, dmz, db, mgmt, workspaces) has a fixed, non-overlapping 1/8 share of the /64 blocks available from the selected IPv6 prefix length (ipv6_netmask_length, or the prefix derived from an explicit ipv6_cidr_block), and at least one tier's subnet count exceeds it. Use a larger prefix (smaller netmask number) or reduce the subnet count in the affected tier."
     }
   }
 }
@@ -377,7 +389,7 @@ resource "aws_subnet" "private_subnets" {
   cidr_block                      = var.private_subnets_list[count.index]
   availability_zone               = element(var.azs, count.index)
   count                           = length(var.private_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_private_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.private * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-private-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -390,7 +402,7 @@ resource "aws_subnet" "public_subnets" {
   #tfsec:ignore:aws-ec2-no-public-ip-subnet
   map_public_ip_on_launch         = var.map_public_ip_on_launch
   count                           = length(var.public_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_public_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.public * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-public-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -400,7 +412,7 @@ resource "aws_subnet" "dmz_subnets" {
   cidr_block                      = var.dmz_subnets_list[count.index]
   availability_zone               = element(var.azs, count.index)
   count                           = length(var.dmz_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_dmz_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.dmz * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-dmz-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -410,7 +422,7 @@ resource "aws_subnet" "db_subnets" {
   cidr_block                      = var.db_subnets_list[count.index]
   availability_zone               = element(var.azs, count.index)
   count                           = length(var.db_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_db_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.db * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-db-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -420,7 +432,7 @@ resource "aws_subnet" "mgmt_subnets" {
   cidr_block                      = var.mgmt_subnets_list[count.index]
   availability_zone               = element(var.azs, count.index)
   count                           = length(var.mgmt_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_mgmt_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.mgmt * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-mgmt-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -430,7 +442,7 @@ resource "aws_subnet" "workspaces_subnets" {
   cidr_block                      = var.workspaces_subnets_list[count.index]
   availability_zone               = element(var.azs, count.index)
   count                           = length(var.workspaces_subnets_list)
-  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_workspaces_offset + count.index) : null
+  ipv6_cidr_block                 = var.enable_ipv6 ? cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, local.ipv6_newbits, local.ipv6_tier_index.workspaces * pow(2, local.ipv6_subnet_bits) + count.index) : null
   assign_ipv6_address_on_creation = var.enable_ipv6
   tags                            = merge(var.tags, ({ "Name" = format("%s-subnet-workspaces-%s", var.name, element(var.azs, count.index)) }))
 }
@@ -514,15 +526,30 @@ resource "aws_route" "private_default_route_fw" {
   route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
 }
 
-# NAT gateways don't support IPv6, so outbound-only IPv6 always targets the
-# egress-only internet gateway regardless of enable_nat_gateway/enable_firewall.
+# When enable_firewall is also true, IPv6 egress is routed through the same
+# firewall ENI(s) as IPv4 instead of the egress-only gateway directly, so
+# firewall mode inspects all egress traffic consistently regardless of IP
+# version. count/indexing mirrors aws_route.private_default_route_fw (the
+# IPv4 sibling) exactly.
+resource "aws_route" "private_default_route_fw_ipv6" {
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id        = element(var.fw_network_interface_id, count.index)
+  route_table_id              = element(aws_route_table.private_route_table[*].id, count.index)
+}
+
+# NAT gateways don't support IPv6, so outbound-only IPv6 targets the
+# egress-only internet gateway when firewall mode is off; when enable_firewall
+# is true, aws_route.private_default_route_fw_ipv6 above handles IPv6 egress
+# through the firewall ENI instead, so this route is skipped entirely to
+# avoid two competing ::/0 routes on the same table.
 # count/indexing must match the number of private route tables
 # (length(var.private_subnets_list)), not length(var.azs) -- those two can
 # differ (e.g. more subnets than AZs, now explicitly supported by
 # subnet_indices), and using length(var.azs) would either skip a route table
 # entirely or wrap via element() and attempt a duplicate ::/0 route on one.
 resource "aws_route" "private_default_route_ipv6" {
-  count                       = var.enable_ipv6 ? length(var.private_subnets_list) : 0
+  count                       = (var.enable_ipv6 && !var.enable_firewall) ? length(var.private_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
   route_table_id              = aws_route_table.private_route_table[count.index].id
@@ -549,10 +576,18 @@ resource "aws_route" "db_default_route_fw" {
   route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
 }
 
+# See the comment on aws_route.private_default_route_fw_ipv6 above for why.
+resource "aws_route" "db_default_route_fw_ipv6" {
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id        = element(var.fw_network_interface_id, count.index)
+  route_table_id              = element(aws_route_table.db_route_table[*].id, count.index)
+}
+
 # count/indexing must match the number of db route tables (see the comment
 # on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "db_default_route_ipv6" {
-  count                       = var.enable_ipv6 ? length(var.db_subnets_list) : 0
+  count                       = (var.enable_ipv6 && !var.enable_firewall) ? length(var.db_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
   route_table_id              = aws_route_table.db_route_table[count.index].id
@@ -579,10 +614,18 @@ resource "aws_route" "dmz_default_route_fw" {
   route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
 }
 
+# See the comment on aws_route.private_default_route_fw_ipv6 above for why.
+resource "aws_route" "dmz_default_route_fw_ipv6" {
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id        = element(var.fw_dmz_network_interface_id, count.index)
+  route_table_id              = element(aws_route_table.dmz_route_table[*].id, count.index)
+}
+
 # count/indexing must match the number of dmz route tables (see the comment
 # on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "dmz_default_route_ipv6" {
-  count                       = var.enable_ipv6 ? length(var.dmz_subnets_list) : 0
+  count                       = (var.enable_ipv6 && !var.enable_firewall) ? length(var.dmz_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
   route_table_id              = aws_route_table.dmz_route_table[count.index].id
@@ -609,10 +652,18 @@ resource "aws_route" "mgmt_default_route_fw" {
   route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
 }
 
+# See the comment on aws_route.private_default_route_fw_ipv6 above for why.
+resource "aws_route" "mgmt_default_route_fw_ipv6" {
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id        = element(var.fw_network_interface_id, count.index)
+  route_table_id              = element(aws_route_table.mgmt_route_table[*].id, count.index)
+}
+
 # count/indexing must match the number of mgmt route tables (see the comment
 # on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "mgmt_default_route_ipv6" {
-  count                       = var.enable_ipv6 ? length(var.mgmt_subnets_list) : 0
+  count                       = (var.enable_ipv6 && !var.enable_firewall) ? length(var.mgmt_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
   route_table_id              = aws_route_table.mgmt_route_table[count.index].id
@@ -639,10 +690,18 @@ resource "aws_route" "workspaces_default_route_fw" {
   route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
 }
 
+# See the comment on aws_route.private_default_route_fw_ipv6 above for why.
+resource "aws_route" "workspaces_default_route_fw_ipv6" {
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  destination_ipv6_cidr_block = "::/0"
+  network_interface_id        = element(var.fw_network_interface_id, count.index)
+  route_table_id              = element(aws_route_table.workspaces_route_table[*].id, count.index)
+}
+
 # count/indexing must match the number of workspaces route tables (see the
 # comment on aws_route.private_default_route_ipv6 above for why).
 resource "aws_route" "workspaces_default_route_ipv6" {
-  count                       = var.enable_ipv6 ? length(var.workspaces_subnets_list) : 0
+  count                       = (var.enable_ipv6 && !var.enable_firewall) ? length(var.workspaces_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = aws_egress_only_internet_gateway.eigw[0].id
   route_table_id              = aws_route_table.workspaces_route_table[count.index].id
