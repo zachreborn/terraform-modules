@@ -935,6 +935,7 @@ run "custom_vpc_endpoints_supports_dns_options_and_subnet_configuration" {
         vpc_endpoint_type   = "Interface"
         service_region      = "us-east-1"
         private_dns_enabled = true
+        subnet_ids          = ["subnet-0123456789abcdef0"]
         dns_options = {
           dns_record_ip_type = "ipv4"
         }
