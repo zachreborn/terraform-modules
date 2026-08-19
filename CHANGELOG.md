@@ -1,5 +1,16 @@
 # Changelog
 
+## [15.0.0](https://github.com/zachreborn/terraform-modules/compare/v14.6.1...v15.0.0) (2026-08-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center/permission_set:** retype target_accounts as map(string) ([#478](https://github.com/zachreborn/terraform-modules/issues/478))
+
+### Bug Fixes
+
+* **identity_center/permission_set:** retype target_accounts as map(string) ([#478](https://github.com/zachreborn/terraform-modules/issues/478)) ([5b56b90](https://github.com/zachreborn/terraform-modules/commit/5b56b9046b2f9710552f835645c5d702e84778ca))
+
 ## [14.6.1](https://github.com/zachreborn/terraform-modules/compare/v14.6.0...v14.6.1) (2026-08-18)
 
 
