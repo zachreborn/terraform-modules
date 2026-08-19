@@ -236,8 +236,15 @@ No modules.
 | <a name="output_flow_log_transit_gateway_ids"></a> [flow\_log\_transit\_gateway\_ids](#output\_flow\_log\_transit\_gateway\_ids) | transit\_gateway\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_flow_log_vpc_ids"></a> [flow\_log\_vpc\_ids](#output\_flow\_log\_vpc\_ids) | vpc\_id of each created aws\_flow\_log resource, in the same order as flow\_vpc\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_iam_policy_description"></a> [iam\_policy\_description](#output\_iam\_policy\_description) | The description of the flow logs IAM policy, proving iam\_policy\_description was forwarded. |
+| <a name="output_iam_role_force_detach_policies"></a> [iam\_role\_force\_detach\_policies](#output\_iam\_role\_force\_detach\_policies) | Whether the flow logs IAM role force-detaches policies before destroy, proving iam\_role\_force\_detach\_policies was forwarded. |
 | <a name="output_iam_role_max_session_duration"></a> [iam\_role\_max\_session\_duration](#output\_iam\_role\_max\_session\_duration) | The max\_session\_duration of the flow logs IAM role, proving iam\_role\_max\_session\_duration was forwarded. |
+| <a name="output_iam_role_permissions_boundary"></a> [iam\_role\_permissions\_boundary](#output\_iam\_role\_permissions\_boundary) | The permissions boundary ARN of the flow logs IAM role, proving iam\_role\_permissions\_boundary was forwarded. |
+| <a name="output_kms_key_customer_master_key_spec"></a> [kms\_key\_customer\_master\_key\_spec](#output\_kms\_key\_customer\_master\_key\_spec) | The customer\_master\_key\_spec of the flow logs KMS key, proving key\_customer\_master\_key\_spec was forwarded. |
+| <a name="output_kms_key_deletion_window_in_days"></a> [kms\_key\_deletion\_window\_in\_days](#output\_kms\_key\_deletion\_window\_in\_days) | The deletion\_window\_in\_days of the flow logs KMS key, proving key\_deletion\_window\_in\_days was forwarded. |
 | <a name="output_kms_key_description"></a> [kms\_key\_description](#output\_kms\_key\_description) | The description of the flow logs KMS key, proving key\_description was forwarded. |
+| <a name="output_kms_key_enable_key_rotation"></a> [kms\_key\_enable\_key\_rotation](#output\_kms\_key\_enable\_key\_rotation) | Whether automatic key rotation is enabled on the flow logs KMS key, proving key\_enable\_key\_rotation was forwarded. |
+| <a name="output_kms_key_is_enabled"></a> [kms\_key\_is\_enabled](#output\_kms\_key\_is\_enabled) | Whether the flow logs KMS key is enabled, proving key\_is\_enabled was forwarded. |
+| <a name="output_kms_key_usage"></a> [kms\_key\_usage](#output\_kms\_key\_usage) | The key\_usage of the flow logs KMS key, proving key\_usage was forwarded. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
