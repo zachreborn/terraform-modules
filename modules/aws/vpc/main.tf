@@ -6,8 +6,14 @@ terraform {
   required_version = ">= 1.9.0"
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = ">= 6.0.0"
+      source = "hashicorp/aws"
+      # >= 6.50.0: aws_route.odb_network_arn was added in 6.47.0 (PR #48027),
+      # but that release had a bug where the API echoes the ODB network ARN
+      # back in gateway_id too, causing a permanent diff/apply failure
+      # ("route target attribute not specified"). The fix landed in 6.50.0
+      # (PR #48239). additional_routes.odb_network_arn below requires the
+      # fixed release, not just the introducing one.
+      version = ">= 6.50.0"
     }
   }
 }
@@ -132,8 +138,13 @@ resource "aws_vpc" "vpc" {
   # (they're alternate ways to size/select the CIDR from the pool), so only
   # pass it through when the caller hasn't also supplied an explicit
   # ipv6_cidr_block.
-  ipv6_netmask_length                  = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null && var.ipv6_cidr_block == null) ? var.ipv6_netmask_length : null
-  ipv6_cidr_block_network_border_group = var.enable_ipv6 ? var.ipv6_cidr_block_network_border_group : null
+  ipv6_netmask_length = (var.enable_ipv6 && var.ipv6_ipam_pool_id != null && var.ipv6_cidr_block == null) ? var.ipv6_netmask_length : null
+  # The AWS provider declares ipv6_cidr_block_network_border_group with
+  # RequiredWith=[assign_generated_ipv6_cidr_block], so it can only be set
+  # alongside an Amazon-generated CIDR (no IPv6 IPAM pool) -- forwarding it
+  # in the IPAM branch (where assign_generated_ipv6_cidr_block resolves to
+  # null) fails provider validation even though enable_ipv6 is true.
+  ipv6_cidr_block_network_border_group = (var.enable_ipv6 && var.ipv6_ipam_pool_id == null) ? var.ipv6_cidr_block_network_border_group : null
 
   enable_dns_hostnames                 = var.enable_dns_hostnames
   enable_dns_support                   = var.enable_dns_support
