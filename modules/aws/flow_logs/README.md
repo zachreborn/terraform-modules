@@ -168,7 +168,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.60.0 |
 
 ## Modules
 
@@ -228,12 +228,16 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the cloudwatch log group used for flow logs |
+| <a name="output_cloudwatch_log_group_deletion_protection_enabled"></a> [cloudwatch\_log\_group\_deletion\_protection\_enabled](#output\_cloudwatch\_log\_group\_deletion\_protection\_enabled) | Whether deletion protection is enabled on the flow logs CloudWatch log group, proving cloudwatch\_deletion\_protection\_enabled was forwarded. |
 | <a name="output_flow_log_eni_ids"></a> [flow\_log\_eni\_ids](#output\_flow\_log\_eni\_ids) | eni\_id of each created aws\_flow\_log resource, in the same order as flow\_eni\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_flow_log_ids"></a> [flow\_log\_ids](#output\_flow\_log\_ids) | IDs of the created aws\_flow\_log resources. Useful for callers to verify wiring (that the flow log count and its target IDs match what was passed in). |
 | <a name="output_flow_log_subnet_ids"></a> [flow\_log\_subnet\_ids](#output\_flow\_log\_subnet\_ids) | subnet\_id of each created aws\_flow\_log resource, in the same order as flow\_subnet\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_flow_log_transit_gateway_attachment_ids"></a> [flow\_log\_transit\_gateway\_attachment\_ids](#output\_flow\_log\_transit\_gateway\_attachment\_ids) | transit\_gateway\_attachment\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_attachment\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_flow_log_transit_gateway_ids"></a> [flow\_log\_transit\_gateway\_ids](#output\_flow\_log\_transit\_gateway\_ids) | transit\_gateway\_id of each created aws\_flow\_log resource, in the same order as flow\_transit\_gateway\_ids. Null entries indicate the flow log was targeted at a different resource type. |
 | <a name="output_flow_log_vpc_ids"></a> [flow\_log\_vpc\_ids](#output\_flow\_log\_vpc\_ids) | vpc\_id of each created aws\_flow\_log resource, in the same order as flow\_vpc\_ids. Null entries indicate the flow log was targeted at a different resource type. |
+| <a name="output_iam_policy_description"></a> [iam\_policy\_description](#output\_iam\_policy\_description) | The description of the flow logs IAM policy, proving iam\_policy\_description was forwarded. |
+| <a name="output_iam_role_max_session_duration"></a> [iam\_role\_max\_session\_duration](#output\_iam\_role\_max\_session\_duration) | The max\_session\_duration of the flow logs IAM role, proving iam\_role\_max\_session\_duration was forwarded. |
+| <a name="output_kms_key_description"></a> [kms\_key\_description](#output\_kms\_key\_description) | The description of the flow logs KMS key, proving key\_description was forwarded. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
