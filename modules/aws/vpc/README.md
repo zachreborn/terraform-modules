@@ -349,13 +349,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.50.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.50.0 |
 
 ## Modules
 
@@ -375,20 +375,25 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_nat_gateway.natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) | resource |
 | [aws_route.additional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.db_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.db_default_route_fw_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.db_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.db_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.dmz_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.dmz_default_route_fw_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.dmz_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.dmz_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.mgmt_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.mgmt_default_route_fw_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.mgmt_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.mgmt_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.private_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.private_default_route_fw_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.private_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.private_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.public_default_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.public_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.workspaces_default_route_fw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.workspaces_default_route_fw_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.workspaces_default_route_ipv6](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.workspaces_default_route_natgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route_table.db_route_table](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
@@ -449,7 +454,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_enable_internet_monitor"></a> [enable\_internet\_monitor](#input\_enable\_internet\_monitor) | (Optional) A boolean flag to enable/disable the creation of a CloudWatch Internet Monitor for this VPC. Defaults false. | `bool` | `false` | no |
 | <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | (Optional) A boolean flag to enable/disable dual-stack IPv6 support. When true and ipv6\_ipam\_pool\_id is not set, an Amazon-provided /56 IPv6 CIDR is auto-assigned to the VPC (assign\_generated\_ipv6\_cidr\_block). Every subnet this module manages then receives a /64 carved out of that block, an egress-only internet gateway is created, and IPv6 default routes (::/0) are added alongside the existing IPv4 defaults. Defaults false (IPv4-only). | `bool` | `false` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | (Optional) A boolean flag to enable/disable the use of NAT gateways in the private subnets. Defaults True. | `bool` | `true` | no |
-| <a name="input_enable_network_address_usage_metrics"></a> [enable\_network\_address\_usage\_metrics](#input\_enable\_network\_address\_usage\_metrics) | (Optional) Indicates whether Network Address Usage metrics are enabled for the VPC. Defaults false. | `bool` | `false` | no |
+| <a name="input_enable_network_address_usage_metrics"></a> [enable\_network\_address\_usage\_metrics](#input\_enable\_network\_address\_usage\_metrics) | (Optional) Indicates whether Network Address Usage metrics are enabled for the VPC. Defaults true, consistent with this module's secure/monitoring-by-default posture (flow logs are also enabled by default). | `bool` | `true` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | (Optional) A boolean flag to enable/disable the use of a S3 endpoint with the VPC. | `bool` | `false` | no |
 | <a name="input_enable_ssm_vpc_endpoints"></a> [enable\_ssm\_vpc\_endpoints](#input\_enable\_ssm\_vpc\_endpoints) | (Optional) A boolean flag to enable/disable SSM (Systems Manager) VPC endpoints. | `bool` | `false` | no |
 | <a name="input_flow_deliver_cross_account_role"></a> [flow\_deliver\_cross\_account\_role](#input\_flow\_deliver\_cross\_account\_role) | (Optional) The ARN of the IAM role that posts logs to CloudWatch Logs in a different account. | `string` | `null` | no |
@@ -562,7 +567,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - **IPv4-only by default.** IPv6 is fully opt-in via `enable_ipv6`; existing deployments are unaffected. See the IPv6 usage example above.
 - **SSM endpoint subnet placement is cost-optimized; ECR endpoint placement is availability-optimized.** `enable_ssm_vpc_endpoints` places its six interface endpoints in only the private subnets listed in `subnet_indices` (default: just the first one) to minimize per-AZ hourly interface-endpoint charges, since SSM/EC2Messages/KMS traffic is mostly management-plane. `enable_ecr_vpc_endpoints` places its endpoints in *every* private subnet instead, since container image pulls need to succeed from workloads in any AZ. Add more indices to `subnet_indices` if you need SSM endpoints reachable from additional AZs.
-- **The composed VPC-endpoint security group has no configurable ingress/egress beyond HTTPS from the VPC's own CIDR.** It's shared by the SSM and ECR/CloudWatch-Logs endpoint families; if you need different rules, attach your own security group to a `vpc_endpoints` entry instead.
+- **The composed VPC-endpoint security group's ingress is fixed to HTTPS from the VPC's own CIDR, but its egress is unrestricted (all protocols to `0.0.0.0/0`).** Neither direction is caller-configurable. It's shared by the SSM and ECR/CloudWatch-Logs endpoint families; if you need different rules, attach your own security group to a `vpc_endpoints` entry instead.
 - **`vpc_endpoints` is additive to, not a replacement for, the `enable_*` shortcuts.** Both mechanisms can be used together; `vpc_endpoints` exists for services the shortcuts don't cover.
 - **`additional_routes` fans a single route definition out across every route table in the tier(s) you select** (mirroring how the built-in NAT/firewall default routes are replicated per AZ), rather than targeting one specific route table -- there's currently no way to add a route to only one AZ's route table within a tier.
 - **The nested `flow_logs` module's full variable surface is now forwarded**, but its internal resources (KMS key, IAM role/policy) are still entirely owned and created by that module -- see [`../flow_logs`](../flow_logs) if you need finer control (e.g. reusing an existing KMS key) than this module's pass-through variables expose.
