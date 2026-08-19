@@ -104,10 +104,20 @@ variable "subnet_indices" {
   default     = [0]
 
   validation {
+    condition     = length(var.subnet_indices) == length(distinct(var.subnet_indices))
+    error_message = "subnet_indices must not contain duplicate values."
+  }
+
+  validation {
+    condition     = alltrue([for i in var.subnet_indices : i == floor(i)])
+    error_message = "subnet_indices must contain only whole numbers (no fractional values)."
+  }
+
+  validation {
     condition = alltrue([
-      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= max(length(var.private_subnets_list) - 1, 0) && length(var.subnet_indices) <= length(var.private_subnets_list)
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= max(length(var.private_subnets_list) - 1, 0)
     ])
-    error_message = "Subnet indices must reference valid, unique positions within private_subnets_list (0 to length(private_subnets_list) - 1)."
+    error_message = "Subnet indices must reference valid positions within private_subnets_list (0 to length(private_subnets_list) - 1)."
   }
 }
 
@@ -154,6 +164,32 @@ variable "vpc_endpoints" {
       for k, v in var.vpc_endpoints : contains(["Gateway", "GatewayLoadBalancer", "Interface", "Resource", "ServiceNetwork"], v.vpc_endpoint_type)
     ])
     error_message = "Each vpc_endpoints entry's vpc_endpoint_type must be one of: Gateway, GatewayLoadBalancer, Interface, Resource, ServiceNetwork."
+  }
+
+  # service_name-based endpoints must use a type AWS actually accepts for a
+  # service name (Gateway/GatewayLoadBalancer/Interface); resource_configuration_arn
+  # requires Resource; service_network_arn requires ServiceNetwork.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      (v.service_name != null && contains(["Gateway", "GatewayLoadBalancer", "Interface"], v.vpc_endpoint_type)) ||
+      (v.resource_configuration_arn != null && v.vpc_endpoint_type == "Resource") ||
+      (v.service_network_arn != null && v.vpc_endpoint_type == "ServiceNetwork")
+    ])
+    error_message = "Each vpc_endpoints entry's vpc_endpoint_type must match its identifier: service_name requires Gateway, GatewayLoadBalancer, or Interface; resource_configuration_arn requires Resource; service_network_arn requires ServiceNetwork."
+  }
+
+  # The AWS API requires every subnet_configuration[].subnet_id to also
+  # appear in the endpoint's own subnet_ids list.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      alltrue([
+        for sc in v.subnet_configuration :
+        sc.subnet_id == null || (v.subnet_ids != null && contains(v.subnet_ids, sc.subnet_id))
+      ])
+    ])
+    error_message = "Each vpc_endpoints entry's subnet_configuration[].subnet_id must also appear in that entry's subnet_ids list."
   }
 }
 ###########################
@@ -299,6 +335,40 @@ variable "additional_routes" {
       && alltrue([for rtt in route.route_table_types : contains(["private", "public", "db", "dmz", "mgmt", "workspaces"], rtt)])
     ])
     error_message = "Each additional_routes entry's route_table_types must be a non-empty list of unique values, each one of: private, public, db, dmz, mgmt, workspaces."
+  }
+
+  # aws_route requires exactly one destination argument.
+  validation {
+    condition = alltrue([
+      for route in var.additional_routes :
+      (
+        (route.destination_cidr_block != null ? 1 : 0) +
+        (route.destination_ipv6_cidr_block != null ? 1 : 0) +
+        (route.destination_prefix_list_id != null ? 1 : 0)
+      ) == 1
+    ])
+    error_message = "Each additional_routes entry must set exactly one of destination_cidr_block, destination_ipv6_cidr_block, or destination_prefix_list_id."
+  }
+
+  # aws_route requires exactly one target argument.
+  validation {
+    condition = alltrue([
+      for route in var.additional_routes :
+      (
+        (route.vpc_peering_connection_id != null ? 1 : 0) +
+        (route.transit_gateway_id != null ? 1 : 0) +
+        (route.carrier_gateway_id != null ? 1 : 0) +
+        (route.core_network_arn != null ? 1 : 0) +
+        (route.vpc_endpoint_id != null ? 1 : 0) +
+        (route.network_interface_id != null ? 1 : 0) +
+        (route.egress_only_gateway_id != null ? 1 : 0) +
+        (route.nat_gateway_id != null ? 1 : 0) +
+        (route.gateway_id != null ? 1 : 0) +
+        (route.local_gateway_id != null ? 1 : 0) +
+        (route.odb_network_arn != null ? 1 : 0)
+      ) == 1
+    ])
+    error_message = "Each additional_routes entry must set exactly one target: vpc_peering_connection_id, transit_gateway_id, carrier_gateway_id, core_network_arn, vpc_endpoint_id, network_interface_id, egress_only_gateway_id, nat_gateway_id, gateway_id, local_gateway_id, or odb_network_arn."
   }
 }
 
