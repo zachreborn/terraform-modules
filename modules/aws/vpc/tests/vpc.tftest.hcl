@@ -877,6 +877,45 @@ run "custom_vpc_endpoints_creates_interface_and_gateway_endpoints" {
   }
 }
 
+# Regression test: Interface/GatewayLoadBalancer/Resource/ServiceNetwork
+# endpoints require at least one subnet, but this module's own subnets are
+# created in the same module call, so callers cannot reference them as an
+# input (circular reference). When subnet_ids is omitted for a type that
+# needs it, this module should default to its own managed private subnets
+# instead of leaving subnet_ids null (which fails at apply). Gateway
+# endpoints don't use subnet_ids at all, so they should stay null.
+run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_omitted" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+      }
+      dynamodb = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(aws_subnet.private_subnets[*].id)
+    error_message = "An Interface endpoint with subnet_ids omitted should default to this module's own managed private subnets."
+  }
+
+  # subnet_ids is a set-typed, Optional+Computed attribute; passing an
+  # explicit null resolves to an empty set in state/plan, not a literal null.
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["dynamodb"].subnet_ids) == 0
+    error_message = "A Gateway endpoint should never have subnet_ids set, even when omitted."
+  }
+}
+
 run "additional_routes_fans_out_across_selected_tiers" {
   command = plan
 
