@@ -540,13 +540,16 @@ resource "aws_route" "private_default_route_fw" {
 # When enable_firewall is also true, IPv6 egress is routed through the same
 # firewall ENI(s) as IPv4 instead of the egress-only gateway directly, so
 # firewall mode inspects all egress traffic consistently regardless of IP
-# version. count/indexing mirrors aws_route.private_default_route_fw (the
-# IPv4 sibling) exactly.
+# version. count/indexing matches the number of private route tables (not
+# length(var.azs) -- see the comment on aws_route.private_default_route_ipv6
+# below for why), while network_interface_id still cycles via element()
+# since the firewall ENI list is legitimately AZ-indexed, the same way
+# aws_subnet.private_subnets assigns AZs via element(var.azs, count.index).
 resource "aws_route" "private_default_route_fw_ipv6" {
-  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.private_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   network_interface_id        = element(var.fw_network_interface_id, count.index)
-  route_table_id              = element(aws_route_table.private_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.private_route_table[count.index].id
 }
 
 # NAT gateways don't support IPv6, so outbound-only IPv6 targets the
@@ -589,10 +592,10 @@ resource "aws_route" "db_default_route_fw" {
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
 resource "aws_route" "db_default_route_fw_ipv6" {
-  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.db_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   network_interface_id        = element(var.fw_network_interface_id, count.index)
-  route_table_id              = element(aws_route_table.db_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.db_route_table[count.index].id
 }
 
 # count/indexing must match the number of db route tables (see the comment
@@ -627,10 +630,10 @@ resource "aws_route" "dmz_default_route_fw" {
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
 resource "aws_route" "dmz_default_route_fw_ipv6" {
-  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.dmz_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   network_interface_id        = element(var.fw_dmz_network_interface_id, count.index)
-  route_table_id              = element(aws_route_table.dmz_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.dmz_route_table[count.index].id
 }
 
 # count/indexing must match the number of dmz route tables (see the comment
@@ -665,10 +668,10 @@ resource "aws_route" "mgmt_default_route_fw" {
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
 resource "aws_route" "mgmt_default_route_fw_ipv6" {
-  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.mgmt_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   network_interface_id        = element(var.fw_network_interface_id, count.index)
-  route_table_id              = element(aws_route_table.mgmt_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.mgmt_route_table[count.index].id
 }
 
 # count/indexing must match the number of mgmt route tables (see the comment
@@ -703,10 +706,10 @@ resource "aws_route" "workspaces_default_route_fw" {
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
 resource "aws_route" "workspaces_default_route_fw_ipv6" {
-  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.azs) : 0
+  count                       = (var.enable_ipv6 && var.enable_firewall) ? length(var.workspaces_subnets_list) : 0
   destination_ipv6_cidr_block = "::/0"
   network_interface_id        = element(var.fw_network_interface_id, count.index)
-  route_table_id              = element(aws_route_table.workspaces_route_table[*].id, count.index)
+  route_table_id              = aws_route_table.workspaces_route_table[count.index].id
 }
 
 # count/indexing must match the number of workspaces route tables (see the

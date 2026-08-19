@@ -100,8 +100,18 @@ run "enable_ipv6_assigns_generated_cidr_and_dual_stacks_every_subnet" {
   }
 
   assert {
-    condition     = length(distinct(concat(aws_subnet.private_subnets[*].ipv6_cidr_block, aws_subnet.public_subnets[*].ipv6_cidr_block))) == length(aws_subnet.private_subnets) + length(aws_subnet.public_subnets)
-    error_message = "Every subnet across tiers should receive a unique /64, proving the per-tier offset math doesn't collide."
+    condition = length(distinct(concat(
+      aws_subnet.private_subnets[*].ipv6_cidr_block,
+      aws_subnet.public_subnets[*].ipv6_cidr_block,
+      aws_subnet.dmz_subnets[*].ipv6_cidr_block,
+      aws_subnet.db_subnets[*].ipv6_cidr_block,
+      aws_subnet.mgmt_subnets[*].ipv6_cidr_block,
+      aws_subnet.workspaces_subnets[*].ipv6_cidr_block,
+      ))) == (
+      length(aws_subnet.private_subnets) + length(aws_subnet.public_subnets) + length(aws_subnet.dmz_subnets) +
+      length(aws_subnet.db_subnets) + length(aws_subnet.mgmt_subnets) + length(aws_subnet.workspaces_subnets)
+    )
+    error_message = "Every subnet across all six tiers should receive a unique /64, proving the per-tier offset math doesn't collide."
   }
 
   assert {
@@ -353,6 +363,63 @@ run "enable_firewall_and_ipv6_routes_ipv6_through_firewall_not_egress_gateway" {
   assert {
     condition     = aws_route.dmz_default_route_fw_ipv6[0].network_interface_id == var.fw_dmz_network_interface_id[0]
     error_message = "The DMZ firewall IPv6 route should target the DMZ-specific ENI(s), matching its IPv4 sibling."
+  }
+}
+
+# Regression test: the firewall-aware IPv6 routes above initially still used
+# length(var.azs) (mirroring the IPv4 sibling too literally) instead of each
+# tier's own route-table count, which drops or duplicates routes whenever
+# subnet count != AZ count -- the exact same class of bug already fixed for
+# the non-firewall egress-only-gateway IPv6 routes. Extends every tier's
+# subnet list by one entry (4 subnets across the default 3 AZs) to prove the
+# firewall-aware routes now correctly scale with route-table count.
+run "enable_firewall_and_ipv6_fw_routes_match_route_table_count_not_az_count" {
+  command = plan
+
+  variables {
+    name                        = "core-vpc"
+    enable_flow_logs            = false
+    enable_ipv6                 = true
+    enable_firewall             = true
+    fw_network_interface_id     = ["eni-0123456789abcdef0", "eni-0123456789abcdef1", "eni-0123456789abcdef2"]
+    fw_dmz_network_interface_id = ["eni-0123456789abcdef3", "eni-0123456789abcdef4", "eni-0123456789abcdef5"]
+    private_subnets_list        = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    db_subnets_list             = concat(var.db_subnets_list, [cidrsubnet(var.db_subnets_list[0], 1, 1)])
+    dmz_subnets_list            = concat(var.dmz_subnets_list, [cidrsubnet(var.dmz_subnets_list[0], 1, 1)])
+    mgmt_subnets_list           = concat(var.mgmt_subnets_list, [cidrsubnet(var.mgmt_subnets_list[0], 1, 1)])
+    workspaces_subnets_list     = concat(var.workspaces_subnets_list, [cidrsubnet(var.workspaces_subnets_list[0], 1, 1)])
+  }
+
+  override_resource {
+    target = aws_vpc.vpc
+    values = {
+      ipv6_cidr_block = "2600:1f16:abc:d800::/56"
+    }
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_fw_ipv6) == length(aws_route_table.private_route_table)
+    error_message = "private firewall IPv6 route count (4) should match the number of private route tables (4), not length(var.azs) (3)."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_fw_ipv6) == length(aws_route_table.db_route_table)
+    error_message = "db firewall IPv6 route count should match the number of db route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_fw_ipv6) == length(aws_route_table.dmz_route_table)
+    error_message = "dmz firewall IPv6 route count should match the number of dmz route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_fw_ipv6) == length(aws_route_table.mgmt_route_table)
+    error_message = "mgmt firewall IPv6 route count should match the number of mgmt route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_fw_ipv6) == length(aws_route_table.workspaces_route_table)
+    error_message = "workspaces firewall IPv6 route count should match the number of workspaces route tables."
   }
 }
 
