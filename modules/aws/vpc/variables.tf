@@ -62,9 +62,9 @@ variable "enable_dns_support" {
 }
 
 variable "enable_network_address_usage_metrics" {
-  description = "(Optional) Indicates whether Network Address Usage metrics are enabled for the VPC. Defaults false."
+  description = "(Optional) Indicates whether Network Address Usage metrics are enabled for the VPC. Defaults true, consistent with this module's secure/monitoring-by-default posture (flow logs are also enabled by default)."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "instance_tenancy" {
