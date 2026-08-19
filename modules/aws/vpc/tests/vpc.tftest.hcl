@@ -684,12 +684,12 @@ run "enable_flow_logs_true_wires_vpc_id_into_flow_logs_module" {
 }
 
 # The flow_logs module's internal resources (aws_kms_key, aws_iam_role, etc.)
-# aren't exposed as outputs, so this can't assert byte-for-byte pass-through
-# from here. It instead proves the full expanded variable surface this module
-# now forwards (KMS knobs, IAM role/policy knobs, deletion protection,
-# alternate flow-log targets) type-checks and plans successfully end-to-end;
-# the flow_logs module's own test suite is responsible for verifying what
-# each of these variables actually does inside that module.
+# aren't exposed as outputs, but native tests can assert directly on any
+# resource address in the full configuration graph (not just outputs), so
+# this proves the expanded variable surface (KMS knobs, IAM role/policy
+# knobs, deletion protection) is actually forwarded through to those nested
+# resources -- not just that the plan happens to succeed, which would still
+# pass even if these assignments were silently dropped.
 run "flow_logs_full_variable_surface_plans_successfully" {
   command = plan
 
@@ -718,6 +718,26 @@ run "flow_logs_full_variable_surface_plans_successfully" {
   assert {
     condition     = module.vpc_flow_logs[0].arn != null
     error_message = "The flow_logs module should still plan successfully with the expanded variable surface."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].cloudwatch_log_group_deletion_protection_enabled == true
+    error_message = "cloudwatch_deletion_protection_enabled should be forwarded to the flow_logs module's log group."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_policy_description == "Custom flow logs policy description."
+    error_message = "iam_policy_description should be forwarded to the flow_logs module's IAM policy."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_max_session_duration == 7200
+    error_message = "iam_role_max_session_duration should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_description == "Custom flow logs KMS key description."
+    error_message = "key_description should be forwarded to the flow_logs module's KMS key."
   }
 }
 
