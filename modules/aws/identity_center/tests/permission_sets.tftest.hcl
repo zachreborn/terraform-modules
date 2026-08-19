@@ -84,7 +84,7 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
     permission_sets = {
       admins = {
         group_keys      = ["Administrators"]
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -120,8 +120,36 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
   }
 
   assert {
-    condition     = output.permission_set_assignment_ids["admins"]["Administrators_123456789012"].principal_type == "GROUP"
-    error_message = "permission_set_assignment_ids should be keyed and parsed exactly as the child module's own assignment_ids output."
+    condition     = output.permission_set_assignment_ids["admins"]["Administrators_primary"].principal_type == "GROUP"
+    error_message = "permission_set_assignment_ids should be keyed by '<group_name>_<label>' and parsed exactly as the child module's own assignment_ids output."
+  }
+}
+
+# Regression proof for issue #121 at the composed-module level: the for_each/output key must derive
+# from the target_accounts map label, never from the account ID value, even when passed through this
+# parent module's own permission_sets composition.
+run "assignment_key_derives_from_label_not_account_id" {
+  command = plan
+
+  variables {
+    groups = {}
+    users  = {}
+    permission_sets = {
+      prod = {
+        groups          = ["pre-existing-group"]
+        target_accounts = { prod = "999999999999" }
+      }
+    }
+  }
+
+  assert {
+    condition     = contains(keys(output.permission_set_assignment_ids["prod"]), "pre-existing-group_prod")
+    error_message = "permission_set_assignment_ids should be keyed by '<group_name>_<label>' ('pre-existing-group_prod'), not '<group_name>_<account_id>', proving the label-based key survives the parent module's pass-through wiring."
+  }
+
+  assert {
+    condition     = !contains(keys(output.permission_set_assignment_ids["prod"]), "pre-existing-group_999999999999")
+    error_message = "permission_set_assignment_ids must never be keyed by the raw account ID -- that is exactly the plan-time-unknown-key failure mode issue #121 fixes."
   }
 }
 
@@ -134,7 +162,7 @@ run "groups_by_name_branch_uses_data_source" {
     permission_sets = {
       readonly = {
         groups          = ["pre-existing-group"]
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -159,7 +187,7 @@ run "mixed_groups_and_group_keys" {
       mixed = {
         groups          = ["pre-existing-group"]
         group_keys      = ["Administrators"]
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -193,7 +221,7 @@ run "rejects_group_keys_entry_not_found_in_groups" {
     permission_sets = {
       broken = {
         group_keys      = ["DoesNotExist"]
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -210,7 +238,7 @@ run "group_ids_field_wires_externally_managed_group" {
     permission_sets = {
       external = {
         group_ids       = { external_group = "33333333-3333-3333-3333-333333333333" }
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -235,7 +263,7 @@ run "group_keys_takes_precedence_over_overlapping_group_ids_key" {
       overlap = {
         group_ids       = { Administrators = "44444444-4444-4444-4444-444444444444" }
         group_keys      = ["Administrators"]
-        target_accounts = ["123456789012"]
+        target_accounts = { primary = "123456789012" }
       }
     }
   }
@@ -256,7 +284,7 @@ run "group_attribute_path_field_is_forwarded" {
       custom_attr = {
         groups               = ["pre-existing-group"]
         group_attribute_path = "UserName"
-        target_accounts      = ["123456789012"]
+        target_accounts      = { primary = "123456789012" }
       }
     }
   }
@@ -299,7 +327,7 @@ run "large_permission_sets_map_scales" {
     permission_sets = {
       for i in range(30) : format("ps-%02d", i) => {
         group_keys      = [format("group-%02d", i)]
-        target_accounts = [for j in range(3) : format("1000000000%02d", j)]
+        target_accounts = { for j in range(3) : format("account-%02d", j) => format("1000000000%02d", j) }
       }
     }
   }

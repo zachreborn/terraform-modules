@@ -14,7 +14,7 @@ output "id" {
 }
 
 output "assignment_ids" {
-  description = "Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group_name>_<account_id>' -- the same key already used by the underlying for_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id)."
+  description = "Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group_name>_<label>' (the target_accounts map label, not the account ID) -- the same key already used by the underlying for_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id)."
   value = {
     for key, assignment in aws_ssoadmin_account_assignment.this : key => {
       principal_id       = split(",", assignment.id)[0]

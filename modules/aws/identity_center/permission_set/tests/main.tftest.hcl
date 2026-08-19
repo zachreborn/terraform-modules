@@ -52,7 +52,7 @@ run "name_lookup_branch_reads_data_source" {
   variables {
     name            = "AdministratorAccess"
     groups          = ["admins"]
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -78,7 +78,7 @@ run "group_ids_branch_bypasses_data_source" {
     name            = "ReadOnlyAccess"
     groups          = []
     group_ids       = { readonly = "94481408-a061-70b9-9ae4-163731119999" }
-    target_accounts = ["123456789012", "123456789013"]
+    target_accounts = { primary = "123456789012", secondary = "123456789013" }
   }
 
   assert {
@@ -98,15 +98,15 @@ run "group_ids_branch_bypasses_data_source" {
 
   assert {
     condition     = length(output.assignment_ids) == 2
-    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by '<group_name>_<account_id>' even though both instances share a mocked id."
+    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by '<group_name>_<label>' even though both instances share a mocked id."
   }
 
   assert {
     condition = alltrue([
-      contains(keys(output.assignment_ids), "readonly_123456789012"),
-      contains(keys(output.assignment_ids), "readonly_123456789013"),
+      contains(keys(output.assignment_ids), "readonly_primary"),
+      contains(keys(output.assignment_ids), "readonly_secondary"),
     ])
-    error_message = "assignment_ids should be keyed by '<group_name>_<account_id>' for each distinct assignment, proving the for_each-derived key no longer collides across instances."
+    error_message = "assignment_ids should be keyed by '<group_name>_<label>' for each distinct assignment, proving the for_each-derived key no longer collides across instances."
   }
 }
 
@@ -117,7 +117,7 @@ run "group_attribute_path_is_forwarded_to_data_source" {
     name                 = "CustomAttributeAccess"
     groups               = ["jdoe@example.com"]
     group_attribute_path = "UserName"
-    target_accounts      = ["123456789012"]
+    target_accounts      = { primary = "123456789012" }
   }
 
   assert {
@@ -138,7 +138,7 @@ run "mixed_groups_and_group_ids" {
     name            = "MixedAccess"
     groups          = ["existing"]
     group_ids       = { new_group = "94481408-a061-70b9-9ae4-163731110000" }
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -159,7 +159,7 @@ run "group_ids_key_present_in_both_prefers_group_ids" {
     name            = "OverlapAccess"
     groups          = ["admins"]
     group_ids       = { admins = "94481408-a061-70b9-9ae4-163731117777" }
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -180,7 +180,7 @@ run "managed_policy_toggle_branches" {
     name                = "ManagedPolicyAccess"
     group_ids           = { readonly = "94481408-a061-70b9-9ae4-163731118888" }
     managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess", "arn:aws:iam::aws:policy/AWSSupportAccess"]
-    target_accounts     = ["123456789012"]
+    target_accounts     = { primary = "123456789012" }
   }
 
   assert {
@@ -207,7 +207,7 @@ run "customer_managed_and_inline_policy_toggle_branches" {
     group_ids                        = { readonly = "94481408-a061-70b9-9ae4-163731116666" }
     customer_managed_iam_policy_name = "test-policy"
     inline_policy                    = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
-    target_accounts                  = ["123456789012"]
+    target_accounts                  = { primary = "123456789012" }
   }
 
   assert {
@@ -232,7 +232,7 @@ run "policy_only_permission_set_with_no_groups" {
   variables {
     name                = "PolicyOnly"
     managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
-    target_accounts     = ["123456789012"]
+    target_accounts     = { primary = "123456789012" }
   }
 
   assert {
@@ -252,7 +252,7 @@ run "assignment_ids_output_parses_composite_id" {
   variables {
     name            = "AdministratorAccess"
     groups          = ["admins"]
-    target_accounts = ["123456789012"]
+    target_accounts = { primary = "123456789012" }
   }
 
   assert {
@@ -261,8 +261,36 @@ run "assignment_ids_output_parses_composite_id" {
   }
 
   assert {
-    condition     = output.assignment_ids["admins_123456789012"].principal_type == "GROUP"
-    error_message = "assignment_ids should be keyed by '<group_name>_<account_id>' and parse the mocked comma-delimited id into its component fields."
+    condition     = output.assignment_ids["admins_primary"].principal_type == "GROUP"
+    error_message = "assignment_ids should be keyed by '<group_name>_<label>' and parse the mocked comma-delimited id into its component fields."
+  }
+}
+
+# Regression proof for issue #121: the for_each/output key must derive from the target_accounts map
+# label, never from the account ID value. Use a label that is textually distinct from its account-ID
+# value so a key built from the wrong component would produce an observably different (and wrong) key.
+run "assignment_key_derives_from_label_not_account_id" {
+  command = plan
+
+  variables {
+    name            = "ProdAccess"
+    groups          = ["admins"]
+    target_accounts = { prod = "999999999999" }
+  }
+
+  assert {
+    condition     = contains(keys(aws_ssoadmin_account_assignment.this), "admins_prod")
+    error_message = "The aws_ssoadmin_account_assignment for_each key should be '<group_name>_<label>' ('admins_prod'), not '<group_name>_<account_id>' ('admins_999999999999') -- this is the regression proof for issue #121: the key must stay plan-time-known even when the account ID value is only known after apply."
+  }
+
+  assert {
+    condition     = contains(keys(output.assignment_ids), "admins_prod")
+    error_message = "assignment_ids should mirror the resource's own label-derived key ('admins_prod'), not an account-ID-derived key."
+  }
+
+  assert {
+    condition     = !contains(keys(output.assignment_ids), "admins_999999999999")
+    error_message = "assignment_ids must never be keyed by the raw account ID -- that is exactly the plan-time-unknown-key failure mode issue #121 fixes."
   }
 }
 
