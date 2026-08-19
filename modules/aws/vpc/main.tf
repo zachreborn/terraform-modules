@@ -361,7 +361,16 @@ resource "aws_vpc_endpoint" "custom" {
   private_dns_enabled        = each.value.private_dns_enabled
   ip_address_type            = each.value.ip_address_type
   security_group_ids         = length(each.value.security_group_ids) > 0 ? each.value.security_group_ids : null
-  subnet_ids                 = each.value.subnet_ids
+  # Interface/GatewayLoadBalancer/Resource/ServiceNetwork endpoints require
+  # at least one subnet and fail at apply time without one; since this
+  # module's own subnets are created in this same module call, callers can't
+  # reference them as an input (circular reference), so default to this
+  # module's managed private subnets when the caller omits subnet_ids.
+  # Gateway endpoints don't use subnet_ids at all, so leave it null for them.
+  subnet_ids = (
+    each.value.subnet_ids != null ? each.value.subnet_ids
+    : (each.value.vpc_endpoint_type == "Gateway" ? null : aws_subnet.private_subnets[*].id)
+  )
   # Gateway endpoints default to every public/private route table this
   # module manages unless the caller supplies explicit route_table_ids.
   route_table_ids = (
