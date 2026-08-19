@@ -114,8 +114,12 @@ variable "subnet_indices" {
   }
 
   validation {
+    # Compare directly against the list length (not
+    # max(length(...)-1, 0)) so an empty private_subnets_list rejects every
+    # supplied index, including 0 -- max(...,0) would otherwise let index 0
+    # incorrectly pass when there are no private subnets to reference.
     condition = alltrue([
-      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index <= max(length(var.private_subnets_list) - 1, 0)
+      for subnet_index in var.subnet_indices : subnet_index >= 0 && subnet_index < length(var.private_subnets_list)
     ])
     error_message = "Subnet indices must reference valid positions within private_subnets_list (0 to length(private_subnets_list) - 1)."
   }
