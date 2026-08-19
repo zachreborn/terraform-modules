@@ -57,3 +57,38 @@ output "cloudwatch_log_group_deletion_protection_enabled" {
   description = "Whether deletion protection is enabled on the flow logs CloudWatch log group, proving cloudwatch_deletion_protection_enabled was forwarded."
   value       = aws_cloudwatch_log_group.log_group.deletion_protection_enabled
 }
+
+output "iam_role_force_detach_policies" {
+  description = "Whether the flow logs IAM role force-detaches policies before destroy, proving iam_role_force_detach_policies was forwarded."
+  value       = aws_iam_role.role.force_detach_policies
+}
+
+output "iam_role_permissions_boundary" {
+  description = "The permissions boundary ARN of the flow logs IAM role, proving iam_role_permissions_boundary was forwarded."
+  value       = aws_iam_role.role.permissions_boundary
+}
+
+output "kms_key_customer_master_key_spec" {
+  description = "The customer_master_key_spec of the flow logs KMS key, proving key_customer_master_key_spec was forwarded."
+  value       = aws_kms_key.key.customer_master_key_spec
+}
+
+output "kms_key_deletion_window_in_days" {
+  description = "The deletion_window_in_days of the flow logs KMS key, proving key_deletion_window_in_days was forwarded."
+  value       = aws_kms_key.key.deletion_window_in_days
+}
+
+output "kms_key_enable_key_rotation" {
+  description = "Whether automatic key rotation is enabled on the flow logs KMS key, proving key_enable_key_rotation was forwarded."
+  value       = aws_kms_key.key.enable_key_rotation
+}
+
+output "kms_key_usage" {
+  description = "The key_usage of the flow logs KMS key, proving key_usage was forwarded."
+  value       = aws_kms_key.key.key_usage
+}
+
+output "kms_key_is_enabled" {
+  description = "Whether the flow logs KMS key is enabled, proving key_is_enabled was forwarded."
+  value       = aws_kms_key.key.is_enabled
+}

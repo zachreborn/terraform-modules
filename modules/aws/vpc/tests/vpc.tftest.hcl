@@ -739,6 +739,41 @@ run "flow_logs_full_variable_surface_plans_successfully" {
     condition     = module.vpc_flow_logs[0].kms_key_description == "Custom flow logs KMS key description."
     error_message = "key_description should be forwarded to the flow_logs module's KMS key."
   }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_force_detach_policies == true
+    error_message = "iam_role_force_detach_policies should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_permissions_boundary == "arn:aws:iam::123456789012:policy/boundary"
+    error_message = "iam_role_permissions_boundary should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_customer_master_key_spec == "SYMMETRIC_DEFAULT"
+    error_message = "key_customer_master_key_spec should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_deletion_window_in_days == 14
+    error_message = "key_deletion_window_in_days should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_enable_key_rotation == false
+    error_message = "key_enable_key_rotation should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_usage == "ENCRYPT_DECRYPT"
+    error_message = "key_usage should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_is_enabled == true
+    error_message = "key_is_enabled should be forwarded to the flow_logs module's KMS key."
+  }
 }
 
 # Regression test: previously, flow_vpc_ids was always set to [aws_vpc.vpc.id]
