@@ -294,3 +294,119 @@ run "ipv6_default_routes_match_route_table_count_not_az_count" {
     error_message = "workspaces IPv6 default route count should match the number of workspaces route tables."
   }
 }
+
+# Regression test: enable_firewall=true previously had no effect on IPv6
+# egress -- the egress-only-gateway routes were created unconditionally,
+# silently bypassing the firewall for all IPv6 traffic while IPv4 correctly
+# went through it. With both flags on, IPv6 default routes must now target
+# the same firewall ENI(s) as IPv4, and the egress-only-gateway routes must
+# not be created at all (avoiding two competing ::/0 routes per table).
+run "enable_firewall_and_ipv6_routes_ipv6_through_firewall_not_egress_gateway" {
+  command = plan
+
+  variables {
+    name                        = "core-vpc"
+    enable_flow_logs            = false
+    enable_ipv6                 = true
+    enable_firewall             = true
+    fw_network_interface_id     = ["eni-0123456789abcdef0", "eni-0123456789abcdef1", "eni-0123456789abcdef2"]
+    fw_dmz_network_interface_id = ["eni-0123456789abcdef3", "eni-0123456789abcdef4", "eni-0123456789abcdef5"]
+  }
+
+  override_resource {
+    target = aws_vpc.vpc
+    values = {
+      ipv6_cidr_block = "2600:1f16:abc:d800::/56"
+    }
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_ipv6) == 0 && length(aws_route.private_default_route_fw_ipv6) == 3
+    error_message = "With enable_firewall=true, private IPv6 egress should route through the firewall ENI (3, one per AZ), not the egress-only gateway (0)."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_ipv6) == 0 && length(aws_route.db_default_route_fw_ipv6) == 3
+    error_message = "With enable_firewall=true, db IPv6 egress should route through the firewall ENI (3), not the egress-only gateway (0)."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_ipv6) == 0 && length(aws_route.dmz_default_route_fw_ipv6) == 3
+    error_message = "With enable_firewall=true, dmz IPv6 egress should route through the firewall ENI (3), not the egress-only gateway (0)."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_ipv6) == 0 && length(aws_route.mgmt_default_route_fw_ipv6) == 3
+    error_message = "With enable_firewall=true, mgmt IPv6 egress should route through the firewall ENI (3), not the egress-only gateway (0)."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_ipv6) == 0 && length(aws_route.workspaces_default_route_fw_ipv6) == 3
+    error_message = "With enable_firewall=true, workspaces IPv6 egress should route through the firewall ENI (3), not the egress-only gateway (0)."
+  }
+
+  assert {
+    condition     = aws_route.private_default_route_fw_ipv6[0].network_interface_id == var.fw_network_interface_id[0]
+    error_message = "The firewall IPv6 route should target the same ENI(s) as the IPv4 firewall route."
+  }
+
+  assert {
+    condition     = aws_route.dmz_default_route_fw_ipv6[0].network_interface_id == var.fw_dmz_network_interface_id[0]
+    error_message = "The DMZ firewall IPv6 route should target the DMZ-specific ENI(s), matching its IPv4 sibling."
+  }
+}
+
+# Regression test for the fix to the cumulative IPv6 per-tier offsets: each
+# tier must occupy a fixed, non-overlapping range of /64 blocks that does not
+# shift when another tier's subnet count changes. Extends private_subnets_list
+# well beyond its default size and proves every other tier's first subnet
+# still lands on its fixed formula (tier_index * 2^subnet_bits), rather than
+# a running total that would have shifted with the old implementation.
+run "ipv6_per_tier_offsets_are_stable_when_another_tier_resizes" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    enable_ipv6      = true
+    private_subnets_list = concat(var.private_subnets_list, [
+      cidrsubnet(var.private_subnets_list[0], 2, 1),
+      cidrsubnet(var.private_subnets_list[0], 2, 2),
+      cidrsubnet(var.private_subnets_list[0], 2, 3),
+    ])
+  }
+
+  override_resource {
+    target = aws_vpc.vpc
+    values = {
+      ipv6_cidr_block = "2600:1f16:abc:d800::/56"
+    }
+  }
+
+  # Default /56 -> newbits=8, tier_bits=3, subnet_bits=5 (32 slots/tier).
+  # Fixed formula: tier_index * 2^subnet_bits + subnet_index.
+  assert {
+    condition     = aws_subnet.public_subnets[0].ipv6_cidr_block == cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, 8, 32)
+    error_message = "public tier's first /64 should stay fixed at tier_index(1)*32=32 regardless of private_subnets_list's size."
+  }
+
+  assert {
+    condition     = aws_subnet.dmz_subnets[0].ipv6_cidr_block == cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, 8, 64)
+    error_message = "dmz tier's first /64 should stay fixed at tier_index(2)*32=64 regardless of private_subnets_list's size."
+  }
+
+  assert {
+    condition     = aws_subnet.db_subnets[0].ipv6_cidr_block == cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, 8, 96)
+    error_message = "db tier's first /64 should stay fixed at tier_index(3)*32=96 regardless of private_subnets_list's size."
+  }
+
+  assert {
+    condition     = aws_subnet.mgmt_subnets[0].ipv6_cidr_block == cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, 8, 128)
+    error_message = "mgmt tier's first /64 should stay fixed at tier_index(4)*32=128 regardless of private_subnets_list's size."
+  }
+
+  assert {
+    condition     = aws_subnet.workspaces_subnets[0].ipv6_cidr_block == cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, 8, 160)
+    error_message = "workspaces tier's first /64 should stay fixed at tier_index(5)*32=160 regardless of private_subnets_list's size."
+  }
+}
