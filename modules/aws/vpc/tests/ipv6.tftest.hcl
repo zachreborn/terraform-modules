@@ -140,6 +140,11 @@ run "enable_ipv6_assigns_generated_cidr_and_dual_stacks_every_subnet" {
   }
 
   assert {
+    condition     = output.vpc_ipv6_association_id == aws_vpc.vpc.ipv6_association_id
+    error_message = "vpc_ipv6_association_id output should resolve to the VPC's ipv6_association_id when enabled."
+  }
+
+  assert {
     condition     = output.egress_only_internet_gateway_id == aws_egress_only_internet_gateway.eigw[0].id
     error_message = "egress_only_internet_gateway_id output should resolve when enable_ipv6 is true."
   }
