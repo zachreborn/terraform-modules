@@ -365,10 +365,11 @@ resource "aws_vpc_endpoint" "custom" {
   # at least one subnet and fail at apply time without one; since this
   # module's own subnets are created in this same module call, callers can't
   # reference them as an input (circular reference), so default to this
-  # module's managed private subnets when the caller omits subnet_ids.
+  # module's managed private subnets when the caller omits subnet_ids OR
+  # passes an explicit empty list -- either way there's no subnet supplied.
   # Gateway endpoints don't use subnet_ids at all, so leave it null for them.
   subnet_ids = (
-    each.value.subnet_ids != null ? each.value.subnet_ids
+    length(coalesce(each.value.subnet_ids, [])) > 0 ? each.value.subnet_ids
     : (each.value.vpc_endpoint_type == "Gateway" ? null : aws_subnet.private_subnets[*].id)
   )
   # Gateway endpoints default to every public/private route table this
