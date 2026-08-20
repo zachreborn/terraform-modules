@@ -638,6 +638,126 @@ run "firewall_enabled_creates_one_fw_route_per_az_per_table" {
     condition     = length(aws_route.workspaces_default_route_fw) == 3
     error_message = "Expected one firewall route per AZ (3) in the workspaces route table."
   }
+
+  # enable_nat_gateway defaults to true; with enable_firewall also true, the
+  # firewall route must take precedence and the NAT default route must not
+  # also be created for the same *******/0 destination, which AWS rejects.
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == 0
+    error_message = "The private NAT default route should be suppressed when enable_firewall=true, since the firewall route already claims the *******/0 destination."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_natgw) == 0
+    error_message = "The db NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "The dmz NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "The mgmt NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "The workspaces NAT default route should be suppressed when enable_firewall=true."
+  }
+}
+
+# Regression test: aws_route.*_default_route_natgw previously used
+# count = length(var.azs) with element()-cycled route_table_id, the same
+# class of bug already fixed for the IPv6 routes (see ipv6.tftest.hcl).
+# Extends every tier's subnet list by one entry beyond the default 3 AZs to
+# prove the NAT default route now correctly scales with each tier's own
+# route-table count instead of length(var.azs).
+run "natgw_default_route_matches_route_table_count_not_az_count" {
+  command = plan
+
+  variables {
+    name                    = "core-vpc"
+    enable_flow_logs        = false
+    private_subnets_list    = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    db_subnets_list         = concat(var.db_subnets_list, [cidrsubnet(var.db_subnets_list[0], 1, 1)])
+    dmz_subnets_list        = concat(var.dmz_subnets_list, [cidrsubnet(var.dmz_subnets_list[0], 1, 1)])
+    mgmt_subnets_list       = concat(var.mgmt_subnets_list, [cidrsubnet(var.mgmt_subnets_list[0], 1, 1)])
+    workspaces_subnets_list = concat(var.workspaces_subnets_list, [cidrsubnet(var.workspaces_subnets_list[0], 1, 1)])
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == length(aws_route_table.private_route_table)
+    error_message = "private NAT default route count (4) should match the number of private route tables (4), not length(var.azs) (3)."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_natgw) == length(aws_route_table.db_route_table)
+    error_message = "db NAT default route count should match the number of db route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == length(aws_route_table.dmz_route_table)
+    error_message = "dmz NAT default route count should match the number of dmz route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == length(aws_route_table.mgmt_route_table)
+    error_message = "mgmt NAT default route count should match the number of mgmt route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == length(aws_route_table.workspaces_route_table)
+    error_message = "workspaces NAT default route count should match the number of workspaces route tables."
+  }
+}
+
+# Regression test: the firewall-aware IPv4 routes had the same AZ-vs-table
+# count bug as the NAT routes above. Combined with the default
+# enable_nat_gateway=true, this also proves the mutual-exclusivity fix holds
+# even when subnet count != AZ count (not just in the simpler 3-AZ case
+# above).
+run "firewall_and_natgw_together_route_count_matches_table_and_natgw_suppressed" {
+  command = plan
+
+  variables {
+    name                        = "core-vpc"
+    enable_flow_logs            = false
+    enable_firewall             = true
+    fw_network_interface_id     = ["eni-0123456789abcdef0", "eni-0123456789abcdef1", "eni-0123456789abcdef2"]
+    fw_dmz_network_interface_id = ["eni-0123456789abcdef3", "eni-0123456789abcdef4", "eni-0123456789abcdef5"]
+    private_subnets_list        = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    db_subnets_list             = concat(var.db_subnets_list, [cidrsubnet(var.db_subnets_list[0], 1, 1)])
+    dmz_subnets_list            = concat(var.dmz_subnets_list, [cidrsubnet(var.dmz_subnets_list[0], 1, 1)])
+    mgmt_subnets_list           = concat(var.mgmt_subnets_list, [cidrsubnet(var.mgmt_subnets_list[0], 1, 1)])
+    workspaces_subnets_list     = concat(var.workspaces_subnets_list, [cidrsubnet(var.workspaces_subnets_list[0], 1, 1)])
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_fw) == length(aws_route_table.private_route_table) && length(aws_route.private_default_route_natgw) == 0
+    error_message = "private firewall route count (4) should match the route-table count, and the NAT default route should be suppressed since enable_firewall takes precedence."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_fw) == length(aws_route_table.db_route_table) && length(aws_route.db_default_route_natgw) == 0
+    error_message = "db firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_fw) == length(aws_route_table.dmz_route_table) && length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "dmz firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_fw) == length(aws_route_table.mgmt_route_table) && length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "mgmt firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_fw) == length(aws_route_table.workspaces_route_table) && length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "workspaces firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
 }
 
 run "enable_flow_logs_false_skips_flow_logs_module" {

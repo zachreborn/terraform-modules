@@ -533,18 +533,28 @@ resource "aws_route_table" "private_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# count/indexing must match the number of private route tables
+# (length(var.private_subnets_list)), not length(var.azs) -- see the comment
+# on aws_route.private_default_route_ipv6 below for why. Also gated on
+# !var.enable_firewall: with defaults, enabling enable_firewall alongside
+# enable_nat_gateway would otherwise create both this route and
+# aws_route.private_default_route_fw below for the same 0.0.0.0/0
+# destination on the same route table, which AWS rejects -- the firewall
+# route takes precedence when both are enabled.
 resource "aws_route" "private_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.private_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && !var.enable_firewall) ? length(var.private_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
-  route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.private_route_table[count.index].id
 }
 
+# count/indexing must match the number of private route tables (see the
+# comment on aws_route.private_default_route_ipv6 below for why).
 resource "aws_route" "private_default_route_fw" {
-  count                  = var.enable_firewall ? length(var.azs) : 0
+  count                  = var.enable_firewall ? length(var.private_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = element(var.fw_network_interface_id, count.index)
-  route_table_id         = element(aws_route_table.private_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.private_route_table[count.index].id
 }
 
 # When enable_firewall is also true, IPv6 egress is routed through the same
@@ -586,18 +596,21 @@ resource "aws_route_table" "db_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# count/indexing must match the number of db route tables, and natgw is
+# gated on !var.enable_firewall to avoid a duplicate 0.0.0.0/0 route -- see
+# the comment on aws_route.private_default_route_natgw above for why.
 resource "aws_route" "db_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.db_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && !var.enable_firewall) ? length(var.db_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
-  route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.db_route_table[count.index].id
 }
 
 resource "aws_route" "db_default_route_fw" {
-  count                  = var.enable_firewall ? length(var.azs) : 0
+  count                  = var.enable_firewall ? length(var.db_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = element(var.fw_network_interface_id, count.index)
-  route_table_id         = element(aws_route_table.db_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.db_route_table[count.index].id
 }
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
@@ -624,18 +637,21 @@ resource "aws_route_table" "dmz_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# count/indexing must match the number of dmz route tables, and natgw is
+# gated on !var.enable_firewall to avoid a duplicate 0.0.0.0/0 route -- see
+# the comment on aws_route.private_default_route_natgw above for why.
 resource "aws_route" "dmz_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.dmz_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && !var.enable_firewall) ? length(var.dmz_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
-  route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.dmz_route_table[count.index].id
 }
 
 resource "aws_route" "dmz_default_route_fw" {
-  count                  = var.enable_firewall ? length(var.azs) : 0
+  count                  = var.enable_firewall ? length(var.dmz_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = element(var.fw_dmz_network_interface_id, count.index)
-  route_table_id         = element(aws_route_table.dmz_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.dmz_route_table[count.index].id
 }
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
@@ -662,18 +678,21 @@ resource "aws_route_table" "mgmt_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# count/indexing must match the number of mgmt route tables, and natgw is
+# gated on !var.enable_firewall to avoid a duplicate 0.0.0.0/0 route -- see
+# the comment on aws_route.private_default_route_natgw above for why.
 resource "aws_route" "mgmt_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.mgmt_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && !var.enable_firewall) ? length(var.mgmt_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
-  route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.mgmt_route_table[count.index].id
 }
 
 resource "aws_route" "mgmt_default_route_fw" {
-  count                  = var.enable_firewall ? length(var.azs) : 0
+  count                  = var.enable_firewall ? length(var.mgmt_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = element(var.fw_network_interface_id, count.index)
-  route_table_id         = element(aws_route_table.mgmt_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.mgmt_route_table[count.index].id
 }
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
@@ -700,18 +719,22 @@ resource "aws_route_table" "workspaces_route_table" {
   vpc_id           = aws_vpc.vpc.id
 }
 
+# count/indexing must match the number of workspaces route tables, and
+# natgw is gated on !var.enable_firewall to avoid a duplicate 0.0.0.0/0
+# route -- see the comment on aws_route.private_default_route_natgw above
+# for why.
 resource "aws_route" "workspaces_default_route_natgw" {
-  count                  = (var.enable_nat_gateway && local.enable_igw && length(var.workspaces_subnets_list) > 0) ? length(var.azs) : 0
+  count                  = (var.enable_nat_gateway && local.enable_igw && !var.enable_firewall) ? length(var.workspaces_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.natgw[*].id, count.index)
-  route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.workspaces_route_table[count.index].id
 }
 
 resource "aws_route" "workspaces_default_route_fw" {
-  count                  = var.enable_firewall ? length(var.azs) : 0
+  count                  = var.enable_firewall ? length(var.workspaces_subnets_list) : 0
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = element(var.fw_network_interface_id, count.index)
-  route_table_id         = element(aws_route_table.workspaces_route_table[*].id, count.index)
+  route_table_id         = aws_route_table.workspaces_route_table[count.index].id
 }
 
 # See the comment on aws_route.private_default_route_fw_ipv6 above for why.
