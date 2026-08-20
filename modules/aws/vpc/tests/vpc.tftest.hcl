@@ -951,6 +951,32 @@ run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_omitted" {
   }
 }
 
+# Regression test: an explicit empty list (subnet_ids = []) previously
+# satisfied the `!= null` check and bypassed the private-subnets fallback
+# entirely, leaving the endpoint with zero subnets at apply time. An
+# explicit empty list must be treated the same as an omitted subnet_ids.
+run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_explicitly_empty" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+        subnet_ids          = []
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(aws_subnet.private_subnets[*].id)
+    error_message = "An Interface endpoint with an explicit empty subnet_ids list should also default to this module's own managed private subnets, not bypass the fallback."
+  }
+}
+
 run "additional_routes_fans_out_across_selected_tiers" {
   command = plan
 
