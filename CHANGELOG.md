@@ -1,5 +1,12 @@
 # Changelog
 
+## [15.1.0](https://github.com/zachreborn/terraform-modules/compare/v15.0.0...v15.1.0) (2026-08-24)
+
+
+### Features
+
+* **waf:** support captcha/challenge rule actions ([#481](https://github.com/zachreborn/terraform-modules/issues/481)) ([2719fa6](https://github.com/zachreborn/terraform-modules/commit/2719fa630f66ddf83c27ec401312a888bf3a413c))
+
 ## [15.0.0](https://github.com/zachreborn/terraform-modules/compare/v14.6.1...v15.0.0) (2026-08-19)
 
 
