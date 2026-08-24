@@ -34,7 +34,8 @@ resource "aws_ram_resource_share" "this" {
 }
 
 resource "aws_ram_resource_association" "this" {
-  resource_arn       = var.resource_arn
+  for_each           = toset(var.resource_arns)
+  resource_arn       = each.value
   resource_share_arn = aws_ram_resource_share.this.arn
 }
 
