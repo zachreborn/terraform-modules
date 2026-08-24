@@ -353,9 +353,24 @@ run "lifecycle_customization_is_honored" {
     error_message = "bucket_lifecycle_transitions should produce one transition block per list entry."
   }
 
+  # `transition` and `noncurrent_version_transition` are provider-schema sets, not ordered
+  # lists, so elements can't be indexed by position (e.g. `r.transition[0]`) and iteration
+  # order isn't guaranteed. Membership checks via anytrue()/contains() are used instead of
+  # positional indexing or equality against a sorted tuple.
   assert {
-    condition     = [for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : sort([for t in r.transition : t.storage_class])][0] == ["GLACIER", "STANDARD_IA"]
-    error_message = "bucket_lifecycle_transitions storage classes should be honored."
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.transition : t.days == 90 && t.storage_class == "STANDARD_IA"])
+    ])
+    error_message = "bucket_lifecycle_transitions should include the 90-day STANDARD_IA transition."
+  }
+
+  assert {
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.transition : t.days == 180 && t.storage_class == "GLACIER"])
+    ])
+    error_message = "bucket_lifecycle_transitions should include the 180-day GLACIER transition."
   }
 
   assert {
@@ -364,13 +379,11 @@ run "lifecycle_customization_is_honored" {
   }
 
   assert {
-    condition     = [for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_transition[0].noncurrent_days][0] == 30
-    error_message = "bucket_lifecycle_noncurrent_version_transitions noncurrent_days should be honored."
-  }
-
-  assert {
-    condition     = [for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_transition[0].storage_class][0] == "GLACIER"
-    error_message = "bucket_lifecycle_noncurrent_version_transitions storage_class should be honored."
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.noncurrent_version_transition : t.noncurrent_days == 30 && t.storage_class == "GLACIER"])
+    ])
+    error_message = "bucket_lifecycle_noncurrent_version_transitions entry should be honored."
   }
 }
 
