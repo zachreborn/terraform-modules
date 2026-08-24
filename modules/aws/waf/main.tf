@@ -160,7 +160,20 @@ resource "aws_wafv2_web_acl_rule" "this" {
     content {
       dynamic "allow" {
         for_each = action.value == "allow" ? [1] : []
-        content {}
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
       }
       dynamic "block" {
         for_each = action.value == "block" ? [1] : []
@@ -168,7 +181,54 @@ resource "aws_wafv2_web_acl_rule" "this" {
       }
       dynamic "count" {
         for_each = action.value == "count" ? [1] : []
-        content {}
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
+      }
+      dynamic "captcha" {
+        for_each = action.value == "captcha" ? [1] : []
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
+      }
+      dynamic "challenge" {
+        for_each = action.value == "challenge" ? [1] : []
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

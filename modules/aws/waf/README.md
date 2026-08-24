@@ -147,6 +147,56 @@ module "waf" {
 }
 ```
 
+### CAPTCHA / Challenge Example
+This example presents a CAPTCHA to requests from an IP set, sets a custom ACL-level immunity time, and tells downstream applications the CAPTCHA fired via a request header.
+```
+module "waf" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/waf"
+
+  name           = "captcha-waf"
+  scope          = "REGIONAL"
+  default_action = "block"
+  token_domains  = ["example.com", "www.example.com"]
+
+  captcha_config = {
+    immunity_time_property = {
+      immunity_time = 120
+    }
+  }
+
+  ip_sets = {
+    suspicious = {
+      name               = "suspicious-ips"
+      ip_address_version = "IPV4"
+      addresses          = ["203.0.113.0/24"]
+    }
+  }
+
+  rule = {
+    captcha_suspicious_ips = {
+      name     = "captcha-suspicious-ips"
+      priority = 1
+      action   = "captcha"
+      custom_request_handling = {
+        insert_header = [
+          { name = "x-captcha-rule", value = "triggered" }
+        ]
+      }
+      statement = {
+        ip_set_reference_statement = {
+          arn = module.waf.ip_sets["suspicious"].arn
+        }
+      }
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "captcha-suspicious-ips"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -154,7 +204,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes / Design Decisions
 
 - **`default_action = "block"`**: The module defaults to blocking all requests not matched by a rule. This is the most secure posture. Override to `"allow"` if your rules are not yet exhaustive and you want to start in monitoring mode.
-- **`action` vs. `override_action`**: Use `action` for rules that use IP set, regex, geo, rate, byte, or custom statement types. Use `override_action` for rules that use `managed_rule_group_statement` — AWS WAFv2 requires managed rule groups to use `override_action`, not `action`. Setting both on the same rule will cause a WAFv2 API error.
+- **`action` vs. `override_action`**: Use `action` for rules that use IP set, regex, geo, rate, byte, or custom statement types. Valid `action` values are `allow`, `block`, `count`, `captcha`, and `challenge`. Use `override_action` for rules that use `managed_rule_group_statement` — AWS WAFv2 requires managed rule groups to use `override_action`, not `action`. Setting both on the same rule will cause a WAFv2 API error.
+- **`custom_request_handling`**: Inserts request headers when a rule's `action` fires, which is the standard way to signal a downstream application that a CAPTCHA/Challenge (or `allow`/`count`) action was applied. Valid only with `action` values `allow`, `count`, `captcha`, or `challenge` — the provider rejects it on `block`, and it is not valid on `override_action`-only (managed rule group) rules. An unrecognized `action` value, or `custom_request_handling` used in an unsupported combination, now fails at plan time instead of silently producing an empty `action {}` block that only fails at apply.
+- **`captcha_config` / `challenge_config` and `token_domains`**: A rule's `action = "captcha"` or `"challenge"` works independently of the ACL-level `captcha_config`/`challenge_config` — if omitted, AWS applies its 300s default immunity time. `token_domains` is required when serving CAPTCHA/Challenge across multiple domains so that a token issued on one domain is honored on another.
 - **`visibility_config.metric_name`**: If left null, the metric name falls back to the WebACL `name` via `coalesce()`. Rule-level metric names must be specified explicitly in each rule's `visibility_config`.
 - **Scope**: REGIONAL WAFs can be attached to ALBs, API Gateways, AppSync APIs, Cognito user pools, and App Runner services. CLOUDFRONT WAFs attach to CloudFront distributions and must be created in `us-east-1`.
 - **WAF Logging**: Logging is optional. When provided, the module creates an `aws_wafv2_web_acl_logging_configuration` resource. You must pre-create the log destination (Firehose, CloudWatch Logs, or S3). Checkov check `CKV2_AWS_31` is suppressed because the log destination is caller-supplied.
@@ -206,7 +258,7 @@ No modules.
 | <a name="input_ip_sets"></a> [ip\_sets](#input\_ip\_sets) | Map of IP sets to create and manage alongside the WAF WebACL. | <pre>map(object({<br/>    name               = string<br/>    description        = optional(string, "IP set created by WAF module")<br/>    ip_address_version = optional(string, "IPV4")<br/>    addresses          = list(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_logging_configuration"></a> [logging\_configuration](#input\_logging\_configuration) | WAF logging configuration. Set log\_destination\_configs to a list of Kinesis Firehose, CloudWatch Logs, or S3 ARNs. redacted\_fields and logging\_filter are optional. | <pre>object({<br/>    log_destination_configs = list(string)<br/>    redacted_fields = optional(list(object({<br/>      single_header = optional(object({ name = string }))<br/>      uri_path      = optional(object({}))<br/>      query_string  = optional(object({}))<br/>      method        = optional(object({}))<br/>    })), [])<br/>    logging_filter = optional(object({<br/>      default_behavior = string<br/>      filter = list(object({<br/>        behavior    = string<br/>        requirement = string<br/>        condition = list(object({<br/>          action_condition     = optional(object({ action = string }))<br/>          label_name_condition = optional(object({ label_name = string }))<br/>        }))<br/>      }))<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | A friendly name of the WebACL. Must be unique within the AWS region. | `string` | n/a | yes |
-| <a name="input_rule"></a> [rule](#input\_rule) | Map of rules to configure on the WAF WebACL. Use 'action' for IP set and regex rules; use 'override\_action' for managed rule group rules. | <pre>map(object({<br/>    name            = string<br/>    priority        = number<br/>    action          = optional(string) # "allow", "block", or "count" — used for non-managed-rule-group statements<br/>    override_action = optional(string) # "none" or "count" — used with managed_rule_group_statement<br/>    statement = object({<br/>      managed_rule_group_statement = optional(object({<br/>        name                  = string<br/>        vendor_name           = string<br/>        rule_action_overrides = optional(list(string), []) # rule names to override to count mode<br/>      }))<br/>      not_statement = optional(object({<br/>        ip_set_reference_statement = object({<br/>          arn = string<br/>        })<br/>      }))<br/>      ip_set_reference_statement = optional(object({<br/>        arn = string<br/>      }))<br/>    })<br/>    captcha_config = optional(object({<br/>      immunity_time_property = optional(object({<br/>        immunity_time = optional(number, 300)<br/>      }), { immunity_time = 300 })<br/>    }))<br/>    challenge_config = optional(object({<br/>      immunity_time_property = optional(object({<br/>        immunity_time = optional(number, 300)<br/>      }), { immunity_time = 300 })<br/>    }))<br/>    visibility_config = object({<br/>      cloudwatch_metrics_enabled = bool<br/>      metric_name                = string<br/>      sampled_requests_enabled   = bool<br/>    })<br/>  }))</pre> | `{}` | no |
+| <a name="input_rule"></a> [rule](#input\_rule) | Map of rules to configure on the WAF WebACL. Use 'action' for IP set and regex rules; use 'override\_action' for managed rule group rules. 'action' supports 'allow', 'block', 'count', 'captcha', or 'challenge'. 'custom\_request\_handling' inserts request headers when the rule's action fires and is not valid with action = 'block' or with override\_action-only (managed rule group) rules. | <pre>map(object({<br/>    name            = string<br/>    priority        = number<br/>    action          = optional(string) # "allow", "block", "count", "captcha", or "challenge" — used for non-managed-rule-group statements<br/>    override_action = optional(string) # "none" or "count" — used with managed_rule_group_statement<br/>    custom_request_handling = optional(object({<br/>      insert_header = list(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>    })) # headers WAF inserts into the request when this rule's action fires; valid only when action is "allow", "count", "captcha", or "challenge" — the provider does not accept it on "block"<br/>    statement = object({<br/>      managed_rule_group_statement = optional(object({<br/>        name                  = string<br/>        vendor_name           = string<br/>        rule_action_overrides = optional(list(string), []) # rule names to override to count mode<br/>      }))<br/>      not_statement = optional(object({<br/>        ip_set_reference_statement = object({<br/>          arn = string<br/>        })<br/>      }))<br/>      ip_set_reference_statement = optional(object({<br/>        arn = string<br/>      }))<br/>    })<br/>    captcha_config = optional(object({<br/>      immunity_time_property = optional(object({<br/>        immunity_time = optional(number, 300)<br/>      }), { immunity_time = 300 })<br/>    }))<br/>    challenge_config = optional(object({<br/>      immunity_time_property = optional(object({<br/>        immunity_time = optional(number, 300)<br/>      }), { immunity_time = 300 })<br/>    }))<br/>    visibility_config = object({<br/>      cloudwatch_metrics_enabled = bool<br/>      metric_name                = string<br/>      sampled_requests_enabled   = bool<br/>    })<br/>  }))</pre> | `{}` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Specifies whether this is for an AWS CloudFront distribution or a regional application. Valid values are CLOUDFRONT or REGIONAL. | `string` | `"REGIONAL"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to all resources. | `map(string)` | `{}` | no |
 | <a name="input_token_domains"></a> [token\_domains](#input\_token\_domains) | Specifies the domains to use for CAPTCHA and Challenge token sharing. Required when using CAPTCHA or Challenge across multiple domains. | `list(string)` | `null` | no |
