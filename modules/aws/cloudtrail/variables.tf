@@ -78,6 +78,52 @@ variable "bucket_lifecycle_expiration_days" {
   }
 }
 
+variable "bucket_lifecycle_noncurrent_version_expiration_days" {
+  type        = number
+  description = "(Optional) The number of days an object is noncurrent before it is eligible for permanent deletion. Applies only when versioning is enabled; without this, expired current versions become noncurrent versions that are retained indefinitely. Set to null to disable (default), which preserves prior behavior for existing callers."
+  default     = null
+  validation {
+    condition     = var.bucket_lifecycle_noncurrent_version_expiration_days == null || var.bucket_lifecycle_noncurrent_version_expiration_days > 0
+    error_message = "The value must be null or a non-zero positive integer."
+  }
+}
+
+variable "bucket_lifecycle_transitions" {
+  type = list(object({
+    days          = number
+    storage_class = string
+  }))
+  description = "(Optional) A list of transition rules that move current object versions to a different storage class after the given number of days. Defaults to an empty list (no transitions)."
+  default     = []
+  validation {
+    condition = alltrue([
+      for t in var.bucket_lifecycle_transitions : contains(
+        ["STANDARD_IA", "ONEZONE_IA", "INTELLIGENT_TIERING", "GLACIER", "GLACIER_IR", "DEEP_ARCHIVE"],
+        t.storage_class
+      )
+    ])
+    error_message = "Each storage_class must be one of STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER, GLACIER_IR, or DEEP_ARCHIVE."
+  }
+}
+
+variable "bucket_lifecycle_noncurrent_version_transitions" {
+  type = list(object({
+    noncurrent_days = number
+    storage_class   = string
+  }))
+  description = "(Optional) A list of transition rules that move noncurrent object versions to a different storage class after the given number of days. Defaults to an empty list (no transitions)."
+  default     = []
+  validation {
+    condition = alltrue([
+      for t in var.bucket_lifecycle_noncurrent_version_transitions : contains(
+        ["STANDARD_IA", "ONEZONE_IA", "INTELLIGENT_TIERING", "GLACIER", "GLACIER_IR", "DEEP_ARCHIVE"],
+        t.storage_class
+      )
+    ])
+    error_message = "Each storage_class must be one of STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER, GLACIER_IR, or DEEP_ARCHIVE."
+  }
+}
+
 variable "versioning_status" {
   type        = string
   description = "(Required) The versioning state of the bucket. Valid values: Enabled, Suspended, or Disabled. Disabled should only be used when creating or importing resources that correspond to unversioned S3 buckets."
