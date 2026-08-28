@@ -113,6 +113,43 @@ run "rejects_invalid_bucket_lifecycle_expiration_days" {
   expect_failures = [var.bucket_lifecycle_expiration_days]
 }
 
+run "rejects_invalid_bucket_lifecycle_noncurrent_version_expiration_days" {
+  command = plan
+
+  variables {
+    target_bucket                                       = "test-cloudtrail-logging-target"
+    bucket_lifecycle_noncurrent_version_expiration_days = 0
+  }
+
+  expect_failures = [var.bucket_lifecycle_noncurrent_version_expiration_days]
+}
+
+run "rejects_invalid_bucket_lifecycle_transitions_storage_class" {
+  command = plan
+
+  variables {
+    target_bucket = "test-cloudtrail-logging-target"
+    bucket_lifecycle_transitions = [
+      { days = 90, storage_class = "NOT_A_REAL_CLASS" },
+    ]
+  }
+
+  expect_failures = [var.bucket_lifecycle_transitions]
+}
+
+run "rejects_invalid_bucket_lifecycle_noncurrent_version_transitions_storage_class" {
+  command = plan
+
+  variables {
+    target_bucket = "test-cloudtrail-logging-target"
+    bucket_lifecycle_noncurrent_version_transitions = [
+      { noncurrent_days = 30, storage_class = "NOT_A_REAL_CLASS" },
+    ]
+  }
+
+  expect_failures = [var.bucket_lifecycle_noncurrent_version_transitions]
+}
+
 run "rejects_invalid_versioning_status" {
   command = plan
 

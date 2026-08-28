@@ -99,6 +99,21 @@ run "field_defaults_are_applied" {
     condition     = aws_s3_bucket.cloudtrail_s3_bucket.force_destroy == false
     error_message = "force_destroy should default to false."
   }
+
+  assert {
+    condition     = length([for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.transition][0]) == 0
+    error_message = "bucket_lifecycle_transitions should default to an empty list, producing no transition blocks."
+  }
+
+  assert {
+    condition     = length([for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_expiration][0]) == 0
+    error_message = "bucket_lifecycle_noncurrent_version_expiration_days should default to null, producing no noncurrent_version_expiration block."
+  }
+
+  assert {
+    condition     = length([for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_transition][0]) == 0
+    error_message = "bucket_lifecycle_noncurrent_version_transitions should default to an empty list, producing no noncurrent_version_transition blocks."
+  }
 }
 
 run "field_overrides_are_honored" {
@@ -310,6 +325,65 @@ run "field_overrides_are_honored" {
   assert {
     condition     = aws_s3_bucket.cloudtrail_s3_bucket.tags["team"] == "platform"
     error_message = "Explicit tags should be honored."
+  }
+}
+
+run "lifecycle_customization_is_honored" {
+  command = plan
+
+  variables {
+    target_bucket                                       = "test-cloudtrail-logging-target"
+    bucket_lifecycle_noncurrent_version_expiration_days = 90
+    bucket_lifecycle_transitions = [
+      { days = 90, storage_class = "STANDARD_IA" },
+      { days = 180, storage_class = "GLACIER" },
+    ]
+    bucket_lifecycle_noncurrent_version_transitions = [
+      { noncurrent_days = 30, storage_class = "GLACIER" },
+    ]
+  }
+
+  assert {
+    condition     = [for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_expiration[0].noncurrent_days][0] == 90
+    error_message = "bucket_lifecycle_noncurrent_version_expiration_days override should be honored."
+  }
+
+  assert {
+    condition     = length([for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.transition][0]) == 2
+    error_message = "bucket_lifecycle_transitions should produce one transition block per list entry."
+  }
+
+  # `transition` and `noncurrent_version_transition` are provider-schema sets, not ordered
+  # lists, so elements can't be indexed by position (e.g. `r.transition[0]`) and iteration
+  # order isn't guaranteed. Membership checks via anytrue()/contains() are used instead of
+  # positional indexing or equality against a sorted tuple.
+  assert {
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.transition : t.days == 90 && t.storage_class == "STANDARD_IA"])
+    ])
+    error_message = "bucket_lifecycle_transitions should include the 90-day STANDARD_IA transition."
+  }
+
+  assert {
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.transition : t.days == 180 && t.storage_class == "GLACIER"])
+    ])
+    error_message = "bucket_lifecycle_transitions should include the 180-day GLACIER transition."
+  }
+
+  assert {
+    condition     = length([for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule : r.noncurrent_version_transition][0]) == 1
+    error_message = "bucket_lifecycle_noncurrent_version_transitions should produce one noncurrent_version_transition block per list entry."
+  }
+
+  assert {
+    condition = alltrue([
+      for r in aws_s3_bucket_lifecycle_configuration.cloudtrail_bucket_lifecycle.rule :
+      anytrue([for t in r.noncurrent_version_transition : t.noncurrent_days == 30 && t.storage_class == "GLACIER"])
+    ])
+    error_message = "bucket_lifecycle_noncurrent_version_transitions entry should be honored."
   }
 }
 
