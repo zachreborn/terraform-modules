@@ -1,5 +1,12 @@
 # Changelog
 
+## [15.2.0](https://github.com/zachreborn/terraform-modules/compare/v15.1.0...v15.2.0) (2026-08-28)
+
+
+### Features
+
+* **aws/cloudtrail:** customizable S3 lifecycle transitions and noncurrent version expiration ([#484](https://github.com/zachreborn/terraform-modules/issues/484)) ([c0f0eb6](https://github.com/zachreborn/terraform-modules/commit/c0f0eb66336e35efdc2792d258c2090069421376))
+
 ## [15.1.0](https://github.com/zachreborn/terraform-modules/compare/v15.0.0...v15.1.0) (2026-08-24)
 
 
