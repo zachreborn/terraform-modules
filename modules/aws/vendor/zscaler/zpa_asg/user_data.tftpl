@@ -1,32 +1,35 @@
 #!/bin/bash
+# Exit immediately if a command exits with a non-zero status
 set -euo pipefail
 
 # =============================================================================
 # ZPA App Connector bootstrap (ASG launch template)
-# Terraform templatefile interpolates named keys; bash expansions use double dollar.
-# - Enroll with provisioning key (Zscaler)
-# - Install amazon-ssm-agent (typically missing on Marketplace AMI)
-# - Optional host OS update via yum (Zscaler docs for RHEL)
+# Values injected by Terraform templatefile() from module variables.
+# shellcheck disable=SC2154
 # =============================================================================
-
 PROVISIONING_KEY="${provisioning_key}"
 ENABLE_SSM_AGENT="${enable_ssm_agent}"
 ENABLE_HOST_OS_UPDATE="${enable_host_os_update}"
 AWS_REGION="${aws_region}"
 
-log() { echo "[zpa-bootstrap] $$*"; }
+log() {
+  echo "[zpa-bootstrap] $*"
+}
 
 # -----------------------------------------------------------------------------
-# 0. Disable source/dest check (ZPA proxies traffic; LT has no ENI flag here)
+# 0. Disable source/dest check (ZPA proxies traffic)
 #    Requires ec2:ModifyInstanceAttribute on the instance profile.
 # -----------------------------------------------------------------------------
 log "Disabling source/dest check on this instance..."
-IMDS_TOKEN="$$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)"
-IMDS_HDR=()
-if [ -n "$${IMDS_TOKEN}" ]; then IMDS_HDR=(-H "X-aws-ec2-metadata-token: $${IMDS_TOKEN}"); fi
-INSTANCE_ID="$$(curl -s "$${IMDS_HDR[@]}" http://169.254.169.254/latest/meta-data/instance-id || true)"
-if command -v aws >/dev/null 2>&1 && [ -n "$${INSTANCE_ID}" ]; then
-  aws ec2 modify-instance-attribute --instance-id "$${INSTANCE_ID}" --no-source-dest-check --region "$${AWS_REGION}" \
+IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
+INSTANCE_ID=""
+if [ -n "$IMDS_TOKEN" ]; then
+  INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id || true)
+else
+  INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id || true)
+fi
+if command -v aws >/dev/null 2>&1 && [ -n "$INSTANCE_ID" ]; then
+  aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --no-source-dest-check --region "$AWS_REGION" \
     || log "WARN: failed to disable source_dest_check (check IAM ec2:ModifyInstanceAttribute)"
 else
   log "WARN: aws CLI or instance-id unavailable; source_dest_check may remain true"
@@ -54,7 +57,7 @@ systemctl stop zpa-connector || true
 
 log "Applying ZPA provisioning key..."
 mkdir -p /opt/zscaler/var
-printf '%s\n' "$${PROVISIONING_KEY}" > /opt/zscaler/var/provision_key
+printf '%s\n' "$PROVISIONING_KEY" > /opt/zscaler/var/provision_key
 chmod 600 /opt/zscaler/var/provision_key
 
 log "Starting zpa-connector..."
@@ -65,10 +68,10 @@ systemctl status zpa-connector --no-pager || true
 # -----------------------------------------------------------------------------
 # 2. SSM agent
 # -----------------------------------------------------------------------------
-if [ "$${ENABLE_SSM_AGENT}" = "true" ]; then
+if [ "$ENABLE_SSM_AGENT" = "true" ]; then
   log "Installing amazon-ssm-agent..."
   if ! systemctl is-active --quiet amazon-ssm-agent 2>/dev/null; then
-    yum install -y "https://s3.$${AWS_REGION}.amazonaws.com/amazon-ssm-$${AWS_REGION}/latest/linux_amd64/amazon-ssm-agent.rpm" \
+    yum install -y "https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm" \
       || yum install -y "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" \
       || log "WARN: amazon-ssm-agent install failed; SSM will be unavailable until fixed"
   fi
@@ -83,7 +86,7 @@ fi
 # 3. Host OS packages (Zscaler docs use yum on RHEL)
 #    https://help.zscaler.com/zpa/updating-host-os-and-software-packages
 # -----------------------------------------------------------------------------
-if [ "$${ENABLE_HOST_OS_UPDATE}" = "true" ]; then
+if [ "$ENABLE_HOST_OS_UPDATE" = "true" ]; then
   log "Running host OS yum update (may take several minutes)..."
   systemctl stop zpa-connector || true
   yum clean all || true

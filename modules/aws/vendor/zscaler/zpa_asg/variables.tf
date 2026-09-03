@@ -120,9 +120,9 @@ variable "http_tokens" {
 }
 
 variable "http_put_response_hop_limit" {
-  description = "(Optional) IMDSv2 hop limit. Defaults to 2."
+  description = "(Optional) IMDSv2 hop limit. Defaults to 1 (Checkov CKV_AWS_341)."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "instance_metadata_tags" {

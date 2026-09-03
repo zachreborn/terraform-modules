@@ -77,7 +77,7 @@ module "zpa_connectors_asg" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.62.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -112,7 +112,7 @@ No modules.
 | <a name="input_health_check_grace_period"></a> [health\_check\_grace\_period](#input\_health\_check\_grace\_period) | (Optional) Seconds after launch before health checks. Defaults to 1200 (20 minutes). | `number` | `1200` | no |
 | <a name="input_health_check_type"></a> [health\_check\_type](#input\_health\_check\_type) | (Optional) ASG health check type. Defaults to EC2. | `string` | `"EC2"` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Instance metadata service. Valid values: enabled, disabled. | `string` | `"enabled"` | no |
-| <a name="input_http_put_response_hop_limit"></a> [http\_put\_response\_hop\_limit](#input\_http\_put\_response\_hop\_limit) | (Optional) IMDSv2 hop limit. Defaults to 2. | `number` | `2` | no |
+| <a name="input_http_put_response_hop_limit"></a> [http\_put\_response\_hop\_limit](#input\_http\_put\_response\_hop\_limit) | (Optional) IMDSv2 hop limit. Defaults to 1 (Checkov CKV\_AWS\_341). | `number` | `1` | no |
 | <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) IMDSv2 token requirement. Defaults to required. | `string` | `"required"` | no |
 | <a name="input_iam_instance_profile"></a> [iam\_instance\_profile](#input\_iam\_instance\_profile) | (Required) IAM instance profile name for SSM and instance permissions (e.g. ssm-role). | `string` | n/a | yes |
 | <a name="input_instance_metadata_tags"></a> [instance\_metadata\_tags](#input\_instance\_metadata\_tags) | (Optional) Expose instance tags via metadata. Defaults to enabled. | `string` | `"enabled"` | no |
