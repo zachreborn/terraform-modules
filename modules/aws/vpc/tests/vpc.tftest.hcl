@@ -638,6 +638,126 @@ run "firewall_enabled_creates_one_fw_route_per_az_per_table" {
     condition     = length(aws_route.workspaces_default_route_fw) == 3
     error_message = "Expected one firewall route per AZ (3) in the workspaces route table."
   }
+
+  # enable_nat_gateway defaults to true; with enable_firewall also true, the
+  # firewall route must take precedence and the NAT default route must not
+  # also be created for the same *******/0 destination, which AWS rejects.
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == 0
+    error_message = "The private NAT default route should be suppressed when enable_firewall=true, since the firewall route already claims the *******/0 destination."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_natgw) == 0
+    error_message = "The db NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "The dmz NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "The mgmt NAT default route should be suppressed when enable_firewall=true."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "The workspaces NAT default route should be suppressed when enable_firewall=true."
+  }
+}
+
+# Regression test: aws_route.*_default_route_natgw previously used
+# count = length(var.azs) with element()-cycled route_table_id, the same
+# class of bug already fixed for the IPv6 routes (see ipv6.tftest.hcl).
+# Extends every tier's subnet list by one entry beyond the default 3 AZs to
+# prove the NAT default route now correctly scales with each tier's own
+# route-table count instead of length(var.azs).
+run "natgw_default_route_matches_route_table_count_not_az_count" {
+  command = plan
+
+  variables {
+    name                    = "core-vpc"
+    enable_flow_logs        = false
+    private_subnets_list    = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    db_subnets_list         = concat(var.db_subnets_list, [cidrsubnet(var.db_subnets_list[0], 1, 1)])
+    dmz_subnets_list        = concat(var.dmz_subnets_list, [cidrsubnet(var.dmz_subnets_list[0], 1, 1)])
+    mgmt_subnets_list       = concat(var.mgmt_subnets_list, [cidrsubnet(var.mgmt_subnets_list[0], 1, 1)])
+    workspaces_subnets_list = concat(var.workspaces_subnets_list, [cidrsubnet(var.workspaces_subnets_list[0], 1, 1)])
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_natgw) == length(aws_route_table.private_route_table)
+    error_message = "private NAT default route count (4) should match the number of private route tables (4), not length(var.azs) (3)."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_natgw) == length(aws_route_table.db_route_table)
+    error_message = "db NAT default route count should match the number of db route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_natgw) == length(aws_route_table.dmz_route_table)
+    error_message = "dmz NAT default route count should match the number of dmz route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_natgw) == length(aws_route_table.mgmt_route_table)
+    error_message = "mgmt NAT default route count should match the number of mgmt route tables."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_natgw) == length(aws_route_table.workspaces_route_table)
+    error_message = "workspaces NAT default route count should match the number of workspaces route tables."
+  }
+}
+
+# Regression test: the firewall-aware IPv4 routes had the same AZ-vs-table
+# count bug as the NAT routes above. Combined with the default
+# enable_nat_gateway=true, this also proves the mutual-exclusivity fix holds
+# even when subnet count != AZ count (not just in the simpler 3-AZ case
+# above).
+run "firewall_and_natgw_together_route_count_matches_table_and_natgw_suppressed" {
+  command = plan
+
+  variables {
+    name                        = "core-vpc"
+    enable_flow_logs            = false
+    enable_firewall             = true
+    fw_network_interface_id     = ["eni-0123456789abcdef0", "eni-0123456789abcdef1", "eni-0123456789abcdef2"]
+    fw_dmz_network_interface_id = ["eni-0123456789abcdef3", "eni-0123456789abcdef4", "eni-0123456789abcdef5"]
+    private_subnets_list        = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    db_subnets_list             = concat(var.db_subnets_list, [cidrsubnet(var.db_subnets_list[0], 1, 1)])
+    dmz_subnets_list            = concat(var.dmz_subnets_list, [cidrsubnet(var.dmz_subnets_list[0], 1, 1)])
+    mgmt_subnets_list           = concat(var.mgmt_subnets_list, [cidrsubnet(var.mgmt_subnets_list[0], 1, 1)])
+    workspaces_subnets_list     = concat(var.workspaces_subnets_list, [cidrsubnet(var.workspaces_subnets_list[0], 1, 1)])
+  }
+
+  assert {
+    condition     = length(aws_route.private_default_route_fw) == length(aws_route_table.private_route_table) && length(aws_route.private_default_route_natgw) == 0
+    error_message = "private firewall route count (4) should match the route-table count, and the NAT default route should be suppressed since enable_firewall takes precedence."
+  }
+
+  assert {
+    condition     = length(aws_route.db_default_route_fw) == length(aws_route_table.db_route_table) && length(aws_route.db_default_route_natgw) == 0
+    error_message = "db firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.dmz_default_route_fw) == length(aws_route_table.dmz_route_table) && length(aws_route.dmz_default_route_natgw) == 0
+    error_message = "dmz firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.mgmt_default_route_fw) == length(aws_route_table.mgmt_route_table) && length(aws_route.mgmt_default_route_natgw) == 0
+    error_message = "mgmt firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
+
+  assert {
+    condition     = length(aws_route.workspaces_default_route_fw) == length(aws_route_table.workspaces_route_table) && length(aws_route.workspaces_default_route_natgw) == 0
+    error_message = "workspaces firewall route count should match the route-table count, and the NAT default route should be suppressed."
+  }
 }
 
 run "enable_flow_logs_false_skips_flow_logs_module" {
@@ -680,5 +800,419 @@ run "enable_flow_logs_true_wires_vpc_id_into_flow_logs_module" {
   assert {
     condition     = module.vpc_flow_logs[0].flow_log_vpc_ids[0] == aws_vpc.vpc.id
     error_message = "The flow log's vpc_id should equal the parent VPC's id, proving flow_vpc_ids was actually wired through (not just that some flow log exists)."
+  }
+}
+
+# The flow_logs module's internal resources (aws_kms_key, aws_iam_role, etc.)
+# aren't exposed as outputs, but native tests can assert directly on any
+# resource address in the full configuration graph (not just outputs), so
+# this proves the expanded variable surface (KMS knobs, IAM role/policy
+# knobs, deletion protection) is actually forwarded through to those nested
+# resources -- not just that the plan happens to succeed, which would still
+# pass even if these assignments were silently dropped.
+run "flow_logs_full_variable_surface_plans_successfully" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = true
+
+    cloudwatch_deletion_protection_enabled = true
+    iam_policy_description                 = "Custom flow logs policy description."
+    iam_role_force_detach_policies         = true
+    iam_role_max_session_duration          = 7200
+    iam_role_permissions_boundary          = "arn:aws:iam::123456789012:policy/boundary"
+    key_customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+    key_description                        = "Custom flow logs KMS key description."
+    key_deletion_window_in_days            = 14
+    key_enable_key_rotation                = false
+    key_usage                              = "ENCRYPT_DECRYPT"
+    key_is_enabled                         = true
+  }
+
+  assert {
+    condition     = length(module.vpc_flow_logs) == 1
+    error_message = "enable_flow_logs=true should still create the flow_logs module when the full variable surface is supplied."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].arn != null
+    error_message = "The flow_logs module should still plan successfully with the expanded variable surface."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].cloudwatch_log_group_deletion_protection_enabled == true
+    error_message = "cloudwatch_deletion_protection_enabled should be forwarded to the flow_logs module's log group."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_policy_description == "Custom flow logs policy description."
+    error_message = "iam_policy_description should be forwarded to the flow_logs module's IAM policy."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_max_session_duration == 7200
+    error_message = "iam_role_max_session_duration should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_description == "Custom flow logs KMS key description."
+    error_message = "key_description should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_force_detach_policies == true
+    error_message = "iam_role_force_detach_policies should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].iam_role_permissions_boundary == "arn:aws:iam::123456789012:policy/boundary"
+    error_message = "iam_role_permissions_boundary should be forwarded to the flow_logs module's IAM role."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_customer_master_key_spec == "SYMMETRIC_DEFAULT"
+    error_message = "key_customer_master_key_spec should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_deletion_window_in_days == 14
+    error_message = "key_deletion_window_in_days should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_enable_key_rotation == false
+    error_message = "key_enable_key_rotation should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_usage == "ENCRYPT_DECRYPT"
+    error_message = "key_usage should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].kms_key_is_enabled == true
+    error_message = "key_is_enabled should be forwarded to the flow_logs module's KMS key."
+  }
+}
+
+# Regression test: previously, flow_vpc_ids was always set to [aws_vpc.vpc.id]
+# regardless of the alternate target variables, which violates the child
+# flow_logs module's "exactly one non-null target" precondition the moment a
+# caller sets any of flow_eni_ids/flow_subnet_ids/flow_transit_gateway_ids/
+# flow_transit_gateway_attachment_ids. This should now plan successfully.
+run "flow_eni_ids_target_suppresses_default_vpc_target" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = true
+    flow_eni_ids     = ["eni-0123456789abcdef0"]
+  }
+
+  assert {
+    condition     = length(module.vpc_flow_logs) == 1
+    error_message = "enable_flow_logs=true with flow_eni_ids set should still create the flow_logs module."
+  }
+
+  assert {
+    condition     = module.vpc_flow_logs[0].arn != null
+    error_message = "The flow_logs module should plan successfully when flow_eni_ids is set (previously always also set flow_vpc_ids, tripping the child module's exactly-one-target precondition)."
+  }
+}
+
+run "vpc_attribute_outputs_resolve" {
+  command = plan
+
+  variables {
+    name                                 = "core-vpc"
+    enable_flow_logs                     = false
+    enable_network_address_usage_metrics = true
+  }
+
+  assert {
+    condition     = aws_vpc.vpc.enable_network_address_usage_metrics == true
+    error_message = "enable_network_address_usage_metrics should pass through to the VPC resource."
+  }
+
+  assert {
+    condition     = output.dhcp_options_id == aws_vpc.vpc.dhcp_options_id
+    error_message = "dhcp_options_id output should equal the VPC resource's dhcp_options_id."
+  }
+
+  assert {
+    condition     = output.main_route_table_id == aws_vpc.vpc.main_route_table_id
+    error_message = "main_route_table_id output should equal the VPC resource's main_route_table_id."
+  }
+
+  assert {
+    condition     = output.default_route_table_id == aws_vpc.vpc.default_route_table_id
+    error_message = "default_route_table_id output should equal the VPC resource's default_route_table_id."
+  }
+
+  assert {
+    condition     = output.default_network_acl_id == aws_vpc.vpc.default_network_acl_id
+    error_message = "default_network_acl_id output should equal the VPC resource's default_network_acl_id."
+  }
+
+  assert {
+    condition     = output.owner_id == aws_vpc.vpc.owner_id
+    error_message = "owner_id output should equal the VPC resource's owner_id."
+  }
+
+  assert {
+    condition     = output.tags_all == aws_vpc.vpc.tags_all
+    error_message = "tags_all output should equal the VPC resource's tags_all."
+  }
+
+  assert {
+    condition     = output.vpc_endpoint_security_group_id == module.ssm_vpc_endpoint_sg.id
+    error_message = "vpc_endpoint_security_group_id output should equal the composed security_group module's id."
+  }
+
+  assert {
+    condition     = output.vpc_endpoint_security_group_name == module.ssm_vpc_endpoint_sg.name
+    error_message = "vpc_endpoint_security_group_name output should equal the composed security_group module's name."
+  }
+
+  assert {
+    condition     = output.egress_only_internet_gateway_id == null
+    error_message = "egress_only_internet_gateway_id output should be null when enable_ipv6 is false."
+  }
+}
+
+run "custom_vpc_endpoints_creates_interface_and_gateway_endpoints" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+        subnet_ids          = ["subnet-0123456789abcdef0"]
+      }
+      dynamodb = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom) == 2
+    error_message = "Both caller-defined endpoints (var.vpc_endpoints) should be created."
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].vpc_endpoint_type == "Interface"
+    error_message = "The secretsmanager endpoint should be an Interface endpoint."
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(["subnet-0123456789abcdef0"])
+    error_message = "The secretsmanager endpoint's subnet_ids should pass through unchanged."
+  }
+
+  # mock_provider does not guarantee unique ids across instances of the same
+  # count-based resource, so comparing against an independently-recomputed
+  # toset() of the same expression (rather than a raw length) verifies the
+  # module's default-fanout logic correctly regardless of any accidental id
+  # collisions in the mocked plan.
+  assert {
+    condition     = aws_vpc_endpoint.custom["dynamodb"].route_table_ids == toset(concat(aws_route_table.public_route_table[*].id, aws_route_table.private_route_table[*].id))
+    error_message = "A Gateway endpoint without an explicit route_table_ids should default to every public and private route table this module manages."
+  }
+
+  assert {
+    condition     = length(output.custom_vpc_endpoint_ids) == 2
+    error_message = "custom_vpc_endpoint_ids output should include both caller-defined endpoints."
+  }
+}
+
+# Regression test: Interface/GatewayLoadBalancer/Resource/ServiceNetwork
+# endpoints require at least one subnet, but this module's own subnets are
+# created in the same module call, so callers cannot reference them as an
+# input (circular reference). When subnet_ids is omitted for a type that
+# needs it, this module should default to its own managed private subnets
+# instead of leaving subnet_ids null (which fails at apply). Gateway
+# endpoints don't use subnet_ids at all, so they should stay null.
+run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_omitted" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+      }
+      dynamodb = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(aws_subnet.private_subnets[*].id)
+    error_message = "An Interface endpoint with subnet_ids omitted should default to this module's own managed private subnets."
+  }
+
+  # subnet_ids is a set-typed, Optional+Computed attribute; passing an
+  # explicit null resolves to an empty set in state/plan, not a literal null.
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["dynamodb"].subnet_ids) == 0
+    error_message = "A Gateway endpoint should never have subnet_ids set, even when omitted."
+  }
+}
+
+# Regression test: an explicit empty list (subnet_ids = []) previously
+# satisfied the `!= null` check and bypassed the private-subnets fallback
+# entirely, leaving the endpoint with zero subnets at apply time. An
+# explicit empty list must be treated the same as an omitted subnet_ids.
+run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_explicitly_empty" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+        subnet_ids          = []
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(aws_subnet.private_subnets[*].id)
+    error_message = "An Interface endpoint with an explicit empty subnet_ids list should also default to this module's own managed private subnets, not bypass the fallback."
+  }
+}
+
+run "additional_routes_fans_out_across_selected_tiers" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      peering = {
+        route_table_types         = ["private", "dmz"]
+        destination_cidr_block    = cidrsubnet(var.workspaces_subnets_list[0], 4, 1)
+        vpc_peering_connection_id = "pcx-0123456789abcdef0"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_route.additional) == length(aws_route_table.private_route_table) + length(aws_route_table.dmz_route_table)
+    error_message = "The additional route should be replicated across every private and dmz route table this module manages."
+  }
+
+  assert {
+    condition     = alltrue([for r in aws_route.additional : r.vpc_peering_connection_id == "pcx-0123456789abcdef0"])
+    error_message = "Every replicated route should carry through the vpc_peering_connection_id."
+  }
+
+  assert {
+    condition     = alltrue([for r in aws_route.additional : r.destination_cidr_block == cidrsubnet(var.workspaces_subnets_list[0], 4, 1)])
+    error_message = "Every replicated route should carry through the destination_cidr_block."
+  }
+}
+
+# Regression test for the previously-missing local_gateway_id/odb_network_arn
+# targets on additional_routes.
+run "additional_routes_supports_local_gateway_and_odb_network_targets" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      outposts = {
+        route_table_types      = ["private"]
+        destination_cidr_block = cidrsubnet(var.mgmt_subnets_list[0], 4, 2)
+        local_gateway_id       = "lgw-0123456789abcdef0"
+      }
+      odb = {
+        route_table_types      = ["private"]
+        destination_cidr_block = cidrsubnet(var.mgmt_subnets_list[0], 4, 3)
+        odb_network_arn        = "arn:aws:odb:us-east-1:123456789012:network/odb-network-0123456789abcdef0"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_route.additional["outposts-private-0"].local_gateway_id == "lgw-0123456789abcdef0"
+    error_message = "local_gateway_id should pass through unchanged."
+  }
+
+  assert {
+    condition     = aws_route.additional["odb-private-0"].odb_network_arn == "arn:aws:odb:us-east-1:123456789012:network/odb-network-0123456789abcdef0"
+    error_message = "odb_network_arn should pass through unchanged."
+  }
+}
+
+# Regression test for the previously-missing service_region/dns_options/
+# subnet_configuration arguments on the generic vpc_endpoints escape hatch.
+run "custom_vpc_endpoints_supports_dns_options_and_subnet_configuration" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        service_region      = "us-east-1"
+        private_dns_enabled = true
+        subnet_ids          = ["subnet-0123456789abcdef0"]
+        dns_options = {
+          dns_record_ip_type = "ipv4"
+        }
+        subnet_configuration = [
+          {
+            subnet_id = "subnet-0123456789abcdef0"
+            ipv4      = cidrhost(var.private_subnets_list[0], 10)
+          }
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].service_region == "us-east-1"
+    error_message = "service_region should pass through unchanged."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["secretsmanager"].dns_options) == 1
+    error_message = "The dns_options block should be populated when dns_options is set."
+  }
+
+  assert {
+    condition     = aws_vpc_endpoint.custom["secretsmanager"].dns_options[0].dns_record_ip_type == "ipv4"
+    error_message = "dns_options.dns_record_ip_type should pass through unchanged."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["secretsmanager"].subnet_configuration) == 1
+    error_message = "The subnet_configuration block should be populated when subnet_configuration is set."
+  }
+
+  # subnet_configuration is a set-typed nested block, not a list, so it can't
+  # be indexed by position ([0]) -- convert to a list first.
+  assert {
+    condition     = tolist(aws_vpc_endpoint.custom["secretsmanager"].subnet_configuration)[0].ipv4 == cidrhost(var.private_subnets_list[0], 10)
+    error_message = "subnet_configuration.ipv4 should pass through unchanged."
   }
 }

@@ -3,9 +3,14 @@
 ###########################
 
 variable "key_customer_master_key_spec" {
-  description = "(Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, or ECC_SECG_P256K1. Defaults to SYMMETRIC_DEFAULT. For help with choosing a key spec, see the AWS KMS Developer Guide."
+  description = "(Optional) Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Must be SYMMETRIC_DEFAULT: CloudWatch Logs encryption only supports symmetric KMS keys, so no other key spec (e.g. the asymmetric RSA_*/ECC_* specs) will work with this module's encrypted log group. Defaults to SYMMETRIC_DEFAULT."
   default     = "SYMMETRIC_DEFAULT"
   type        = string
+
+  validation {
+    condition     = var.key_customer_master_key_spec == "SYMMETRIC_DEFAULT"
+    error_message = "key_customer_master_key_spec must be SYMMETRIC_DEFAULT; CloudWatch Logs encryption only supports symmetric KMS keys."
+  }
 }
 
 variable "key_description" {
@@ -27,9 +32,14 @@ variable "key_enable_key_rotation" {
 }
 
 variable "key_usage" {
-  description = "(Optional) Specifies the intended use of the key. Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported."
+  description = "(Optional) Specifies the intended use of the key. Must be ENCRYPT_DECRYPT: this key encrypts a CloudWatch Logs log group, which requires an encrypt/decrypt-capable key, not a SIGN_VERIFY key. Defaults to ENCRYPT_DECRYPT."
   default     = "ENCRYPT_DECRYPT"
   type        = string
+
+  validation {
+    condition     = var.key_usage == "ENCRYPT_DECRYPT"
+    error_message = "key_usage must be ENCRYPT_DECRYPT; this key encrypts a CloudWatch Logs log group, which requires an encrypt/decrypt-capable key."
+  }
 }
 
 variable "key_is_enabled" {
