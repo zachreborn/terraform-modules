@@ -70,8 +70,24 @@ This example shares a transit gateway with the current AWS organization. This al
 module "tgw_ram_share" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/ram"
 
-  name         = "transit_tgw"
-  resource_arn = module.transit_gateway.arn
+  name          = "transit_tgw"
+  resource_arns = [module.transit_gateway.arn]
+}
+```
+
+### Multi-Resource Example
+
+This example shares two managed prefix lists in a single resource share, consolidating what would otherwise require two separate module calls.
+
+```
+module "prefix_list_ram_share" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/ram"
+
+  name = "managed_prefix_lists"
+  resource_arns = [
+    module.zpa_app_connectors_prefix_list.arn,
+    module.cisco_switches_prefix_list.arn,
+  ]
 }
 ```
 
@@ -116,7 +132,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | The name of the resource share. | `string` | n/a | yes |
 | <a name="input_permission_arns"></a> [permission\_arns](#input\_permission\_arns) | The ARNs of the permissions to associate with the resource share. | `list(string)` | `null` | no |
 | <a name="input_principal"></a> [principal](#input\_principal) | The principal to associate with the resource share. | `string` | `null` | no |
-| <a name="input_resource_arn"></a> [resource\_arn](#input\_resource\_arn) | The ARN of the resource to associate with the resource share. | `string` | n/a | yes |
+| <a name="input_resource_arns"></a> [resource\_arns](#input\_resource\_arns) | List of resource ARNs to associate with the resource share. | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource share. | `map(string)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
@@ -125,6 +141,7 @@ No modules.
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the resource share. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the resource share. |
+| <a name="output_resource_association_ids"></a> [resource\_association\_ids](#output\_resource\_association\_ids) | A map of resource ARN to the ID of the aws\_ram\_resource\_association created for it. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
