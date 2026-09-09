@@ -92,3 +92,14 @@ run "rejects_invalid_http_tokens" {
 
   expect_failures = [var.http_tokens]
 }
+
+run "rejects_invalid_termination_policies" {
+  command = plan
+
+  variables {
+    termination_policies = ["OldestLaunchTemplat"]
+  }
+
+  expect_failures = [var.termination_policies]
+}
+

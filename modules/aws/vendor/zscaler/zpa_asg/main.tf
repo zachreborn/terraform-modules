@@ -49,8 +49,6 @@ locals {
     enable_host_os_update = var.enable_host_os_update
     aws_region            = data.aws_region.current.region
   }))
-
-  asg_name = var.name
 }
 
 ###########################
@@ -88,7 +86,10 @@ resource "aws_launch_template" "zpa" {
     name = var.iam_instance_profile
   }
 
-  # Marketplace RHEL AMI is pre-encrypted by Zscaler; AWS rejects re-encryption
+  # Root device must match AMI (zpa-connector-el9* uses /dev/xvda). Wrong name
+  # silently skips size/type/encryption overrides on the real boot volume.
+  # encrypted defaults false: Marketplace AMI is vendor-pre-encrypted; Gen2 prod
+  # connectors use encrypted=false because AWS has rejected re-encryption here.
   block_device_mappings {
     device_name = var.root_device_name
 
@@ -142,7 +143,7 @@ resource "aws_launch_template" "zpa" {
 # Auto Scaling Group
 ###########################
 resource "aws_autoscaling_group" "zpa" {
-  name                      = local.asg_name
+  name                      = var.name
   vpc_zone_identifier       = var.subnet_ids
   min_size                  = var.min_size
   max_size                  = var.max_size

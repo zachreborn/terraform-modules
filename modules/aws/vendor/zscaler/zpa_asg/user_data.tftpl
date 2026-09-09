@@ -50,7 +50,8 @@ REPO
 
 log "Installing/updating zpa-connector package..."
 yum clean all || true
-yum install -y zpa-connector || true
+# Marketplace image may already ship the package; soft-fail only the reinstall.
+yum install -y zpa-connector || log "WARN: zpa-connector package install returned non-zero (may already be present)"
 
 log "Stopping zpa-connector for enrollment..."
 systemctl stop zpa-connector || true
@@ -59,10 +60,22 @@ log "Applying ZPA provisioning key..."
 mkdir -p /opt/zscaler/var
 printf '%s\n' "$PROVISIONING_KEY" >/opt/zscaler/var/provision_key
 chmod 600 /opt/zscaler/var/provision_key
+# Fail boot bootstrap if key never landed (enrollment cannot succeed).
+if [ ! -s /opt/zscaler/var/provision_key ]; then
+	log "ERROR: provision_key missing or empty after write"
+	exit 1
+fi
 
 log "Starting zpa-connector..."
 systemctl enable zpa-connector
-systemctl start zpa-connector || true
+systemctl start zpa-connector
+# Allow a short settle window, then require an active unit.
+sleep 5
+if ! systemctl is-active --quiet zpa-connector; then
+	log "ERROR: zpa-connector failed to become active after start"
+	systemctl status zpa-connector --no-pager || true
+	exit 1
+fi
 systemctl status zpa-connector --no-pager || true
 
 # -----------------------------------------------------------------------------

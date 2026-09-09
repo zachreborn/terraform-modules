@@ -66,15 +66,15 @@ variable "associate_public_ip_address" {
 }
 
 variable "encrypted" {
-  description = "(Optional) Encrypt the root EBS volume. Defaults to false because Zscaler Marketplace AMIs are pre-encrypted and AWS may reject re-encryption."
+  description = "(Optional) Encrypt the root EBS volume via launch-template block_device_mappings. Defaults to false: the Zscaler Marketplace AMI is already vendor-pre-encrypted, and Sunward Gen2 production connectors use encrypted=false because AWS has rejected re-encryption on this AMI path. Callers may set true and validate in plan/apply if desired."
   type        = bool
   default     = false
 }
 
 variable "root_device_name" {
-  description = "(Optional) Root device name for the block device mapping."
+  description = "(Optional) Root device name for the launch-template block_device_mappings override. Must match the AMI root device or size/type/encryption overrides are silently ignored. zpa-connector-el9* uses /dev/xvda (verified 2026-09 against Marketplace AMI and live Gen2 instances)."
   type        = string
-  default     = "/dev/sda1"
+  default     = "/dev/xvda"
 }
 
 variable "root_delete_on_termination" {
@@ -158,9 +158,9 @@ variable "enable_ssm_agent" {
 }
 
 variable "enable_host_os_update" {
-  description = "(Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to true."
+  description = "(Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to false (opt-in). Enabling on a full ASG launch updates every instance at once with no health-gated stagger; a bad kernel/package update can take out the whole group. Prefer a canary LT version or ASG instance refresh with high MinHealthyPercentage when enabling."
   type        = bool
-  default     = true
+  default     = false
 }
 
 ###########################
@@ -220,6 +220,21 @@ variable "termination_policies" {
   description = "(Optional) Ordered termination policies. Defaults to OldestLaunchTemplate then OldestInstance."
   type        = list(string)
   default     = ["OldestLaunchTemplate", "OldestInstance"]
+
+  validation {
+    condition = alltrue([
+      for p in var.termination_policies : contains([
+        "OldestInstance",
+        "NewestInstance",
+        "OldestLaunchConfiguration",
+        "ClosestToNextInstanceHour",
+        "OldestLaunchTemplate",
+        "AllocationStrategy",
+        "Default",
+      ], p)
+    ])
+    error_message = "termination_policies entries must be one of: OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, OldestLaunchTemplate, AllocationStrategy, Default."
+  }
 }
 
 variable "max_instance_lifetime" {

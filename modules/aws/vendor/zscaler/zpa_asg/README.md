@@ -38,9 +38,10 @@ module "zpa_connectors_asg" {
   max_instance_lifetime     = 7776000 # 90 days
   termination_policies      = ["OldestLaunchTemplate", "OldestInstance"]
   enable_ssm_agent          = true
-  enable_host_os_update     = true
-  # Marketplace AMI is pre-encrypted by Zscaler; AWS rejects re-encryption
+  enable_host_os_update     = false # opt-in; avoid fleet-wide first-boot yum+reboot
+  # Marketplace AMI is vendor-pre-encrypted; Gen2 prod uses false (re-encryption rejected)
   encrypted                 = false
+  root_device_name          = "/dev/xvda" # must match AMI root device
   health_check_grace_period = 1200
 
   tags = {
@@ -56,7 +57,10 @@ module "zpa_connectors_asg" {
 ### Notes
 
 - **Enrollment:** same App Connector Group provisioning key can enroll many ASG instances. Clean up stale connectors in the ZPA portal after replace/scale-in.
-- **Host OS:** Zscaler docs use `yum` on RHEL; first-boot `yum update` is optional via `enable_host_os_update`.
+- **Health:** ASG `health_check_type = "EC2"` only covers instance/system status checks. It does **not** prove ZPA enrollment succeeded. Watch connector health in the ZPA admin portal (and clean up offline/stale members after refresh). Bootstrap fails the boot path if `provision_key` is missing or `zpa-connector` never becomes active.
+- **Host OS:** Zscaler docs use `yum` on RHEL. First-boot `yum update` is **opt-in** (`enable_host_os_update`, default `false`) because a full ASG launch would patch every instance at once with no stagger; a bad update can take out the whole group. When enabling, use a canary LT version or ASG instance refresh with a high MinHealthyPercentage.
+- **Root volume:** `root_device_name` must match the AMI root device (`/dev/xvda` for `zpa-connector-el9*`). A wrong name silently skips size/type/encryption overrides on the real boot volume.
+- **Encryption:** default `encrypted = false` matches Sunward Gen2 production on this Marketplace AMI (vendor-pre-encrypted; AWS has rejected re-encryption). Callers may try `true` and validate in plan/apply.
 - **SSM:** Marketplace AMI usually lacks amazon-ssm-agent; module installs it when `enable_ssm_agent=true`. Private subnets still need SSM VPC endpoints or working egress to AWS APIs.
 - **source_dest_check:** disabled in user_data via `ec2:ModifyInstanceAttribute` (instance profile needs that permission).
 - **Rolling replace:** publish a new LT version and run an ASG instance refresh. Termination policies prefer outdated LT then oldest instance.
@@ -105,10 +109,10 @@ No modules.
 | <a name="input_default_cooldown"></a> [default\_cooldown](#input\_default\_cooldown) | (Optional) ASG default cooldown in seconds. Defaults to 300. | `number` | `300` | no |
 | <a name="input_desired_capacity"></a> [desired\_capacity](#input\_desired\_capacity) | (Optional) Desired number of connectors. Defaults to 3. | `number` | `3` | no |
 | <a name="input_enable_cpu_target_tracking"></a> [enable\_cpu\_target\_tracking](#input\_enable\_cpu\_target\_tracking) | (Optional) Attach a CPU target-tracking scaling policy. Defaults to false. | `bool` | `false` | no |
-| <a name="input_enable_host_os_update"></a> [enable\_host\_os\_update](#input\_enable\_host\_os\_update) | (Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to true. | `bool` | `true` | no |
+| <a name="input_enable_host_os_update"></a> [enable\_host\_os\_update](#input\_enable\_host\_os\_update) | (Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to false (opt-in). Enabling on a full ASG launch updates every instance at once with no health-gated stagger; a bad kernel/package update can take out the whole group. Prefer a canary LT version or ASG instance refresh with high MinHealthyPercentage when enabling. | `bool` | `false` | no |
 | <a name="input_enable_ssm_agent"></a> [enable\_ssm\_agent](#input\_enable\_ssm\_agent) | (Optional) Install and enable amazon-ssm-agent on first boot. Defaults to true. | `bool` | `true` | no |
 | <a name="input_enabled_metrics"></a> [enabled\_metrics](#input\_enabled\_metrics) | (Optional) List of ASG group metrics to enable. | `list(string)` | `[]` | no |
-| <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Encrypt the root EBS volume. Defaults to false because Zscaler Marketplace AMIs are pre-encrypted and AWS may reject re-encryption. | `bool` | `false` | no |
+| <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Encrypt the root EBS volume via launch-template block\_device\_mappings. Defaults to false: the Zscaler Marketplace AMI is already vendor-pre-encrypted, and Sunward Gen2 production connectors use encrypted=false because AWS has rejected re-encryption on this AMI path. Callers may set true and validate in plan/apply if desired. | `bool` | `false` | no |
 | <a name="input_health_check_grace_period"></a> [health\_check\_grace\_period](#input\_health\_check\_grace\_period) | (Optional) Seconds after launch before health checks. Defaults to 1200 (20 minutes). | `number` | `1200` | no |
 | <a name="input_health_check_type"></a> [health\_check\_type](#input\_health\_check\_type) | (Optional) ASG health check type. Defaults to EC2. | `string` | `"EC2"` | no |
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Instance metadata service. Valid values: enabled, disabled. | `string` | `"enabled"` | no |
@@ -126,7 +130,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | (Required) Base name for the Auto Scaling group and launch template prefix. | `string` | n/a | yes |
 | <a name="input_provisioning_key"></a> [provisioning\_key](#input\_provisioning\_key) | (Required) ZPA App Connector provisioning key from the ZPA admin portal. Mark sensitive in the calling workspace. | `string` | n/a | yes |
 | <a name="input_root_delete_on_termination"></a> [root\_delete\_on\_termination](#input\_root\_delete\_on\_termination) | (Optional) Delete root volume on termination. Defaults to true. | `bool` | `true` | no |
-| <a name="input_root_device_name"></a> [root\_device\_name](#input\_root\_device\_name) | (Optional) Root device name for the block device mapping. | `string` | `"/dev/sda1"` | no |
+| <a name="input_root_device_name"></a> [root\_device\_name](#input\_root\_device\_name) | (Optional) Root device name for the launch-template block\_device\_mappings override. Must match the AMI root device or size/type/encryption overrides are silently ignored. zpa-connector-el9* uses /dev/xvda (verified 2026-09 against Marketplace AMI and live Gen2 instances). | `string` | `"/dev/xvda"` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Root EBS volume size in GiB. Minimum 64 GiB required by the Zscaler Marketplace AMI. | `number` | `75` | no |
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Root EBS volume type. Defaults to gp3. | `string` | `"gp3"` | no |
 | <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | (Optional) Name for the ZPA App Connector security group. | `string` | `"zpa_connector_asg_sg"` | no |
