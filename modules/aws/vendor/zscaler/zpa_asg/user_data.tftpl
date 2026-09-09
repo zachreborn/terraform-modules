@@ -1,0 +1,115 @@
+#!/bin/bash
+# shellcheck shell=bash disable=SC2154
+# Exit immediately if a command exits with a non-zero status
+set -euo pipefail
+
+# =============================================================================
+# ZPA App Connector bootstrap (ASG launch template)
+# Values injected by Terraform templatefile() from module variables.
+# =============================================================================
+PROVISIONING_KEY="${provisioning_key}"
+ENABLE_SSM_AGENT="${enable_ssm_agent}"
+ENABLE_HOST_OS_UPDATE="${enable_host_os_update}"
+AWS_REGION="${aws_region}"
+
+log() {
+	echo "[zpa-bootstrap] $*"
+}
+
+# -----------------------------------------------------------------------------
+# 0. Disable source/dest check (ZPA proxies traffic)
+#    Requires ec2:ModifyInstanceAttribute on the instance profile.
+# -----------------------------------------------------------------------------
+log "Disabling source/dest check on this instance..."
+IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
+INSTANCE_ID=""
+if [ -n "$IMDS_TOKEN" ]; then
+	INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id || true)
+else
+	INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id || true)
+fi
+if command -v aws >/dev/null 2>&1 && [ -n "$INSTANCE_ID" ]; then
+	aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --no-source-dest-check --region "$AWS_REGION" ||
+		log "WARN: failed to disable source_dest_check (check IAM ec2:ModifyInstanceAttribute)"
+else
+	log "WARN: aws CLI or instance-id unavailable; source_dest_check may remain true"
+fi
+
+# -----------------------------------------------------------------------------
+# 1. Zscaler yum repo + connector package
+# -----------------------------------------------------------------------------
+log "Configuring Zscaler Private Access repository..."
+cat <<'REPO' | tee /etc/yum.repos.d/zscaler.repo
+[zscaler]
+name=Zscaler Private Access Repository
+baseurl=https://yum.private.zscaler.com/yum/el9
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.private.zscaler.com/yum/el9/gpg
+REPO
+
+log "Installing/updating zpa-connector package..."
+yum clean all || true
+# Marketplace image may already ship the package; soft-fail only the reinstall.
+yum install -y zpa-connector || log "WARN: zpa-connector package install returned non-zero (may already be present)"
+
+log "Stopping zpa-connector for enrollment..."
+systemctl stop zpa-connector || true
+
+log "Applying ZPA provisioning key..."
+mkdir -p /opt/zscaler/var
+printf '%s\n' "$PROVISIONING_KEY" >/opt/zscaler/var/provision_key
+chmod 600 /opt/zscaler/var/provision_key
+# Fail boot bootstrap if key never landed (enrollment cannot succeed).
+if [ ! -s /opt/zscaler/var/provision_key ]; then
+	log "ERROR: provision_key missing or empty after write"
+	exit 1
+fi
+
+log "Starting zpa-connector..."
+systemctl enable zpa-connector
+systemctl start zpa-connector
+# Allow a short settle window, then require an active unit.
+sleep 5
+if ! systemctl is-active --quiet zpa-connector; then
+	log "ERROR: zpa-connector failed to become active after start"
+	systemctl status zpa-connector --no-pager || true
+	exit 1
+fi
+systemctl status zpa-connector --no-pager || true
+
+# -----------------------------------------------------------------------------
+# 2. SSM agent
+# -----------------------------------------------------------------------------
+if [ "$ENABLE_SSM_AGENT" = "true" ]; then
+	log "Installing amazon-ssm-agent..."
+	if ! systemctl is-active --quiet amazon-ssm-agent 2>/dev/null; then
+		yum install -y "https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm" ||
+			yum install -y "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ||
+			log "WARN: amazon-ssm-agent install failed; SSM will be unavailable until fixed"
+	fi
+	systemctl enable amazon-ssm-agent || true
+	systemctl start amazon-ssm-agent || true
+	systemctl status amazon-ssm-agent --no-pager || true
+else
+	log "SSM agent install skipped (enable_ssm_agent=false)"
+fi
+
+# -----------------------------------------------------------------------------
+# 3. Host OS packages (Zscaler docs use yum on RHEL)
+#    https://help.zscaler.com/zpa/updating-host-os-and-software-packages
+# -----------------------------------------------------------------------------
+if [ "$ENABLE_HOST_OS_UPDATE" = "true" ]; then
+	log "Running host OS yum update (may take several minutes)..."
+	systemctl stop zpa-connector || true
+	yum clean all || true
+	yum remove --oldinstallonly -y || true
+	yum autoremove -y || true
+	yum update -y
+	log "Host OS update complete; rebooting..."
+	nohup bash -c 'sleep 5; reboot' >/dev/null 2>&1 &
+else
+	log "Host OS yum update skipped (enable_host_os_update=false)"
+fi
+
+log "Bootstrap finished."
