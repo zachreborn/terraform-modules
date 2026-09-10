@@ -101,6 +101,31 @@ output "private_subnet_arns" {
   value       = aws_subnet.private_subnets[*].arn
 }
 
+output "public_subnet_arns" {
+  description = "List of ARNs of public subnets"
+  value       = aws_subnet.public_subnets[*].arn
+}
+
+output "db_subnet_arns" {
+  description = "List of ARNs of database subnets"
+  value       = aws_subnet.db_subnets[*].arn
+}
+
+output "dmz_subnet_arns" {
+  description = "List of ARNs of DMZ subnets"
+  value       = aws_subnet.dmz_subnets[*].arn
+}
+
+output "mgmt_subnet_arns" {
+  description = "List of ARNs of management subnets"
+  value       = aws_subnet.mgmt_subnets[*].arn
+}
+
+output "workspaces_subnet_arns" {
+  description = "List of ARNs of WorkSpaces subnets"
+  value       = aws_subnet.workspaces_subnets[*].arn
+}
+
 output "internet_monitor_arn" {
   description = "The ARN of the CloudWatch Internet Monitor. Null when enable_internet_monitor is false."
   value       = one(aws_internetmonitor_monitor.this[*].arn)
