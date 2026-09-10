@@ -64,6 +64,28 @@ run "with_real_target_still_creates_one_flow_log" {
   }
 }
 
+# Known-length multi-target list (null-check selection, not coalesce) so first-create VPC IDs can plan.
+run "with_multiple_vpc_ids_creates_matching_flow_log_count" {
+  command = plan
+
+  variables {
+    flow_vpc_ids = [
+      "vpc-aaaaaaaaaaaaaaaaa",
+      "vpc-bbbbbbbbbbbbbbbbb",
+    ]
+  }
+
+  assert {
+    condition     = length(aws_flow_log.this) == 2
+    error_message = "Multiple flow_vpc_ids must produce one flow log per ID (known length)."
+  }
+
+  assert {
+    condition     = aws_flow_log.this[0].vpc_id == "vpc-aaaaaaaaaaaaaaaaa" && aws_flow_log.this[1].vpc_id == "vpc-bbbbbbbbbbbbbbbbb"
+    error_message = "Flow logs should map 1:1 to the supplied VPC IDs in order."
+  }
+}
+
 run "with_eni_target_exposes_eni_output" {
   command = plan
 
