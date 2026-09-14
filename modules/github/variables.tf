@@ -11,7 +11,7 @@ variable "profiles" {
   type = map(object({
     description                             = optional(string)
     homepage_url                            = optional(string)
-    fork                                    = optional(bool)
+    fork                                    = optional(string)
     source_owner                            = optional(string)
     source_repo                             = optional(string)
     private                                 = optional(bool)
@@ -54,12 +54,9 @@ variable "profiles" {
     }))
 
     security_and_analysis = optional(object({
-      advanced_security                     = optional(string)
-      code_security                         = optional(string)
-      secret_scanning                       = optional(string)
-      secret_scanning_push_protection       = optional(string)
-      secret_scanning_ai_detection          = optional(string)
-      secret_scanning_non_provider_patterns = optional(string)
+      advanced_security               = optional(string)
+      secret_scanning                 = optional(string)
+      secret_scanning_push_protection = optional(string)
     }))
 
     template = optional(object({
@@ -68,6 +65,15 @@ variable "profiles" {
       include_all_branches = optional(bool)
     }))
   }))
+
+  validation {
+    condition = alltrue([
+      for profile in values(var.profiles) :
+      profile.fork == null || contains(["true", "false"], profile.fork)
+    ])
+    error_message = "Each profile fork must be null, \"true\", or \"false\"."
+  }
+
 
   validation {
     condition = length(setsubtract(
@@ -128,7 +134,7 @@ variable "repositories" {
     overrides = optional(object({
       description                             = optional(string)
       homepage_url                            = optional(string)
-      fork                                    = optional(bool)
+      fork                                    = optional(string)
       source_owner                            = optional(string)
       source_repo                             = optional(string)
       private                                 = optional(bool)
@@ -171,12 +177,9 @@ variable "repositories" {
       }))
 
       security_and_analysis = optional(object({
-        advanced_security                     = optional(string)
-        code_security                         = optional(string)
-        secret_scanning                       = optional(string)
-        secret_scanning_push_protection       = optional(string)
-        secret_scanning_ai_detection          = optional(string)
-        secret_scanning_non_provider_patterns = optional(string)
+        advanced_security               = optional(string)
+        secret_scanning                 = optional(string)
+        secret_scanning_push_protection = optional(string)
       }))
 
       template = optional(object({
@@ -197,6 +200,14 @@ variable "repositories" {
   }))
 
   default = {}
+  validation {
+    condition = alltrue([
+      for repository in values(var.repositories) :
+      repository.overrides.fork == null ||
+      contains(["true", "false"], repository.overrides.fork)
+    ])
+    error_message = "Each repository override fork must be null, \"true\", or \"false\"."
+  }
 
   validation {
     condition = alltrue([

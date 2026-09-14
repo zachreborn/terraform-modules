@@ -6,7 +6,9 @@ import re
 
 
 MODULE_MAIN = Path(__file__).resolve().parents[1] / "main.tf"
+MODULE_VARIABLES = Path(__file__).resolve().parents[1] / "variables.tf"
 SOURCE = MODULE_MAIN.read_text(encoding="utf-8")
+VARIABLE_SOURCE = MODULE_VARIABLES.read_text(encoding="utf-8")
 
 
 def resource_body(resource_type: str, resource_name: str) -> str:
@@ -31,6 +33,9 @@ assert "sort(distinct([" in SOURCE, "Normalized collections must be deduplicated
 assert "lower(trimspace(topic))" in SOURCE, "Repository topics must be lowercased and trimmed"
 assert "trimspace(check)" in SOURCE, "Supplemental status-check names must be trimmed"
 assert "bypass_actors {" not in SOURCE, "Supplemental rulesets must never render bypass actors"
+assert len(re.findall(r"^\s*fork\s*=\s*optional\(string\)$", VARIABLE_SOURCE, re.MULTILINE)) == 2, (
+    "Profile and override fork inputs must match the provider string schema"
+)
 
 repository_arguments = {
     "name",

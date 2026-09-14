@@ -135,10 +135,6 @@ locals {
           try(repository.overrides.security_and_analysis.advanced_security, null),
           try(var.profiles[repository.profile].security_and_analysis.advanced_security, null)
         ), null)
-        code_security = try(coalesce(
-          try(repository.overrides.security_and_analysis.code_security, null),
-          try(var.profiles[repository.profile].security_and_analysis.code_security, null)
-        ), null)
         secret_scanning = try(coalesce(
           try(repository.overrides.security_and_analysis.secret_scanning, null),
           try(var.profiles[repository.profile].security_and_analysis.secret_scanning, null)
@@ -146,14 +142,6 @@ locals {
         secret_scanning_push_protection = try(coalesce(
           try(repository.overrides.security_and_analysis.secret_scanning_push_protection, null),
           try(var.profiles[repository.profile].security_and_analysis.secret_scanning_push_protection, null)
-        ), null)
-        secret_scanning_ai_detection = try(coalesce(
-          try(repository.overrides.security_and_analysis.secret_scanning_ai_detection, null),
-          try(var.profiles[repository.profile].security_and_analysis.secret_scanning_ai_detection, null)
-        ), null)
-        secret_scanning_non_provider_patterns = try(coalesce(
-          try(repository.overrides.security_and_analysis.secret_scanning_non_provider_patterns, null),
-          try(var.profiles[repository.profile].security_and_analysis.secret_scanning_non_provider_patterns, null)
         ), null)
       }
 
@@ -256,12 +244,6 @@ resource "github_repository" "this" {
         }
       }
 
-      dynamic "code_security" {
-        for_each = security_and_analysis.value.code_security == null ? [] : [security_and_analysis.value.code_security]
-        content {
-          status = code_security.value
-        }
-      }
 
       dynamic "secret_scanning" {
         for_each = security_and_analysis.value.secret_scanning == null ? [] : [security_and_analysis.value.secret_scanning]
@@ -277,19 +259,6 @@ resource "github_repository" "this" {
         }
       }
 
-      dynamic "secret_scanning_ai_detection" {
-        for_each = security_and_analysis.value.secret_scanning_ai_detection == null ? [] : [security_and_analysis.value.secret_scanning_ai_detection]
-        content {
-          status = secret_scanning_ai_detection.value
-        }
-      }
-
-      dynamic "secret_scanning_non_provider_patterns" {
-        for_each = security_and_analysis.value.secret_scanning_non_provider_patterns == null ? [] : [security_and_analysis.value.secret_scanning_non_provider_patterns]
-        content {
-          status = secret_scanning_non_provider_patterns.value
-        }
-      }
     }
   }
 

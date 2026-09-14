@@ -34,6 +34,23 @@ run "accepts_valid_baseline" {
   }
 }
 
+run "rejects_invalid_profile_fork_value" {
+  command = plan
+
+  variables {
+    profiles = {
+      aws_dev       = { fork = "yes" }
+      aws_test      = {}
+      aws_prod      = {}
+      control_plane = {}
+      factory       = {}
+    }
+    repositories = {}
+  }
+
+  expect_failures = [var.profiles]
+}
+
 run "rejects_missing_required_profile" {
   command = plan
 
@@ -103,6 +120,24 @@ run "rejects_invalid_profile_security_status" {
   }
 
   expect_failures = [var.profiles]
+}
+
+run "rejects_invalid_override_fork_value" {
+  command = plan
+
+  variables {
+    repositories = {
+      example = {
+        profile          = "aws_dev"
+        management_stage = "managed"
+        overrides = {
+          fork = "yes"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.repositories]
 }
 
 run "rejects_unknown_repository_profile" {

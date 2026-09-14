@@ -35,12 +35,9 @@ variables {
       allow_auto_merge = true
 
       security_and_analysis = {
-        advanced_security                     = "enabled"
-        code_security                         = "enabled"
-        secret_scanning                       = "enabled"
-        secret_scanning_push_protection       = "enabled"
-        secret_scanning_ai_detection          = "enabled"
-        secret_scanning_non_provider_patterns = "enabled"
+        advanced_security               = "enabled"
+        secret_scanning                 = "enabled"
+        secret_scanning_push_protection = "enabled"
       }
     }
     aws_test      = {}
@@ -94,14 +91,6 @@ run "merges_profile_and_sparse_nested_overrides" {
     error_message = "A sparse nested override must replace the selected profile security field."
   }
 
-  assert {
-    condition = (
-      github_repository.this["example"].security_and_analysis[0].code_security[0].status == "enabled" &&
-      github_repository.this["example"].security_and_analysis[0].secret_scanning_ai_detection[0].status == "enabled" &&
-      github_repository.this["example"].security_and_analysis[0].secret_scanning_non_provider_patterns[0].status == "enabled"
-    )
-    error_message = "All selected-provider security fields must render without being replaced by a sparse override."
-  }
 }
 
 run "normalizes_topics_deterministically" {
@@ -261,7 +250,7 @@ run "wires_creation_and_legacy_repository_options" {
         profile          = "aws_dev"
         management_stage = "managed"
         overrides = {
-          fork                                    = true
+          fork                                    = "true"
           source_owner                            = "upstream"
           source_repo                             = "source"
           private                                 = true
@@ -280,7 +269,7 @@ run "wires_creation_and_legacy_repository_options" {
 
   assert {
     condition = (
-      github_repository.this["example"].fork &&
+      github_repository.this["example"].fork == "true" &&
       github_repository.this["example"].source_owner == "upstream" &&
       github_repository.this["example"].source_repo == "source" &&
       github_repository.this["example"].auto_init
