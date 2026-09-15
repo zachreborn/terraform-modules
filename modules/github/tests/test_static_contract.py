@@ -30,16 +30,16 @@ assert re.search(
     re.DOTALL,
 ), "github_repository.this must always set lifecycle.prevent_destroy to true"
 
-assert (
-    "sort(distinct([" in SOURCE
-), "Normalized collections must be deduplicated and sorted"
-assert (
-    "lower(trimspace(topic))" in SOURCE
-), "Repository topics must be lowercased and trimmed"
+assert "sort(distinct([" in SOURCE, (
+    "Normalized collections must be deduplicated and sorted"
+)
+assert "lower(trimspace(topic))" in SOURCE, (
+    "Repository topics must be lowercased and trimmed"
+)
 assert "trimspace(check)" in SOURCE, "Supplemental status-check names must be trimmed"
-assert (
-    "bypass_actors {" not in SOURCE
-), "Supplemental rulesets must never render bypass actors"
+assert "bypass_actors {" not in SOURCE, (
+    "Supplemental rulesets must never render bypass actors"
+)
 assert (
     len(
         re.findall(r"^\s*fork\s*=\s*optional\(string\)$", VARIABLE_SOURCE, re.MULTILINE)
@@ -85,11 +85,11 @@ repository_arguments = {
     "archive_on_destroy",
 }
 for argument in repository_arguments:
-    assert re.search(
-        rf"^\s*{argument}\s*=", repository, re.MULTILINE
-    ), f"github_repository.this must wire the provider argument {argument}"
+    assert re.search(rf"^\s*{argument}\s*=", repository, re.MULTILINE), (
+        f"github_repository.this must wire the provider argument {argument}"
+    )
 
 for block in ("pages", "security_and_analysis", "template"):
-    assert re.search(
-        rf'dynamic "{block}"\s*\{{', repository
-    ), f"github_repository.this must render the provider block {block}"
+    assert re.search(rf'dynamic "{block}"\s*\{{', repository), (
+        f"github_repository.this must render the provider block {block}"
+    )
