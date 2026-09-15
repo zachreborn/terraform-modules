@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify safety and deterministic-normalization clauses that plan values cannot expose."""
+"""Verify safety clauses that plan values cannot expose."""
 
 import re
 from pathlib import Path
@@ -24,28 +24,32 @@ def resource_body(resource_type: str, resource_name: str) -> str:
 
 
 repository = resource_body("github_repository", "this")
-assert re.search(
+lifecycle_ok = re.search(
     r"lifecycle\s*\{\s*prevent_destroy\s*=\s*true\s*\}",
     repository,
     re.DOTALL,
-), "github_repository.this must always set lifecycle.prevent_destroy to true"
+)
+assert lifecycle_ok, "github_repository.this must set lifecycle.prevent_destroy"
 
-assert "sort(distinct([" in SOURCE, (
-    "Normalized collections must be deduplicated and sorted"
+msg = "Normalized collections must be deduplicated and sorted"
+assert "sort(distinct([" in SOURCE, msg
+
+msg = "Repository topics must be lowercased and trimmed"
+assert "lower(trimspace(topic))" in SOURCE, msg
+
+msg = "Supplemental status-check names must be trimmed"
+assert "trimspace(check)" in SOURCE, msg
+
+msg = "Supplemental rulesets must never render bypass actors"
+assert "bypass_actors {" not in SOURCE, msg
+
+fork_optional = re.findall(
+    r"^\s*fork\s*=\s*optional\(string\)$",
+    VARIABLE_SOURCE,
+    re.MULTILINE,
 )
-assert "lower(trimspace(topic))" in SOURCE, (
-    "Repository topics must be lowercased and trimmed"
-)
-assert "trimspace(check)" in SOURCE, "Supplemental status-check names must be trimmed"
-assert "bypass_actors {" not in SOURCE, (
-    "Supplemental rulesets must never render bypass actors"
-)
-assert (
-    len(
-        re.findall(r"^\s*fork\s*=\s*optional\(string\)$", VARIABLE_SOURCE, re.MULTILINE)
-    )
-    == 2
-), "Profile and override fork inputs must match the provider string schema"
+msg = "Profile and override fork inputs must match provider string schema"
+assert len(fork_optional) == 2, msg
 
 repository_arguments = {
     "name",
@@ -85,11 +89,11 @@ repository_arguments = {
     "archive_on_destroy",
 }
 for argument in repository_arguments:
-    assert re.search(rf"^\s*{argument}\s*=", repository, re.MULTILINE), (
-        f"github_repository.this must wire the provider argument {argument}"
-    )
+    matched = re.search(rf"^\s*{argument}\s*=", repository, re.MULTILINE)
+    msg = f"github_repository.this must wire provider argument {argument}"
+    assert matched, msg
 
 for block in ("pages", "security_and_analysis", "template"):
-    assert re.search(rf'dynamic "{block}"\s*\{{', repository), (
-        f"github_repository.this must render the provider block {block}"
-    )
+    matched = re.search(rf'dynamic "{block}"\s*\{{', repository)
+    msg = f"github_repository.this must render provider block {block}"
+    assert matched, msg
