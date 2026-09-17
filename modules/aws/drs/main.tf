@@ -48,23 +48,32 @@ locals {
     : (var.kms_key_arn != null ? element(split(":", var.kms_key_arn), 3) : null)
   )
 
+  # Resolve ebs_encryption first (as its own map) so the key-injection step
+  # below can key off the *resolved* mode rather than just whether a shared
+  # key exists. A template that supplies its own ebs_encryption_key_arn
+  # resolves to CUSTOM even when this module has no shared key of its own
+  # (create_kms_key = false and no kms_key_arn), so the per-template override
+  # always takes effect.
+  resolved_ebs_encryption = {
+    for key, template in var.templates : key => (
+      template.ebs_encryption != null
+      ? template.ebs_encryption
+      : ((local.kms_key_enabled || template.ebs_encryption_key_arn != null) ? "CUSTOM" : "DEFAULT")
+    )
+  }
+
   # Inject the resolved customer managed key into every template that did not
-  # set one explicitly, and keep ebs_encryption consistent with it. A template
-  # that supplies its own ebs_encryption_key_arn must resolve to CUSTOM even
-  # when this module has no shared key of its own (create_kms_key = false and
-  # no kms_key_arn), so the per-template override always takes effect.
+  # set one explicitly, but only when the resolved mode is CUSTOM -- AWS only
+  # accepts an ebs_encryption_key_arn alongside CUSTOM, so a template that
+  # explicitly opts into DEFAULT or NONE must never receive the shared key.
   templates = {
     for key, template in var.templates : key => merge(template, {
-      ebs_encryption = (
-        template.ebs_encryption != null
-        ? template.ebs_encryption
-        : ((local.kms_key_enabled || template.ebs_encryption_key_arn != null) ? "CUSTOM" : "DEFAULT")
-      )
+      ebs_encryption = local.resolved_ebs_encryption[key]
 
       ebs_encryption_key_arn = (
         template.ebs_encryption_key_arn != null
         ? template.ebs_encryption_key_arn
-        : local.kms_key_arn
+        : (local.resolved_ebs_encryption[key] == "CUSTOM" ? local.kms_key_arn : null)
       )
 
       region = template.region != null ? template.region : var.region
@@ -91,11 +100,16 @@ resource "terraform_data" "validate_kms_inputs" {
     # KMS keys are regional. A template that relies on this module's shared
     # key (rather than supplying its own ebs_encryption_key_arn) must resolve
     # to the same Region that key lives in, or AWS will reject the template
-    # with a cross-region KMS key error.
+    # with a cross-region KMS key error. Templates whose resolved mode is not
+    # CUSTOM never consume the shared key, so they are exempt from this check
+    # regardless of Region.
     precondition {
       condition = alltrue([
         for key, template in var.templates :
-        template.ebs_encryption_key_arn != null || !local.kms_key_enabled || coalesce(template.region, var.region, data.aws_region.current.region) == local.kms_key_region
+        (template.ebs_encryption_key_arn != null ||
+          !local.kms_key_enabled ||
+          local.resolved_ebs_encryption[key] != "CUSTOM" ||
+        coalesce(template.region, var.region, data.aws_region.current.region) == local.kms_key_region)
       ])
       error_message = "One or more entries in var.templates resolve to a region different from the shared KMS key's region (${coalesce(local.kms_key_region, "unknown")}). KMS keys are regional: give that template its own ebs_encryption_key_arn in the same region as staging_area_subnet_id, or set create_kms_key = false / ebs_encryption = \"DEFAULT\" for it."
     }

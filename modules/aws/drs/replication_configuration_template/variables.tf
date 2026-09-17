@@ -69,9 +69,9 @@ variable "templates" {
       * `data_plane_routing` - (Optional) Data plane routing mechanism used for replication. Valid values are PUBLIC_IP and PRIVATE_IP. Defaults to PRIVATE_IP.
       * `default_large_staging_disk_type` - (Optional) Staging disk EBS volume type used during replication. Valid values are GP2, GP3, ST1, and AUTO. Defaults to GP3.
       * `ebs_encryption` - (Optional) Type of EBS encryption used during replication. Valid values are DEFAULT, CUSTOM, and NONE (per the DRS API; the Terraform Registry page for this resource omits NONE, but the provider schema and AWS API both accept it). When omitted this resolves to CUSTOM if `ebs_encryption_key_arn` is set and DEFAULT otherwise.
-      * `ebs_encryption_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the staging area during replication. Required when `ebs_encryption` is CUSTOM.
+      * `ebs_encryption_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the staging area during replication. Required when `ebs_encryption` is CUSTOM, and rejected when `ebs_encryption` is explicitly DEFAULT or NONE.
       * `name` - (Optional) Overrides the map key when building the default Name tag.
-      * `pit_policy` - (Optional) Point in time (PIT) snapshot policy rules. Defaults to the three rules AWS mandates. Only the `retention_duration` of rule 3 may be changed.
+      * `pit_policy` - (Optional) Point in time (PIT) snapshot policy rules. Defaults to the three rules AWS mandates. All three rules must stay enabled; only rule 3's `retention_duration` may be changed, and only within 1-365 days.
       * `region` - (Optional) Region in which to manage this template. Defaults to the region set in the provider configuration.
       * `replication_server_instance_type` - (Optional) Instance type used for the replication server. Defaults to t3.small.
       * `replication_servers_security_groups_ids` - (Optional) Security group IDs used by the replication server. Required to be non-empty unless `associate_default_security_group` is true.
@@ -113,6 +113,17 @@ variable "templates" {
       template.ebs_encryption != "CUSTOM" || template.ebs_encryption_key_arn != null
     ])
     error_message = "A template with ebs_encryption set to CUSTOM must also set ebs_encryption_key_arn."
+  }
+
+  # The above only checks CUSTOM => key required. AWS also rejects the reverse:
+  # an explicit DEFAULT or NONE combined with a key ARN. A null ebs_encryption
+  # plus a key ARN remains valid (it auto-resolves to CUSTOM in main.tf).
+  validation {
+    condition = alltrue([
+      for key, template in var.templates :
+      template.ebs_encryption_key_arn == null || template.ebs_encryption == null || template.ebs_encryption == "CUSTOM"
+    ])
+    error_message = "A template with ebs_encryption_key_arn set must leave ebs_encryption unset or set it to CUSTOM; DEFAULT and NONE do not accept a KMS key ARN."
   }
 
   validation {
@@ -160,6 +171,18 @@ variable "templates" {
     error_message = "Each pit_policy rule's units must be one of MINUTE, HOUR, or DAY."
   }
 
+  # AWS's fixed PIT policy has no notion of a disabled required rule; all
+  # three of rule 1, 2, and 3 must remain enabled.
+  validation {
+    condition = alltrue(flatten([
+      for key, template in var.templates : [
+        for rule in template.pit_policy :
+        rule.enabled == true
+      ]
+    ]))
+    error_message = "Each pit_policy rule must remain enabled (enabled = true); AWS's fixed PIT policy does not support disabling any of the three required rules."
+  }
+
   validation {
     condition = alltrue(flatten([
       for key, template in var.templates : [
@@ -180,14 +203,16 @@ variable "templates" {
     error_message = "AWS only accepts pit_policy rule 2 as interval 1, units HOUR, retention_duration 24."
   }
 
+  # https://docs.aws.amazon.com/drs/latest/userguide/point-in-time.html: rule
+  # 3's retention_duration (in days) is configurable from 1 to 365.
   validation {
     condition = alltrue(flatten([
       for key, template in var.templates : [
         for rule in template.pit_policy :
-        rule.rule_id != 3 || (rule.interval == 1 && rule.units == "DAY")
+        rule.rule_id != 3 || (rule.interval == 1 && rule.units == "DAY" && rule.retention_duration >= 1 && rule.retention_duration <= 365)
       ]
     ]))
-    error_message = "AWS only accepts pit_policy rule 3 as interval 1, units DAY; only its retention_duration may be changed."
+    error_message = "AWS only accepts pit_policy rule 3 as interval 1, units DAY, with a retention_duration between 1 and 365 days; only its retention_duration may be changed."
   }
 }
 

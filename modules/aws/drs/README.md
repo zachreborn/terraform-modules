@@ -149,6 +149,7 @@ steps below, but confirm it now so replication isn't silently stuck later.
 module "drs" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
 
+  create_kms_key             = false
   create_service_roles       = true
   create_service_linked_role = true
 }
@@ -157,6 +158,8 @@ module "drs" {
 This creates the six DRS service roles, their instance profiles, and the `AWSServiceRoleForElasticDisasterRecovery`
 service-linked role -- everything [Elastic Disaster Recovery initialization and permissions](https://docs.aws.amazon.com/drs/latest/userguide/getting-started-initializing.html)
 documents *except* the final `InitializeService` API call itself, which has no Terraform resource.
+`create_kms_key` is set to `false` here since it defaults to `true`; there's no template yet to encrypt, so the
+key is deferred to Step 4.
 
 **Step 3 -- run `aws drs initialize-service` (manual, out of band):**
 

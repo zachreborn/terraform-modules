@@ -291,6 +291,74 @@ run "remaining_outputs_are_asserted" {
   }
 }
 
+run "explicit_default_encryption_does_not_receive_the_shared_key" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "DEFAULT"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption == "DEFAULT"
+    error_message = "An explicit DEFAULT mode should be honored even though the wrapper creates a shared KMS key by default."
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption_key_arn == null
+    error_message = "An explicit DEFAULT mode should never receive the shared KMS key's ARN."
+  }
+}
+
+run "explicit_none_encryption_does_not_receive_the_shared_key" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "NONE"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption == "NONE"
+    error_message = "An explicit NONE mode should be honored even though the wrapper creates a shared KMS key by default."
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption_key_arn == null
+    error_message = "An explicit NONE mode should never receive the shared KMS key's ARN."
+  }
+}
+
+run "cross_region_template_with_explicit_default_mode_is_not_rejected" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "DEFAULT"
+        region                                  = "us-west-2"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].region == "us-west-2"
+    error_message = "A cross-region template that explicitly opts into DEFAULT encryption should plan successfully, since it never consumes the shared (same-region) key."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.

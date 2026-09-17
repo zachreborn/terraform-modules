@@ -13,12 +13,12 @@ output "ids" {
 }
 
 output "ebs_encryption" {
-  description = "Map of the resolved EBS encryption mode (DEFAULT or CUSTOM) for each template, keyed by the logical name used in var.templates."
+  description = "Map of the resolved EBS encryption mode (DEFAULT, CUSTOM, or NONE) for each template, keyed by the logical name used in var.templates."
   value       = { for key, template in aws_drs_replication_configuration_template.this : key => template.ebs_encryption }
 }
 
 output "ebs_encryption_key_arns" {
-  description = "Map of the KMS key ARN encrypting each template's staging area, keyed by the logical name used in var.templates. Null for templates using DEFAULT encryption."
+  description = "Map of the KMS key ARN encrypting each template's staging area, keyed by the logical name used in var.templates. Null for templates using DEFAULT or NONE encryption."
   value       = { for key, template in aws_drs_replication_configuration_template.this : key => template.ebs_encryption_key_arn }
 }
 

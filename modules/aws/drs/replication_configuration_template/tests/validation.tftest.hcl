@@ -358,6 +358,195 @@ run "rejects_pit_policy_duplicate_rule_id" {
   expect_failures = [var.templates]
 }
 
+run "rejects_default_encryption_with_key_arn" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "DEFAULT"
+        ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/abcd1234-1234-1234-1234-123456789012"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_none_encryption_with_key_arn" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "NONE"
+        ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/abcd1234-1234-1234-1234-123456789012"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_disabled_pit_policy_rule" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = false
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 3
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_rule_3_retention_duration_below_minimum" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 0
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_rule_3_retention_duration_above_maximum" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 366
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "allows_rule_3_retention_duration_at_maximum" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 365
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = output.arns["app1"] != null
+    error_message = "A rule 3 retention_duration of exactly 365 (the documented maximum) should be allowed."
+  }
+}
+
 # Do NOT delete, skip, or loosen an `expect_failures` case (or any assertion above) just to
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # `validation {}` block in variables.tf has a bug or the test's inputs are wrong -- find and
