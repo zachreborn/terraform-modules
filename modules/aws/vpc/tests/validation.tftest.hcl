@@ -529,3 +529,72 @@ run "rejects_vpc_endpoints_gatewayloadbalancer_with_multiple_subnets" {
 
   expect_failures = [var.vpc_endpoints]
 }
+
+# With no managed private subnets to default to, an Interface endpoint that
+# omits subnet_ids would otherwise silently plan with an empty subnet set
+# and fail at apply; reject it at validation time instead.
+run "rejects_vpc_endpoints_interface_type_without_subnets_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      bad = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# With no managed private subnets to default to, a GatewayLoadBalancer
+# endpoint that omits subnet_ids would otherwise index an empty fallback
+# list and fail during planning; reject it at validation time instead.
+run "rejects_vpc_endpoints_gatewayloadbalancer_without_subnets_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+        vpc_endpoint_type = "GatewayLoadBalancer"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# A Gateway endpoint doesn't need subnet_ids at all, so an empty
+# private_subnets_list should not affect it.
+run "accepts_vpc_endpoints_gateway_type_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      good = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom) == 1
+    error_message = "A Gateway endpoint should plan successfully even when private_subnets_list is empty, since it doesn't use subnet_ids."
+  }
+}

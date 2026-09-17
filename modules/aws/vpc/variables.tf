@@ -226,6 +226,23 @@ variable "vpc_endpoints" {
     ])
     error_message = "Each vpc_endpoints entry of type GatewayLoadBalancer must supply exactly one subnet_ids entry, or omit subnet_ids to default to one."
   }
+
+  # Interface/GatewayLoadBalancer/Resource/ServiceNetwork endpoints require
+  # at least one subnet, but this module can only default to one of its own
+  # managed private subnets when private_subnets_list is non-empty. Without
+  # this check, an empty private_subnets_list combined with an omitted or
+  # empty subnet_ids on one of these types either produces an empty
+  # subnet_ids set (Interface/Resource/ServiceNetwork, which AWS rejects at
+  # apply) or indexes an empty fallback list (GatewayLoadBalancer, which
+  # fails during planning). Require an explicit, non-empty subnet_ids in
+  # that scenario instead.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      v.vpc_endpoint_type == "Gateway" || length(coalesce(v.subnet_ids, [])) > 0 || length(var.private_subnets_list) > 0
+    ])
+    error_message = "Each vpc_endpoints entry of type Interface, GatewayLoadBalancer, Resource, or ServiceNetwork must supply an explicit, non-empty subnet_ids when private_subnets_list is empty (there are no managed private subnets to default to)."
+  }
 }
 ###########################
 # Subnets
