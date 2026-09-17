@@ -45,6 +45,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#deployment-guide">Deployment Guide</a></li>
     <li><a href="#prerequisites">Prerequisites</a></li>
     <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
     <li><a href="#requirements">Requirements</a></li>
@@ -80,40 +81,9 @@ module "drs" {
 
 ### Fresh Account, Let Terraform Initialize DRS's IAM Roles
 
-DRS rejects replication configuration templates until the account has been initialized (see
-[Prerequisites](#prerequisites)), so this is a two-step apply rather than one:
-
-**Step 1 -- create only the IAM roles, instance profiles, and service-linked role:**
-
-```
-module "drs" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
-
-  create_service_roles       = true
-  create_service_linked_role = true
-}
-```
-
-Apply this first, then run `aws drs initialize-service` (or visit the DRS console) once for this account and
-region.
-
-**Step 2 -- add templates once the account is initialized:**
-
-```
-module "drs" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
-
-  create_service_roles       = true
-  create_service_linked_role = true
-
-  templates = {
-    app1 = {
-      replication_servers_security_groups_ids = ["sg-0123456789abcdef0"]
-      staging_area_subnet_id                  = "subnet-0123456789abcdef0"
-    }
-  }
-}
-```
+DRS rejects replication configuration templates until the account has been initialized, and that
+initialization requires one manual, non-Terraform step in the middle. See the [Deployment Guide](#deployment-guide)
+below for the full walkthrough -- Path B covers this scenario end to end.
 
 ### Multiple Templates from YAML, Existing KMS Key
 
@@ -133,6 +103,107 @@ module "drs" {
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Deployment Guide
+
+Rolling out DRS end to end is not a single `terraform apply`. AWS requires one out-of-band API/console call
+per account per region before any replication configuration template can exist, and getting data actually
+replicating requires installing an agent on each source server -- neither of those two steps has a Terraform
+resource. This section walks through the full process and calls out exactly which steps this module manages
+and which ones you run yourself.
+
+```mermaid
+flowchart TD
+    A("terraform apply<br/>roles only") -->|Terraform| B("aws drs initialize-service")
+    B -->|Manual, one time per account/Region| C("terraform apply<br/>add templates")
+    C -->|Terraform| D("Install AWS Replication Agent<br/>on each source server")
+    D -->|Manual, per source server| E("Replication starts<br/>monitor in the DRS console")
+```
+
+First, determine which path applies to you:
+
+- **Path A -- account already initialized.** Most organizations initialize DRS once per account/region
+  (often through the console) and reuse it. If `aws drs describe-jobs --region <region>` (or any other DRS
+  read call) succeeds instead of failing with `UninitializedAccountException`, the account is already
+  initialized -- skip to [Path A](#path-a----account-already-initialized).
+- **Path B -- fresh account or new Region.** If DRS has never been used in this account/Region, follow
+  [Path B](#path-b----fresh-account-or-new-region) in full.
+
+### Path A -- Account Already Initialized
+
+This is the common case and needs no manual steps. Apply the module with `templates` populated (see the
+[Simple Example](#simple-example) above) and leave `create_service_roles` / `create_service_linked_role` at
+their defaults (`false`), since the roles this module would create already exist under those exact names.
+
+### Path B -- Fresh Account or New Region
+
+**Step 1 -- confirm the network prerequisites.** The staging area subnet and its security groups need the
+access described in [Prerequisites](#prerequisites) before anything can replicate. This doesn't block the
+steps below, but confirm it now so replication isn't silently stuck later.
+
+**Step 2 -- apply this module with roles only (Terraform-managed):**
+
+```
+module "drs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
+
+  create_service_roles       = true
+  create_service_linked_role = true
+}
+```
+
+This creates the six DRS service roles, their instance profiles, and the `AWSServiceRoleForElasticDisasterRecovery`
+service-linked role -- everything [Elastic Disaster Recovery initialization and permissions](https://docs.aws.amazon.com/drs/latest/userguide/getting-started-initializing.html)
+documents *except* the final `InitializeService` API call itself, which has no Terraform resource.
+
+**Step 3 -- run `aws drs initialize-service` (manual, out of band):**
+
+```sh
+aws drs initialize-service --region us-east-1
+```
+
+Run this once per account per Region, using credentials for the account's Admin user (AWS requires this;
+see the linked doc above). It takes no other arguments. This is also the point where you could instead click
+through the DRS console's first-run wizard -- either path finishes initialization identically. Confirm it
+succeeded by running a DRS read call, e.g. `aws drs describe-jobs --region us-east-1`: it fails with
+`UninitializedAccountException` beforehand and succeeds (even with an empty result) once initialization is
+complete.
+
+**Step 4 -- apply again with templates (Terraform-managed):**
+
+```
+module "drs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
+
+  create_service_roles       = true
+  create_service_linked_role = true
+
+  templates = {
+    app1 = {
+      replication_servers_security_groups_ids = ["sg-0123456789abcdef0"]
+      staging_area_subnet_id                  = "subnet-0123456789abcdef0"
+    }
+  }
+}
+```
+
+Applying templates before Step 3 completes fails outright, since DRS rejects `CreateReplicationConfigurationTemplate`
+calls on an uninitialized account.
+
+**Step 5 -- install the AWS Replication Agent on each source server (manual, per server).** Terraform stops
+at the replication configuration template; nothing in DRS starts replicating data until the agent is running
+on a source server. AWS provides platform-specific installer commands in
+[Installing the AWS Replication Agent](https://docs.aws.amazon.com/drs/latest/userguide/agent-installation.html).
+The credentials you supply to the installer need the **`AWSElasticDisasterRecoveryAgentInstallationPolicy`**
+managed policy -- this is distinct from the `AWSElasticDisasterRecoveryAgentRole` this module creates (that
+role is assumed by the DRS *service* itself, per its trust policy, not by the installer).
+
+**Step 6 -- verify replication.** Once the agent is installed, the source server appears in the DRS console
+(or `aws drs describe-source-servers --region us-east-1`) and begins an initial sync. Data replication state
+moves from initial sync to "Healthy" once it catches up; recovery/drill instances can only be launched from a
+source server in a healthy state.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
