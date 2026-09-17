@@ -68,6 +68,11 @@ output "iam_role_permissions_boundary" {
   value       = aws_iam_role.role.permissions_boundary
 }
 
+output "iam_role_assume_role_policy" {
+  description = "The assume_role_policy of the flow logs IAM role, proving iam_role_assume_role_policy was forwarded."
+  value       = aws_iam_role.role.assume_role_policy
+}
+
 output "kms_key_customer_master_key_spec" {
   description = "The customer_master_key_spec of the flow logs KMS key, proving key_customer_master_key_spec was forwarded."
   value       = aws_kms_key.key.customer_master_key_spec

@@ -828,6 +828,15 @@ run "flow_logs_full_variable_surface_plans_successfully" {
     key_enable_key_rotation                = false
     key_usage                              = "ENCRYPT_DECRYPT"
     key_is_enabled                         = true
+    iam_role_assume_role_policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Sid       = "CustomAssumeRoleForTesting"
+        Effect    = "Allow"
+        Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }]
+    })
   }
 
   assert {
@@ -893,6 +902,11 @@ run "flow_logs_full_variable_surface_plans_successfully" {
   assert {
     condition     = module.vpc_flow_logs[0].kms_key_is_enabled == true
     error_message = "key_is_enabled should be forwarded to the flow_logs module's KMS key."
+  }
+
+  assert {
+    condition     = can(regex("CustomAssumeRoleForTesting", module.vpc_flow_logs[0].iam_role_assume_role_policy))
+    error_message = "iam_role_assume_role_policy should be forwarded to the flow_logs module's IAM role."
   }
 }
 
@@ -978,6 +992,60 @@ run "vpc_attribute_outputs_resolve" {
   assert {
     condition     = output.egress_only_internet_gateway_id == null
     error_message = "egress_only_internet_gateway_id output should be null when enable_ipv6 is false."
+  }
+}
+
+# Composition/wiring test: the previous test only checked that the two
+# parent outputs alias the composed security_group module's id/name, but
+# never verified that the three standalone ingress/egress rule resources
+# this module attaches are actually wired to that security group with the
+# intended CIDR/protocol/ports.
+run "vpc_endpoint_security_group_rules_wired_correctly" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_ingress_rule.vpc_endpoint_https_tcp.security_group_id == module.ssm_vpc_endpoint_sg.id
+    error_message = "The HTTPS/TCP ingress rule should attach to the composed security_group module's id."
+  }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_tcp.cidr_ipv4 == aws_vpc.vpc.cidr_block &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_tcp.from_port == 443 &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_tcp.to_port == 443 &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_tcp.ip_protocol == "tcp"
+    )
+    error_message = "The HTTPS/TCP ingress rule should allow TCP/443 from the VPC's own CIDR."
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_ingress_rule.vpc_endpoint_https_udp.security_group_id == module.ssm_vpc_endpoint_sg.id
+    error_message = "The HTTPS/UDP ingress rule should attach to the composed security_group module's id."
+  }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_udp.cidr_ipv4 == aws_vpc.vpc.cidr_block &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_udp.from_port == 443 &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_udp.to_port == 443 &&
+      aws_vpc_security_group_ingress_rule.vpc_endpoint_https_udp.ip_protocol == "udp"
+    )
+    error_message = "The HTTPS/UDP ingress rule should allow UDP/443 from the VPC's own CIDR."
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_egress_rule.vpc_endpoint_all_traffic.security_group_id == module.ssm_vpc_endpoint_sg.id
+    error_message = "The all-traffic egress rule should attach to the composed security_group module's id."
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_egress_rule.vpc_endpoint_all_traffic.cidr_ipv4 == "0.0.0.0/0" && aws_vpc_security_group_egress_rule.vpc_endpoint_all_traffic.ip_protocol == "-1"
+    error_message = "The all-traffic egress rule should be unrestricted (0.0.0.0/0, all protocols)."
   }
 }
 
