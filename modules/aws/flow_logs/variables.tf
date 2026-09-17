@@ -65,8 +65,8 @@ variable "cloudwatch_name_prefix" {
 }
 
 variable "cloudwatch_deletion_protection_enabled" {
-  description = "(Optional) If true, prevents the log group from being deleted. Defaults to false. Requires AWS provider >= 6.25.0."
-  default     = false
+  description = "(Optional) If true, prevents the log group from being deleted. Defaults to true, per this repository's secure-default standard for stateful resources. Requires AWS provider >= 6.25.0."
+  default     = true
   type        = bool
 }
 

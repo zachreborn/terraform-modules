@@ -427,9 +427,9 @@ variable "cloudwatch_retention_in_days" {
 }
 
 variable "cloudwatch_deletion_protection_enabled" {
-  description = "(Optional) If true, prevents the flow logs' CloudWatch log group from being deleted. Defaults false. Requires AWS provider >= 6.25.0. Passed through to modules/aws/flow_logs."
+  description = "(Optional) If true, prevents the flow logs' CloudWatch log group from being deleted. Defaults true, per this repository's secure-default standard for stateful resources (flow logs are also enabled by default). Requires AWS provider >= 6.25.0. Passed through to modules/aws/flow_logs."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "iam_policy_description" {
