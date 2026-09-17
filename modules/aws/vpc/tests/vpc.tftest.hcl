@@ -1200,9 +1200,13 @@ run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_explicitly
     }
   }
 
+  # The default layout is one private subnet per AZ, so the one-subnet-per-AZ
+  # fallback resolves to every managed private subnet here. The
+  # more-subnets-than-AZs case is covered separately by
+  # custom_vpc_endpoints_subnet_fallback_uses_one_subnet_per_az.
   assert {
     condition     = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset(aws_subnet.private_subnets[*].id)
-    error_message = "An Interface endpoint with an explicit empty subnet_ids list should also default to this module's own managed private subnets, not bypass the fallback."
+    error_message = "An Interface endpoint with an explicit empty subnet_ids list should also default to this module's own managed private subnets (one per AZ), not bypass the fallback."
   }
 }
 

@@ -99,7 +99,7 @@ variable "enable_ecr_vpc_endpoints" {
   default     = false
 }
 variable "subnet_indices" {
-  description = "(Optional) List of indices into private_subnets_list identifying which private subnets the SSM VPC endpoints (enable_ssm_vpc_endpoints) should be placed in. Defaults to just the first private subnet to minimize per-AZ interface endpoint charges; add more indices to spread SSM endpoints across additional AZs. Unlike the SSM endpoints, the ECR/CloudWatch Logs endpoints (enable_ecr_vpc_endpoints) are always placed in every private subnet, since container image pulls must succeed from workloads in any AZ."
+  description = "(Optional) List of indices into private_subnets_list identifying which private subnets the SSM VPC endpoints (enable_ssm_vpc_endpoints) should be placed in. Defaults to just the first private subnet to minimize per-AZ interface endpoint charges; add more indices to spread SSM endpoints across additional AZs, though no two indices may resolve to the same Availability Zone (AWS rejects that with DuplicateSubnetsInSameZone). Unlike the SSM endpoints, the ECR/CloudWatch Logs endpoints (enable_ecr_vpc_endpoints) are placed automatically in one managed private subnet per distinct Availability Zone, so container image pulls succeed from workloads in any AZ. When private_subnets_list has more subnets than azs, that is fewer endpoint placements (and lower charges) than one per private subnet."
   type        = list(number)
   default     = [0]
 
