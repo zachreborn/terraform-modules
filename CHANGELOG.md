@@ -1,5 +1,12 @@
 # Changelog
 
+## [15.3.0](https://github.com/zachreborn/terraform-modules/compare/v15.2.0...v15.3.0) (2026-09-17)
+
+
+### Features
+
+* **drs:** add AWS Elastic Disaster Recovery module ([#493](https://github.com/zachreborn/terraform-modules/issues/493)) ([fc8716a](https://github.com/zachreborn/terraform-modules/commit/fc8716a90244370d25363514a614743f6e1c92bc))
+
 ## [15.2.0](https://github.com/zachreborn/terraform-modules/compare/v15.1.0...v15.2.0) (2026-08-28)
 
 
