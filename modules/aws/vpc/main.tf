@@ -220,6 +220,18 @@ resource "aws_vpc_security_group_egress_rule" "vpc_endpoint_all_traffic" {
   ip_protocol = "-1"
 }
 
+# Interface/Resource/ServiceNetwork endpoints reject more than one subnet
+# per Availability Zone ("DuplicateSubnetsInSameZone"), but this module
+# explicitly supports more private subnets than AZs (subnet_indices, an
+# arbitrary-length private_subnets_list), so falling back to *every* managed
+# private subnet -- or to caller-selected subnet_indices that happen to
+# collide on the same AZ -- can put two subnets from the same AZ behind one
+# endpoint. Group by AZ and take one subnet id per distinct AZ instead.
+locals {
+  private_subnet_ids_by_az      = { for s in aws_subnet.private_subnets : s.availability_zone => s.id... }
+  private_subnet_ids_one_per_az = [for az, ids in local.private_subnet_ids_by_az : ids[0]]
+}
+
 # SSM VPC Endpoints
 resource "aws_vpc_endpoint" "ec2messages" {
   count               = var.enable_ssm_vpc_endpoints ? 1 : 0
@@ -288,12 +300,16 @@ resource "aws_vpc_endpoint" "ssmmessages" {
 }
 
 # ECR VPC Endpoints
+# subnet_ids uses one managed private subnet per distinct AZ (not every
+# private subnet) -- container image pulls still succeed from workloads in
+# any AZ this way, without risking DuplicateSubnetsInSameZone when this
+# module has more private subnets than AZs.
 resource "aws_vpc_endpoint" "ecr_api" {
   count               = var.enable_ecr_vpc_endpoints ? 1 : 0
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.api"
   security_group_ids  = [module.ssm_vpc_endpoint_sg.id]
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset(local.private_subnet_ids_one_per_az)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
   tags                = merge(tomap({ Name = var.name }), var.tags)
@@ -304,7 +320,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.dkr"
   security_group_ids  = [module.ssm_vpc_endpoint_sg.id]
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset(local.private_subnet_ids_one_per_az)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
   tags                = merge(tomap({ Name = var.name }), var.tags)
@@ -316,7 +332,7 @@ resource "aws_vpc_endpoint" "cloudwatch" {
   private_dns_enabled = true
   service_name        = "com.amazonaws.${data.aws_region.current.region}.logs"
   security_group_ids  = [module.ssm_vpc_endpoint_sg.id]
-  subnet_ids          = toset(aws_subnet.private_subnets[*].id)
+  subnet_ids          = toset(local.private_subnet_ids_one_per_az)
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.vpc.id
   tags                = merge(tomap({ Name = var.name }), var.tags)
@@ -341,17 +357,6 @@ resource "aws_vpc_endpoint_route_table_association" "public_s3" {
   count           = (var.enable_s3_endpoint || var.enable_ecr_vpc_endpoints) ? length(aws_route_table.public_route_table[*].id) : 0
   route_table_id  = element(aws_route_table.public_route_table[*].id, count.index)
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
-}
-
-# Interface/Resource/ServiceNetwork endpoints reject more than one subnet
-# per Availability Zone ("DuplicateSubnetsInSameZone"), but this module
-# explicitly supports more private subnets than AZs (subnet_indices, an
-# arbitrary-length private_subnets_list), so falling back to *every* managed
-# private subnet can put two subnets from the same AZ in one endpoint's
-# subnet_ids. Group by AZ and take one subnet id per distinct AZ instead.
-locals {
-  private_subnet_ids_by_az      = { for s in aws_subnet.private_subnets : s.availability_zone => s.id... }
-  private_subnet_ids_one_per_az = [for az, ids in local.private_subnet_ids_by_az : ids[0]]
 }
 
 # Generic, caller-defined VPC endpoints. Use this (via var.vpc_endpoints) to

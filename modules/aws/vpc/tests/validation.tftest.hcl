@@ -88,6 +88,24 @@ run "accepts_subnet_index_beyond_old_hardcoded_cap_when_private_subnets_list_is_
   }
 }
 
+# Regression test: aws_subnet.private_subnets assigns AZs via
+# element(var.azs, count.index), which cycles once there are more private
+# subnets than AZs. With the default 3 AZs and a 4th private subnet added,
+# indices 0 and 3 both land on azs[0] -- selecting both would place two
+# subnets from the same AZ behind each SSM interface endpoint.
+run "rejects_subnet_indices_selecting_duplicate_az" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    subnet_indices       = [0, 3]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
 run "rejects_invalid_cloudwatch_retention_in_days" {
   command = plan
 

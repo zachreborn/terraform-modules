@@ -562,6 +562,47 @@ run "ecr_vpc_endpoints_enabled_creates_ecr_dkr_logs_and_s3" {
   }
 }
 
+# Regression test: the ECR/CloudWatch Logs endpoints previously used every
+# managed private subnet, which places more than one subnet in the same AZ
+# once this module has more private subnets than AZs -- AWS rejects that
+# with DuplicateSubnetsInSameZone for Interface endpoints. They should now
+# select one subnet per distinct AZ instead.
+run "ecr_vpc_endpoints_subnet_ids_use_one_subnet_per_az" {
+  command = plan
+
+  variables {
+    name                     = "core-vpc"
+    enable_ecr_vpc_endpoints = true
+    private_subnets_list     = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+  }
+
+  # mock_provider does not guarantee unique ids across instances of the same
+  # count-based resource, so comparing against an independently-recomputed
+  # toset() of the same one-subnet-per-AZ selection (rather than a raw
+  # length) verifies the module's fallback logic correctly regardless of
+  # any accidental id collisions in the mocked plan.
+  assert {
+    condition = aws_vpc_endpoint.ecr_api[0].subnet_ids == toset([
+      for az, ids in { for s in aws_subnet.private_subnets : s.availability_zone => s.id... } : ids[0]
+    ])
+    error_message = "With 4 private subnets across 3 AZs, ecr_api's subnet_ids should select one subnet per distinct AZ, not every managed private subnet."
+  }
+
+  assert {
+    condition = aws_vpc_endpoint.ecr_dkr[0].subnet_ids == toset([
+      for az, ids in { for s in aws_subnet.private_subnets : s.availability_zone => s.id... } : ids[0]
+    ])
+    error_message = "With 4 private subnets across 3 AZs, ecr_dkr's subnet_ids should select one subnet per distinct AZ, not every managed private subnet."
+  }
+
+  assert {
+    condition = aws_vpc_endpoint.cloudwatch[0].subnet_ids == toset([
+      for az, ids in { for s in aws_subnet.private_subnets : s.availability_zone => s.id... } : ids[0]
+    ])
+    error_message = "With 4 private subnets across 3 AZs, cloudwatch's subnet_ids should select one subnet per distinct AZ, not every managed private subnet."
+  }
+}
+
 run "s3_endpoint_enabled_independently_of_ecr" {
   command = plan
 

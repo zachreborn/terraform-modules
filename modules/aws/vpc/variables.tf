@@ -123,6 +123,17 @@ variable "subnet_indices" {
     ])
     error_message = "Subnet indices must reference valid positions within private_subnets_list (0 to length(private_subnets_list) - 1)."
   }
+
+  # aws_subnet.private_subnets assigns each subnet's AZ via
+  # element(var.azs, count.index), which cycles once there are more private
+  # subnets than AZs. Two selected indices can therefore land in the same
+  # AZ (e.g. subnet_indices = [0, 3] with 4 private subnets across 3 AZs),
+  # which would place more than one subnet from that AZ behind each SSM
+  # interface endpoint -- AWS rejects this with DuplicateSubnetsInSameZone.
+  validation {
+    condition     = length(var.azs) == 0 || length(distinct([for i in var.subnet_indices : element(var.azs, i)])) == length(var.subnet_indices)
+    error_message = "subnet_indices must not select more than one private subnet from the same Availability Zone (each index's AZ is element(var.azs, index))."
+  }
 }
 
 variable "vpc_endpoints" {
