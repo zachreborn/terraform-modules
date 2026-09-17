@@ -11,6 +11,12 @@ mock_provider "aws" {
     }
   }
 
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
+
   mock_resource "aws_kms_key" {
     defaults = {
       arn    = "arn:aws:kms:us-east-1:123456789012:key/mocked-key"
@@ -190,6 +196,98 @@ run "create_initialization_false_skips_the_submodule_entirely" {
   assert {
     condition     = length(output.initialization_role_arns) == 0
     error_message = "initialization_role_arns output should be empty when create_initialization is false."
+  }
+}
+
+run "per_template_key_survives_without_a_global_key" {
+  command = plan
+
+  variables {
+    create_kms_key = false
+    templates = {
+      app1 = {
+        ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/caller-template-key"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption == "CUSTOM"
+    error_message = "A template's own ebs_encryption_key_arn should resolve to CUSTOM even when this module has no shared key of its own."
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption_key_arn == "arn:aws:kms:us-east-1:123456789012:key/caller-template-key"
+    error_message = "A template's own ebs_encryption_key_arn should be passed through unchanged."
+  }
+}
+
+run "cross_region_template_without_its_own_key_is_rejected" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        region                                  = "us-west-2"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  expect_failures = [
+    terraform_data.validate_kms_inputs,
+  ]
+}
+
+run "cross_region_template_with_its_own_key_is_allowed" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption_key_arn                  = "arn:aws:kms:us-west-2:123456789012:key/region-specific-key"
+        region                                  = "us-west-2"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = module.replication_configuration_template.templates["app1"].ebs_encryption_key_arn == "arn:aws:kms:us-west-2:123456789012:key/region-specific-key"
+    error_message = "A cross-region template that supplies its own same-region key should not trip the cross-region guard."
+  }
+}
+
+run "remaining_outputs_are_asserted" {
+  command = plan
+
+  variables {
+    create_service_roles       = true
+    create_service_linked_role = true
+  }
+
+  assert {
+    condition     = output.replication_configuration_template_arns["app1"] != null
+    error_message = "replication_configuration_template_arns output should expose each template's ARN."
+  }
+
+  assert {
+    condition     = output.replication_configuration_template_ids["app1"] != null
+    error_message = "replication_configuration_template_ids output should expose each template's ID."
+  }
+
+  assert {
+    condition     = output.initialization_role_names["AWSElasticDisasterRecoveryAgentRole"] != null
+    error_message = "initialization_role_names output should expose the agent role's name."
+  }
+
+  assert {
+    condition     = length(output.initialization_instance_profile_arns) == 4
+    error_message = "initialization_instance_profile_arns output should expose an ARN for each of the four EC2-assumed roles."
   }
 }
 

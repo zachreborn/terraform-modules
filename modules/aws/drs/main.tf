@@ -16,6 +16,16 @@ terraform {
 }
 
 ###########################
+# Data Sources
+###########################
+
+# Resolves the provider's default region when var.region is not set, so the
+# cross-region KMS guard below can compare a template's effective region
+# against the shared key's actual region even when both are left at their
+# provider defaults.
+data "aws_region" "current" {}
+
+###########################
 # Locals
 ###########################
 
@@ -28,14 +38,27 @@ locals {
 
   kms_key_arn = var.create_kms_key ? module.kms_key[0].arn : var.kms_key_arn
 
+  # The Region the shared key (created or supplied) actually lives in. KMS keys
+  # are regional, so this is what the cross-region guard below compares each
+  # template's effective Region against. ARNs embed the Region as their fourth
+  # colon-delimited field (arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE).
+  kms_key_region = (
+    var.create_kms_key
+    ? coalesce(var.region, data.aws_region.current.region)
+    : (var.kms_key_arn != null ? element(split(":", var.kms_key_arn), 3) : null)
+  )
+
   # Inject the resolved customer managed key into every template that did not
-  # set one explicitly, and keep ebs_encryption consistent with it.
+  # set one explicitly, and keep ebs_encryption consistent with it. A template
+  # that supplies its own ebs_encryption_key_arn must resolve to CUSTOM even
+  # when this module has no shared key of its own (create_kms_key = false and
+  # no kms_key_arn), so the per-template override always takes effect.
   templates = {
     for key, template in var.templates : key => merge(template, {
       ebs_encryption = (
         template.ebs_encryption != null
         ? template.ebs_encryption
-        : (local.kms_key_enabled ? "CUSTOM" : "DEFAULT")
+        : ((local.kms_key_enabled || template.ebs_encryption_key_arn != null) ? "CUSTOM" : "DEFAULT")
       )
 
       ebs_encryption_key_arn = (
@@ -56,13 +79,25 @@ locals {
 # This module declares no aws_* resources of its own, so there is nothing to
 # attach a lifecycle precondition to directly. Terraform's variable `validation`
 # blocks cannot cross-reference another variable until Terraform 1.9, so this
-# built-in, provider-less resource exists solely to carry the precondition that
-# enforces `create_kms_key` / `kms_key_arn` mutual exclusivity.
+# built-in, provider-less resource exists solely to carry the preconditions
+# below.
 resource "terraform_data" "validate_kms_inputs" {
   lifecycle {
     precondition {
       condition     = !(var.create_kms_key && var.kms_key_arn != null)
       error_message = "create_kms_key and kms_key_arn are mutually exclusive. Set create_kms_key to false when supplying an existing kms_key_arn."
+    }
+
+    # KMS keys are regional. A template that relies on this module's shared
+    # key (rather than supplying its own ebs_encryption_key_arn) must resolve
+    # to the same Region that key lives in, or AWS will reject the template
+    # with a cross-region KMS key error.
+    precondition {
+      condition = alltrue([
+        for key, template in var.templates :
+        template.ebs_encryption_key_arn != null || !local.kms_key_enabled || coalesce(template.region, var.region, data.aws_region.current.region) == local.kms_key_region
+      ])
+      error_message = "One or more entries in var.templates resolve to a region different from the shared KMS key's region (${coalesce(local.kms_key_region, "unknown")}). KMS keys are regional: give that template its own ebs_encryption_key_arn in the same region as staging_area_subnet_id, or set create_kms_key = false / ebs_encryption = \"DEFAULT\" for it."
     }
   }
 }

@@ -80,6 +80,25 @@ module "drs" {
 
 ### Fresh Account, Let Terraform Initialize DRS's IAM Roles
 
+DRS rejects replication configuration templates until the account has been initialized (see
+[Prerequisites](#prerequisites)), so this is a two-step apply rather than one:
+
+**Step 1 -- create only the IAM roles, instance profiles, and service-linked role:**
+
+```
+module "drs" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
+
+  create_service_roles       = true
+  create_service_linked_role = true
+}
+```
+
+Apply this first, then run `aws drs initialize-service` (or visit the DRS console) once for this account and
+region.
+
+**Step 2 -- add templates once the account is initialized:**
+
 ```
 module "drs" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/drs"
@@ -95,9 +114,6 @@ module "drs" {
   }
 }
 ```
-
-After applying, you must still run `aws drs initialize-service` once for this account and region -- see
-[Prerequisites](#prerequisites).
 
 ### Multiple Templates from YAML, Existing KMS Key
 
@@ -166,6 +182,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
@@ -181,6 +198,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Type |
 | ---- | ---- |
 | [terraform_data.validate_kms_inputs](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 

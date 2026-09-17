@@ -58,6 +58,26 @@ run "baseline_creates_all_six_service_roles_and_the_service_linked_role" {
     condition     = output.service_linked_role_arn != null
     error_message = "service_linked_role_arn output should expose the mocked service-linked role ARN."
   }
+
+  assert {
+    condition     = output.service_linked_role_name == "AWSServiceRoleForElasticDisasterRecovery"
+    error_message = "service_linked_role_name output should expose the service-linked role's name."
+  }
+
+  assert {
+    condition     = length(output.role_arns) == 6
+    error_message = "role_arns output should expose an ARN for all six service roles."
+  }
+
+  assert {
+    condition     = output.role_names["AWSElasticDisasterRecoveryAgentRole"] != null
+    error_message = "role_names output should expose the agent role's name."
+  }
+
+  assert {
+    condition     = length(output.instance_profile_names) == 4
+    error_message = "instance_profile_names output should expose a name for each of the four EC2-assumed roles."
+  }
 }
 
 run "agent_and_failback_roles_trust_drs_with_source_identity_condition" {

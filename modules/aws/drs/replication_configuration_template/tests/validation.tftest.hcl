@@ -219,6 +219,145 @@ run "rejects_pit_policy_rule_3_units_mutation" {
   expect_failures = [var.templates]
 }
 
+run "rejects_invalid_ebs_encryption" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "BOGUS"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_empty_pit_policy" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy                              = []
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_invalid_pit_policy_units" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "SECOND"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 3
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_pit_policy_missing_rule_3" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 24
+            rule_id            = 2
+            units              = "HOUR"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
+run "rejects_pit_policy_duplicate_rule_id" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        pit_policy = [
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 10
+            retention_duration = 60
+            rule_id            = 1
+            units              = "MINUTE"
+          },
+          {
+            enabled            = true
+            interval           = 1
+            retention_duration = 3
+            rule_id            = 3
+            units              = "DAY"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.templates]
+}
+
 # Do NOT delete, skip, or loosen an `expect_failures` case (or any assertion above) just to
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # `validation {}` block in variables.tf has a bug or the test's inputs are wrong -- find and

@@ -34,19 +34,21 @@ locals {
         : (template.ebs_encryption_key_arn != null ? "CUSTOM" : "DEFAULT")
       )
 
-      # staging_area_tags is required by the provider. Default it to the repo's
-      # standard Name + tags merge so every EC2 replication server, EBS volume
-      # and EBS snapshot created in the staging area is attributable.
-      staging_area_tags = (
-        template.staging_area_tags != null
-        ? template.staging_area_tags
-        : merge(tomap({ Name = coalesce(template.name, key) }), var.tags)
+      # staging_area_tags is required by the provider. Always merge in the
+      # module's Name + tags convention (as used throughout this repo, e.g.
+      # modules/aws/ipam/main.tf and modules/aws/workspaces/workspace/main.tf)
+      # so var.tags reaches every composed resource even when the entry sets
+      # its own tags; entry-specific keys still take precedence on conflict.
+      staging_area_tags = merge(
+        tomap({ Name = coalesce(template.name, key) }),
+        var.tags,
+        coalesce(template.staging_area_tags, {})
       )
 
-      tags = (
-        template.tags != null
-        ? template.tags
-        : merge(tomap({ Name = coalesce(template.name, key) }), var.tags)
+      tags = merge(
+        tomap({ Name = coalesce(template.name, key) }),
+        var.tags,
+        coalesce(template.tags, {})
       )
     })
   }

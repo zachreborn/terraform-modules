@@ -206,6 +206,144 @@ run "rule_3_retention_duration_override_is_honored" {
   }
 }
 
+run "custom_tags_and_staging_area_tags_are_merged_not_replaced" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        tags = {
+          team = "platform"
+        }
+        staging_area_tags = {
+          team = "platform"
+        }
+      }
+    }
+    tags = {
+      terraform = "true"
+      env       = "prod"
+    }
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].tags["team"] == "platform"
+    error_message = "An entry's own tags should be present in the merged tags map."
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].tags["env"] == "prod"
+    error_message = "The module-level var.tags should still be merged in even when the entry sets its own tags."
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].tags["Name"] == "app1"
+    error_message = "The generated Name tag should still be merged in even when the entry sets its own tags."
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].staging_area_tags["env"] == "prod"
+    error_message = "The module-level var.tags should still be merged into staging_area_tags even when the entry sets its own staging_area_tags."
+  }
+}
+
+run "name_override_changes_the_generated_name_tag" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        name                                    = "custom-name"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].tags["Name"] == "custom-name"
+    error_message = "Setting name should override the map key used for the generated Name tag."
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].staging_area_tags["Name"] == "custom-name"
+    error_message = "Setting name should override the map key used for the generated staging_area_tags Name tag too."
+  }
+}
+
+run "timeouts_override_is_honored" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+        timeouts = {
+          create = "30m"
+          update = "30m"
+          delete = "30m"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].timeouts.create == "30m"
+    error_message = "A supplied timeouts block should be passed through to the resource."
+  }
+}
+
+run "ebs_encryption_none_is_accepted" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption                          = "NONE"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = aws_drs_replication_configuration_template.this["app1"].ebs_encryption == "NONE"
+    error_message = "NONE should be accepted as a valid ebs_encryption value, per the AWS DRS API (the Terraform Registry page omits it, but the provider schema and AWS API both accept it)."
+  }
+}
+
+run "remaining_outputs_are_asserted" {
+  command = plan
+
+  variables {
+    templates = {
+      app1 = {
+        ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/abcd1234-1234-1234-1234-123456789012"
+        replication_servers_security_groups_ids = ["sg-abcd1234"]
+        staging_area_subnet_id                  = "subnet-abcd1234"
+      }
+    }
+  }
+
+  assert {
+    condition     = output.ebs_encryption_key_arns["app1"] == "arn:aws:kms:us-east-1:123456789012:key/abcd1234-1234-1234-1234-123456789012"
+    error_message = "ebs_encryption_key_arns output should expose each template's resolved KMS key ARN."
+  }
+
+  assert {
+    condition     = output.staging_area_subnet_ids["app1"] == "subnet-abcd1234"
+    error_message = "staging_area_subnet_ids output should expose each template's staging area subnet ID."
+  }
+
+  assert {
+    condition     = output.tags_all["app1"] != null
+    error_message = "tags_all output should expose each template's full resolved tag set."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.

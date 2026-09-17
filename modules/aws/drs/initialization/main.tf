@@ -2,9 +2,10 @@
 # Provider Configuration
 ###########################
 terraform {
-  # >= 1.3.0: var.additional_policy_arns and the role map handling below rely on
-  # optional() object attributes, introduced in Terraform 1.3 / OpenTofu 1.6.
-  required_version = ">= 1.3.0"
+  # This module uses no optional() object attributes or other post-1.0 language
+  # features (additional_policy_arns is a plain map(list(string))), so the repo
+  # baseline floor applies.
+  required_version = ">= 1.0.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

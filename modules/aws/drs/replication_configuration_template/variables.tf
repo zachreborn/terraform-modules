@@ -68,7 +68,7 @@ variable "templates" {
       * `create_public_ip` - (Optional) Whether to create a public IP for the recovery instance by default. Defaults to false.
       * `data_plane_routing` - (Optional) Data plane routing mechanism used for replication. Valid values are PUBLIC_IP and PRIVATE_IP. Defaults to PRIVATE_IP.
       * `default_large_staging_disk_type` - (Optional) Staging disk EBS volume type used during replication. Valid values are GP2, GP3, ST1, and AUTO. Defaults to GP3.
-      * `ebs_encryption` - (Optional) Type of EBS encryption used during replication. Valid values are DEFAULT and CUSTOM. When omitted this resolves to CUSTOM if `ebs_encryption_key_arn` is set and DEFAULT otherwise.
+      * `ebs_encryption` - (Optional) Type of EBS encryption used during replication. Valid values are DEFAULT, CUSTOM, and NONE (per the DRS API; the Terraform Registry page for this resource omits NONE, but the provider schema and AWS API both accept it). When omitted this resolves to CUSTOM if `ebs_encryption_key_arn` is set and DEFAULT otherwise.
       * `ebs_encryption_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the staging area during replication. Required when `ebs_encryption` is CUSTOM.
       * `name` - (Optional) Overrides the map key when building the default Name tag.
       * `pit_policy` - (Optional) Point in time (PIT) snapshot policy rules. Defaults to the three rules AWS mandates. Only the `retention_duration` of rule 3 may be changed.
@@ -76,8 +76,8 @@ variable "templates" {
       * `replication_server_instance_type` - (Optional) Instance type used for the replication server. Defaults to t3.small.
       * `replication_servers_security_groups_ids` - (Optional) Security group IDs used by the replication server. Required to be non-empty unless `associate_default_security_group` is true.
       * `staging_area_subnet_id` - (Required) Subnet used by the replication staging area.
-      * `staging_area_tags` - (Optional) Tags applied to every resource created in the replication staging area. Defaults to the module's Name plus `tags` merge.
-      * `tags` - (Optional) Tags applied to the replication configuration template itself. Defaults to the module's Name plus `tags` merge.
+      * `staging_area_tags` - (Optional) Tags applied to every resource created in the replication staging area, always merged with a Name tag and the module's `tags`; entry-specific keys take precedence on conflict.
+      * `tags` - (Optional) Tags applied to the replication configuration template itself, always merged with a Name tag and the module's `tags`; entry-specific keys take precedence on conflict.
       * `timeouts` - (Optional) Overrides for the resource create, update, and delete timeouts. Each defaults to 20m in the provider.
       * `use_dedicated_replication_server` - (Optional) Whether to use a dedicated replication server in the staging area. Defaults to false.
   EOT
@@ -102,9 +102,9 @@ variable "templates" {
   validation {
     condition = alltrue([
       for key, template in var.templates :
-      template.ebs_encryption == null || contains(["DEFAULT", "CUSTOM"], coalesce(template.ebs_encryption, "DEFAULT"))
+      template.ebs_encryption == null || contains(["DEFAULT", "CUSTOM", "NONE"], coalesce(template.ebs_encryption, "DEFAULT"))
     ])
-    error_message = "Each template's ebs_encryption must be either DEFAULT or CUSTOM when set."
+    error_message = "Each template's ebs_encryption must be one of DEFAULT, CUSTOM, or NONE when set."
   }
 
   validation {
@@ -131,12 +131,23 @@ variable "templates" {
     error_message = "Each template's bandwidth_throttling must be zero (unthrottled) or greater."
   }
 
+  # A nonempty-list check alone would let a single rule, duplicate rule_ids,
+  # omitted rule_id values, or an extra/foreign rule slip past the rule 1/2/3
+  # exact-value validations below, since those only constrain a rule IF its
+  # rule_id happens to equal 1, 2, or 3. AWS's fixed PIT policy requires
+  # exactly rule_ids 1, 2, and 3, each exactly once; enforce that set directly.
+  #
+  # sort() returns list(string), which compares unequal to a tuple literal via
+  # == even when their elements match (a real Terraform/OpenTofu cty quirk);
+  # join() side-steps this by comparing plain strings. tostring() is injective
+  # over integers, so a match against "1,2,3" is only possible when the
+  # underlying rule_id multiset is exactly {1, 2, 3}.
   validation {
     condition = alltrue([
       for key, template in var.templates :
-      length(template.pit_policy) > 0
+      join(",", sort([for rule in template.pit_policy : tostring(coalesce(rule.rule_id, -1))])) == "1,2,3"
     ])
-    error_message = "Each template must declare at least one pit_policy rule."
+    error_message = "Each template's pit_policy must declare exactly three rules with rule_id 1, 2, and 3 (each exactly once), per AWS's fixed PIT policy requirement."
   }
 
   validation {
@@ -186,7 +197,7 @@ variable "templates" {
 
 variable "tags" {
   type        = map(string)
-  description = "(Optional) A map of tags merged with a Name tag and applied to each template and its staging area resources when the entry does not set its own tags."
+  description = "(Optional) A map of tags merged with a Name tag and applied to each template and its staging area resources. Always merged in, even when an entry sets its own tags / staging_area_tags; entry-specific keys take precedence on conflict."
   default = {
     terraform = "true"
   }
