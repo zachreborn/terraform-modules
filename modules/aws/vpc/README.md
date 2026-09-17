@@ -287,10 +287,12 @@ module "vpc" {
     azs      = ["us-east-1a", "us-east-1b", "us-east-1c"]
 
     vpc_endpoints = {
-        # subnet_ids is omitted here: Interface/GatewayLoadBalancer/Resource/
-        # ServiceNetwork endpoints default to this module's own managed
-        # private subnets when subnet_ids isn't set. Set subnet_ids
-        # explicitly to place the endpoint elsewhere instead.
+        # subnet_ids is omitted here: Interface/Resource/ServiceNetwork
+        # endpoints default to one of this module's own managed private
+        # subnets per Availability Zone when subnet_ids isn't set
+        # (GatewayLoadBalancer endpoints, which accept only one subnet,
+        # default to a single one). Set subnet_ids explicitly to place the
+        # endpoint elsewhere instead.
         secretsmanager = {
             service_name        = "com.amazonaws.us-east-1.secretsmanager"
             vpc_endpoint_type   = "Interface"

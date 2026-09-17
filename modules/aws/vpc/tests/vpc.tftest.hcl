@@ -1097,6 +1097,94 @@ run "custom_vpc_endpoints_defaults_subnet_ids_to_private_subnets_when_explicitly
   }
 }
 
+# Regression test: a Gateway endpoint doesn't use subnet_ids at all (AWS
+# uses route_table_ids instead), but the previous fallback logic only
+# checked whether subnet_ids was supplied, not the endpoint type, so an
+# explicit non-empty subnet_ids on a Gateway endpoint was forwarded
+# straight to CreateVpcEndpoint and failed. It must resolve to null/empty
+# regardless of what the caller supplies.
+run "custom_vpc_endpoints_gateway_ignores_explicit_subnet_ids" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      dynamodb = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+        subnet_ids        = ["subnet-0123456789abcdef0"]
+      }
+    }
+  }
+
+  # subnet_ids is a set-typed, Optional+Computed attribute; passing an
+  # explicit null resolves to an empty set in state/plan, not a literal null.
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["dynamodb"].subnet_ids) == 0
+    error_message = "A Gateway endpoint should never have subnet_ids set, even when the caller explicitly supplies one."
+  }
+}
+
+# Regression test: GatewayLoadBalancer endpoints accept exactly one subnet,
+# but omitting subnet_ids previously fell back to every managed private
+# subnet (three by default), which AWS rejects for this endpoint type.
+run "custom_vpc_endpoints_gatewayloadbalancer_defaults_to_one_subnet" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      gwlbe = {
+        service_name      = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+        vpc_endpoint_type = "GatewayLoadBalancer"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom["gwlbe"].subnet_ids) == 1
+    error_message = "A GatewayLoadBalancer endpoint with subnet_ids omitted should default to exactly one managed private subnet."
+  }
+}
+
+# Regression test: Interface (and Resource/ServiceNetwork) endpoints reject
+# more than one subnet per Availability Zone. This module explicitly
+# supports more private subnets than AZs (subnet_indices, an
+# arbitrary-length private_subnets_list), so the fallback must select one
+# subnet per distinct AZ, not every managed private subnet -- otherwise two
+# subnets from the same AZ (e.g. index 0 and 3 with 4 subnets across 3 AZs)
+# would both be included, which AWS rejects with DuplicateSubnetsInSameZone.
+run "custom_vpc_endpoints_subnet_fallback_uses_one_subnet_per_az" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    vpc_endpoints = {
+      secretsmanager = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+      }
+    }
+  }
+
+  # mock_provider does not guarantee unique ids across instances of the same
+  # count-based resource, so comparing against an independently-recomputed
+  # toset() of the same one-subnet-per-AZ selection (rather than a raw
+  # length) verifies the module's fallback logic correctly regardless of
+  # any accidental id collisions in the mocked plan.
+  assert {
+    condition = aws_vpc_endpoint.custom["secretsmanager"].subnet_ids == toset([
+      for az, ids in { for s in aws_subnet.private_subnets : s.availability_zone => s.id... } : ids[0]
+    ])
+    error_message = "With 4 private subnets across 3 AZs, the fallback should select one subnet per distinct AZ, not every managed private subnet."
+  }
+}
+
 run "additional_routes_fans_out_across_selected_tiers" {
   command = plan
 

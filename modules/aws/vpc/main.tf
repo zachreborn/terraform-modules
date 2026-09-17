@@ -343,6 +343,17 @@ resource "aws_vpc_endpoint_route_table_association" "public_s3" {
   vpc_endpoint_id = aws_vpc_endpoint.s3[0].id
 }
 
+# Interface/Resource/ServiceNetwork endpoints reject more than one subnet
+# per Availability Zone ("DuplicateSubnetsInSameZone"), but this module
+# explicitly supports more private subnets than AZs (subnet_indices, an
+# arbitrary-length private_subnets_list), so falling back to *every* managed
+# private subnet can put two subnets from the same AZ in one endpoint's
+# subnet_ids. Group by AZ and take one subnet id per distinct AZ instead.
+locals {
+  private_subnet_ids_by_az      = { for s in aws_subnet.private_subnets : s.availability_zone => s.id... }
+  private_subnet_ids_one_per_az = [for az, ids in local.private_subnet_ids_by_az : ids[0]]
+}
+
 # Generic, caller-defined VPC endpoints. Use this (via var.vpc_endpoints) to
 # attach any endpoint not covered by the enable_ssm_vpc_endpoints /
 # enable_ecr_vpc_endpoints / enable_s3_endpoint shortcuts above, without
@@ -360,24 +371,37 @@ resource "aws_vpc_endpoint" "custom" {
   policy                     = each.value.policy
   private_dns_enabled        = each.value.private_dns_enabled
   ip_address_type            = each.value.ip_address_type
-  security_group_ids         = length(each.value.security_group_ids) > 0 ? each.value.security_group_ids : null
-  # Interface/GatewayLoadBalancer/Resource/ServiceNetwork endpoints require
-  # at least one subnet and fail at apply time without one; since this
-  # module's own subnets are created in this same module call, callers can't
-  # reference them as an input (circular reference), so default to this
-  # module's managed private subnets when the caller omits subnet_ids OR
-  # passes an explicit empty list -- either way there's no subnet supplied.
-  # Gateway endpoints don't use subnet_ids at all, so leave it null for them.
-  subnet_ids = (
-    length(coalesce(each.value.subnet_ids, [])) > 0 ? each.value.subnet_ids
-    : (each.value.vpc_endpoint_type == "Gateway" ? null : aws_subnet.private_subnets[*].id)
+  # security_group_ids is only applicable to Interface endpoints (AWS
+  # provider docs); force it null for every other type instead of
+  # forwarding a caller-supplied value that would fail at apply time.
+  security_group_ids = (
+    each.value.vpc_endpoint_type == "Interface" && length(each.value.security_group_ids) > 0
+    ? each.value.security_group_ids
+    : null
   )
-  # Gateway endpoints default to every public/private route table this
-  # module manages unless the caller supplies explicit route_table_ids.
+  # Gateway endpoints don't use subnet_ids at all -- always null for them,
+  # even if the caller supplies one, since AWS rejects it for that type.
+  # GatewayLoadBalancer endpoints accept exactly one subnet (validated on
+  # var.vpc_endpoints), so default to one when omitted. Interface/Resource/
+  # ServiceNetwork endpoints require at least one subnet and fail at apply
+  # time without one; since this module's own subnets are created in this
+  # same module call, callers can't reference them as an input (circular
+  # reference), so default to one managed private subnet per distinct AZ
+  # when the caller omits subnet_ids OR passes an explicit empty list --
+  # either way there's no subnet supplied.
+  subnet_ids = (
+    each.value.vpc_endpoint_type == "Gateway" ? null
+    : length(coalesce(each.value.subnet_ids, [])) > 0 ? each.value.subnet_ids
+    : (each.value.vpc_endpoint_type == "GatewayLoadBalancer" ? [local.private_subnet_ids_one_per_az[0]] : local.private_subnet_ids_one_per_az)
+  )
+  # route_table_ids is only applicable to Gateway endpoints (AWS provider
+  # docs); force it null for every other type instead of forwarding a
+  # caller-supplied value that would fail at apply time. Gateway endpoints
+  # default to every public/private route table this module manages unless
+  # the caller supplies explicit route_table_ids.
   route_table_ids = (
-    each.value.vpc_endpoint_type == "Gateway" && each.value.route_table_ids == null
-    ? concat(aws_route_table.public_route_table[*].id, aws_route_table.private_route_table[*].id)
-    : each.value.route_table_ids
+    each.value.vpc_endpoint_type != "Gateway" ? null
+    : (each.value.route_table_ids != null ? each.value.route_table_ids : concat(aws_route_table.public_route_table[*].id, aws_route_table.private_route_table[*].id))
   )
   tags = merge(tomap({ Name = each.key }), var.tags, each.value.tags)
 

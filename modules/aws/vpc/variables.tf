@@ -195,6 +195,37 @@ variable "vpc_endpoints" {
     ])
     error_message = "Each vpc_endpoints entry's subnet_configuration[].subnet_id must also appear in that entry's subnet_ids list."
   }
+
+  # security_group_ids is only applicable to Interface endpoints (AWS
+  # provider docs); reject it for every other type instead of silently
+  # dropping a caller-supplied value that would fail at apply time.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      v.vpc_endpoint_type == "Interface" || length(v.security_group_ids) == 0
+    ])
+    error_message = "Each vpc_endpoints entry's security_group_ids is only used for Interface endpoints; leave it unset for Gateway, GatewayLoadBalancer, Resource, and ServiceNetwork endpoints."
+  }
+
+  # route_table_ids is only applicable to Gateway endpoints (AWS provider
+  # docs); reject it for every other type instead of silently dropping a
+  # caller-supplied value that would fail at apply time.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      v.vpc_endpoint_type == "Gateway" || v.route_table_ids == null
+    ])
+    error_message = "Each vpc_endpoints entry's route_table_ids is only used for Gateway endpoints; leave it unset for Interface, GatewayLoadBalancer, Resource, and ServiceNetwork endpoints."
+  }
+
+  # GatewayLoadBalancer endpoints accept exactly one subnet.
+  validation {
+    condition = alltrue([
+      for k, v in var.vpc_endpoints :
+      v.vpc_endpoint_type != "GatewayLoadBalancer" || v.subnet_ids == null || length(v.subnet_ids) == 1
+    ])
+    error_message = "Each vpc_endpoints entry of type GatewayLoadBalancer must supply exactly one subnet_ids entry, or omit subnet_ids to default to one."
+  }
 }
 ###########################
 # Subnets
