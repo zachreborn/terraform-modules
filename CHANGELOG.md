@@ -1,5 +1,16 @@
 # Changelog
 
+## [16.0.0](https://github.com/zachreborn/terraform-modules/compare/v15.3.0...v16.0.0) (2026-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433))
+
+### Features
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433)) ([d8e9280](https://github.com/zachreborn/terraform-modules/commit/d8e9280fd0826926482733d24a5e9f678ca0c277))
+
 ## [15.3.0](https://github.com/zachreborn/terraform-modules/compare/v15.2.0...v15.3.0) (2026-09-17)
 
 
