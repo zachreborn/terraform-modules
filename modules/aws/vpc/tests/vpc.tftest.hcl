@@ -136,6 +136,31 @@ run "baseline_plans_with_defaults" {
   }
 
   assert {
+    condition     = output.public_subnet_arns == aws_subnet.public_subnets[*].arn
+    error_message = "public_subnet_arns output should equal the public subnet resources' arns."
+  }
+
+  assert {
+    condition     = output.db_subnet_arns == aws_subnet.db_subnets[*].arn
+    error_message = "db_subnet_arns output should equal the db subnet resources' arns."
+  }
+
+  assert {
+    condition     = output.dmz_subnet_arns == aws_subnet.dmz_subnets[*].arn
+    error_message = "dmz_subnet_arns output should equal the dmz subnet resources' arns."
+  }
+
+  assert {
+    condition     = output.mgmt_subnet_arns == aws_subnet.mgmt_subnets[*].arn
+    error_message = "mgmt_subnet_arns output should equal the mgmt subnet resources' arns."
+  }
+
+  assert {
+    condition     = output.workspaces_subnet_arns == aws_subnet.workspaces_subnets[*].arn
+    error_message = "workspaces_subnet_arns output should equal the workspaces subnet resources' arns."
+  }
+
+  assert {
     condition     = output.availability_zone == aws_subnet.private_subnets[*].availability_zone
     error_message = "availability_zone output should equal the private subnet resources' availability_zones."
   }
@@ -440,6 +465,11 @@ run "empty_public_subnets_list_disables_igw_even_when_enabled" {
   assert {
     condition     = length(output.public_subnet_ids) == 0
     error_message = "public_subnet_ids output should be empty when public_subnets_list is empty."
+  }
+
+  assert {
+    condition     = length(output.public_subnet_arns) == 0
+    error_message = "public_subnet_arns output should be empty when public_subnets_list is empty."
   }
 }
 
