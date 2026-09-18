@@ -25,9 +25,9 @@ variable "principal" {
   default     = null
 }
 
-variable "resource_arn" {
-  description = "The ARN of the resource to associate with the resource share."
-  type        = string
+variable "resource_arns" {
+  description = "List of resource ARNs to associate with the resource share."
+  type        = list(string)
 }
 
 ###########################
