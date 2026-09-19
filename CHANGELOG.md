@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.1.0](https://github.com/zachreborn/terraform-modules/compare/v16.0.0...v16.1.0) (2026-09-19)
+
+
+### Features
+
+* **sagemaker,glue:** add Glue catalog database and SageMaker domain/user profile modules ([#357](https://github.com/zachreborn/terraform-modules/issues/357)) ([e50f2a8](https://github.com/zachreborn/terraform-modules/commit/e50f2a8d3411417a0ed0a3183d9cc85ccd8f8aec))
+
 ## [16.0.0](https://github.com/zachreborn/terraform-modules/compare/v15.3.0...v16.0.0) (2026-09-17)
 
 
