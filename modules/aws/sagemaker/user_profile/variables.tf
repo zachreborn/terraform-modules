@@ -214,6 +214,5 @@ variable "user_settings" {
       }))
     }))
   })
-  description = "(Optional) The user settings applied to the user profile. Must include execution_role when set; all app-settings sub-blocks are optional and map directly to the aws_sagemaker_user_profile user_settings block."
-  default     = null
+  description = "(Required) The user settings applied to the user profile. Must include execution_role; all app-settings sub-blocks are optional and map directly to the aws_sagemaker_user_profile user_settings block."
 }

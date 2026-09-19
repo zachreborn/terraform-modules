@@ -140,6 +140,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 - This module manages a single `aws_sagemaker_domain`. A SageMaker domain is one-per-account/region (similar to a VPC), so no map/`for_each` input is provided.
 - **Secure-by-default:** `app_network_access_type` defaults to `VpcOnly` (the provider default is `PublicInternetOnly`). `VpcOnly` requires the caller to supply routable subnets and the necessary VPC endpoints/NAT for SageMaker traffic. Override to `PublicInternetOnly` if that posture is required.
+- `app_security_group_management` is only meaningful when `app_network_access_type` is `VpcOnly`; a `lifecycle.precondition` on the resource rejects setting it alongside `PublicInternetOnly`.
 - Encryption of the domain EFS volume is caller-controlled via `kms_key_id`. When null, an AWS managed key is used.
 - `default_user_settings` is required and must include `execution_role`. All nested app-settings blocks are optional and mirror the `aws >= 6.0.0` provider schema exactly.
 - No cross-cutting resources (IAM roles, KMS keys, security groups, VPC/subnets, EFS) are created inline; they are passed in by ARN/ID.
@@ -151,14 +152,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -168,13 +169,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_sagemaker_domain.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_domain) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_app_network_access_type"></a> [app\_network\_access\_type](#input\_app\_network\_access\_type) | (Optional) Specifies the VPC used for non-EFS traffic. Valid values are PublicInternetOnly and VpcOnly. Defaults to VpcOnly for a secure-by-default posture (the provider default is PublicInternetOnly). | `string` | `"VpcOnly"` | no |
 | <a name="input_app_security_group_management"></a> [app\_security\_group\_management](#input\_app\_security\_group\_management) | (Optional) The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Valid values are Service and Customer. | `string` | `null` | no |
 | <a name="input_auth_mode"></a> [auth\_mode](#input\_auth\_mode) | (Required) The mode of authentication that members use to access the domain. Valid values are IAM and SSO. | `string` | n/a | yes |
@@ -192,7 +193,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the SageMaker domain. |
 | <a name="output_home_efs_file_system_id"></a> [home\_efs\_file\_system\_id](#output\_home\_efs\_file\_system\_id) | The ID of the Amazon Elastic File System (EFS) managed by this domain. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the SageMaker domain. |

@@ -146,14 +146,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -163,13 +163,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_glue_catalog_database.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_catalog_database) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_catalog_id"></a> [catalog\_id](#input\_catalog\_id) | (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID. | `string` | `null` | no |
 | <a name="input_create_table_default_permission"></a> [create\_table\_default\_permission](#input\_create\_table\_default\_permission) | (Optional) Creates a set of default permissions on the table for principals. Provide the permissions list (for example, ["ALL"]) and the Lake Formation principal identifier. | <pre>object({<br/>    permissions = optional(list(string))<br/>    principal = optional(object({<br/>      data_lake_principal_identifier = optional(string)<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Description of the database. | `string` | `null` | no |
@@ -183,7 +183,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | ARN of the Glue catalog database. |
 | <a name="output_catalog_id"></a> [catalog\_id](#output\_catalog\_id) | ID of the Glue Catalog the database lives in. |
 | <a name="output_id"></a> [id](#output\_id) | Catalog ID and name of the database in the format catalog\_id:name. |

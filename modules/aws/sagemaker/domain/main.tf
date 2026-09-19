@@ -25,6 +25,13 @@ resource "aws_sagemaker_domain" "this" {
   tag_propagation               = var.tag_propagation
   tags                          = merge(tomap({ Name = var.domain_name }), var.tags)
 
+  lifecycle {
+    precondition {
+      condition     = var.app_security_group_management == null || var.app_network_access_type == "VpcOnly"
+      error_message = "app_security_group_management is only meaningful when app_network_access_type is VpcOnly; leave it null for PublicInternetOnly."
+    }
+  }
+
   default_user_settings {
     auto_mount_home_efs = var.default_user_settings.auto_mount_home_efs
     default_landing_uri = var.default_user_settings.default_landing_uri

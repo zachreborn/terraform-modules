@@ -21,8 +21,15 @@ resource "aws_sagemaker_user_profile" "this" {
   single_sign_on_user_value      = var.single_sign_on_user_value
   tags                           = merge(tomap({ Name = var.user_profile_name }), var.tags)
 
+  lifecycle {
+    precondition {
+      condition     = (var.single_sign_on_user_identifier == null) == (var.single_sign_on_user_value == null)
+      error_message = "single_sign_on_user_identifier and single_sign_on_user_value must either both be set (for SSO domains) or both be null (for IAM domains)."
+    }
+  }
+
   dynamic "user_settings" {
-    for_each = var.user_settings != null ? [var.user_settings] : []
+    for_each = [var.user_settings]
     content {
       auto_mount_home_efs = user_settings.value.auto_mount_home_efs
       default_landing_uri = user_settings.value.default_landing_uri
