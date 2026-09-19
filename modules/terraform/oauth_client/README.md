@@ -87,13 +87,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
 
 ## Modules
@@ -103,13 +103,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [tfe_oauth_client.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/oauth_client) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_api_url"></a> [api\_url](#input\_api\_url) | (Required) The base URL of your VCS provider's API (e.g. https://api.github.com or https://ghe.example.com/api/v3). | `string` | n/a | yes |
 | <a name="input_http_url"></a> [http\_url](#input\_http\_url) | (Required) The homepage of your VCS provider (e.g. https://github.com or https://ghe.example.com). | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Display name for the OAuth Client. Defaults to the service\_provider if not supplied. | `string` | n/a | yes |
@@ -119,7 +119,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_oauth_token_id"></a> [oauth\_token\_id](#output\_oauth\_token\_id) | n/a |
 <!-- END_TF_DOCS -->

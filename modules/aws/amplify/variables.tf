@@ -49,12 +49,12 @@ variable "build_spec" {
 }
 
 variable "cache_config_type" {
-  description = "Cache config type for the Amplify App. Valid values are AMPLIFY_MANAGED, AMPLIFY_MANAGED_NO_COOKIES, "
+  description = "Cache config type for the Amplify App. Valid values are AMPLIFY_MANAGED or AMPLIFY_MANAGED_NO_COOKIES. Set to null to omit the cache_config block entirely (disables cache configuration)."
   type        = string
   default     = "AMPLIFY_MANAGED"
   validation {
-    condition     = var.cache_config_type == "AMPLIFY_MANAGED" || var.cache_config_type == "AMPLIFY_MANAGED_NO_COOKIES"
-    error_message = "Cache config type must be either AMPLIFY_MANAGED or AMPLIFY_MANAGED_NO_COOKIES."
+    condition     = var.cache_config_type == null || var.cache_config_type == "AMPLIFY_MANAGED" || var.cache_config_type == "AMPLIFY_MANAGED_NO_COOKIES"
+    error_message = "Cache config type must be null (to disable cache_config) or one of: AMPLIFY_MANAGED, AMPLIFY_MANAGED_NO_COOKIES."
   }
 }
 
@@ -162,7 +162,7 @@ variable "repository" {
 ###########################
 
 variable "branches" {
-  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings."
+  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
   type = map(object({
     basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
@@ -185,6 +185,8 @@ variable "branches" {
     ttl                           = optional(number)                    # The TTL for the branch.
     wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.
   }))
+  default  = {}
+  nullable = false
   # Example:
   # branches = {
   #   main = {

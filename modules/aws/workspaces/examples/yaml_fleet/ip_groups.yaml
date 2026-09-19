@@ -1,0 +1,9 @@
+# Passed almost verbatim into the parent module's `ip_groups` variable (map(object({...}))). Referenced by
+# directories.yaml entries via `ip_group_keys`.
+corporate_offices:
+  description: "Corporate office egress ranges"
+  rules:
+    - source: "192.0.2.0/24"
+      description: "HQ"
+    - source: "198.51.100.0/24"
+      description: "Branch office"

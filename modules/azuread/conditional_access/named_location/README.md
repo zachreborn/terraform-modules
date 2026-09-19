@@ -112,14 +112,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 2.36.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | >= 2.36.0 |
 
 ## Modules
@@ -129,13 +129,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azuread_named_location.this](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/named_location) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_country"></a> [country](#input\_country) | (Optional) A list of countries and regions to include in the named location. | <pre>list(object({<br/>    countries_and_regions                 = list(string)<br/>    include_unknown_countries_and_regions = bool<br/>  }))</pre> | `null` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | (Required) The friendly name for this named location. | `string` | n/a | yes |
 | <a name="input_ip"></a> [ip](#input\_ip) | (Optional) A list of IP ranges to include in the named location. | <pre>list(object({<br/>    ip_ranges = list(string)<br/>    trusted   = bool<br/>  }))</pre> | `null` | no |
@@ -143,7 +143,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the named location. |
 <!-- END_TF_DOCS -->
 

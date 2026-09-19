@@ -157,14 +157,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
 
 ## Modules
@@ -174,13 +174,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_organizations_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_content"></a> [content](#input\_content) | (Required) The content of the AWS Organization's policy in JSON format. | `string` | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) A description of the AWS Organization's policy. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the AWS Organization's policy. | `string` | n/a | yes |
@@ -191,7 +191,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the AWS Organization's delegated resource policy. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the AWS Organization's delegated resource policy. |
 <!-- END_TF_DOCS -->

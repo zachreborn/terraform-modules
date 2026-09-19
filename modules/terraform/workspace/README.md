@@ -130,14 +130,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
 
 ## Modules
@@ -147,7 +147,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [tfe_team_access.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/team_access) | resource |
 | [tfe_variable.tfc_aws_provider_auth](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
 | [tfe_variable.tfc_aws_run_role_arn](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/variable) | resource |
@@ -157,7 +157,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_agent_pool_id"></a> [agent\_pool\_id](#input\_agent\_pool\_id) | (Optional) The ID of an agent pool to assign to the workspace. Requires execution\_mode to be set to agent. This value must not be provided if execution\_mode is set to any other value or if operations is provided. | `string` | `null` | no |
 | <a name="input_allow_destroy_plan"></a> [allow\_destroy\_plan](#input\_allow\_destroy\_plan) | (Optional) Whether destroy plans can be queued on the workspace. | `bool` | `false` | no |
 | <a name="input_assessments_enabled"></a> [assessments\_enabled](#input\_assessments\_enabled) | (Optional) Whether to regularly run health assessments such as drift detection on the workspace. Defaults to true. | `bool` | `true` | no |
@@ -188,7 +188,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_execution_mode"></a> [execution\_mode](#output\_execution\_mode) | The effective execution mode of the workspace as managed by the tfe\_workspace\_settings resource. |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_workspace_settings_overwrites"></a> [workspace\_settings\_overwrites](#output\_workspace\_settings\_overwrites) | Read-only attribute indicating whether execution\_mode and agent\_pool are set explicitly on the workspace (true) or inherited from organization/project defaults (false). |

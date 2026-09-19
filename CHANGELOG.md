@@ -1,5 +1,296 @@
 # Changelog
 
+## [16.0.0](https://github.com/zachreborn/terraform-modules/compare/v15.3.0...v16.0.0) (2026-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433))
+
+### Features
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433)) ([d8e9280](https://github.com/zachreborn/terraform-modules/commit/d8e9280fd0826926482733d24a5e9f678ca0c277))
+
+## [15.3.0](https://github.com/zachreborn/terraform-modules/compare/v15.2.0...v15.3.0) (2026-09-17)
+
+
+### Features
+
+* **drs:** add AWS Elastic Disaster Recovery module ([#493](https://github.com/zachreborn/terraform-modules/issues/493)) ([fc8716a](https://github.com/zachreborn/terraform-modules/commit/fc8716a90244370d25363514a614743f6e1c92bc))
+
+## [15.2.0](https://github.com/zachreborn/terraform-modules/compare/v15.1.0...v15.2.0) (2026-08-28)
+
+
+### Features
+
+* **aws/cloudtrail:** customizable S3 lifecycle transitions and noncurrent version expiration ([#484](https://github.com/zachreborn/terraform-modules/issues/484)) ([c0f0eb6](https://github.com/zachreborn/terraform-modules/commit/c0f0eb66336e35efdc2792d258c2090069421376))
+
+## [15.1.0](https://github.com/zachreborn/terraform-modules/compare/v15.0.0...v15.1.0) (2026-08-24)
+
+
+### Features
+
+* **waf:** support captcha/challenge rule actions ([#481](https://github.com/zachreborn/terraform-modules/issues/481)) ([2719fa6](https://github.com/zachreborn/terraform-modules/commit/2719fa630f66ddf83c27ec401312a888bf3a413c))
+
+## [15.0.0](https://github.com/zachreborn/terraform-modules/compare/v14.6.1...v15.0.0) (2026-08-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center/permission_set:** retype target_accounts as map(string) ([#478](https://github.com/zachreborn/terraform-modules/issues/478))
+
+### Bug Fixes
+
+* **identity_center/permission_set:** retype target_accounts as map(string) ([#478](https://github.com/zachreborn/terraform-modules/issues/478)) ([5b56b90](https://github.com/zachreborn/terraform-modules/commit/5b56b9046b2f9710552f835645c5d702e84778ca))
+
+## [14.6.1](https://github.com/zachreborn/terraform-modules/compare/v14.6.0...v14.6.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* **lb,waf:** add per-listener target_group_key and fix WAF captcha_config provider bug ([#445](https://github.com/zachreborn/terraform-modules/issues/445)) ([12fac8f](https://github.com/zachreborn/terraform-modules/commit/12fac8fdceef8f54656a64d77ee05b96003f5f48))
+
+## [14.6.0](https://github.com/zachreborn/terraform-modules/compare/v14.5.1...v14.6.0) (2026-08-18)
+
+
+### Features
+
+* **directconnect:** add connection, gateway, and transit VIF modules ([#444](https://github.com/zachreborn/terraform-modules/issues/444)) ([bfb4c6c](https://github.com/zachreborn/terraform-modules/commit/bfb4c6cd223cead8142f77f398777d003e4ed2f6))
+
+## [14.5.1](https://github.com/zachreborn/terraform-modules/compare/v14.5.0...v14.5.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **directory_service:** ignore password changes to prevent directory replacement ([#473](https://github.com/zachreborn/terraform-modules/issues/473)) ([6de7851](https://github.com/zachreborn/terraform-modules/commit/6de785182d8f311a504590214801af69056c6221))
+
+## [14.5.0](https://github.com/zachreborn/terraform-modules/compare/v14.4.0...v14.5.0) (2026-08-01)
+
+
+### Features
+
+* Add Direct Connect and Cloud WAN VPN Attachment modules ([#266](https://github.com/zachreborn/terraform-modules/issues/266)) ([deb8721](https://github.com/zachreborn/terraform-modules/commit/deb8721bfcde6658138fab77d2afe74795fa482e))
+
+## [14.4.0](https://github.com/zachreborn/terraform-modules/compare/v14.3.0...v14.4.0) (2026-08-01)
+
+
+### Features
+
+* **secrets_manager:** add AWS Secrets Manager module ([#372](https://github.com/zachreborn/terraform-modules/issues/372)) ([e0d68a4](https://github.com/zachreborn/terraform-modules/commit/e0d68a40c7f5cc807f53bd349b78884656a61d3e))
+
+## [14.3.0](https://github.com/zachreborn/terraform-modules/compare/v14.2.0...v14.3.0) (2026-07-29)
+
+
+### Features
+
+* **aws/managed_prefix_list:** add managed prefix list module ([#237](https://github.com/zachreborn/terraform-modules/issues/237)) ([9552df2](https://github.com/zachreborn/terraform-modules/commit/9552df2b52e76187c677794acd988b30cf771072))
+
+## [14.2.0](https://github.com/zachreborn/terraform-modules/compare/v14.1.0...v14.2.0) (2026-07-29)
+
+
+### Features
+
+* **storage_gateway:** add Storage Gateway File Gateway module ([#367](https://github.com/zachreborn/terraform-modules/issues/367)) ([5a76741](https://github.com/zachreborn/terraform-modules/commit/5a767415d78c53864b19c402bd678334f7228c88))
+
+## [14.1.0](https://github.com/zachreborn/terraform-modules/compare/v14.0.0...v14.1.0) (2026-07-28)
+
+
+### Features
+
+* **fsx_ontap:** add FSx for NetApp ONTAP module ([#368](https://github.com/zachreborn/terraform-modules/issues/368)) ([fe35c3d](https://github.com/zachreborn/terraform-modules/commit/fe35c3d90aa40afde8eb2c08396c50a48f1439c3))
+
+## [14.0.0](https://github.com/zachreborn/terraform-modules/compare/v13.0.0...v14.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **scalr:** compose root module from environment/workspace/vcs_provider/provider_configuration submodules ([#462](https://github.com/zachreborn/terraform-modules/issues/462))
+
+### Features
+
+* **scalr:** compose root module from environment/workspace/vcs_provider/provider_configuration submodules ([#462](https://github.com/zachreborn/terraform-modules/issues/462)) ([4573302](https://github.com/zachreborn/terraform-modules/commit/45733023994f48de2c88ef0aa65d72c861d3c4e9))
+
+## [13.0.0](https://github.com/zachreborn/terraform-modules/compare/v12.5.0...v13.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center:** `permission_set`'s `assignment_ids` output is now keyed by `<group_name>_<account_id>` instead of `<principal_id>_<account_id>`.
+
+### Features
+
+* **identity_center:** compose permission_set as a child module ([#458](https://github.com/zachreborn/terraform-modules/issues/458)) ([9c77d02](https://github.com/zachreborn/terraform-modules/commit/9c77d024ecc0c21914358be3edd89932bbc345bd))
+
+## [12.5.0](https://github.com/zachreborn/terraform-modules/compare/v12.4.0...v12.5.0) (2026-07-26)
+
+
+### Features
+
+* **scalr:** expand module to full Scalr provider resource coverage ([#454](https://github.com/zachreborn/terraform-modules/issues/454)) ([6e2dd27](https://github.com/zachreborn/terraform-modules/commit/6e2dd27fed5366e0884af59d6eb1ae6d97e0f6f6))
+
+## [12.4.0](https://github.com/zachreborn/terraform-modules/compare/v12.3.0...v12.4.0) (2026-07-24)
+
+
+### Features
+
+* **organizations:** wire delegated_admin into the organizations parent module ([#451](https://github.com/zachreborn/terraform-modules/issues/451)) ([2a332b3](https://github.com/zachreborn/terraform-modules/commit/2a332b3d8ed13a1c7b7cca4a6f309fd603eb28d3))
+
+## [12.3.0](https://github.com/zachreborn/terraform-modules/compare/v12.2.0...v12.3.0) (2026-07-24)
+
+
+### Features
+
+* **issue-triage:** detect duplicate and similar issues before advancing ([#448](https://github.com/zachreborn/terraform-modules/issues/448)) ([6237d7f](https://github.com/zachreborn/terraform-modules/commit/6237d7f41b74c3e8b8925a0e9428b55305a4c0c6))
+
+## [12.2.0](https://github.com/zachreborn/terraform-modules/compare/v12.1.0...v12.2.0) (2026-07-20)
+
+
+### Features
+
+* **workspaces:** add AWS WorkSpaces modules with multi-IdP support ([#373](https://github.com/zachreborn/terraform-modules/issues/373)) ([200a990](https://github.com/zachreborn/terraform-modules/commit/200a99032f3e81612ce7777ee8103ef76ff4ca25))
+
+## [12.1.0](https://github.com/zachreborn/terraform-modules/compare/v12.0.1...v12.1.0) (2026-07-20)
+
+
+### Features
+
+* **kms:** add optional region variable for cross-Region key creation ([#439](https://github.com/zachreborn/terraform-modules/issues/439)) ([5b60b47](https://github.com/zachreborn/terraform-modules/commit/5b60b47dc5c05846318c6bbd392c30de78eec060))
+
+## [12.0.1](https://github.com/zachreborn/terraform-modules/compare/v12.0.0...v12.0.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **ecs:** suppress Checkov CKV_AWS_224 and CKV_AWS_97 false positives on cluster and task_definition ([#437](https://github.com/zachreborn/terraform-modules/issues/437)) ([b1bddb8](https://github.com/zachreborn/terraform-modules/commit/b1bddb8aa46149c3b07ab532f572ecce576e6415))
+
+## [12.0.0](https://github.com/zachreborn/terraform-modules/compare/v11.0.2...v12.0.0) (2026-07-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modules/aws/flow_logs now requires Terraform >= 1.2.0 (previously >= 1.0.0) due to its new lifecycle.precondition-based "exactly one target" validation.
+
+### Bug Fixes
+
+* **vpc:** gate NAT-gateway resources on IGW state ([#409](https://github.com/zachreborn/terraform-modules/issues/409)) ([2e9ebd1](https://github.com/zachreborn/terraform-modules/commit/2e9ebd18d6af2e3edd2cb459f7203716aef9471d))
+
+## [11.0.2](https://github.com/zachreborn/terraform-modules/compare/v11.0.1...v11.0.2) (2026-07-15)
+
+
+### Bug Fixes
+
+* **amplify:** treat branches = null as empty map to prevent plan crash ([#426](https://github.com/zachreborn/terraform-modules/issues/426)) ([2e29296](https://github.com/zachreborn/terraform-modules/commit/2e2929682335cce62e5f17fe8a28313b8d7bd4b4))
+
+## [11.0.1](https://github.com/zachreborn/terraform-modules/compare/v11.0.0...v11.0.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **cloudformation/stack_set:** reject both template_body and template_url at plan time ([#425](https://github.com/zachreborn/terraform-modules/issues/425)) ([1e13d7f](https://github.com/zachreborn/terraform-modules/commit/1e13d7f6796362cb9a934aa8d4dc954f11047c27))
+
+## [11.0.0](https://github.com/zachreborn/terraform-modules/compare/v10.2.7...v11.0.0) (2026-07-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427))
+
+### Bug Fixes
+
+* **cloudwatch/alarm:** type action variables as list(string) with safe defaults ([#427](https://github.com/zachreborn/terraform-modules/issues/427)) ([ca12815](https://github.com/zachreborn/terraform-modules/commit/ca12815f4445cd391ad44897ca652a2799e24a03))
+
+## [10.2.7](https://github.com/zachreborn/terraform-modules/compare/v10.2.6...v10.2.7) (2026-07-14)
+
+
+### Bug Fixes
+
+* **aws/cloudformation/stack:** give URL form precedence over body ([#410](https://github.com/zachreborn/terraform-modules/issues/410)) ([e05561d](https://github.com/zachreborn/terraform-modules/commit/e05561d7d9ec6a82989828eba3ec21cefaf1df6a))
+
+## [10.2.6](https://github.com/zachreborn/terraform-modules/compare/v10.2.5...v10.2.6) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** anchor enum regex validations for shutdown behavior and auto_recovery ([#412](https://github.com/zachreborn/terraform-modules/issues/412)) ([aebf992](https://github.com/zachreborn/terraform-modules/commit/aebf992962503d7cbd975d1b976d5e9755ff97fe))
+
+## [10.2.5](https://github.com/zachreborn/terraform-modules/compare/v10.2.4...v10.2.5) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ec2_instance:** apply auto_recovery via maintenance_options block ([#413](https://github.com/zachreborn/terraform-modules/issues/413)) ([7971c03](https://github.com/zachreborn/terraform-modules/commit/7971c03212fb0ae3277656707d4444798860a0ce))
+
+## [10.2.4](https://github.com/zachreborn/terraform-modules/compare/v10.2.3...v10.2.4) (2026-07-14)
+
+
+### Bug Fixes
+
+* **vpc:** gate NAT routes and public association on local.enable_igw ([#415](https://github.com/zachreborn/terraform-modules/issues/415)) ([6b4d1ce](https://github.com/zachreborn/terraform-modules/commit/6b4d1ce3e727de59a4a53131a975d9552b591636))
+
+## [10.2.3](https://github.com/zachreborn/terraform-modules/compare/v10.2.2...v10.2.3) (2026-07-14)
+
+
+### Bug Fixes
+
+* **route53:** drop trailing TXT separator on exact 255-char multiples ([#408](https://github.com/zachreborn/terraform-modules/issues/408)) ([74aae22](https://github.com/zachreborn/terraform-modules/commit/74aae228e18428a603033fe1e2ca587d1b31f2c3))
+
+## [10.2.2](https://github.com/zachreborn/terraform-modules/compare/v10.2.1...v10.2.2) (2026-07-14)
+
+
+### Bug Fixes
+
+* **lambda:** align timeout description with actual 180 default ([#414](https://github.com/zachreborn/terraform-modules/issues/414)) ([536507e](https://github.com/zachreborn/terraform-modules/commit/536507eac0d6cd06e8bf6aec94e5539f3c09a8fd))
+
+## [10.2.1](https://github.com/zachreborn/terraform-modules/compare/v10.2.0...v10.2.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **amplify:** widen cache_config_type validation to allow null ([#411](https://github.com/zachreborn/terraform-modules/issues/411)) ([7bbd540](https://github.com/zachreborn/terraform-modules/commit/7bbd540d12c57669ba5b531d552d46112212143e))
+
+## [10.2.0](https://github.com/zachreborn/terraform-modules/compare/v10.1.0...v10.2.0) (2026-07-12)
+
+
+### Features
+
+* **ecs:** add AWS ECS module family ([#295](https://github.com/zachreborn/terraform-modules/issues/295)) ([3a90693](https://github.com/zachreborn/terraform-modules/commit/3a90693429b03dd87129907cd35df9ec05457409))
+
+## [10.1.0](https://github.com/zachreborn/terraform-modules/compare/v10.0.0...v10.1.0) (2026-07-09)
+
+
+### Features
+
+* **organizations:** add four new SCPs to the organization module ([#371](https://github.com/zachreborn/terraform-modules/issues/371)) ([2a53032](https://github.com/zachreborn/terraform-modules/commit/2a530327293ae97de724bd76e96fd8d39fbd77c8))
+
+## [10.0.0](https://github.com/zachreborn/terraform-modules/compare/v9.0.0...v10.0.0) (2026-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **fsx:** modernize FSx for Windows File Server module ([#366](https://github.com/zachreborn/terraform-modules/issues/366))
+
+### Features
+
+* **fsx:** modernize FSx for Windows File Server module ([#366](https://github.com/zachreborn/terraform-modules/issues/366)) ([fe8566a](https://github.com/zachreborn/terraform-modules/commit/fe8566aae95e816ac86798d10f3c9d3976dd58a8))
+
+## [9.0.0](https://github.com/zachreborn/terraform-modules/compare/v8.25.0...v9.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362))
+
+### Features
+
+* **organizations:** map-based ou/account modules + composed module ([#362](https://github.com/zachreborn/terraform-modules/issues/362)) ([84d0e55](https://github.com/zachreborn/terraform-modules/commit/84d0e55b7669143813d652774e33704f679b9809))
+
+## [8.25.0](https://github.com/zachreborn/terraform-modules/compare/v8.24.0...v8.25.0) (2026-07-06)
+
+
+### Features
+
+* **organizations:** add opt-in Region-restriction SCP to organization module ([#360](https://github.com/zachreborn/terraform-modules/issues/360)) ([55f2f25](https://github.com/zachreborn/terraform-modules/commit/55f2f252500855a7308a387b8e7d2437e425e784))
+
 ## [8.24.0](https://github.com/zachreborn/terraform-modules/compare/v8.23.0...v8.24.0) (2026-07-04)
 
 

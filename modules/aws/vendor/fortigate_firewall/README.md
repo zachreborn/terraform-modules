@@ -99,14 +99,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -116,7 +116,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_metric_alarm.instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.system](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_eip.external_ip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
@@ -130,7 +130,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | The AMI to use | `string` | n/a | yes |
 | <a name="input_dmz_nic_description"></a> [dmz\_nic\_description](#input\_dmz\_nic\_description) | Description of the dmz network interface | `string` | `"Fortigate FW DMZ nic"` | no |
 | <a name="input_dmz_private_ips"></a> [dmz\_private\_ips](#input\_dmz\_private\_ips) | (Optional) List of private IPs to assign to the ENI. | `list(string)` | <pre>[<br/>  "10.11.101.10",<br/>  "10.11.102.10"<br/>]</pre> | no |
@@ -168,7 +168,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_dmz_network_interface_id"></a> [dmz\_network\_interface\_id](#output\_dmz\_network\_interface\_id) | n/a |
 | <a name="output_ec2_instance_id"></a> [ec2\_instance\_id](#output\_ec2\_instance\_id) | n/a |
 | <a name="output_eip_id"></a> [eip\_id](#output\_eip\_id) | n/a |

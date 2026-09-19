@@ -84,14 +84,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.0.0 |
 
 ## Modules
@@ -101,13 +101,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [cloudflare_record.this](https://registry.terraform.io/providers/cloudflare/cloudflare/4.0.0/docs/resources/record) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_allow_overwrite"></a> [allow\_overwrite](#input\_allow\_overwrite) | (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not affect the ability to update the record in Terraform and does not prevent other resources within Terraform or manual changes outside Terraform from overwriting this record. This configuration is not recommended for most environments. Defaults to false. | `bool` | `false` | no |
 | <a name="input_comment"></a> [comment](#input\_comment) | (Optional) Comments or notes about the DNS record. This field has no effect on DNS responses. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the DNS record. This can be a subdomain (www), an apex domain (@), or a wildcard (*.). | `string` | n/a | yes |

@@ -1,0 +1,12 @@
+---
+kubernetes:
+  provider_name: "kubernetes"
+  environments:
+    - "env-xxxxxxxxxx"
+  argument:
+    - name: "host"
+      value: "https://kubernetes.example.com"
+      description: "The hostname (in form of URI) of the Kubernetes API."
+    - name: "config_path"
+      value: "~/.kube/config"
+      hcl: false

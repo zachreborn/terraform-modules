@@ -39,9 +39,14 @@ gh issue view <issue_number> --repo <repository> \
 ## Required reading (consult before writing)
 
 - `AGENTS.md` (root) — repo conventions: four-file module layout, tagging
-  pattern, lifecycle ignores, tfsec suppression style.
+  pattern, lifecycle ignores, tfsec suppression style, and the Native Test
+  Coverage requirement (§ 6 of Module Design Specifications).
 - `.github/specs/_template.md` — the canonical spec layout your spec must follow.
-- `modules/module_template/` — the starting point for new modules.
+- `modules/module_template/` — the starting point for new modules, including its
+  `tests/` scaffolding.
+- `modules/aws/organizations/tests/` — a worked example of the `mock_provider` /
+  `run` / `expect_failures` test conventions to reference when writing the Test
+  Plan section.
 
 ## Output
 
@@ -69,6 +74,13 @@ The spec MUST be based on `_template.md` and MUST contain:
 - Checkov / tfsec suppression considerations (state "none" if no new
   suppressions are needed)
 - terraform-docs impact (will the auto-generated README change?)
+- Testing — fill in `_template.md`'s § 8 native `tofu test` plan: a
+  valid-baseline case, one `expect_failures` case per planned variable
+  `validation { ... }` rule, one case per conditional/`count`/`for_each`
+  branch, assertions on meaningful outputs, and — for wrapper/composition
+  modules — wiring assertions proving submodule inputs/outputs connect
+  correctly. Do not describe workarounds or weakened assertions; every case
+  must exercise real module behavior.
 - Acceptance criteria
 
 Check completeness exhaustively: walk this required-section list one item at a

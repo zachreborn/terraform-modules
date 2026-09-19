@@ -80,14 +80,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -97,13 +97,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_elastic_beanstalk_application.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elastic_beanstalk_application) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_delete_source_from_s3"></a> [delete\_source\_from\_s3](#input\_delete\_source\_from\_s3) | (Optional) Set to true to delete a version's source bundle from S3 when the application version is deleted. | `string` | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Short description of the application | `string` | `""` | no |
 | <a name="input_max_age_in_days"></a> [max\_age\_in\_days](#input\_max\_age\_in\_days) | (Optional) The number of days to retain an application version. | `string` | n/a | yes |

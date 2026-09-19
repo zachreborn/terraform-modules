@@ -81,14 +81,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -98,13 +98,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_lambda_event_source_mapping.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_batch_size"></a> [batch\_size](#input\_batch\_size) | (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to 100 for DynamoDB and Kinesis, 10 for SQS. | `string` | `10` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | (Optional) Determines if the mapping will be enabled on creation. Defaults to true. | `string` | `true` | no |
 | <a name="input_event_source_arn"></a> [event\_source\_arn](#input\_event\_source\_arn) | (Required) The event source ARN - can either be a Kinesis, DynamoDB stream, or SQS queue. | `string` | n/a | yes |

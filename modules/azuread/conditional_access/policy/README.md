@@ -92,14 +92,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 2.36.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | >= 2.36.0 |
 
 ## Modules
@@ -109,13 +109,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azuread_conditional_access_policy.example](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/conditional_access_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_application_enforced_restrictions_enabled"></a> [application\_enforced\_restrictions\_enabled](#input\_application\_enforced\_restrictions\_enabled) | (Optional) Whether or not application enforced restrictions are enabled. Defaults to false. | `bool` | `false` | no |
 | <a name="input_built_in_controls"></a> [built\_in\_controls](#input\_built\_in\_controls) | (Required) List of built-in controls required by the policy. Possible values are: block, mfa, approvedApplication, compliantApplication, compliantDevice, domainJoinedDevice, passwordChange or unknownFutureValue. | `list(string)` | `null` | no |
 | <a name="input_client_app_types"></a> [client\_app\_types](#input\_client\_app\_types) | (Required) A list of client application types included in the policy. Possible values are: all, browser, mobileAppsAndDesktopClients, exchangeActiveSync, easSupported and other. | `list(string)` | n/a | yes |

@@ -105,14 +105,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -122,13 +122,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudformation_stack.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | A list of capabilities that AWS CloudFormation can use. Valid values are: CAPABILITY\_IAM, CAPABILITY\_NAMED\_IAM, CAPABILITY\_AUTO\_EXPAND. | `list(string)` | `null` | no |
 | <a name="input_disable_rollback"></a> [disable\_rollback](#input\_disable\_rollback) | Whether to disable rollback on stack creation failures. Conflicts with 'on\_failure' parameter. | `bool` | `false` | no |
 | <a name="input_iam_role_arn"></a> [iam\_role\_arn](#input\_iam\_role\_arn) | The ARN of the IAM role to use for the CloudFormation stack. If this is not set, CloudFormation uses the role that was previously associated with the stack. If no role has been set, CloudFormation uses a temporary session generated from the user credentials. | `string` | `null` | no |
@@ -146,7 +146,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The unique ID of the stack. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the stack. |
 | <a name="output_outputs"></a> [outputs](#output\_outputs) | A map containing all of the outputs from the stack. |

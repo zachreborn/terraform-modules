@@ -208,14 +208,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -225,7 +225,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_lb.load_balancer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
 | [aws_lb_listener.listener](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener_rule.listener_rule](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_rule) | resource |
@@ -234,7 +234,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_logs"></a> [access\_logs](#input\_access\_logs) | Access logs configuration for the LB | <pre>map(object({<br/>    bucket  = string<br/>    prefix  = string<br/>    enabled = bool<br/>  }))</pre> | `null` | no |
 | <a name="input_client_keep_alive"></a> [client\_keep\_alive](#input\_client\_keep\_alive) | (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds. | `number` | `3600` | no |
 | <a name="input_connection_logs"></a> [connection\_logs](#input\_connection\_logs) | (Optional) Connection Logs block. See below. Only valid for Load Balancers of type application. | <pre>map(object({<br/>    bucket  = string<br/>    prefix  = string<br/>    enabled = bool<br/>  }))</pre> | `null` | no |
@@ -253,8 +253,8 @@ No modules.
 | <a name="input_idle_timeout"></a> [idle\_timeout](#input\_idle\_timeout) | The time in seconds that the connection is allowed to be idle | `number` | `60` | no |
 | <a name="input_internal"></a> [internal](#input\_internal) | If true, the LB will be internal | `bool` | `false` | no |
 | <a name="input_ip_address_type"></a> [ip\_address\_type](#input\_ip\_address\_type) | The type of IP addresses used by the subnets for your load balancer | `string` | `"ipv4"` | no |
-| <a name="input_listener_rules"></a> [listener\_rules](#input\_listener\_rules) | Map of listener rule configurations | <pre>map(object({<br/>    listener_key = string<br/>    priority     = optional(number)<br/><br/>    action = object({<br/>      type             = string<br/>      target_group_arn = optional(string)<br/><br/>      fixed_response = optional(object({<br/>        content_type = string<br/>        message_body = optional(string)<br/>        status_code  = optional(string)<br/>      }))<br/><br/>      redirect = optional(object({<br/>        path        = optional(string)<br/>        host        = optional(string)<br/>        port        = optional(string)<br/>        protocol    = optional(string)<br/>        query       = optional(string)<br/>        status_code = string<br/>      }))<br/>    })<br/><br/>    conditions = list(object({<br/>      host_header = optional(object({<br/>        values = list(string)<br/>      }))<br/><br/>      http_header = optional(map(object({<br/>        http_header_name = string<br/>        values           = list(string)<br/>      })))<br/><br/>      path_pattern = optional(object({<br/>        values = list(string)<br/>      }))<br/><br/>      query_string = optional(map(object({<br/>        key   = optional(string)<br/>        value = string<br/>      })))<br/><br/>      source_ip = optional(object({<br/>        values = list(string)<br/>      }))<br/>    }))<br/>  }))</pre> | `{}` | no |
-| <a name="input_listeners"></a> [listeners](#input\_listeners) | Map of listener configurations | <pre>map(object({<br/>    port            = number<br/>    protocol        = string<br/>    ssl_policy      = optional(string)<br/>    certificate_arn = optional(string)<br/>    alpn_policy     = optional(string)<br/><br/>    authenticate_oidc = optional(object({<br/>      authorization_endpoint = string<br/>      client_id              = string<br/>      client_secret          = string<br/>      issuer                 = string<br/>      token_endpoint         = string<br/>      user_info_endpoint     = string<br/>    }))<br/><br/>    authenticate_cognito = optional(object({<br/>      user_pool_arn       = string<br/>      user_pool_client_id = string<br/>      user_pool_domain    = string<br/>    }))<br/><br/>    mutual_authentication = optional(object({<br/>      mode = string # Only valid field, can be "verify" or "strict"<br/>    }))<br/><br/>    default_action = object({<br/>      type             = string<br/>      target_group_arn = optional(string)<br/><br/>      fixed_response = optional(object({<br/>        content_type = string<br/>        message_body = optional(string)<br/>        status_code  = optional(string)<br/>      }))<br/><br/>      redirect = optional(object({<br/>        path        = optional(string)<br/>        host        = optional(string)<br/>        port        = optional(string)<br/>        protocol    = optional(string)<br/>        query       = optional(string)<br/>        status_code = string<br/>      }))<br/>    })<br/>  }))</pre> | `{}` | no |
+| <a name="input_listener_rules"></a> [listener\_rules](#input\_listener\_rules) | Map of listener rule configurations | <pre>map(object({<br/>    listener_key = string<br/>    priority     = optional(number)<br/><br/>    action = object({<br/>      type             = string<br/>      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main". Ignored when target_group_arn is set.<br/>      target_group_arn = optional(string)         # Explicit target group ARN (e.g. an externally managed target group); takes precedence over target_group_key when set.<br/><br/>      fixed_response = optional(object({<br/>        content_type = string<br/>        message_body = optional(string)<br/>        status_code  = optional(string)<br/>      }))<br/><br/>      redirect = optional(object({<br/>        path        = optional(string)<br/>        host        = optional(string)<br/>        port        = optional(string)<br/>        protocol    = optional(string)<br/>        query       = optional(string)<br/>        status_code = string<br/>      }))<br/>    })<br/><br/>    conditions = list(object({<br/>      host_header = optional(object({<br/>        values = list(string)<br/>      }))<br/><br/>      http_header = optional(map(object({<br/>        http_header_name = string<br/>        values           = list(string)<br/>      })))<br/><br/>      path_pattern = optional(object({<br/>        values = list(string)<br/>      }))<br/><br/>      query_string = optional(map(object({<br/>        key   = optional(string)<br/>        value = string<br/>      })))<br/><br/>      source_ip = optional(object({<br/>        values = list(string)<br/>      }))<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_listeners"></a> [listeners](#input\_listeners) | Map of listener configurations | <pre>map(object({<br/>    port            = number<br/>    protocol        = string<br/>    ssl_policy      = optional(string)<br/>    certificate_arn = optional(string)<br/>    alpn_policy     = optional(string)<br/><br/>    authenticate_oidc = optional(object({<br/>      authorization_endpoint = string<br/>      client_id              = string<br/>      client_secret          = string<br/>      issuer                 = string<br/>      token_endpoint         = string<br/>      user_info_endpoint     = string<br/>    }))<br/><br/>    authenticate_cognito = optional(object({<br/>      user_pool_arn       = string<br/>      user_pool_client_id = string<br/>      user_pool_domain    = string<br/>    }))<br/><br/>    mutual_authentication = optional(object({<br/>      mode = string # Only valid field, can be "verify" or "strict"<br/>    }))<br/><br/>    default_action = object({<br/>      type             = string<br/>      target_group_key = optional(string, "main") # Key into target_groups map; defaults to "main". Ignored when target_group_arn is set.<br/>      target_group_arn = optional(string)         # Explicit target group ARN (e.g. an externally managed target group); takes precedence over target_group_key when set.<br/><br/>      fixed_response = optional(object({<br/>        content_type = string<br/>        message_body = optional(string)<br/>        status_code  = optional(string)<br/>      }))<br/><br/>      redirect = optional(object({<br/>        path        = optional(string)<br/>        host        = optional(string)<br/>        port        = optional(string)<br/>        protocol    = optional(string)<br/>        query       = optional(string)<br/>        status_code = string<br/>      }))<br/>    })<br/>  }))</pre> | `{}` | no |
 | <a name="input_load_balancer_type"></a> [load\_balancer\_type](#input\_load\_balancer\_type) | Type of load balancer. Valid values are application, gateway, or network | `string` | `"network"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the load balancer | `string` | n/a | yes |
 | <a name="input_preserve_host_header"></a> [preserve\_host\_header](#input\_preserve\_host\_header) | Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to false. | `bool` | `false` | no |
@@ -267,7 +267,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the load balancer |
 | <a name="output_arn_suffix"></a> [arn\_suffix](#output\_arn\_suffix) | The ARN suffix for use with CloudWatch Metrics |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the load balancer |

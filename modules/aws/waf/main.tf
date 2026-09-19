@@ -160,7 +160,20 @@ resource "aws_wafv2_web_acl_rule" "this" {
     content {
       dynamic "allow" {
         for_each = action.value == "allow" ? [1] : []
-        content {}
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
       }
       dynamic "block" {
         for_each = action.value == "block" ? [1] : []
@@ -168,7 +181,54 @@ resource "aws_wafv2_web_acl_rule" "this" {
       }
       dynamic "count" {
         for_each = action.value == "count" ? [1] : []
-        content {}
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
+      }
+      dynamic "captcha" {
+        for_each = action.value == "captcha" ? [1] : []
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
+      }
+      dynamic "challenge" {
+        for_each = action.value == "challenge" ? [1] : []
+        content {
+          dynamic "custom_request_handling" {
+            for_each = each.value.custom_request_handling != null ? [each.value.custom_request_handling] : []
+            content {
+              dynamic "insert_header" {
+                for_each = custom_request_handling.value.insert_header
+                content {
+                  name  = insert_header.value.name
+                  value = insert_header.value.value
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -225,15 +285,21 @@ resource "aws_wafv2_web_acl_rule" "this" {
     }
   }
 
-  captcha_config {
-    immunity_time_property {
-      immunity_time = try(each.value.captcha_config.immunity_time_property.immunity_time, 300)
+  dynamic "captcha_config" {
+    for_each = try(each.value.captcha_config, null) != null ? [each.value.captcha_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = captcha_config.value.immunity_time_property.immunity_time
+      }
     }
   }
 
-  challenge_config {
-    immunity_time_property {
-      immunity_time = try(each.value.challenge_config.immunity_time_property.immunity_time, 300)
+  dynamic "challenge_config" {
+    for_each = try(each.value.challenge_config, null) != null ? [each.value.challenge_config] : []
+    content {
+      immunity_time_property {
+        immunity_time = challenge_config.value.immunity_time_property.immunity_time
+      }
     }
   }
 

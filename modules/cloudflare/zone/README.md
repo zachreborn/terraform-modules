@@ -81,14 +81,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | 4.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.0.0 |
 
 ## Modules
@@ -98,13 +98,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [cloudflare_zone.this](https://registry.terraform.io/providers/cloudflare/cloudflare/4.0.0/docs/resources/zone) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_account_id"></a> [account\_id](#input\_account\_id) | (Required) Account ID to manage the zone resource in. | `string` | n/a | yes |
 | <a name="input_jump_start"></a> [jump\_start](#input\_jump\_start) | (Optional) Whether to scan for DNS records on creation. Ignored after zone is created. | `bool` | `false` | no |
 | <a name="input_paused"></a> [paused](#input\_paused) | (Optional)(Boolean) Whether this zone is paused (traffic bypasses Cloudflare). Defaults to false. | `bool` | `false` | no |
@@ -115,7 +115,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_name_servers"></a> [name\_servers](#output\_name\_servers) | n/a |
 | <a name="output_status"></a> [status](#output\_status) | n/a |

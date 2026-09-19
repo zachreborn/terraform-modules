@@ -129,14 +129,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -146,13 +146,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_route53domains_registered_domain.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53domains_registered_domain) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_admin_contact"></a> [admin\_contact](#input\_admin\_contact) | The admin contact information for the domain. Set to null to omit the admin\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
 | <a name="input_admin_privacy"></a> [admin\_privacy](#input\_admin\_privacy) | Whether to enable admin privacy protection. Default is true. | `bool` | `true` | no |
 | <a name="input_billing_contact"></a> [billing\_contact](#input\_billing\_contact) | The billing contact information for the domain. Set to null to omit the billing\_contact block. | <pre>object({<br/>    address_line_1    = string<br/>    address_line_2    = string<br/>    city              = string<br/>    contact_type      = string<br/>    country_code      = string<br/>    email             = string<br/>    extra_params      = map(any)<br/>    fax               = string<br/>    first_name        = string<br/>    last_name         = string<br/>    organization_name = string<br/>    phone_number      = string<br/>    state             = string<br/>    zip_code          = string<br/>  })</pre> | `null` | no |
@@ -167,7 +167,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_creation_dates"></a> [creation\_dates](#output\_creation\_dates) | The creation date of the domain. |
 | <a name="output_expiration_dates"></a> [expiration\_dates](#output\_expiration\_dates) | The expiration date of the domain. |
 | <a name="output_updated_dates"></a> [updated\_dates](#output\_updated\_dates) | The last updated date of the domain. |

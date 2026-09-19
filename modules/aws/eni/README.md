@@ -80,14 +80,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -97,13 +97,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_network_interface.eni](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_description"></a> [description](#input\_description) | (Required) A description for the network interface. | `string` | n/a | yes |
 | <a name="input_device_index"></a> [device\_index](#input\_device\_index) | (Required) Integer to define the devices index. | `number` | n/a | yes |
 | <a name="input_instance_id"></a> [instance\_id](#input\_instance\_id) | (Required) ID of the instance to attach to. | `string` | n/a | yes |
@@ -118,7 +118,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_attachment"></a> [attachment](#output\_attachment) | n/a |
 | <a name="output_description"></a> [description](#output\_description) | n/a |
 | <a name="output_private_ips"></a> [private\_ips](#output\_private\_ips) | n/a |

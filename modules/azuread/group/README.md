@@ -116,14 +116,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 2.36.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | >= 2.36.0 |
 
 ## Modules
@@ -133,13 +133,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azuread_group.this](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/group) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_auto_subscribe_new_members"></a> [auto\_subscribe\_new\_members](#input\_auto\_subscribe\_new\_members) | (Optional) Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups. | `bool` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) A description for the group. | `string` | `null` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | (Required) The display name for the group. | `string` | n/a | yes |
@@ -160,7 +160,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_mail"></a> [mail](#output\_mail) | The SMTP address for the group. |
 | <a name="output_object_id"></a> [object\_id](#output\_object\_id) | The object ID of the Azure AD group. |
 | <a name="output_proxy_addresses"></a> [proxy\_addresses](#output\_proxy\_addresses) | The proxy addresses for the group. |

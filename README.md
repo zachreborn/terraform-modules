@@ -243,6 +243,16 @@ module "iam_roles" {
 
 Modules that are inherently singleton (e.g., a VPC, an AWS Organization) are exempt and should document that explicitly.
 
+### Native Test Coverage
+
+Every new or significantly updated module **must ship a `tests/` directory** of native OpenTofu tests (`*.tftest.hcl`, run via `tofu test`) covering a valid baseline, every variable validation rule, every conditional resource branch, meaningful outputs, and (for wrapper modules) submodule wiring. Tests run offline via `mock_provider`/`mock_resource` — no real credentials required. `modules/module_template/tests/` ships the scaffolding to start from.
+
+Tests must never be weakened to force a pass — a failing test means the module code (or, rarely, the test itself) has a bug that needs fixing, not an assertion to loosen.
+
+### Provider and Tool Version Constraints
+
+Each module's `required_version` and provider `version` constraint start from the baseline floor in `modules/module_template/main.tf` (`terraform >= 1.0.0`, `aws >= 6.0.0`), but that floor is not a fixed value to copy into every module unchanged. If a module uses a resource, attribute, or HCL language feature introduced in a later provider or Terraform/OpenTofu release, its constraint must be bumped to that release — with a short comment explaining why — and never inflated beyond the true minimum just to be cautious.
+
 For the full specification including examples and enforcement rules, see [`AGENTS.md § Module Design Specifications`](./AGENTS.md#module-design-specifications).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -329,7 +339,7 @@ Spec PRs land under [`.github/specs/`](./.github/specs) and are opened **ready-f
 
 ### Reviewing an Oz-generated implementation
 
-Implementation PRs are opened from branches named `feat/issue-<N>-<slug>` or `fix/issue-<N>-<slug>`, include `Fixes #<N>` in the body, and run through the standard CI (`build.yml`, `test.yml`, `scan.yml`) like any other PR. The same review and merge rules apply. Squash-and-merge is preferred.
+Implementation PRs are opened from branches named `feat/issue-<N>-<slug>` or `fix/issue-<N>-<slug>`, include `Fixes #<N>` in the body, and run through the standard CI (`build.yml`, `test.yml`, `scan.yml`) like any other PR. The same review and merge rules apply. Squash-and-merge is preferred. Confirm the PR includes real, full-coverage `tests/*.tftest.hcl` for any new or changed module, and that no test was weakened (loosened assertion, deleted `run` block, relaxed `expect_failures`) just to get CI green — request changes if the root cause of a failing test was worked around instead of fixed.
 
 ### Releases and versioning
 
@@ -345,9 +355,10 @@ You are always free to skip the pipeline and submit a PR the traditional way. Th
 
 1. Fork the project.
 2. Create your feature branch: `git switch -c feat/short-description` (or `fix/...`).
-3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `tofu fmt -recursive` (or `terraform fmt -recursive`), the tagging pattern, and tfsec/Checkov suppression style.
+3. Make your changes following the conventions in [`AGENTS.md`](./AGENTS.md) — the four-file module layout, `tofu fmt -recursive` (or `terraform fmt -recursive`), the tagging pattern, tfsec/Checkov suppression style, and provider/tool version constraints scoped to the features you actually use.
 4. Validate locally: `tofu -chdir=<module_path> init -backend=false` then `tofu -chdir=<module_path> validate` (or use `terraform` equivalents).
-5. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
+5. Write or update `tests/*.tftest.hcl` for full coverage (see [Native Test Coverage](#native-test-coverage)) and run `tofu -chdir=<module_path> test` until every case passes for the right reason — do not weaken a test just to make it pass.
+6. Push and open a PR, filling in every section of [`.github/pull_request_template.md`](./.github/pull_request_template.md).
 
 **A note on `terraform-docs` and `tofu fmt`:** for PRs opened from a branch in this repo, the `Build` workflow ([`build.yml`](./.github/workflows/build.yml)) runs `tofu fmt -recursive` and regenerates each module's `<!-- BEGIN_TF_DOCS -->` block, then auto-commits the result back to your branch. The current `build.yml` is **not fork-compatible** — it checks out `${{ github.event.pull_request.head.ref }}` against the base repository without setting `repository: head.repo.full_name`, so the checkout fails for PRs opened from a fork. Until that is addressed, fork contributors must run these locally before opening the PR:
 

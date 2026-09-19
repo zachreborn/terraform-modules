@@ -77,13 +77,13 @@ module "admins_permissions" {
   ]
 
   managed_policy_arns = "arn:aws:iam::aws:policy/AdministratorAccess"
-  target_accounts = [
-    module.organization.id,
-    module.security.id,
-    module.logging.id,
-    module.network.id,
-    module.infrastructure.id
-  ]
+  target_accounts = {
+    organization   = module.organization.id
+    security       = module.security.id
+    logging        = module.logging.id
+    network        = module.network.id
+    infrastructure = module.infrastructure.id
+  }
 }
 ```
 
@@ -104,9 +104,9 @@ module "customer_managed_permissions" {
 
   customer_managed_iam_policy_name = "test-policy"
   customer_managed_iam_policy_path = "/"
-  target_accounts = [
-    module.organization.id
-  ]
+  target_accounts = {
+    organization = module.organization.id
+  }
 }
 ```
 
@@ -126,17 +126,74 @@ module "inline_permissions" {
   ]
 
   inline_policy = data.aws_iam_policy_document.example.json
-  target_accounts = [
-    module.organization.id,
-    module.security.id,
-    module.logging.id,
-    module.network.id,
-    module.infrastructure.id
-  ]
+  target_accounts = {
+    organization   = module.organization.id
+    security       = module.security.id
+    logging        = module.logging.id
+    network        = module.network.id
+    infrastructure = module.infrastructure.id
+  }
+}
+```
+
+### Same-Apply Example (group_ids)
+
+By default, `groups` resolves group display names via an `aws_identitystore_group` data source lookup at plan time, which requires the group to already exist in AWS Identity Store. If you create a new group and want to assign a permission set to it in the *same* apply (e.g. from the `modules/aws/identity_center` module's own group resources), pass the group's ID directly through `group_ids` instead -- this skips the data source lookup entirely for that group, so a same-apply plan no longer fails with `ResourceNotFoundException: GROUP not found`. This is the fix for [issue #456](https://github.com/zachreborn/terraform-modules/issues/456); it is also how `modules/aws/identity_center`'s own `permission_sets` composition wires newly-created groups in automatically via its `group_keys` input -- see that module's README for the fully composed pattern.
+
+```hcl
+resource "aws_identitystore_group" "readonly" {
+  display_name      = "readonly"
+  identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+}
+
+module "readonly_permissions" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/identity_center/permission_set"
+
+  name        = "ReadOnlyAccess"
+  description = "Read-only permissions for a group created in this same apply"
+
+  # group_ids bypasses the name-based lookup entirely -- readonly's ID is known only after apply,
+  # but that's fine since it flows through as a resource-argument value, not a for_each key.
+  # Note: use group_id (the Identity Store principal ID), not id (aws_identitystore_group's own
+  # resource id is the composite "<identity_store_id>/<group_id>", which is not a valid principal ID).
+  group_ids = {
+    readonly = aws_identitystore_group.readonly.group_id
+  }
+
+  managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  target_accounts = {
+    organization = module.organization.id
+  }
 }
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+
+## Notes / Design Decisions
+
+### `target_accounts` is now `map(string)` (breaking) -- fixes [issue #121](https://github.com/zachreborn/terraform-modules/issues/121)
+
+`target_accounts` changed from `set(string)` to `map(string)`: the key is a static, caller-defined label (e.g. an account name/alias) that must be known at plan time, and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). Previously the account ID itself drove the `aws_ssoadmin_account_assignment` `for_each` key, so a computed account ID made the key unknown at plan time and planning failed with `The for_each value depends on resource attributes that cannot be determined until apply.` -- meaning a brand-new account and its permission set assignment could never be created in the same apply. Keying by a static label instead fixes this: the label is always known at plan time, and the account ID is only ever consumed as the `target_id` resource attribute.
+
+Convert existing `target_accounts` list literals to maps (see the examples above), choosing any stable, caller-meaningful label per account. Two constraints are enforced on the map:
+
+- **Labels must not contain an underscore (`_`).** The `for_each` key is derived as `"<group_name>_<label>"`; without this constraint, two different (group, label) pairs could concatenate to the same string (e.g. group `"a"` + label `"b_c"` collides with group `"a_b"` + label `"c"`), which fails at plan time with a confusing duplicate-object-key error instead of this module's clear validation message.
+- **Account ID values must be unique across labels.** Assigning the same account ID under two different labels would create two `aws_ssoadmin_account_assignment` resources managing the identical AWS assignment under separate addresses -- which can conflict on create and inconsistently revoke access if either address is later destroyed.
+
+**State migration:** the `for_each` key for `aws_ssoadmin_account_assignment.this` changes from `"<group_name>_<account_id>"` (e.g. `"admins_123456789012"`) to `"<group_name>_<label>"` (e.g. `"admins_organization"`), and `assignment_ids` (see below) is re-keyed identically. Without a state migration, every existing assignment plans as **destroy + create**, which revokes the group's access to that account until the create completes.
+
+Migrate state with a `tofu state mv` / `terraform state mv` command per assignment, mapping each old key to its new label-based key -- scriptable for many accounts:
+```sh
+tofu state mv \
+  'module.admins_permissions.aws_ssoadmin_account_assignment.this["admins_123456789012"]' \
+  'module.admins_permissions.aws_ssoadmin_account_assignment.this["admins_organization"]'
+```
+
+The module cannot ship a generic `moved` block for this migration -- `moved` requires static, literal addresses, and the old key embeds caller-specific account IDs. Unlike `state mv`, a `moved` block can only be *declared inside the module that instantiates the resource*, never from a caller's root module, so a root-level `moved` block referencing `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]` is not a usable migration path for callers consuming this module by source reference. `state mv` is therefore the supported migration path; a `moved` block is only an option if you fork or vendor this module and add it directly inside its own `main.tf`.
+
+### `assignment_ids` output key changed (breaking)
+
+`assignment_ids` is now keyed by `"<group_name>_<label>"` (the `target_accounts` map label, not the account ID -- the same key already used by the underlying `aws_ssoadmin_account_assignment` `for_each`) instead of `"<principal_id>_<account_id>"` (parsed from the assignment resource's own runtime `id`). The old derivation re-parsed a value from the resource's `id` to build a map key, which could collide if two assignments ever resolved to the same parsed key, and made it impossible to write native `tofu test` coverage of multiple assignments together, since mocked resource attributes are not unique per instance. If you index this output by the old `<principal_id>_<account_id>` or `<group_name>_<account_id>` shape, update those references to the new `<group_name>_<label>` key before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -146,14 +203,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -163,7 +220,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_ssoadmin_account_assignment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment) | resource |
 | [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
 | [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
@@ -175,27 +232,30 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_customer_managed_iam_policy_name"></a> [customer\_managed\_iam\_policy\_name](#input\_customer\_managed\_iam\_policy\_name) | (Optional) The name of the customer managed IAM policy to attach to a Permission Set. If this is set, the module will utilize a customer\_managed\_policy\_attachment. | `string` | `null` | no |
 | <a name="input_customer_managed_iam_policy_path"></a> [customer\_managed\_iam\_policy\_path](#input\_customer\_managed\_iam\_policy\_path) | (Optional) The path of the customer managed IAM policy to attach to a Permission Set. | `string` | `"/"` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) The description of the permission set. | `string` | `null` | no |
 | <a name="input_group_attribute_path"></a> [group\_attribute\_path](#input\_group\_attribute\_path) | (Optional) The path of the group attribute in AWS SSO. This value is used to uniquely identify groups in AWS SSO. | `string` | `"DisplayName"` | no |
-| <a name="input_groups"></a> [groups](#input\_groups) | (Required) The group names to lookup and associate with the permission set. | `set(string)` | n/a | yes |
+| <a name="input_group_ids"></a> [group\_ids](#input\_group\_ids) | (Optional) Pre-resolved Identity Store group IDs keyed by the same logical group name used in<br/>groups / the assignment keys. Use this to bypass the name-based data source lookup entirely --<br/>e.g. pass a group's id output so a new group and its permission set can be created in one apply.<br/>Values may be known-only-after-apply. If the same key appears in both groups and group\_ids,<br/>group\_ids wins and the data source lookup is skipped for it. | `map(string)` | `{}` | no |
+| <a name="input_groups"></a> [groups](#input\_groups) | (Optional) Group display names to resolve via the aws\_identitystore\_group data source and<br/>associate with the permission set. Names supplied here must already exist in AWS Identity Store<br/>at plan time. Keys present in group\_ids are resolved from that map instead and skipped here. | `set(string)` | `[]` | no |
 | <a name="input_inline_policy"></a> [inline\_policy](#input\_inline\_policy) | (Optional) The IAM inline policy to attach to a Permission Set. If this is set, the module will utilize an inline\_policy. | `string` | `null` | no |
 | <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) List of ARNs of the IAM managed policy to attach to a Permission Set. If this is set, the module will utilize a managed\_policy\_attachment. | `list(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The name of the permission set. | `string` | n/a | yes |
 | <a name="input_relay_state"></a> [relay\_state](#input\_relay\_state) | (Optional) The relay state URL used to redirect users within the application during the federation authentication process. | `string` | `null` | no |
 | <a name="input_session_duration"></a> [session\_duration](#input\_session\_duration) | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. | `string` | `"PT1H"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. | `map(string)` | `{}` | no |
-| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) The list of AWS account IDs to assign the permission set to. | `set(string)` | n/a | yes |
+| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) Map of AWS accounts to assign the permission set to. The key is a static,<br/>caller-defined label (e.g. an account name/alias) that must be known at plan time and must not<br/>contain an underscore ('\_'); the value is the AWS account ID, which may be a computed reference<br/>(e.g. a newly created account's id) that is only known after apply. Keying by a static label --<br/>instead of the account ID itself -- keeps the underlying aws\_ssoadmin\_account\_assignment for\_each<br/>key plan-time-known even when the account ID is not, which is what allows a brand-new account and<br/>its permission set assignment to be created together in the same apply. Each account ID value<br/>must also be unique across labels: the module assigns one aws\_ssoadmin\_account\_assignment per<br/>group x label pair, so reusing the same account ID under two labels would create two resources<br/>managing the identical AWS assignment under separate addresses. | `map(string)` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
-| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration |
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group\_name>\_<label>' (the target\_accounts map label, not the account ID) -- the same key already used by the underlying for\_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id). |
 | <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
+| <a name="output_group_attribute_path"></a> [group\_attribute\_path](#output\_group\_attribute\_path) | The group attribute path actually used for the name-based aws\_identitystore\_group data source lookup (var.group\_attribute\_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly). |
+| <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group\_ids input. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the permission set |
 <!-- END_TF_DOCS -->
 

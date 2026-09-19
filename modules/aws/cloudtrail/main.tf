@@ -255,6 +255,29 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_bucket_lifecycle" {
     expiration {
       days = var.bucket_lifecycle_expiration_days
     }
+
+    dynamic "transition" {
+      for_each = var.bucket_lifecycle_transitions
+      content {
+        days          = transition.value.days
+        storage_class = transition.value.storage_class
+      }
+    }
+
+    dynamic "noncurrent_version_expiration" {
+      for_each = var.bucket_lifecycle_noncurrent_version_expiration_days == null ? [] : [var.bucket_lifecycle_noncurrent_version_expiration_days]
+      content {
+        noncurrent_days = noncurrent_version_expiration.value
+      }
+    }
+
+    dynamic "noncurrent_version_transition" {
+      for_each = var.bucket_lifecycle_noncurrent_version_transitions
+      content {
+        noncurrent_days = noncurrent_version_transition.value.noncurrent_days
+        storage_class   = noncurrent_version_transition.value.storage_class
+      }
+    }
   }
 }
 

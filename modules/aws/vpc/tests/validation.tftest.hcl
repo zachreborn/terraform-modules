@@ -1,0 +1,618 @@
+mock_provider "aws" {}
+
+run "valid_baseline_does_not_fail" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+  }
+
+  assert {
+    condition     = aws_vpc.vpc.cidr_block == var.vpc_cidr
+    error_message = "Default inputs should satisfy every validation block and plan successfully."
+  }
+}
+
+run "rejects_invalid_instance_tenancy" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    instance_tenancy = "host"
+  }
+
+  expect_failures = [var.instance_tenancy]
+}
+
+run "rejects_subnet_index_above_range" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    subnet_indices   = [3]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_subnet_index_below_range" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    subnet_indices   = [-1]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_subnet_indices_longer_than_private_subnets_list" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    # Truncate the module's own default private_subnets_list to 2 entries
+    # (rather than hardcoding new CIDR literals) so subnet_indices (3 entries)
+    # ends up longer than private_subnets_list, tripping the length check.
+    private_subnets_list = slice(var.private_subnets_list, 0, 2)
+    subnet_indices       = [0, 1, 2]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+# Regression test for the previously-hardcoded "0 to 2" cap on subnet_indices
+# (fixed to be dynamic: 0 to length(private_subnets_list) - 1). Extend the
+# module's own default private_subnets_list by one entry (rather than
+# hardcoding a new CIDR literal) so subnet_indices can reference index 3,
+# which used to be rejected unconditionally regardless of how many private
+# subnets were actually configured.
+run "accepts_subnet_index_beyond_old_hardcoded_cap_when_private_subnets_list_is_longer" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    subnet_indices       = [3]
+  }
+
+  assert {
+    condition     = aws_vpc.vpc.cidr_block == var.vpc_cidr
+    error_message = "subnet_indices=[3] should now pass validation when private_subnets_list has 4 entries, and the rest of the plan should proceed normally."
+  }
+}
+
+# Regression test: aws_subnet.private_subnets assigns AZs via
+# element(var.azs, count.index), which cycles once there are more private
+# subnets than AZs. With the default 3 AZs and a 4th private subnet added,
+# indices 0 and 3 both land on azs[0] -- selecting both would place two
+# subnets from the same AZ behind each SSM interface endpoint.
+run "rejects_subnet_indices_selecting_duplicate_az" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = concat(var.private_subnets_list, [cidrsubnet(var.private_subnets_list[0], 1, 1)])
+    subnet_indices       = [0, 3]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_invalid_cloudwatch_retention_in_days" {
+  command = plan
+
+  variables {
+    name                         = "core-vpc"
+    enable_flow_logs             = false
+    cloudwatch_retention_in_days = 45
+  }
+
+  expect_failures = [var.cloudwatch_retention_in_days]
+}
+
+run "rejects_invalid_flow_traffic_type" {
+  command = plan
+
+  variables {
+    name              = "core-vpc"
+    enable_flow_logs  = false
+    flow_traffic_type = "SOMETHING"
+  }
+
+  expect_failures = [var.flow_traffic_type]
+}
+
+run "rejects_internet_monitor_traffic_percentage_below_range" {
+  command = plan
+
+  variables {
+    name                                           = "core-vpc"
+    enable_flow_logs                               = false
+    internet_monitor_traffic_percentage_to_monitor = 0
+  }
+
+  expect_failures = [var.internet_monitor_traffic_percentage_to_monitor]
+}
+
+run "rejects_internet_monitor_traffic_percentage_above_range" {
+  command = plan
+
+  variables {
+    name                                           = "core-vpc"
+    enable_flow_logs                               = false
+    internet_monitor_traffic_percentage_to_monitor = 101
+  }
+
+  expect_failures = [var.internet_monitor_traffic_percentage_to_monitor]
+}
+
+run "rejects_internet_monitor_max_city_networks_below_range" {
+  command = plan
+
+  variables {
+    name                                          = "core-vpc"
+    enable_flow_logs                              = false
+    internet_monitor_max_city_networks_to_monitor = 0
+  }
+
+  expect_failures = [var.internet_monitor_max_city_networks_to_monitor]
+}
+
+run "rejects_internet_monitor_max_city_networks_above_range" {
+  command = plan
+
+  variables {
+    name                                          = "core-vpc"
+    enable_flow_logs                              = false
+    internet_monitor_max_city_networks_to_monitor = 500001
+  }
+
+  expect_failures = [var.internet_monitor_max_city_networks_to_monitor]
+}
+
+run "rejects_invalid_internet_monitor_status" {
+  command = plan
+
+  variables {
+    name                    = "core-vpc"
+    enable_flow_logs        = false
+    internet_monitor_status = "PAUSED"
+  }
+
+  expect_failures = [var.internet_monitor_status]
+}
+
+run "rejects_internet_monitor_availability_score_threshold_below_range" {
+  command = plan
+
+  variables {
+    name                                          = "core-vpc"
+    enable_flow_logs                              = false
+    internet_monitor_availability_score_threshold = 0
+  }
+
+  expect_failures = [var.internet_monitor_availability_score_threshold]
+}
+
+run "rejects_internet_monitor_availability_score_threshold_above_range" {
+  command = plan
+
+  variables {
+    name                                          = "core-vpc"
+    enable_flow_logs                              = false
+    internet_monitor_availability_score_threshold = 101
+  }
+
+  expect_failures = [var.internet_monitor_availability_score_threshold]
+}
+
+run "rejects_internet_monitor_performance_score_threshold_below_range" {
+  command = plan
+
+  variables {
+    name                                         = "core-vpc"
+    enable_flow_logs                             = false
+    internet_monitor_performance_score_threshold = 0
+  }
+
+  expect_failures = [var.internet_monitor_performance_score_threshold]
+}
+
+run "rejects_internet_monitor_performance_score_threshold_above_range" {
+  command = plan
+
+  variables {
+    name                                         = "core-vpc"
+    enable_flow_logs                             = false
+    internet_monitor_performance_score_threshold = 101
+  }
+
+  expect_failures = [var.internet_monitor_performance_score_threshold]
+}
+
+run "rejects_invalid_internet_monitor_s3_bucket_status" {
+  command = plan
+
+  variables {
+    name                              = "core-vpc"
+    enable_flow_logs                  = false
+    internet_monitor_s3_bucket_status = "MAYBE"
+  }
+
+  expect_failures = [var.internet_monitor_s3_bucket_status]
+}
+
+run "rejects_additional_routes_with_unsupported_tier_name" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["bogus"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_empty_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = []
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_duplicate_route_table_types" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["private", "private"]
+        destination_cidr_block = "192.0.2.0/24"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_vpc_endpoints_entry_with_no_identifier" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {}
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_two_identifiers" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name               = "com.amazonaws.us-east-1.secretsmanager"
+        resource_configuration_arn = "arn:aws:vpc-lattice:us-east-1:123456789012:resourceconfiguration/rcfg-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_entry_with_invalid_type" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type = "Bogus"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_subnet_indices_with_duplicate_values" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    subnet_indices   = [0, 0]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_subnet_indices_with_fractional_value" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    subnet_indices   = [0.5]
+  }
+
+  expect_failures = [var.subnet_indices]
+}
+
+run "rejects_additional_routes_with_no_destination" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types         = ["private"]
+        vpc_peering_connection_id = "pcx-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_two_destinations" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types           = ["private"]
+        destination_cidr_block      = cidrsubnet(var.private_subnets_list[0], 4, 1)
+        destination_ipv6_cidr_block = "2600:1f16:abc:d800::/64"
+        vpc_peering_connection_id   = "pcx-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_no_target" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types      = ["private"]
+        destination_cidr_block = cidrsubnet(var.private_subnets_list[0], 4, 1)
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_additional_routes_with_two_targets" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    additional_routes = {
+      bad = {
+        route_table_types         = ["private"]
+        destination_cidr_block    = cidrsubnet(var.private_subnets_list[0], 4, 1)
+        vpc_peering_connection_id = "pcx-0123456789abcdef0"
+        transit_gateway_id        = "tgw-0123456789abcdef0"
+      }
+    }
+  }
+
+  expect_failures = [var.additional_routes]
+}
+
+run "rejects_vpc_endpoints_entry_with_identifier_type_mismatch" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        resource_configuration_arn = "arn:aws:vpc-lattice:us-east-1:123456789012:resourceconfiguration/rcfg-0123456789abcdef0"
+        vpc_endpoint_type          = "Interface"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+run "rejects_vpc_endpoints_subnet_configuration_id_not_in_subnet_ids" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name = "com.amazonaws.us-east-1.secretsmanager"
+        subnet_ids   = ["subnet-0123456789abcdef0"]
+        subnet_configuration = [
+          {
+            subnet_id = "subnet-fedcba9876543210f"
+          }
+        ]
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# security_group_ids is only applicable to Interface endpoints (AWS provider
+# docs); a Gateway endpoint supplying one should be rejected at validation
+# time instead of failing later at apply.
+run "rejects_vpc_endpoints_security_group_ids_on_non_interface_type" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name       = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type  = "Gateway"
+        security_group_ids = ["sg-0123456789abcdef0"]
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# route_table_ids is only applicable to Gateway endpoints (AWS provider
+# docs); an Interface endpoint supplying one should be rejected at
+# validation time instead of failing later at apply.
+run "rejects_vpc_endpoints_route_table_ids_on_non_gateway_type" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+        route_table_ids     = ["rtb-0123456789abcdef0"]
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# GatewayLoadBalancer endpoints accept exactly one subnet; supplying more
+# than one should be rejected at validation time instead of failing later
+# at apply.
+run "rejects_vpc_endpoints_gatewayloadbalancer_with_multiple_subnets" {
+  command = plan
+
+  variables {
+    name             = "core-vpc"
+    enable_flow_logs = false
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+        vpc_endpoint_type = "GatewayLoadBalancer"
+        subnet_ids        = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1"]
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# With no managed private subnets to default to, an Interface endpoint that
+# omits subnet_ids would otherwise silently plan with an empty subnet set
+# and fail at apply; reject it at validation time instead.
+run "rejects_vpc_endpoints_interface_type_without_subnets_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      bad = {
+        service_name        = "com.amazonaws.us-east-1.secretsmanager"
+        vpc_endpoint_type   = "Interface"
+        private_dns_enabled = true
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# With no managed private subnets to default to, a GatewayLoadBalancer
+# endpoint that omits subnet_ids would otherwise index an empty fallback
+# list and fail during planning; reject it at validation time instead.
+run "rejects_vpc_endpoints_gatewayloadbalancer_without_subnets_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      bad = {
+        service_name      = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+        vpc_endpoint_type = "GatewayLoadBalancer"
+      }
+    }
+  }
+
+  expect_failures = [var.vpc_endpoints]
+}
+
+# A Gateway endpoint doesn't need subnet_ids at all, so an empty
+# private_subnets_list should not affect it.
+run "accepts_vpc_endpoints_gateway_type_when_private_subnets_list_is_empty" {
+  command = plan
+
+  variables {
+    name                 = "core-vpc"
+    enable_flow_logs     = false
+    private_subnets_list = []
+    subnet_indices       = []
+    vpc_endpoints = {
+      good = {
+        service_name      = "com.amazonaws.us-east-1.dynamodb"
+        vpc_endpoint_type = "Gateway"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.custom) == 1
+    error_message = "A Gateway endpoint should plan successfully even when private_subnets_list is empty, since it doesn't use subnet_ids."
+  }
+}

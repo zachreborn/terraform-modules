@@ -62,7 +62,7 @@ variable "engine_version" {
 
 variable "identifier" {
   type        = string
-  description = "(Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier."
+  description = "(Optional, Forces new resource) The identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier."
   default     = null
 }
 

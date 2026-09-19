@@ -24,10 +24,12 @@ resource "aws_kms_key" "this" {
   key_usage                = var.key_usage
   is_enabled               = var.is_enabled
   policy                   = var.policy
+  region                   = var.region
   tags                     = var.tags
 }
 
 resource "aws_kms_alias" "this" {
   name_prefix   = startswith(var.name_prefix, "alias/") ? var.name_prefix : "alias/${var.name_prefix}"
   target_key_id = aws_kms_key.this.key_id
+  region        = var.region
 }

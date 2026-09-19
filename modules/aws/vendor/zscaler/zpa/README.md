@@ -103,14 +103,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -120,7 +120,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_metric_alarm.instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.system](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_instance.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
@@ -131,7 +131,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID to override the default Amazon Linux 2 AMI. If not specified, the latest Amazon Linux 2 x86\_64 HVM GP2 AMI is selected automatically. | `string` | `null` | no |
 | <a name="input_associate_public_ip_address"></a> [associate\_public\_ip\_address](#input\_associate\_public\_ip\_address) | (Optional) Whether to associate a public IP address with the instances. Defaults to false. | `bool` | `false` | no |
 | <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Whether to encrypt the root EBS volume. Defaults to true. | `bool` | `true` | no |
@@ -155,7 +155,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arns"></a> [arns](#output\_arns) | List of ARNs for the ZPA App Connector EC2 instances. |
 | <a name="output_instance_ids"></a> [instance\_ids](#output\_instance\_ids) | List of EC2 instance IDs for the ZPA App Connector instances. |
 | <a name="output_private_ips"></a> [private\_ips](#output\_private\_ips) | List of private IP addresses assigned to the ZPA App Connector instances. |

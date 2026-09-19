@@ -83,13 +83,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_tfe"></a> [tfe](#requirement\_tfe) | >=0.42.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_tfe"></a> [tfe](#provider\_tfe) | >=0.42.0 |
 
 ## Modules
@@ -99,13 +99,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [tfe_team.this](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/team) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_manage_modules"></a> [manage\_modules](#input\_manage\_modules) | (Optional) Allow members to publish and delete modules in the organization's private registry. | `bool` | `false` | no |
 | <a name="input_manage_policies"></a> [manage\_policies](#input\_manage\_policies) | (Optional) Allows members to create, edit, and delete the organization's Sentinel policies. | `bool` | `false` | no |
 | <a name="input_manage_policy_overrides"></a> [manage\_policy\_overrides](#input\_manage\_policy\_overrides) | (Optional) Allows members to override soft-mandatory policy checks. | `bool` | `false` | no |
@@ -121,7 +121,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 <!-- END_TF_DOCS -->
 

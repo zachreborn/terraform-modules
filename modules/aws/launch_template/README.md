@@ -110,14 +110,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.0.0 |
 
 ## Modules
@@ -127,13 +127,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_launch_template.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_auto_recovery"></a> [auto\_recovery](#input\_auto\_recovery) | (Optional) Disables the automatic recovery behavior of your instance or sets it to default. Can be 'default' or 'disabled'. See Recover your instance for more details. | `string` | `"default"` | no |
 | <a name="input_block_device_mappings"></a> [block\_device\_mappings](#input\_block\_device\_mappings) | (Optional) Customize EBS volumes attached to the instance. | <pre>list(object({<br/>    device_name = string<br/>    ebs = object({<br/>      delete_on_termination = bool<br/>      encrypted             = bool<br/>      iops                  = number<br/>      kms_key_id            = string<br/>      snapshot_id           = string<br/>      throughput            = number<br/>      volume_size           = number<br/>      volume_type           = string<br/>    })<br/>  }))</pre> | `[]` | no |
 | <a name="input_credit_specification"></a> [credit\_specification](#input\_credit\_specification) | (Optional) Customize the credit specification of the instance. See Credit Specification below for more details. | <pre>object({<br/>    cpu_credits = string<br/>  })</pre> | <pre>{<br/>  "cpu_credits": "standard"<br/>}</pre> | no |
@@ -165,7 +165,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | Amazon Resource Name (ARN) of the launch template. |
 | <a name="output_id"></a> [id](#output\_id) | ID of the launch template. |
 | <a name="output_latest_version"></a> [latest\_version](#output\_latest\_version) | The latest version of the launch template. |

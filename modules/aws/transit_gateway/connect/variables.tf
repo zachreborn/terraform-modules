@@ -25,7 +25,7 @@ variable "transit_gateway_default_route_table_propagation" {
 
 variable "transport_attachment_id" {
   type        = string
-  description = "(Required) The underlaying transit gateway VPC attachment ID."
+  description = "(Required) The underlying transit gateway VPC attachment ID."
 }
 
 variable "transit_gateway_id" {

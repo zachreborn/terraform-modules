@@ -91,14 +91,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
@@ -108,18 +108,18 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_directory_service_directory.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/directory_service_directory) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for enable\_sso. | `string` | `null` | no |
-| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. | `string` | `null` | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_alias"></a> [alias](#input\_alias) | (Optional) The alias for the directory. Required for enable\_sso. WARNING: an alias must be unique across every directory alias in the Region and is immutable -- it is ForceNew, so changing it replaces the directory and destroys anything registered against it. Leave null (the default) to let AWS use the directory ID as the alias. | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | (Optional) A textual description for the directory. WARNING: this is ForceNew -- changing it on an existing directory replaces it and destroys anything registered against it. Treat it as set-once at creation. | `string` | `null` | no |
 | <a name="input_enable_sso"></a> [enable\_sso](#input\_enable\_sso) | (Optional) Whether to enable single-sign on for the directory. Requires alias. Defaults to false. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | (Required) The fully qualified name for the directory, such as corp.example.com | `string` | n/a | yes |
-| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator or connector user. | `string` | n/a | yes |
+| <a name="input_password"></a> [password](#input\_password) | (Required) The password for the directory administrator. Changes to this value are ignored -- see the lifecycle block in main.tf. AWS has no API for updating a directory password, so reset it out of band and leave this input at its original value. | `string` | n/a | yes |
 | <a name="input_short_name"></a> [short\_name](#input\_short\_name) | (Optional) The short name of the directory, such as CORP. | `string` | `null` | no |
 | <a name="input_size"></a> [size](#input\_size) | (Required) The size of the directory. Valid values: Small, Large. | `string` | `"Small"` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs). | `list(string)` | `[]` | no |
@@ -130,7 +130,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_dns_ip_addresses"></a> [dns\_ip\_addresses](#output\_dns\_ip\_addresses) | A list of IP addresses of the DNS servers for the directory. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the directory. |
 | <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | The ID of the security group created by the directory. |

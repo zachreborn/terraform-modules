@@ -152,14 +152,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | n/a |
 
@@ -170,7 +170,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_openid_connect_provider.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 | [aws_iam_role.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.terraform_cloud](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
@@ -179,7 +179,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | (Optional) The name of the IAM role to assume when generating dynamic credentials for this workspace. | `string` | `"terraform_cloud"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the workspace. | `map(string)` | <pre>{<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 | <a name="input_terraform_cloud_aws_audience"></a> [terraform\_cloud\_aws\_audience](#input\_terraform\_cloud\_aws\_audience) | (Optional) The audience value to use in the terraform run identity tokens | `string` | `"aws.workload.identity"` | no |
@@ -192,7 +192,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The ARN of the IAM role for 'terraform\_cloud' that Terraform Cloud/Enterprise will assume. |
 <!-- END_TF_DOCS -->
 

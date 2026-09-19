@@ -18,7 +18,7 @@ terraform {
 data "aws_ssoadmin_instances" "this" {}
 
 data "aws_identitystore_group" "this" {
-  for_each          = var.groups
+  for_each          = toset([for g in var.groups : g if !contains(keys(var.group_ids), g)])
   identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
   alternate_identifier {
     unique_attribute {
@@ -33,24 +33,42 @@ data "aws_identitystore_group" "this" {
 ###########################
 
 locals {
+  # Effective group display name -> group ID map: looked-up IDs (from the narrowed data source
+  # above) merged with the caller-supplied group_ids (group_ids wins on key overlap). Every
+  # downstream reference to a group's ID goes through this map instead of the data source directly,
+  # so a group covered by group_ids never triggers a GetGroupId API call.
+  group_id_map = merge(
+    { for g, d in data.aws_identitystore_group.this : g => d.group_id },
+    var.group_ids
+  )
+
   # Creates a map of objects with the following structure:
   # assignments = {
-  #   "group_name_account_id" = {
+  #   "group_name_label" = {
   #     group_name = group_name
   #     group_id   = group_id
   #     account_id = account_id
+  #     label      = label
   #   }
   # }
+  # Keyed by the caller-supplied target_accounts label (never the account_id itself), so the key
+  # stays known at plan time even when the account_id value is only known after apply -- e.g. a
+  # newly created aws_organizations_account's id. This is the fix for issue #121.
+  #
+  # "${group_name}_${label}" is guaranteed unique because var.target_accounts's own validation
+  # (variables.tf) rejects underscores in labels and rejects duplicate account_id values -- see that
+  # variable's validation blocks for the full rationale.
   assignments = {
     for item in flatten([
-      for group in var.groups : [
-        for account in var.target_accounts : {
+      for group in keys(local.group_id_map) : [
+        for label, account in var.target_accounts : {
           group_name = group
-          group_id   = data.aws_identitystore_group.this[group].group_id
+          group_id   = local.group_id_map[group]
           account_id = account
+          label      = label
         }
       ]
-    ]) : "${item.group_name}_${item.account_id}" => item
+    ]) : "${item.group_name}_${item.label}" => item
   }
 }
 

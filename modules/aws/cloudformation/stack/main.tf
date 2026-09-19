@@ -35,9 +35,9 @@ resource "aws_cloudformation_stack" "this" {
   on_failure         = var.disable_rollback ? null : var.on_failure
   parameters         = var.parameters
   policy_body        = var.policy_url == null ? var.policy_body : null
-  policy_url         = var.policy_body == null ? var.policy_url : null
+  policy_url         = var.policy_url
   tags               = var.tags
   template_body      = var.template_url == null ? var.template_body : null
-  template_url       = var.template_body == null ? var.template_url : null
+  template_url       = var.template_url
   timeout_in_minutes = var.timeout_in_minutes
 }

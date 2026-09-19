@@ -13,6 +13,7 @@ variable "customer_master_key_spec" {
 }
 
 variable "description" {
+  type        = string
   description = "(Optional) The description of the key as viewed in AWS console."
   default     = null
 }
@@ -56,11 +57,18 @@ variable "policy" {
   default     = null
 }
 
+variable "region" {
+  type        = string
+  description = "(Optional) Region where this KMS key and its alias are managed. Defaults to the Region set in the provider configuration."
+  default     = null
+}
+
 ######################
 # Global Variables
 ######################
 
 variable "tags" {
+  type        = map(string)
   description = "(Optional) A mapping of tags to assign to the object."
   default = {
     environment = "prod"
