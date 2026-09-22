@@ -33,7 +33,10 @@ variable "accounts" {
       - role_name:                  (Optional) Name of the IAM role Organizations preconfigures in the new
                                      account. Defaults to OrganizationAccountAccessRole.
       - close_on_deletion:          (Optional) If true, a deletion event will close the account. Defaults to false.
-      - tags:                       (Optional) Additional tags for this account, merged with var.tags.
+      - tags:                       (Optional) Additional tags for this account, merged with var.tags. Tag keys
+                                     and values must consist only of letters, numbers, spaces, and the
+                                     characters + - = . _ : / @ (AWS Organizations' allowed tag character set).
+                                     Tag keys must be non-empty; tag values may be empty.
   EOT
   type = map(object({
     name                       = optional(string)
@@ -59,6 +62,43 @@ variable "accounts" {
     ])
     error_message = "Each accounts entry must set exactly one of parent_id or parent_key."
   }
+
+  # AWS Organizations' CreateAccount API rejects tag keys/values containing characters outside this
+  # set at apply time (see issue #496); catching it here surfaces the error at plan/validate time
+  # instead, naming the offending account and tag key.
+  validation {
+    condition = alltrue(flatten([
+      for account_key, account in var.accounts : account != null ? [
+        for tag_key, tag_value in account.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+      ] : []
+    ]))
+    error_message = join(" ", concat(
+      ["Each accounts entry's tags keys must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending account_key.tag_key pairs:"],
+      flatten([
+        for account_key, account in var.accounts : account != null ? [
+          for tag_key, tag_value in account.tags : "${account_key}.${tag_key}"
+          if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+        ] : []
+      ])
+    ))
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for account_key, account in var.accounts : account != null ? [
+        for tag_key, tag_value in account.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+      ] : []
+    ]))
+    error_message = join(" ", concat(
+      ["Each accounts entry's tags values must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending account_key.tag_key pairs (values omitted to avoid echoing long strings):"],
+      flatten([
+        for account_key, account in var.accounts : account != null ? [
+          for tag_key, tag_value in account.tags : "${account_key}.${tag_key}"
+          if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+        ] : []
+      ])
+    ))
+  }
 }
 
 variable "organizational_unit_ids" {
@@ -68,7 +108,38 @@ variable "organizational_unit_ids" {
 }
 
 variable "tags" {
-  description = "(Optional) Key-value map of resource tags applied to every account, merged with each entry's optional per-account tags. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level."
+  description = "(Optional) Key-value map of resource tags applied to every account, merged with each entry's optional per-account tags. If configured with a provider default_tags configuration block present, tags with matching keys will overwrite those defined at the provider-level. Tag keys and values must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Tag keys must be non-empty; tag values may be empty."
   type        = map(any)
   default     = {}
+
+  # See the accounts variable above for why this is validated here rather than only relying on the
+  # resource's own behavior (issue #496).
+  validation {
+    condition = alltrue([
+      for tag_key, tag_value in var.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+    ])
+    error_message = join(" ", concat(
+      ["Each tags key must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending keys:"],
+      [
+        for tag_key, tag_value in var.tags : tag_key
+        if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+      ]
+    ))
+  }
+
+  # var.tags is map(any) (unlike the account-entry tags above, which are map(string)), so each value is
+  # wrapped in tostring() inside can() -- a non-string-convertible value (e.g. a list or object) then
+  # fails this validation instead of raising a type error.
+  validation {
+    condition = alltrue([
+      for tag_key, tag_value in var.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tostring(tag_value)))
+    ])
+    error_message = join(" ", concat(
+      ["Each tags value must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending keys (values omitted to avoid echoing long strings):"],
+      [
+        for tag_key, tag_value in var.tags : tag_key
+        if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tostring(tag_value)))
+      ]
+    ))
+  }
 }
