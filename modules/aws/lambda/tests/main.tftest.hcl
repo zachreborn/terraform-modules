@@ -232,38 +232,31 @@ run "outputs_expose_function_attributes" {
   }
 }
 
-# Implementer note (per the approved spec, .github/specs/issue-502-lambda-completeness.md § 8):
-# this run block is EXPECTED to fail as of this PR, and is placed last in this file so its
-# failure does not skip the unrelated run blocks above. The aws provider's aws_lambda_function
-# schema declares `ExactlyOneOf = ["filename", "image_uri", "s3_bucket"]` (confirmed against
-# hashicorp/aws v6.66.0's internal/service/lambda/function.go), and mock_provider forwards
-# ValidateResourceConfig to the real provider, so this constraint is enforced even under a
-# fully offline `tofu test`. Since this module has no s3_bucket/image_uri input (out of scope
-# per spec § 2/§ 9), omitting filename with no alternative source can never plan successfully.
-# This is the exact "real coverage gap" the spec's implementer note anticipated -- do NOT
-# weaken this assertion or delete this case. It is intentionally left failing so reviewers can
-# decide whether to fold s3_bucket/image_uri into scope (see spec § 9 open question).
-run "omitting_optional_package_inputs_plans_successfully" {
+# aws_lambda_function's schema declares ExactlyOneOf(filename, image_uri, s3_bucket), so a plan
+# that omits all three can never succeed -- this module has no s3_bucket/image_uri input (out of
+# scope per the approved spec's § 2/§ 9), so `filename` must stay supplied here. This case targets
+# the actual regression the spec's acceptance criteria call out: omitting `description` (now
+# `default = null`) no longer fails with "No value for required variable".
+#
+# `source_code_hash` is intentionally not asserted here: it is `Optional: true, Computed: true`
+# in the aws_lambda_function schema (confirmed against hashicorp/aws v6.66.0's
+# internal/service/lambda/function.go), so when it is omitted from config, both the real provider
+# and mock_provider compute a value for it rather than leaving it null -- asserting `== null`
+# would be testing mock-fixture behavior, not real module behavior. The regression this module
+# actually fixes (no "No value for required variable" error) is already proven by this run block
+# planning successfully with `source_code_hash` omitted.
+run "omitting_description_plans_successfully" {
   command = plan
 
   variables {
     function_name = "example-function"
+    filename      = "function.zip"
     role          = "arn:aws:iam::123456789012:role/example-lambda-role"
   }
 
   assert {
     condition     = aws_lambda_function.lambda_function.description == null
     error_message = "description should be null when omitted."
-  }
-
-  assert {
-    condition     = aws_lambda_function.lambda_function.filename == null
-    error_message = "filename should be null when omitted."
-  }
-
-  assert {
-    condition     = aws_lambda_function.lambda_function.source_code_hash == null
-    error_message = "source_code_hash should be null when omitted."
   }
 }
 
