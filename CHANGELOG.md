@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.2.0](https://github.com/zachreborn/terraform-modules/compare/v16.1.1...v16.2.0) (2026-09-25)
+
+
+### Features
+
+* **lambda:** add tags, vpc_config, more outputs, and optional package defaults ([#505](https://github.com/zachreborn/terraform-modules/issues/505)) ([329d4ed](https://github.com/zachreborn/terraform-modules/commit/329d4ed80cc2b6f0412df38952570577d6ee25af))
+
 ## [16.1.1](https://github.com/zachreborn/terraform-modules/compare/v16.1.0...v16.1.1) (2026-09-22)
 
 
