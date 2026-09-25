@@ -1,0 +1,1 @@
+@modules/aws/eventbridge_scheduler/main.tf

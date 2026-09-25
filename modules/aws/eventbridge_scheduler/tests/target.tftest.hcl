@@ -1,0 +1,1 @@
+@modules/aws/eventbridge_scheduler/tests/target.tftest.hcl
