@@ -93,6 +93,9 @@ variable "accounts" {
     separate organizational_unit_ids input here.
     Note: iam_user_access_to_billing has no default here either, for the same reason it has none in the
     account submodule -- see that module's variable description for details.
+    Tag keys and values (both each entry's tags map and the module-level tags variable below) must
+    consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations'
+    allowed tag character set). Tag keys must be non-empty; tag values may be empty.
   EOT
   type = map(object({
     name                       = optional(string)
@@ -105,6 +108,43 @@ variable "accounts" {
     tags                       = optional(map(string), {})
   }))
   default = {}
+
+  # Duplicated from modules/aws/organizations/account/variables.tf's accounts validation (rather than
+  # relying on the submodule alone) so the failure is reported against this caller-facing variable and
+  # is referenceable from this module's own tests via expect_failures = [var.accounts] (issue #496).
+  validation {
+    condition = alltrue(flatten([
+      for account_key, account in var.accounts : account != null ? [
+        for tag_key, tag_value in account.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+      ] : []
+    ]))
+    error_message = join(" ", concat(
+      ["Each accounts entry's tags keys must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending account_key.tag_key pairs:"],
+      flatten([
+        for account_key, account in var.accounts : account != null ? [
+          for tag_key, tag_value in account.tags : "${account_key}.${tag_key}"
+          if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+        ] : []
+      ])
+    ))
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for account_key, account in var.accounts : account != null ? [
+        for tag_key, tag_value in account.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+      ] : []
+    ]))
+    error_message = join(" ", concat(
+      ["Each accounts entry's tags values must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending account_key.tag_key pairs (values omitted to avoid echoing long strings):"],
+      flatten([
+        for account_key, account in var.accounts : account != null ? [
+          for tag_key, tag_value in account.tags : "${account_key}.${tag_key}"
+          if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+        ] : []
+      ])
+    ))
+  }
 }
 
 ############################################################
@@ -136,9 +176,38 @@ variable "delegated_admins" {
 ############################################################
 
 variable "tags" {
-  description = "(Optional) A mapping of tags applied to every Organizational Unit and Account created by this module, merged with each entry's optional per-resource tags."
+  description = "(Optional) A mapping of tags applied to every Organizational Unit and Account created by this module, merged with each entry's optional per-resource tags. Fans out to both the account and ou submodules, and AWS applies the same tag character rules to OU tags. Tag keys and values must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Tag keys must be non-empty; tag values may be empty."
   type        = map(string)
   default = {
     terraform = "true"
+  }
+
+  # See the accounts variable above for why this is validated here rather than only relying on the
+  # submodules alone (issue #496). This single pair of blocks covers both the account and ou submodules,
+  # since var.tags fans out to both.
+  validation {
+    condition = alltrue([
+      for tag_key, tag_value in var.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+    ])
+    error_message = join(" ", concat(
+      ["Each tags key must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending keys:"],
+      [
+        for tag_key, tag_value in var.tags : tag_key
+        if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]+$", tag_key))
+      ]
+    ))
+  }
+
+  validation {
+    condition = alltrue([
+      for tag_key, tag_value in var.tags : can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+    ])
+    error_message = join(" ", concat(
+      ["Each tags value must consist only of letters, numbers, spaces, and the characters + - = . _ : / @ (AWS Organizations' allowed tag character set). Offending keys (values omitted to avoid echoing long strings):"],
+      [
+        for tag_key, tag_value in var.tags : tag_key
+        if !can(regex("^[\\p{L}\\p{N}\\p{Z}+\\-=._:/@]*$", tag_value))
+      ]
+    ))
   }
 }

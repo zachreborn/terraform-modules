@@ -1,5 +1,51 @@
 # Changelog
 
+## [16.3.0](https://github.com/zachreborn/terraform-modules/compare/v16.2.0...v16.3.0) (2026-09-25)
+
+
+### Features
+
+* **eventbridge_scheduler:** add new module wrapping aws_scheduler_schedule ([#506](https://github.com/zachreborn/terraform-modules/issues/506)) ([23fa0cb](https://github.com/zachreborn/terraform-modules/commit/23fa0cb5dc0d834a5eba8fc701ea3b7b05bde964))
+
+## [16.2.0](https://github.com/zachreborn/terraform-modules/compare/v16.1.1...v16.2.0) (2026-09-25)
+
+
+### Features
+
+* **lambda:** add tags, vpc_config, more outputs, and optional package defaults ([#505](https://github.com/zachreborn/terraform-modules/issues/505)) ([329d4ed](https://github.com/zachreborn/terraform-modules/commit/329d4ed80cc2b6f0412df38952570577d6ee25af))
+
+## [16.1.1](https://github.com/zachreborn/terraform-modules/compare/v16.1.0...v16.1.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **organizations:** validate account/OU tag characters at plan time ([#499](https://github.com/zachreborn/terraform-modules/issues/499)) ([c12efc7](https://github.com/zachreborn/terraform-modules/commit/c12efc7bd1886e177b13191d4c6eef76e8048ef1))
+
+## [16.1.0](https://github.com/zachreborn/terraform-modules/compare/v16.0.0...v16.1.0) (2026-09-19)
+
+
+### Features
+
+* **sagemaker,glue:** add Glue catalog database and SageMaker domain/user profile modules ([#357](https://github.com/zachreborn/terraform-modules/issues/357)) ([e50f2a8](https://github.com/zachreborn/terraform-modules/commit/e50f2a8d3411417a0ed0a3183d9cc85ccd8f8aec))
+
+## [16.0.0](https://github.com/zachreborn/terraform-modules/compare/v15.3.0...v16.0.0) (2026-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433))
+
+### Features
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433)) ([d8e9280](https://github.com/zachreborn/terraform-modules/commit/d8e9280fd0826926482733d24a5e9f678ca0c277))
+
+## [15.3.0](https://github.com/zachreborn/terraform-modules/compare/v15.2.0...v15.3.0) (2026-09-17)
+
+
+### Features
+
+* **drs:** add AWS Elastic Disaster Recovery module ([#493](https://github.com/zachreborn/terraform-modules/issues/493)) ([fc8716a](https://github.com/zachreborn/terraform-modules/commit/fc8716a90244370d25363514a614743f6e1c92bc))
+
 ## [15.2.0](https://github.com/zachreborn/terraform-modules/compare/v15.1.0...v15.2.0) (2026-08-28)
 
 
