@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.3.0](https://github.com/zachreborn/terraform-modules/compare/v16.2.0...v16.3.0) (2026-09-25)
+
+
+### Features
+
+* **eventbridge_scheduler:** add new module wrapping aws_scheduler_schedule ([#506](https://github.com/zachreborn/terraform-modules/issues/506)) ([23fa0cb](https://github.com/zachreborn/terraform-modules/commit/23fa0cb5dc0d834a5eba8fc701ea3b7b05bde964))
+
 ## [16.2.0](https://github.com/zachreborn/terraform-modules/compare/v16.1.1...v16.2.0) (2026-09-25)
 
 
