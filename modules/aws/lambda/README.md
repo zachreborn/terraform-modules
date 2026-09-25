@@ -102,7 +102,7 @@ module "vpc_test" {
 
   vpc_config = {
     subnet_ids          = ["subnet-0123456789abcdef0"]
-    security_group_ids  = ["sg-0123456789abcdef0"]
+    security_group_ids = ["sg-0123456789abcdef0"]
   }
 
   dead_letter_config = {
