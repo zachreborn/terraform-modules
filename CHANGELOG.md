@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.1.1](https://github.com/zachreborn/terraform-modules/compare/v16.1.0...v16.1.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **organizations:** validate account/OU tag characters at plan time ([#499](https://github.com/zachreborn/terraform-modules/issues/499)) ([c12efc7](https://github.com/zachreborn/terraform-modules/commit/c12efc7bd1886e177b13191d4c6eef76e8048ef1))
+
 ## [16.1.0](https://github.com/zachreborn/terraform-modules/compare/v16.0.0...v16.1.0) (2026-09-19)
 
 
