@@ -65,6 +65,23 @@ run "with_real_target_still_creates_one_flow_log" {
 }
 
 # Known-length multi-target list (null-check selection, not coalesce) so first-create VPC IDs can plan.
+#
+# NOTE on coverage limits: the actual bug this fix addresses only manifests
+# when a flow_vpc_ids element is unknown at plan time (e.g. flow_vpc_ids =
+# [aws_vpc.this.id] for a VPC created in the same plan, not yet applied).
+# That scenario cannot be reproduced in this native-test file: OpenTofu's
+# mock_provider unconditionally synthesizes a concrete value for every
+# computed attribute in PlanResourceChange, even under command = plan and
+# even with no explicit mock_resource override, so a mocked aws_vpc.id is
+# never actually unknown here (verified against a real aws_vpc-creating
+# fixture module -- its id still came back as a concrete mock string in the
+# plan, not "(known after apply)"). This run therefore only proves that a
+# multi-element, fully known list still selects and counts correctly; it
+# would have passed under the old coalesce()-based code too and does not by
+# itself guard against regressing to coalesce(). Confidence in the
+# unknown-value fix instead comes from the real (non-mocked) Scalr plan
+# validation linked in the PR description (aws_prod_opstooling#118), which
+# exercises a genuine first-create VPC id.
 run "with_multiple_vpc_ids_creates_matching_flow_log_count" {
   command = plan
 
