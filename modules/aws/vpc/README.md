@@ -343,6 +343,41 @@ module "vpc" {
 }
 ```
 
+### Cloud WAN VPC Attachment (subnet ARNs)
+
+Cloud WAN VPC attachments require subnet ARNs. Pass them directly from the VPC module outputs instead of building ARNs in locals. Every subnet tier has a matching `*_subnet_arns` list (`private`, `public`, `db`, `dmz`, `mgmt`, `workspaces`); empty tiers return `[]`.
+
+```hcl
+module "vpc" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/vpc"
+
+  name     = "client_prod_vpc"
+  vpc_cidr = "*********/16"
+  azs      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+  tags = {
+    terraform   = "true"
+    environment = "prod"
+  }
+}
+
+module "cloud_wan_vpc_attachment" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/cloud_wan/vpc_attachment"
+
+  core_network_id = var.core_network_id
+
+  vpc_attachments = {
+    workload = {
+      vpc_arn     = module.vpc.vpc_arn
+      subnet_arns = module.vpc.private_subnet_arns
+      # Other tiers: module.vpc.public_subnet_arns, module.vpc.dmz_subnet_arns,
+      # module.vpc.db_subnet_arns, module.vpc.mgmt_subnet_arns,
+      # module.vpc.workspaces_subnet_arns
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -529,12 +564,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_availability_zone"></a> [availability\_zone](#output\_availability\_zone) | n/a |
 | <a name="output_custom_vpc_endpoint_ids"></a> [custom\_vpc\_endpoint\_ids](#output\_custom\_vpc\_endpoint\_ids) | Map of caller-defined VPC endpoint (var.vpc\_endpoints) names to their resource ids. |
 | <a name="output_db_route_table_ids"></a> [db\_route\_table\_ids](#output\_db\_route\_table\_ids) | n/a |
+| <a name="output_db_subnet_arns"></a> [db\_subnet\_arns](#output\_db\_subnet\_arns) | List of ARNs of database subnets |
 | <a name="output_db_subnet_ids"></a> [db\_subnet\_ids](#output\_db\_subnet\_ids) | n/a |
 | <a name="output_default_network_acl_id"></a> [default\_network\_acl\_id](#output\_default\_network\_acl\_id) | The ID of the network ACL created by default on VPC creation. |
 | <a name="output_default_route_table_id"></a> [default\_route\_table\_id](#output\_default\_route\_table\_id) | The ID of the route table created by default on VPC creation. |
 | <a name="output_default_security_group_id"></a> [default\_security\_group\_id](#output\_default\_security\_group\_id) | n/a |
 | <a name="output_dhcp_options_id"></a> [dhcp\_options\_id](#output\_dhcp\_options\_id) | The ID of the DHCP options set associated with the VPC. |
 | <a name="output_dmz_route_table_ids"></a> [dmz\_route\_table\_ids](#output\_dmz\_route\_table\_ids) | n/a |
+| <a name="output_dmz_subnet_arns"></a> [dmz\_subnet\_arns](#output\_dmz\_subnet\_arns) | List of ARNs of DMZ subnets |
 | <a name="output_dmz_subnet_ids"></a> [dmz\_subnet\_ids](#output\_dmz\_subnet\_ids) | n/a |
 | <a name="output_egress_only_internet_gateway_id"></a> [egress\_only\_internet\_gateway\_id](#output\_egress\_only\_internet\_gateway\_id) | The ID of the egress-only internet gateway used for outbound-only IPv6. Null when enable\_ipv6 is false. |
 | <a name="output_igw_id"></a> [igw\_id](#output\_igw\_id) | n/a |
@@ -542,6 +579,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_internet_monitor_id"></a> [internet\_monitor\_id](#output\_internet\_monitor\_id) | The ID (name) of the CloudWatch Internet Monitor. Null when enable\_internet\_monitor is false. |
 | <a name="output_main_route_table_id"></a> [main\_route\_table\_id](#output\_main\_route\_table\_id) | The ID of the main route table associated with the VPC. |
 | <a name="output_mgmt_route_table_ids"></a> [mgmt\_route\_table\_ids](#output\_mgmt\_route\_table\_ids) | n/a |
+| <a name="output_mgmt_subnet_arns"></a> [mgmt\_subnet\_arns](#output\_mgmt\_subnet\_arns) | List of ARNs of management subnets |
 | <a name="output_mgmt_subnet_ids"></a> [mgmt\_subnet\_ids](#output\_mgmt\_subnet\_ids) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | The name of the VPC |
 | <a name="output_nat_eips"></a> [nat\_eips](#output\_nat\_eips) | n/a |
@@ -553,6 +591,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | n/a |
 | <a name="output_private_subnets"></a> [private\_subnets](#output\_private\_subnets) | n/a |
 | <a name="output_public_route_table_ids"></a> [public\_route\_table\_ids](#output\_public\_route\_table\_ids) | n/a |
+| <a name="output_public_subnet_arns"></a> [public\_subnet\_arns](#output\_public\_subnet\_arns) | List of ARNs of public subnets |
 | <a name="output_public_subnet_ids"></a> [public\_subnet\_ids](#output\_public\_subnet\_ids) | n/a |
 | <a name="output_public_subnets"></a> [public\_subnets](#output\_public\_subnets) | n/a |
 | <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | A map of tags assigned to the VPC, including those inherited from the provider default\_tags configuration block. |
@@ -564,6 +603,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_vpc_ipv6_association_id"></a> [vpc\_ipv6\_association\_id](#output\_vpc\_ipv6\_association\_id) | The association ID for the VPC's IPv6 CIDR block. Null when enable\_ipv6 is false. |
 | <a name="output_vpc_ipv6_cidr_block"></a> [vpc\_ipv6\_cidr\_block](#output\_vpc\_ipv6\_cidr\_block) | The IPv6 CIDR block assigned to the VPC. Null when enable\_ipv6 is false. |
 | <a name="output_workspaces_route_table_ids"></a> [workspaces\_route\_table\_ids](#output\_workspaces\_route\_table\_ids) | n/a |
+| <a name="output_workspaces_subnet_arns"></a> [workspaces\_subnet\_arns](#output\_workspaces\_subnet\_arns) | List of ARNs of WorkSpaces subnets |
 | <a name="output_workspaces_subnet_ids"></a> [workspaces\_subnet\_ids](#output\_workspaces\_subnet\_ids) | n/a |
 <!-- END_TF_DOCS -->
 

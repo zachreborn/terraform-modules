@@ -21,21 +21,22 @@ data "aws_region" "current" {}
 # Locals
 ###########################
 locals {
-
-  # try() guards against the case where none of the five target variables are
-  # set (all null): coalesce() would otherwise fail with "no non-null,
-  # non-empty-string arguments" when static analysis tools (e.g. tflint)
-  # evaluate the module with all variables left at their defaults. Real
-  # callers must still provide exactly one target list -- that contract is
-  # enforced explicitly by the lifecycle precondition on aws_kms_key.key
-  # below, rather than relying on coalesce() itself to error out.
-  flow_logs_source = try(coalesce(
-    var.flow_eni_ids,
-    var.flow_subnet_ids,
-    var.flow_transit_gateway_ids,
-    var.flow_transit_gateway_attachment_ids,
-    var.flow_vpc_ids
-  ), [])
+  # Select the single non-null target list without coalesce().
+  # coalesce() can taint the whole result as unknown when a list element is
+  # unknown-at-plan (e.g. flow_vpc_ids = [aws_vpc.this.id] on first create).
+  # That makes length() unknown and breaks count on aws_flow_log.this — Scalr
+  # plans fail before apply. A null-check chain keeps list length known while
+  # element IDs may still be unknown. Empty [] covers the all-null default
+  # case for static analysis; preconditions on aws_kms_key.key still require
+  # exactly one non-empty target list from real callers.
+  flow_logs_source = (
+    var.flow_eni_ids != null ? var.flow_eni_ids :
+    var.flow_subnet_ids != null ? var.flow_subnet_ids :
+    var.flow_transit_gateway_ids != null ? var.flow_transit_gateway_ids :
+    var.flow_transit_gateway_attachment_ids != null ? var.flow_transit_gateway_attachment_ids :
+    var.flow_vpc_ids != null ? var.flow_vpc_ids :
+    []
+  )
 }
 
 ###########################
