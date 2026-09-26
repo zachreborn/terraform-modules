@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.4.0](https://github.com/zachreborn/terraform-modules/compare/v16.3.0...v16.4.0) (2026-09-26)
+
+
+### Features
+
+* **aws/vpc:** output subnet ARNs for all subnet tiers ([#491](https://github.com/zachreborn/terraform-modules/issues/491)) ([3b4d9dd](https://github.com/zachreborn/terraform-modules/commit/3b4d9dd2bfa23369b679b2017eb1dcb77b6e511b))
+
 ## [16.3.0](https://github.com/zachreborn/terraform-modules/compare/v16.2.0...v16.3.0) (2026-09-25)
 
 
