@@ -107,19 +107,19 @@ run "rejects_duplicate_target_accounts_values" {
   expect_failures = [var.target_accounts]
 }
 
-run "rejects_target_accounts_label_containing_underscore" {
+run "allows_target_accounts_label_containing_underscore" {
   command = plan
 
   variables {
     name   = "AdministratorAccess"
     groups = ["admins"]
-    # This label, combined with a group named "admins_extra", would otherwise collide with group
-    # "admins" + label "extra_account" -- both concatenate to "admins_extra_account". Rejecting
-    # underscores in labels prevents that ambiguity regardless of what the group name turns out to be.
     target_accounts = { "extra_account" = "123456789012" }
   }
 
-  expect_failures = [var.target_accounts]
+  assert {
+    condition     = contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["admins", "extra_account"]))
+    error_message = "Underscores in target_accounts labels should be accepted and represented by a collision-safe JSON tuple key."
+  }
 }
 
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a signal that the

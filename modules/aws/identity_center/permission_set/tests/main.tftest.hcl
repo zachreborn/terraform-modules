@@ -33,8 +33,8 @@ mock_provider "aws" {
 
   # A single static mocked id is shared by every aws_ssoadmin_account_assignment instance (native tofu
   # test mocking seeds computed attributes per resource *type*, not per instance). This is fine for
-  # assignment_ids: it's keyed by the resource's own for_each key ("<group_name>_<account_id>"), which
-  # is unique by construction regardless of the shared mocked id, so multi-instance runs can safely
+  # assignment_ids: it's keyed by the resource's own JSON-encoded [group_name, label] for_each key,
+  # which is unique by construction regardless of the shared mocked id, so multi-instance runs can safely
   # assert on both the raw resource count and the assignment_ids output itself. The parsed *fields*
   # inside each entry's value (principal_id, target_id, etc.) still reflect the shared mocked id, since
   # those come from parsing .id -- see "group_ids_branch_bypasses_data_source" below for exactly what's
@@ -98,15 +98,15 @@ run "group_ids_branch_bypasses_data_source" {
 
   assert {
     condition     = length(output.assignment_ids) == 2
-    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by '<group_name>_<label>' even though both instances share a mocked id."
+    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by its JSON-encoded [group_name, label] tuple even though both instances share a mocked id."
   }
 
   assert {
     condition = alltrue([
-      contains(keys(output.assignment_ids), "readonly_primary"),
-      contains(keys(output.assignment_ids), "readonly_secondary"),
+      contains(keys(output.assignment_ids), jsonencode(["readonly", "primary"])),
+      contains(keys(output.assignment_ids), jsonencode(["readonly", "secondary"])),
     ])
-    error_message = "assignment_ids should be keyed by '<group_name>_<label>' for each distinct assignment, proving the for_each-derived key no longer collides across instances."
+    error_message = "assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple for each distinct assignment, proving the for_each-derived key does not collide across instances."
   }
 }
 
@@ -261,8 +261,8 @@ run "assignment_ids_output_parses_composite_id" {
   }
 
   assert {
-    condition     = output.assignment_ids["admins_primary"].principal_type == "GROUP"
-    error_message = "assignment_ids should be keyed by '<group_name>_<label>' and parse the mocked comma-delimited id into its component fields."
+    condition     = output.assignment_ids[jsonencode(["admins", "primary"])].principal_type == "GROUP"
+    error_message = "assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple and parse the mocked comma-delimited id into its component fields."
   }
 }
 
@@ -279,18 +279,55 @@ run "assignment_key_derives_from_label_not_account_id" {
   }
 
   assert {
-    condition     = contains(keys(aws_ssoadmin_account_assignment.this), "admins_prod")
-    error_message = "The aws_ssoadmin_account_assignment for_each key should be '<group_name>_<label>' ('admins_prod'), not '<group_name>_<account_id>' ('admins_999999999999') -- this is the regression proof for issue #121: the key must stay plan-time-known even when the account ID value is only known after apply."
+    condition     = contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["admins", "prod"]))
+    error_message = "The aws_ssoadmin_account_assignment for_each key should be the JSON-encoded [group_name, label] tuple, not one derived from the account ID -- this is the regression proof for issue #121: the key must stay plan-time-known even when the account ID value is only known after apply."
   }
 
   assert {
-    condition     = contains(keys(output.assignment_ids), "admins_prod")
-    error_message = "assignment_ids should mirror the resource's own label-derived key ('admins_prod'), not an account-ID-derived key."
+    condition     = contains(keys(output.assignment_ids), jsonencode(["admins", "prod"]))
+    error_message = "assignment_ids should mirror the resource's own label-derived JSON tuple key, not an account-ID-derived key."
   }
 
   assert {
-    condition     = !contains(keys(output.assignment_ids), "admins_999999999999")
+    condition     = !contains(keys(output.assignment_ids), jsonencode(["admins", "999999999999"]))
     error_message = "assignment_ids must never be keyed by the raw account ID -- that is exactly the plan-time-unknown-key failure mode issue #121 fixes."
+  }
+}
+
+# Regression proof for issue #510: hyphens and underscores in labels must remain accepted, and
+# structurally distinct (group, label) pairs that used to concatenate to the same string must retain
+# unique, plan-time-known addresses.
+run "tuple_assignment_keys_support_hyphens_and_underscores_without_collisions" {
+  command = plan
+
+  variables {
+    name = "UnderscoreLabelAccess"
+    group_ids = {
+      a   = "94481408-a061-70b9-9ae4-163731110001"
+      a_b = "94481408-a061-70b9-9ae4-163731110002"
+    }
+    target_accounts = {
+      b_c = "123456789012"
+      "b-c" = "123456789013"
+      c   = "123456789014"
+    }
+  }
+
+  assert {
+    condition     = length(aws_ssoadmin_account_assignment.this) == 6
+    error_message = "Two groups x three target accounts should produce six distinct assignments even when (a, b_c) and (a_b, c) would have collided under delimiter-based keys."
+  }
+
+  assert {
+    condition = alltrue([
+      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a", "b_c"])),
+      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a", "b-c"])),
+      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a_b", "c"])),
+      contains(keys(output.assignment_ids), jsonencode(["a", "b_c"])),
+      contains(keys(output.assignment_ids), jsonencode(["a", "b-c"])),
+      contains(keys(output.assignment_ids), jsonencode(["a_b", "c"])),
+    ])
+    error_message = "Hyphenated and underscored labels must produce collision-safe JSON tuple keys in both the resources and assignment_ids output."
   }
 }
 
