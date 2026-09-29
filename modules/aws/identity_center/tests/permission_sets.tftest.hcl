@@ -84,7 +84,7 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
     permission_sets = {
       admins = {
         group_keys      = ["Administrators"]
-        target_accounts = { primary = "123456789012" }
+        target_accounts = { primary_account = "123456789012" }
       }
     }
   }
@@ -120,8 +120,8 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
   }
 
   assert {
-    condition     = output.permission_set_assignment_ids["admins"][jsonencode(["Administrators", "primary"])].principal_type == "GROUP"
-    error_message = "permission_set_assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple and parsed exactly as the child module's own assignment_ids output."
+    condition     = output.permission_set_assignment_ids["admins"][jsonencode(["Administrators", "primary_account"])].principal_type == "GROUP"
+    error_message = "permission_set_assignment_ids should preserve an underscore-containing label in the JSON-encoded [group_name, label] tuple and parse the child module's assignment_ids output."
   }
 }
 

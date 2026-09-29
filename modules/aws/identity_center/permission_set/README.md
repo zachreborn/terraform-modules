@@ -188,7 +188,7 @@ tofu state mv \
   'module.admins_permissions.aws_ssoadmin_account_assignment.this["[\"admins\",\"organization\"]"]'
 ```
 
-The module cannot ship a generic `moved` block for this migration -- `moved` requires static, literal addresses, and the old key embeds caller-specific account IDs. Unlike `state mv`, a `moved` block can only be *declared inside the module that instantiates the resource*, never from a caller's root module, so a root-level `moved` block referencing `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]` is not a usable migration path for callers consuming this module by source reference. `state mv` is therefore the supported migration path; a `moved` block is only an option if you fork or vendor this module and add it directly inside its own `main.tf`.
+The module cannot ship a generic `moved` block for this migration -- `moved` requires static, literal addresses, and both the old and new keys contain caller-specific group names and labels. Unlike `state mv`, a `moved` block can only be *declared inside the module that instantiates the resource*, never from a caller's root module, so a root-level `moved` block referencing `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]` is not a usable migration path for callers consuming this module by source reference. `state mv` is therefore the supported migration path; a `moved` block is only an option if you fork or vendor this module and add it directly inside its own `main.tf`.
 
 ### `assignment_ids` output key changed (breaking)
 
