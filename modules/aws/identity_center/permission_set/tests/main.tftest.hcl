@@ -307,9 +307,9 @@ run "tuple_assignment_keys_support_hyphens_and_underscores_without_collisions" {
       a_b = "94481408-a061-70b9-9ae4-163731110002"
     }
     target_accounts = {
-      b_c = "123456789012"
+      b_c   = "123456789012"
       "b-c" = "123456789013"
-      c   = "123456789014"
+      c     = "123456789014"
     }
   }
 

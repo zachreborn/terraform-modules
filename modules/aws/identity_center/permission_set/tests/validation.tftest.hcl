@@ -111,8 +111,8 @@ run "allows_target_accounts_label_containing_underscore" {
   command = plan
 
   variables {
-    name   = "AdministratorAccess"
-    groups = ["admins"]
+    name            = "AdministratorAccess"
+    groups          = ["admins"]
     target_accounts = { "extra_account" = "123456789012" }
   }
 

@@ -120,8 +120,8 @@ run "group_keys_wiring_creates_group_and_permission_set_together" {
   }
 
   assert {
-    condition     = output.permission_set_assignment_ids["admins"]["Administrators_primary"].principal_type == "GROUP"
-    error_message = "permission_set_assignment_ids should be keyed by '<group_name>_<label>' and parsed exactly as the child module's own assignment_ids output."
+    condition     = output.permission_set_assignment_ids["admins"][jsonencode(["Administrators", "primary"])].principal_type == "GROUP"
+    error_message = "permission_set_assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple and parsed exactly as the child module's own assignment_ids output."
   }
 }
 
@@ -143,12 +143,12 @@ run "assignment_key_derives_from_label_not_account_id" {
   }
 
   assert {
-    condition     = contains(keys(output.permission_set_assignment_ids["prod"]), "pre-existing-group_prod")
-    error_message = "permission_set_assignment_ids should be keyed by '<group_name>_<label>' ('pre-existing-group_prod'), not '<group_name>_<account_id>', proving the label-based key survives the parent module's pass-through wiring."
+    condition     = contains(keys(output.permission_set_assignment_ids["prod"]), jsonencode(["pre-existing-group", "prod"]))
+    error_message = "permission_set_assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple, not by the account ID, proving the label-based key survives the parent module's pass-through wiring."
   }
 
   assert {
-    condition     = !contains(keys(output.permission_set_assignment_ids["prod"]), "pre-existing-group_999999999999")
+    condition     = !contains(keys(output.permission_set_assignment_ids["prod"]), jsonencode(["pre-existing-group", "999999999999"]))
     error_message = "permission_set_assignment_ids must never be keyed by the raw account ID -- that is exactly the plan-time-unknown-key failure mode issue #121 fixes."
   }
 }
