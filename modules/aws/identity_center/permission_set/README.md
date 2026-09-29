@@ -210,7 +210,7 @@ The module cannot ship a generic `moved` block for this migration -- `moved` req
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.57.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
