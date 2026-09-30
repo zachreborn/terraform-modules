@@ -29,6 +29,16 @@ resource "aws_ssoadmin_account_assignment" "this" {
   permission_set_arn = var.permission_set_arn
   principal_id       = var.group_id
   principal_type     = "GROUP"
+  region             = var.region
   target_id          = each.value
   target_type        = "AWS_ACCOUNT"
+
+  # Only emitted when the caller sets at least one timeout; unset keys keep the provider defaults.
+  dynamic "timeouts" {
+    for_each = length(var.timeouts) > 0 ? [var.timeouts] : []
+    content {
+      create = lookup(timeouts.value, "create", null)
+      delete = lookup(timeouts.value, "delete", null)
+    }
+  }
 }

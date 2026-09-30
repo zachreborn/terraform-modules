@@ -77,6 +77,60 @@ run "empty_target_accounts_plans_no_assignments" {
   }
 }
 
+run "region_is_forwarded_to_every_assignment" {
+  command = plan
+
+  variables {
+    region          = "us-west-2"
+    target_accounts = { primary = "123456789012", secondary = "123456789013" }
+  }
+
+  assert {
+    condition     = alltrue([for k, a in aws_ssoadmin_account_assignment.this : a.region == "us-west-2"])
+    error_message = "region should be forwarded to every aws_ssoadmin_account_assignment."
+  }
+}
+
+run "timeouts_are_forwarded_to_every_assignment" {
+  command = plan
+
+  variables {
+    timeouts        = { create = "10m", delete = "15m" }
+    target_accounts = { primary = "123456789012", secondary = "123456789013" }
+  }
+
+  assert {
+    condition = alltrue([
+      for k, a in aws_ssoadmin_account_assignment.this :
+      a.timeouts.create == "10m" && a.timeouts.delete == "15m"
+    ])
+    error_message = "create and delete timeouts should be forwarded to every aws_ssoadmin_account_assignment."
+  }
+}
+
+run "rejects_unknown_timeouts_key" {
+  command = plan
+
+  variables {
+    timeouts        = { update = "10m" }
+    target_accounts = { primary = "123456789012" }
+  }
+
+  expect_failures = [var.timeouts]
+}
+
+run "rejects_duplicate_target_accounts_values" {
+  command = plan
+
+  variables {
+    # Two labels for the identical account ID would create two resources managing the same AWS
+    # assignment under separate addresses, so direct callers of this module are rejected too.
+    target_accounts = { primary = "123456789012", duplicate = "123456789012" }
+  }
+
+  expect_failures = [var.target_accounts]
+}
+
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a signal that the
 # module code has a bug and fix the root cause in main.tf / variables.tf / outputs.tf, then re-run
 # `tofu test` until it passes for the right reason.

@@ -92,7 +92,8 @@ module "admins_group_assignment" {
 
 - **The label is the resource key.** `aws_ssoadmin_account_assignment.this` is keyed by the `target_accounts` label, never by the account ID, so the key stays known at plan time even when the account ID is only known after apply.
 - **No key construction.** The parent module calls this module once per group, so the full address is `module.group_assignments["<group>"].aws_ssoadmin_account_assignment.this["<label>"]`. Distinct (group, label) pairs cannot collide, and neither group names nor labels are restricted in any way.
-- **Duplicate account IDs** under different labels are rejected by the parent module's `target_accounts` validation, not here, because this module only ever sees one group.
+- **Duplicate account IDs are rejected.** Two labels pointing at the same account ID would create two `aws_ssoadmin_account_assignment` resources managing the identical group, permission set, and account assignment under separate addresses, so deleting either address could revoke the shared assignment. `target_accounts` therefore requires every account ID to be unique across labels. The parent `permission_set` module enforces the same rule on its own input, so callers get the error at the outermost variable.
+- **`region` and `timeouts`.** `region` (default: the provider's Region) and `timeouts` (a map with the optional keys `create` and `delete`; provider default 5m each) are passed to every assignment. The parent `permission_set` module does not expose them, so they apply to direct callers of this module. A `region` for the parent would have to cover its permission set, policy attachments, and data sources together -- applying it to only the assignments would split one permission set across Regions -- so it is left as a separate change.
 - **Outputs mirror the keys.** `assignment_ids` is keyed by the same label and exposes the parsed components of each assignment's composite `id`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -130,7 +131,9 @@ No modules.
 | <a name="input_group_id"></a> [group\_id](#input\_group\_id) | (Required) The Identity Store group ID (principal ID) the permission set is assigned to. May be known only after apply. | `string` | n/a | yes |
 | <a name="input_instance_arn"></a> [instance\_arn](#input\_instance\_arn) | (Required) The ARN of the IAM Identity Center instance the permission set belongs to. | `string` | n/a | yes |
 | <a name="input_permission_set_arn"></a> [permission\_set\_arn](#input\_permission\_set\_arn) | (Required) The ARN of the permission set to assign. | `string` | n/a | yes |
-| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) Map of static, caller-defined label to AWS account ID. The label keys the underlying for\_each (and must be known at plan time); the account ID may be known only after apply. Labels may contain any characters. | `map(string)` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | (Optional) Region where the account assignments are managed. Defaults to the Region set in the provider configuration. It must be the Region of the IAM Identity Center instance and permission set being assigned. | `string` | `null` | no |
+| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) Map of static, caller-defined label to AWS account ID. The label keys the underlying for\_each (and must be known at plan time); the account ID may be known only after apply. Labels may contain any characters. Each account ID must be unique across labels. | `map(string)` | n/a | yes |
+| <a name="input_timeouts"></a> [timeouts](#input\_timeouts) | (Optional) Operation timeouts applied to every aws\_ssoadmin\_account\_assignment, as a map with the optional keys 'create' and 'delete' (for example { create = "10m", delete = "10m" }). Unset keys use the provider defaults (5m each). | `map(string)` | `{}` | no |
 
 ## Outputs
 
