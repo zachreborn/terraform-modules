@@ -1,5 +1,16 @@
 # Changelog
 
+## [17.0.0](https://github.com/zachreborn/terraform-modules/compare/v16.4.0...v17.0.0) (2026-09-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center:** allow underscore account labels ([#511](https://github.com/zachreborn/terraform-modules/issues/511))
+
+### Features
+
+* **identity_center:** allow underscore account labels ([#511](https://github.com/zachreborn/terraform-modules/issues/511)) ([664d99a](https://github.com/zachreborn/terraform-modules/commit/664d99af819b82d1e6894e6831090833a1281cbe))
+
 ## [16.4.0](https://github.com/zachreborn/terraform-modules/compare/v16.3.0...v16.4.0) (2026-09-26)
 
 
