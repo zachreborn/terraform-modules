@@ -33,12 +33,12 @@ mock_provider "aws" {
 
   # A single static mocked id is shared by every aws_ssoadmin_account_assignment instance (native tofu
   # test mocking seeds computed attributes per resource *type*, not per instance). This is fine for
-  # assignment_ids: it's keyed by the resource's own JSON-encoded [group_name, label] for_each key,
-  # which is unique by construction regardless of the shared mocked id, so multi-instance runs can safely
-  # assert on both the raw resource count and the assignment_ids output itself. The parsed *fields*
-  # inside each entry's value (principal_id, target_id, etc.) still reflect the shared mocked id, since
-  # those come from parsing .id -- see "group_ids_branch_bypasses_data_source" below for exactly what's
-  # safe to assert in that case.
+  # assignment_ids: the assignments live inside module.group_assignments["<group>"] and are keyed by
+  # target_accounts label within each group, so their addresses are unique by construction regardless
+  # of the shared mocked id. Resources inside child modules are not addressable from a test, so
+  # assertions go through the assignment_ids output instead. The parsed *fields* inside each entry's
+  # value (principal_id, target_id, etc.) still reflect the shared mocked id, since those come from
+  # parsing .id -- see "group_ids_branch_bypasses_data_source" below for exactly what's safe to assert.
   mock_resource "aws_ssoadmin_account_assignment" {
     defaults = {
       id = "94481408-a061-70b9-9ae4-163731112222,GROUP,123456789012,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-abcdef1234567890,arn:aws:sso:::instance/ssoins-1234567890abcdef"
@@ -61,7 +61,7 @@ run "name_lookup_branch_reads_data_source" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 1
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 1
     error_message = "Expected one assignment (1 group x 1 account)."
   }
 
@@ -87,7 +87,7 @@ run "group_ids_branch_bypasses_data_source" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 2
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 2
     error_message = "Expected two assignments (1 group x 2 accounts) built entirely from group_ids."
   }
 
@@ -97,16 +97,16 @@ run "group_ids_branch_bypasses_data_source" {
   }
 
   assert {
-    condition     = length(output.assignment_ids) == 2
-    error_message = "assignment_ids should contain one entry per assignment, keyed uniquely by its JSON-encoded [group_name, label] tuple even though both instances share a mocked id."
+    condition     = length(output.assignment_ids) == 1 && length(output.assignment_ids["readonly"]) == 2
+    error_message = "assignment_ids should contain one group entry holding one entry per label (2), even though both instances share a mocked id."
   }
 
   assert {
     condition = alltrue([
-      contains(keys(output.assignment_ids), jsonencode(["readonly", "primary"])),
-      contains(keys(output.assignment_ids), jsonencode(["readonly", "secondary"])),
+      contains(keys(output.assignment_ids["readonly"]), "primary"),
+      contains(keys(output.assignment_ids["readonly"]), "secondary"),
     ])
-    error_message = "assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple for each distinct assignment, proving the for_each-derived key does not collide across instances."
+    error_message = "assignment_ids should hold one entry per label under the group, proving the labels do not collide across instances."
   }
 }
 
@@ -147,7 +147,7 @@ run "mixed_groups_and_group_ids" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 2
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 2
     error_message = "Expected one assignment per resolved group (existing + new_group) x 1 account."
   }
 }
@@ -236,7 +236,7 @@ run "policy_only_permission_set_with_no_groups" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 0
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 0
     error_message = "No groups or group_ids means no group_id_map entries, so no account assignments should be planned even though target_accounts is non-empty."
   }
 
@@ -261,8 +261,8 @@ run "assignment_ids_output_parses_composite_id" {
   }
 
   assert {
-    condition     = output.assignment_ids[jsonencode(["admins", "primary"])].principal_type == "GROUP"
-    error_message = "assignment_ids should be keyed by the JSON-encoded [group_name, label] tuple and parse the mocked comma-delimited id into its component fields."
+    condition     = output.assignment_ids["admins"]["primary"].principal_type == "GROUP"
+    error_message = "assignment_ids should be nested group -> label and parse the mocked comma-delimited id into its component fields."
   }
 }
 
@@ -279,25 +279,21 @@ run "assignment_key_derives_from_label_not_account_id" {
   }
 
   assert {
-    condition     = contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["admins", "prod"]))
-    error_message = "The aws_ssoadmin_account_assignment for_each key should be the JSON-encoded [group_name, label] tuple, not one derived from the account ID -- this is the regression proof for issue #121: the key must stay plan-time-known even when the account ID value is only known after apply."
+    condition     = contains(keys(output.assignment_ids["admins"]), "prod")
+    error_message = "The per-group aws_ssoadmin_account_assignment for_each key should be the target_accounts label ('prod'), not one derived from the account ID -- this is the regression proof for issue #121: the key must stay plan-time-known even when the account ID value is only known after apply."
   }
 
   assert {
-    condition     = contains(keys(output.assignment_ids), jsonencode(["admins", "prod"]))
-    error_message = "assignment_ids should mirror the resource's own label-derived JSON tuple key, not an account-ID-derived key."
-  }
-
-  assert {
-    condition     = !contains(keys(output.assignment_ids), jsonencode(["admins", "999999999999"]))
+    condition     = !contains(keys(output.assignment_ids["admins"]), "999999999999")
     error_message = "assignment_ids must never be keyed by the raw account ID -- that is exactly the plan-time-unknown-key failure mode issue #121 fixes."
   }
 }
 
-# Regression proof for issue #510: hyphens and underscores in labels must remain accepted, and
-# structurally distinct (group, label) pairs that used to concatenate to the same string must retain
-# unique, plan-time-known addresses.
-run "tuple_assignment_keys_support_hyphens_and_underscores_without_collisions" {
+# Regression proof for issue #510: hyphens and underscores in labels must be accepted, and (group,
+# label) pairs that used to concatenate to the same string -- (a, b_c) and (a_b, c) both became
+# "a_b_c" under the old "<group>_<label>" key -- must stay distinct. Each group is its own
+# module.group_assignments["<group>"] instance, so they cannot collide.
+run "nested_keys_support_hyphens_and_underscores_without_collisions" {
   command = plan
 
   variables {
@@ -314,20 +310,52 @@ run "tuple_assignment_keys_support_hyphens_and_underscores_without_collisions" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 6
-    error_message = "Two groups x three target accounts should produce six distinct assignments even when (a, b_c) and (a_b, c) would have collided under delimiter-based keys."
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 6
+    error_message = "Two groups x three target accounts should produce six distinct assignments even when (a, b_c) and (a_b, c) would have collided under the old delimiter-based keys."
   }
 
   assert {
     condition = alltrue([
-      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a", "b_c"])),
-      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a", "b-c"])),
-      contains(keys(aws_ssoadmin_account_assignment.this), jsonencode(["a_b", "c"])),
-      contains(keys(output.assignment_ids), jsonencode(["a", "b_c"])),
-      contains(keys(output.assignment_ids), jsonencode(["a", "b-c"])),
-      contains(keys(output.assignment_ids), jsonencode(["a_b", "c"])),
+      contains(keys(output.assignment_ids["a"]), "b_c"),
+      contains(keys(output.assignment_ids["a"]), "b-c"),
+      contains(keys(output.assignment_ids["a"]), "c"),
+      contains(keys(output.assignment_ids["a_b"]), "b_c"),
+      contains(keys(output.assignment_ids["a_b"]), "b-c"),
+      contains(keys(output.assignment_ids["a_b"]), "c"),
     ])
-    error_message = "Hyphenated and underscored labels must produce collision-safe JSON tuple keys in both the resources and assignment_ids output."
+    error_message = "Every group must list every label verbatim under its own assignment_ids entry."
+  }
+}
+
+# Nothing is concatenated or encoded, so neither group names nor labels are restricted in any way.
+run "group_names_and_labels_with_any_characters_are_supported" {
+  command = plan
+
+  variables {
+    name = "AnyCharacterAccess"
+    group_ids = {
+      "Domain Admins"    = "94481408-a061-70b9-9ae4-163731110005"
+      "jdoe@example.com" = "94481408-a061-70b9-9ae4-163731110006"
+      "pi|pe"            = "94481408-a061-70b9-9ae4-163731110007"
+    }
+    target_accounts = {
+      "with space" = "123456789012"
+      "pi|pe"      = "123456789013"
+      "at@sign"    = "123456789014"
+    }
+  }
+
+  assert {
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 9
+    error_message = "Three groups x three labels should produce nine distinct assignments regardless of the characters used."
+  }
+
+  assert {
+    condition = alltrue([
+      for g in ["Domain Admins", "jdoe@example.com", "pi|pe"] :
+      alltrue([for l in ["with space", "pi|pe", "at@sign"] : contains(keys(output.assignment_ids[g]), l)])
+    ])
+    error_message = "Group names and labels must appear verbatim as assignment_ids keys with no encoding."
   }
 }
 

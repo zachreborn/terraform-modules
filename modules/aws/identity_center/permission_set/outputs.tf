@@ -14,17 +14,8 @@ output "id" {
 }
 
 output "assignment_ids" {
-  description = "Map of the IDs of the permission set assignments and their corresponding configuration, keyed by the JSON-encoded '[group_name, label]' tuple (the target_accounts map label, not the account ID) -- the same collision-safe key used by the underlying for_each."
-  value = {
-    for key, assignment in aws_ssoadmin_account_assignment.this : key => {
-      principal_id       = split(",", assignment.id)[0]
-      principal_type     = split(",", assignment.id)[1]
-      target_id          = split(",", assignment.id)[2]
-      target_type        = split(",", assignment.id)[3]
-      permission_set_arn = split(",", assignment.id)[4]
-      instance_arn       = split(",", assignment.id)[5]
-    }
-  }
+  description = "Nested map of the permission set's account assignments: group name -> target_accounts label (not the account ID) -> parsed assignment configuration. The nesting mirrors the module.group_assignments[\"<group>\"] / aws_ssoadmin_account_assignment.this[\"<label>\"] resource addresses."
+  value       = { for group, m in module.group_assignments : group => m.assignment_ids }
 }
 
 output "group_ids" {

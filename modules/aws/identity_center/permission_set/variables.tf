@@ -89,7 +89,7 @@ variable "target_accounts" {
     (Required) Map of AWS accounts to assign the permission set to. The key is a static,
     caller-defined label (e.g. an account name/alias) that must be known at plan time; the value is
     the AWS account ID, which may be a computed reference (e.g. a newly created account's id) that
-    is only known after apply. Labels may contain underscores. Keying by a static label -- instead
+    is only known after apply. Labels may contain any characters. Keying by a static label -- instead
     of the account ID itself -- keeps the underlying aws_ssoadmin_account_assignment for_each key
     plan-time-known even when the account ID is not, which is what allows a brand-new account and
     its permission set assignment to be created together in the same apply. Each account ID value

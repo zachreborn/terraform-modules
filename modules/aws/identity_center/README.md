@@ -205,19 +205,35 @@ The underlying `aws_identitystore_group` resource treats `description` as option
 
 ### `permission_sets[*].target_accounts` is now `map(string)` (breaking) -- fixes [issue #121](https://github.com/zachreborn/terraform-modules/issues/121)
 
-Each `permission_sets` entry's `target_accounts` field changed from `set(string)` to `map(string)`, mirroring the identical change in the `permission_set` submodule: the key is a static, caller-defined label known at plan time, and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). Labels may contain underscores and hyphens; account ID values must remain unique across labels within the same entry. This is what allows a brand-new account (created by this same module call, or any other module in the same apply) and its permission set assignment to be created together, instead of failing with `The for_each value depends on resource attributes that cannot be determined until apply.`. See the `permission_set` submodule's own README for the full rationale: the underlying `aws_ssoadmin_account_assignment` `for_each` key and its `assignment_ids` output use a collision-safe JSON-encoded `[group_name, label]` tuple.
+Each `permission_sets` entry's `target_accounts` field changed from `set(string)` to `map(string)`, mirroring the identical change in the `permission_set` submodule: the key is a static, caller-defined label known at plan time, and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). Group names and labels may contain any characters (underscores, hyphens, spaces, and so on); account ID values must remain unique across labels within the same entry. This is what allows a brand-new account (created by this same module call, or any other module in the same apply) and its permission set assignment to be created together, instead of failing with `The for_each value depends on resource attributes that cannot be determined until apply.`. See the `permission_set` submodule's own README for the full rationale: assignments are created by a per-group `group_assignment` child module, so each one is addressed as `module.group_assignments["<group>"].aws_ssoadmin_account_assignment.this["<label>"]` and its `assignment_ids` output is nested group name, then label.
 
-**State migration for composed instances:** the submodule's own README documents `state mv` addresses for a *direct* module call (e.g. `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]`). A `permission_sets` entry composed through *this* module is nested one level deeper -- through this module's own module call, then through the `permission_sets["<key>"]` submodule instance -- so the address to migrate has this shape instead:
+**State migration for composed instances:** the submodule's own README documents `state mv` addresses for a *direct* module call (e.g. `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]`). A `permission_sets` entry composed through *this* module is nested one level deeper -- through this module's own module call, then through the `permission_sets["<key>"]` submodule instance -- so the addresses have this shape instead:
 ```sh
 tofu state mv \
   'module.identity_center.module.permission_sets["admins"].aws_ssoadmin_account_assignment.this["Administrators_organization"]' \
-  'module.identity_center.module.permission_sets["admins"].aws_ssoadmin_account_assignment.this["[\"Administrators\",\"organization\"]"]'
+  'module.identity_center.module.permission_sets["admins"].module.group_assignments["Administrators"].aws_ssoadmin_account_assignment.this["organization"]'
+```
+To migrate many assignments at once, list your groups and labels explicitly (the old `<group_name>_<label>` key cannot be reliably split back apart when either contains an underscore):
+```sh
+for group in Administrators ReadOnly; do
+  for label in organization security; do
+    tofu state mv \
+      "module.identity_center.module.permission_sets[\"admins\"].aws_ssoadmin_account_assignment.this[\"${group}_${label}\"]" \
+      "module.identity_center.module.permission_sets[\"admins\"].module.group_assignments[\"${group}\"].aws_ssoadmin_account_assignment.this[\"${label}\"]"
+  done
+done
 ```
 (Replace `module.identity_center` with whatever local name you gave this module's own call, and `"admins"` with the relevant `permission_sets` map key.)
 
-### `permission_set`'s `assignment_ids` output key changed (breaking)
+### `permission_set_assignment_ids` output is now nested (breaking)
 
-The `permission_set` submodule's `assignment_ids` output is keyed by a JSON-encoded `"[group_name,label]"` tuple, the same collision-safe key used by its underlying `for_each`, rather than a key parsed from the resource's runtime `id`. If you index a composed `permission_set_assignment_ids` value by the old `<group_name>_<label>` or `<principal_id>_<account_id>` shape, update that reference to the JSON tuple key before upgrading.
+Each `permission_set_assignment_ids` value is the `permission_set` submodule's own `assignment_ids`: a nested map of group name, then `target_accounts` label, then the parsed assignment. A composed lookup therefore has three levels:
+
+```hcl
+module.identity_center.permission_set_assignment_ids["admins"]["Administrators"]["organization"].target_id
+```
+
+If you index a composed `permission_set_assignment_ids` value by the old flat `<group_name>_<label>` or `<principal_id>_<account_id>` shape, update that reference to the nested form before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -267,7 +283,7 @@ The `permission_set` submodule's `assignment_ids` output is keyed by a JSON-enco
 | <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | The IDs of the groups in the identity store |
 | <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | The group memberships created in the identity store, keyed by '<user\_display\_name>-<group\_name>' |
 | <a name="output_permission_set_arns"></a> [permission\_set\_arns](#output\_permission\_set\_arns) | Map of permission set ARNs, keyed by the same keys as var.permission\_sets. |
-| <a name="output_permission_set_assignment_ids"></a> [permission\_set\_assignment\_ids](#output\_permission\_set\_assignment\_ids) | Map of each permission set's own assignment\_ids output (account-assignment IDs and parsed fields), keyed by the same keys as var.permission\_sets; each child assignment map uses JSON-encoded [group\_name, label] tuple keys. |
+| <a name="output_permission_set_assignment_ids"></a> [permission\_set\_assignment\_ids](#output\_permission\_set\_assignment\_ids) | Map of each permission set's own assignment\_ids output (account-assignment IDs and parsed fields), keyed by the same keys as var.permission\_sets; each value is nested group name -> target\_accounts label -> assignment. |
 | <a name="output_permission_set_created_dates"></a> [permission\_set\_created\_dates](#output\_permission\_set\_created\_dates) | Map of the date each permission set was created, keyed by the same keys as var.permission\_sets. |
 | <a name="output_permission_set_group_ids"></a> [permission\_set\_group\_ids](#output\_permission\_set\_group\_ids) | Map of each permission set's own effective resolved group-name to group-ID map, keyed by the same keys as var.permission\_sets. |
 | <a name="output_permission_set_ids"></a> [permission\_set\_ids](#output\_permission\_set\_ids) | Map of permission set IDs, keyed by the same keys as var.permission\_sets. |
