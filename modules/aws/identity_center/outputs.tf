@@ -66,7 +66,7 @@ output "permission_set_created_dates" {
 }
 
 output "permission_set_assignment_ids" {
-  description = "Map of each permission set's own assignment_ids output (account-assignment IDs and parsed fields), keyed by the same keys as var.permission_sets."
+  description = "Map of each permission set's own assignment_ids output (account-assignment IDs and parsed fields), keyed by the same keys as var.permission_sets; each value is nested group name -> target_accounts label -> assignment."
   value       = { for k, v in module.permission_sets : k => v.assignment_ids }
 }
 

@@ -63,7 +63,7 @@ run "empty_groups_and_group_ids_plans_successfully" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 0
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 0
     error_message = "groups and group_ids default to empty; a policy-only permission set with no group associations is a legitimate configuration."
   }
 }
@@ -107,19 +107,19 @@ run "rejects_duplicate_target_accounts_values" {
   expect_failures = [var.target_accounts]
 }
 
-run "rejects_target_accounts_label_containing_underscore" {
+run "allows_target_accounts_label_containing_underscore" {
   command = plan
 
   variables {
-    name   = "AdministratorAccess"
-    groups = ["admins"]
-    # This label, combined with a group named "admins_extra", would otherwise collide with group
-    # "admins" + label "extra_account" -- both concatenate to "admins_extra_account". Rejecting
-    # underscores in labels prevents that ambiguity regardless of what the group name turns out to be.
+    name            = "AdministratorAccess"
+    groups          = ["admins"]
     target_accounts = { "extra_account" = "123456789012" }
   }
 
-  expect_failures = [var.target_accounts]
+  assert {
+    condition     = contains(keys(output.assignment_ids["admins"]), "extra_account")
+    error_message = "Underscores in target_accounts labels should be accepted and appear verbatim under the group in assignment_ids."
+  }
 }
 
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a signal that the
