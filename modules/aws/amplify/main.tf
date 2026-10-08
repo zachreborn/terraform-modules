@@ -53,6 +53,12 @@ locals {
       }
     ]
   }) : null
+
+  # Subset of var.branches that opted in to a custom domain. Keys remain the
+  # branch names so existing aws_amplify_domain_association addresses are stable.
+  branch_domain_associations = {
+    for name, branch in var.branches : name => branch if branch.domain_name != null
+  }
 }
 
 ###########################
@@ -144,7 +150,7 @@ resource "aws_amplify_branch" "this" {
   basic_auth_credentials        = each.value.basic_auth_credentials != null ? base64encode(each.value.basic_auth_credentials) : null
   branch_name                   = each.key
   description                   = each.value.description
-  display_name                  = each.value.display_name != null ? each.value.display_name : each.key
+  display_name                  = each.value.display_name != null ? each.value.display_name : replace(each.key, "/", "-") # The provider rejects "/" in display_name, so default to the branch name with "/" replaced by "-".
   enable_auto_build             = each.value.enable_auto_build
   enable_basic_auth             = each.value.enable_basic_auth
   enable_notification           = each.value.enable_notification
@@ -172,10 +178,10 @@ resource "aws_amplify_branch" "this" {
 # Amplify App Domain Association
 ###########################
 resource "aws_amplify_domain_association" "this" {
-  # Guarded for parity with aws_amplify_branch.this and defense in depth; with
-  # nullable = false + default = {} on var.branches, this value is already
-  # guaranteed non-null.
-  for_each               = var.branches != null ? var.branches : {}
+  # The domain association is opt-in per branch: only branches that set
+  # domain_name get one. Branches without it are served only from the app's
+  # default amplifyapp.com domain.
+  for_each               = local.branch_domain_associations
   app_id                 = aws_amplify_app.this.id
   domain_name            = each.value.domain_name
   enable_auto_sub_domain = each.value.enable_auto_sub_domain
@@ -189,7 +195,7 @@ resource "aws_amplify_domain_association" "this" {
   }
 
   dynamic "sub_domain" {
-    for_each = var.branches
+    for_each = local.branch_domain_associations
     content {
       branch_name = each.key
       prefix      = ""

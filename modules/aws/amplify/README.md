@@ -104,6 +104,46 @@ module "example_website" {
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
+### Default Amplify domain only (no custom domain)
+
+`domain_name` is optional per branch. A branch that omits it is created without an
+`aws_amplify_domain_association` and is served only from the app's default
+`amplifyapp.com` domain (over HTTPS using the Amplify-managed certificate). This is
+useful for proof-of-concept, preview, and short-lived test sites. Branches in the
+same map that do set `domain_name` still get a domain association.
+
+```
+module "example_poc" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/amplify"
+
+  name       = "example_poc"
+  repository = "https://github.com/example/example_poc"
+  branches = {
+    main = {
+      framework = "Astro"
+      stage     = "EXPERIMENTAL"
+    }
+  }
+}
+
+output "poc_url" {
+  value = module.example_poc.branch_urls["main"]
+}
+```
+
+Notes:
+
+- `branch_urls` is a map of branch name to `https://<branch>.<default_domain>`, where `/` in the
+  branch name is replaced by `-`. It is populated for every branch, including branches that also
+  have a custom domain. Only the `/` to `-` substitution is applied; Amplify may normalize other
+  characters in branch names differently.
+- `sub_domains` and `custom_certificate_arn` require `domain_name` and are rejected by validation
+  when it is omitted.
+- `certificate_type`, `enable_certificate`, `enable_auto_sub_domain`, and `wait_for_verification`
+  have non-null defaults and are ignored for a branch with no `domain_name`.
+- When a branch does not set `display_name`, it defaults to the branch name with `/` replaced by `-`
+  because the AWS provider rejects `/` in `display_name`.
+
 ### Rotating basic auth credentials
 
 The `basic_auth_credentials` attribute on `aws_amplify_app.this` (including its
@@ -174,7 +214,7 @@ applies to every entry in `var.branches`; branches that do not set
 | <a name="input_auto_branch_creation_config"></a> [auto\_branch\_creation\_config](#input\_auto\_branch\_creation\_config) | Auto branch creation config for the Amplify App. | <pre>object({<br/>    basic_auth_credentials        = optional(string)      # Basic auth credentials for the branch. Must be input as "username:password".<br/>    build_spec                    = optional(string)      # Build spec for the branch.<br/>    enable_auto_build             = optional(bool)        # Enable auto build for the branch.<br/>    enable_basic_auth             = optional(bool)        # Enable basic auth for the branch.<br/>    enable_performance_mode       = optional(bool)        # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)        # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string)) # Map of environment variables for the branch.<br/>    framework                     = optional(string)      # The framework for the branch.<br/>    pull_request_environment_name = optional(string)      # The name of the pull request environment.<br/>    stage                         = optional(string)      # Description of the stage. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>  })</pre> | `null` | no |
 | <a name="input_auto_branch_creation_patterns"></a> [auto\_branch\_creation\_patterns](#input\_auto\_branch\_creation\_patterns) | Patterns for auto branch creation. | `list(string)` | `null` | no |
 | <a name="input_basic_auth_credentials"></a> [basic\_auth\_credentials](#input\_basic\_auth\_credentials) | Basic auth credentials for the Amplify App. Must be input as 'username:password'. | `string` | `null` | no |
-| <a name="input_branches"></a> [branches](#input\_branches) | A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations. | <pre>map(object({<br/>    basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".<br/>    certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.<br/>    custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.<br/>    description                   = optional(string)                    # The description of the branch.<br/>    display_name                  = optional(string)                    # The display name of the branch. This gets used as the default domain prefix.<br/>    domain_name                   = string                              # The domain name for the domain association.<br/>    enable_auto_build             = optional(bool, true)                # Enable auto build for the branch.<br/>    enable_auto_sub_domain        = optional(bool, false)               # Enable auto sub domain for the domain association.<br/>    enable_basic_auth             = optional(bool)                      # Enable basic auth for the branch.<br/>    enable_certificate            = optional(bool, true)                # Enable certificate for the domain association.<br/>    enable_notification           = optional(bool)                      # Enable notification for the branch.<br/>    enable_performance_mode       = optional(bool)                      # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)                      # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string))               # Map of environment variables for the branch.<br/>    framework                     = optional(string)                    # The framework for the branch.<br/>    pull_request_environment_name = optional(string)                    # The name of the pull request environment.<br/>    stage                         = optional(string)                    # The stage for the branch. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>    sub_domains                   = optional(set(string))               # A list of sub domains to associate with the branch.<br/>    ttl                           = optional(number)                    # The TTL for the branch.<br/>    wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.<br/>  }))</pre> | `{}` | no |
+| <a name="input_branches"></a> [branches](#input\_branches) | A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. domain\_name is optional; omitting it skips the domain association for that branch, which is then served only from the app's default amplifyapp.com domain. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations. | <pre>map(object({<br/>    basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".<br/>    certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.<br/>    custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.<br/>    description                   = optional(string)                    # The description of the branch.<br/>    display_name                  = optional(string)                    # The display name of the branch. This gets used as the default domain prefix.<br/>    domain_name                   = optional(string)                    # The domain name for the domain association. When null, no aws_amplify_domain_association is created and the branch is served only from the app's default amplifyapp.com domain.<br/>    enable_auto_build             = optional(bool, true)                # Enable auto build for the branch.<br/>    enable_auto_sub_domain        = optional(bool, false)               # Enable auto sub domain for the domain association.<br/>    enable_basic_auth             = optional(bool)                      # Enable basic auth for the branch.<br/>    enable_certificate            = optional(bool, true)                # Enable certificate for the domain association.<br/>    enable_notification           = optional(bool)                      # Enable notification for the branch.<br/>    enable_performance_mode       = optional(bool)                      # Enable performance mode for the branch.<br/>    enable_pull_request_preview   = optional(bool)                      # Enable pull request preview for the branch.<br/>    environment_variables         = optional(map(string))               # Map of environment variables for the branch.<br/>    framework                     = optional(string)                    # The framework for the branch.<br/>    pull_request_environment_name = optional(string)                    # The name of the pull request environment.<br/>    stage                         = optional(string)                    # The stage for the branch. Valid values are PRODUCTION, BETA, DEVELOPMENT, EXPERIMENTAL, PULL_REQUEST.<br/>    sub_domains                   = optional(set(string))               # A list of sub domains to associate with the branch.<br/>    ttl                           = optional(number)                    # The TTL for the branch.<br/>    wait_for_verification         = optional(bool, true)                # Wait for verification for the domain association.<br/>  }))</pre> | `{}` | no |
 | <a name="input_build_spec"></a> [build\_spec](#input\_build\_spec) | Build spec for the Amplify App. | `string` | `null` | no |
 | <a name="input_cache_config_type"></a> [cache\_config\_type](#input\_cache\_config\_type) | Cache config type for the Amplify App. Valid values are AMPLIFY\_MANAGED or AMPLIFY\_MANAGED\_NO\_COOKIES. Set to null to omit the cache\_config block entirely (disables cache configuration). | `string` | `"AMPLIFY_MANAGED"` | no |
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create an SNS topic for Amplify build notifications. When false, sns\_topic\_arn must be provided. | `bool` | `true` | no |
@@ -202,6 +242,7 @@ applies to every entry in `var.branches`; branches that do not set
 | ---- | ----------- |
 | <a name="output_app_arn"></a> [app\_arn](#output\_app\_arn) | The ARN of the Amplify app. |
 | <a name="output_app_id"></a> [app\_id](#output\_app\_id) | The unique ID of the Amplify app. |
+| <a name="output_branch_urls"></a> [branch\_urls](#output\_branch\_urls) | Map of branch name to the branch's default Amplify URL (https://<branch>.<default\_domain>, with / in the branch name replaced by -). Always the default amplifyapp.com URL, populated for every branch including branches that also have a custom domain. |
 | <a name="output_default_domain"></a> [default\_domain](#output\_default\_domain) | The default domain of the Amplify app. |
 | <a name="output_notification_event_rule_arn"></a> [notification\_event\_rule\_arn](#output\_notification\_event\_rule\_arn) | The ARN of the CloudWatch EventBridge rule for Amplify build notifications. Null when notifications are disabled. |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | The ARN of the SNS topic used for Amplify build notifications. Null when notifications are disabled. |

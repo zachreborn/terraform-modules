@@ -84,6 +84,11 @@ run "valid_baseline_plans_successfully" {
   }
 
   assert {
+    condition     = length(output.branch_urls) == 0
+    error_message = "branch_urls output should be empty when no branches are declared."
+  }
+
+  assert {
     condition     = output.sns_topic_arn == null
     error_message = "sns_topic_arn output should be null when enable_notifications is false."
   }
@@ -116,6 +121,11 @@ run "branches_null_plans_with_zero_resources" {
     condition     = length(aws_amplify_domain_association.this) == 0
     error_message = "branches = null should coerce to {} and plan zero domain associations (no Invalid for_each crash)."
   }
+
+  assert {
+    condition     = length(output.branch_urls) == 0
+    error_message = "branches = null should produce an empty branch_urls output."
+  }
 }
 
 # Exercises the new default = {} by leaving branches unset entirely, confirming
@@ -135,6 +145,11 @@ run "branches_default_empty_plans" {
   assert {
     condition     = length(aws_amplify_domain_association.this) == 0
     error_message = "Omitting branches should default to {} and plan zero domain associations."
+  }
+
+  assert {
+    condition     = length(output.branch_urls) == 0
+    error_message = "Omitting branches should produce an empty branch_urls output."
   }
 }
 
@@ -354,3 +369,126 @@ run "sub_domains_toggle_adds_extra_sub_domain_entry" {
 # Do NOT weaken these assertions to force a pass. If a run block fails, treat it as a
 # signal that the module code has a bug and fix the root cause in main.tf / variables.tf /
 # outputs.tf, then re-run `tofu test` until it passes for the right reason.
+
+# Core behavior for issue #516: a branch with no domain_name is created without
+# a domain association and is served only from the default amplifyapp.com URL.
+run "branch_without_domain_creates_no_domain_association" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        framework = "Astro"
+        stage     = "EXPERIMENTAL"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 1
+    error_message = "Expected exactly one branch to be planned."
+  }
+
+  assert {
+    condition     = aws_amplify_branch.this["main"].branch_name == "main"
+    error_message = "branch_name should equal the map key."
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 0
+    error_message = "No domain association should be planned for a branch without domain_name."
+  }
+}
+
+# Association keys remain branch names and only branches that set domain_name
+# get an association.
+run "mixed_branches_create_associations_only_where_domain_set" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        domain_name = "example.org"
+      }
+      poc = {
+        framework = "Astro"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 2
+    error_message = "Both branches should be planned regardless of domain_name."
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 1
+    error_message = "Only the branch with domain_name should get a domain association."
+  }
+
+  assert {
+    condition     = contains(keys(aws_amplify_domain_association.this), "main")
+    error_message = "The association should be keyed by the branch name 'main'."
+  }
+
+  assert {
+    condition     = !contains(keys(aws_amplify_domain_association.this), "poc")
+    error_message = "The domain-less branch 'poc' must not get a domain association."
+  }
+
+  assert {
+    condition     = aws_amplify_domain_association.this["main"].domain_name == "example.org"
+    error_message = "domain_name should pass through unchanged for the branch that sets it."
+  }
+
+  assert {
+    condition     = length(output.branch_urls) == 2
+    error_message = "branch_urls should include every branch, including those with a custom domain."
+  }
+
+  assert {
+    condition     = output.branch_urls["main"] == "https://main.d1234567890abc.amplifyapp.com"
+    error_message = "A branch with a custom domain should still get its default Amplify URL."
+  }
+
+  assert {
+    condition     = output.branch_urls["poc"] == "https://poc.d1234567890abc.amplifyapp.com"
+    error_message = "A domain-less branch should get its default Amplify URL."
+  }
+}
+
+run "branch_urls_output_is_built_from_default_domain" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {}
+      "feature/login" = {
+        framework = "Astro"
+      }
+    }
+  }
+
+  assert {
+    condition     = output.branch_urls["main"] == "https://main.d1234567890abc.amplifyapp.com"
+    error_message = "branch_urls should be https://<branch>.<default_domain>."
+  }
+
+  assert {
+    condition     = output.branch_urls["feature/login"] == "https://feature-login.d1234567890abc.amplifyapp.com"
+    error_message = "branch_urls should replace / with - in the branch name."
+  }
+
+  assert {
+    condition     = length(output.branch_urls) == 2
+    error_message = "branch_urls should have one entry per branch."
+  }
+
+  assert {
+    condition     = aws_amplify_branch.this["feature/login"].display_name == "feature-login"
+    error_message = "display_name should default to the branch name with / replaced by -, since the provider rejects / in display_name."
+  }
+}
