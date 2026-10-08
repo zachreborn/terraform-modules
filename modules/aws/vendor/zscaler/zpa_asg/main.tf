@@ -44,11 +44,44 @@ locals {
   ami_id = var.ami_id != null ? var.ami_id : data.aws_ami.zpa_connector_el9.id
 
   user_data = base64encode(templatefile("${path.module}/user_data.tftpl", {
-    provisioning_key      = var.provisioning_key
-    enable_ssm_agent      = var.enable_ssm_agent
-    enable_host_os_update = var.enable_host_os_update
-    aws_region            = data.aws_region.current.region
+    provisioning_key          = var.provisioning_key
+    enable_ssm_agent          = var.enable_ssm_agent
+    enable_host_os_update     = var.enable_host_os_update
+    aws_region                = data.aws_region.current.region
+    disable_source_dest_check = !var.source_dest_check
   }))
+}
+
+###########################
+# IAM: source_dest_check (launch templates cannot set this)
+###########################
+data "aws_iam_instance_profile" "zpa" {
+  count = var.attach_source_dest_check_iam && !var.source_dest_check ? 1 : 0
+  name  = var.iam_instance_profile
+}
+
+resource "aws_iam_role_policy" "source_dest_check" {
+  count = var.attach_source_dest_check_iam && !var.source_dest_check ? 1 : 0
+
+  name = "${var.name}-source-dest-check"
+  role = data.aws_iam_instance_profile.zpa[0].role_name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "DisableSourceDestCheckOnZpaConnectors"
+        Effect   = "Allow"
+        Action   = ["ec2:ModifyInstanceAttribute"]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "ec2:ResourceTag/role" = "zpa_connector"
+          }
+        }
+      }
+    ]
+  })
 }
 
 ###########################
@@ -113,6 +146,8 @@ resource "aws_launch_template" "zpa" {
     enabled = var.monitoring
   }
 
+  # Note: aws_launch_template network_interfaces has no source_dest_check
+  # (AWS CreateLaunchTemplate API omits it). Disabled post-launch in user_data.
   network_interfaces {
     associate_public_ip_address = var.associate_public_ip_address
     delete_on_termination       = true

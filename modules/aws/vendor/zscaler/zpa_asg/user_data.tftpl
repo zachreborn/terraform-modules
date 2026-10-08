@@ -10,6 +10,7 @@ set -euo pipefail
 PROVISIONING_KEY="${provisioning_key}"
 ENABLE_SSM_AGENT="${enable_ssm_agent}"
 ENABLE_HOST_OS_UPDATE="${enable_host_os_update}"
+DISABLE_SOURCE_DEST_CHECK="${disable_source_dest_check}"
 AWS_REGION="${aws_region}"
 
 log() {
@@ -18,21 +19,26 @@ log() {
 
 # -----------------------------------------------------------------------------
 # 0. Disable source/dest check (ZPA proxies traffic)
-#    Requires ec2:ModifyInstanceAttribute on the instance profile.
+#    Launch templates cannot set source_dest_check (AWS API). Requires
+#    ec2:ModifyInstanceAttribute on the instance profile (module can attach it).
 # -----------------------------------------------------------------------------
-log "Disabling source/dest check on this instance..."
-IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
-INSTANCE_ID=""
-if [ -n "$IMDS_TOKEN" ]; then
-	INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id || true)
+if [ "$DISABLE_SOURCE_DEST_CHECK" = "true" ]; then
+	log "Disabling source/dest check on this instance..."
+	IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
+	INSTANCE_ID=""
+	if [ -n "$IMDS_TOKEN" ]; then
+		INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id || true)
+	else
+		INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id || true)
+	fi
+	if command -v aws >/dev/null 2>&1 && [ -n "$INSTANCE_ID" ]; then
+		aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --no-source-dest-check --region "$AWS_REGION" ||
+			log "WARN: failed to disable source_dest_check (check IAM ec2:ModifyInstanceAttribute)"
+	else
+		log "WARN: aws CLI or instance-id unavailable; source_dest_check may remain true"
+	fi
 else
-	INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id || true)
-fi
-if command -v aws >/dev/null 2>&1 && [ -n "$INSTANCE_ID" ]; then
-	aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --no-source-dest-check --region "$AWS_REGION" ||
-		log "WARN: failed to disable source_dest_check (check IAM ec2:ModifyInstanceAttribute)"
-else
-	log "WARN: aws CLI or instance-id unavailable; source_dest_check may remain true"
+	log "source_dest_check disable skipped (source_dest_check=true)"
 fi
 
 # -----------------------------------------------------------------------------

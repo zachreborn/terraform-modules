@@ -55,7 +55,7 @@ variable "key_name" {
 }
 
 variable "iam_instance_profile" {
-  description = "(Required) IAM instance profile name for SSM and instance permissions (e.g. ssm-role)."
+  description = "(Required) IAM instance profile name for SSM Session Manager (e.g. ssm-role). When source_dest_check is false and attach_source_dest_check_iam is true, this module attaches a narrow inline policy for ec2:ModifyInstanceAttribute on instances tagged role=zpa_connector."
   type        = string
 }
 
@@ -63,6 +63,18 @@ variable "associate_public_ip_address" {
   description = "(Optional) Associate a public IP. Defaults to false."
   type        = bool
   default     = false
+}
+
+variable "source_dest_check" {
+  description = "(Optional) Desired source/destination check on connectors. Defaults to false (ZPA must forward proxied traffic). Launch templates cannot set this attribute (AWS API gap), so when false the bootstrap user_data calls ModifyInstanceAttribute. Pair with attach_source_dest_check_iam unless the instance profile already allows that action."
+  type        = bool
+  default     = false
+}
+
+variable "attach_source_dest_check_iam" {
+  description = "(Optional) Attach an inline policy to the iam_instance_profile role granting ec2:ModifyInstanceAttribute when source_dest_check is false. Defaults to true. Set false if the role already has the permission or policy must be managed elsewhere."
+  type        = bool
+  default     = true
 }
 
 variable "encrypted" {

@@ -62,7 +62,7 @@ module "zpa_connectors_asg" {
 - **Root volume:** `root_device_name` must match the AMI root device (`/dev/xvda` for `zpa-connector-el9*`). A wrong name silently skips size/type/encryption overrides on the real boot volume.
 - **Encryption:** default `encrypted = false` matches Sunward Gen2 production on this Marketplace AMI (vendor-pre-encrypted; AWS has rejected re-encryption). Callers may try `true` and validate in plan/apply.
 - **SSM:** Marketplace AMI usually lacks amazon-ssm-agent; module installs it when `enable_ssm_agent=true`. Private subnets still need SSM VPC endpoints or working egress to AWS APIs.
-- **source_dest_check:** disabled in user_data via `ec2:ModifyInstanceAttribute` (instance profile needs that permission).
+- **source_dest_check:** defaults to `false` so connectors can forward proxied traffic (matches Gen2). **Launch templates cannot set this** (not in the CreateLaunchTemplate API; `aws_instance` can, ASG LTs cannot). Bootstrap disables it via `ec2:ModifyInstanceAttribute`. By default the module attaches a narrow inline policy on the instance-profile role (`attach_source_dest_check_iam = true`, conditioned on tag `role=zpa_connector`). Set that false if IAM is managed elsewhere.
 - **Rolling replace:** publish a new LT version and run an ASG instance refresh. Termination policies prefer outdated LT then oldest instance.
 - **IPs:** ASG assigns dynamic private IPs (not static).
 
@@ -81,7 +81,7 @@ module "zpa_connectors_asg" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.68.0 |
 
 ## Modules
 
@@ -93,9 +93,11 @@ No modules.
 | ---- | ---- |
 | [aws_autoscaling_group.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group) | resource |
 | [aws_autoscaling_policy.cpu_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_policy) | resource |
+| [aws_iam_role_policy.source_dest_check](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_launch_template.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) | resource |
 | [aws_security_group.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_ami.zpa_connector_el9](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
+| [aws_iam_instance_profile.zpa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_instance_profile) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
@@ -104,6 +106,7 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Optional) AMI ID override for the ZPA App Connector. When null, the latest Marketplace zpa-connector-el9* AMI is selected. | `string` | `null` | no |
 | <a name="input_associate_public_ip_address"></a> [associate\_public\_ip\_address](#input\_associate\_public\_ip\_address) | (Optional) Associate a public IP. Defaults to false. | `bool` | `false` | no |
+| <a name="input_attach_source_dest_check_iam"></a> [attach\_source\_dest\_check\_iam](#input\_attach\_source\_dest\_check\_iam) | (Optional) Attach an inline policy to the iam\_instance\_profile role granting ec2:ModifyInstanceAttribute when source\_dest\_check is false. Defaults to true. Set false if the role already has the permission or policy must be managed elsewhere. | `bool` | `true` | no |
 | <a name="input_capacity_rebalance"></a> [capacity\_rebalance](#input\_capacity\_rebalance) | (Optional) Enable capacity rebalance. Defaults to false. | `bool` | `false` | no |
 | <a name="input_cpu_target_value"></a> [cpu\_target\_value](#input\_cpu\_target\_value) | (Optional) Target average CPU percent when enable\_cpu\_target\_tracking is true. | `number` | `50` | no |
 | <a name="input_default_cooldown"></a> [default\_cooldown](#input\_default\_cooldown) | (Optional) ASG default cooldown in seconds. Defaults to 300. | `number` | `300` | no |
@@ -118,7 +121,7 @@ No modules.
 | <a name="input_http_endpoint"></a> [http\_endpoint](#input\_http\_endpoint) | (Optional) Instance metadata service. Valid values: enabled, disabled. | `string` | `"enabled"` | no |
 | <a name="input_http_put_response_hop_limit"></a> [http\_put\_response\_hop\_limit](#input\_http\_put\_response\_hop\_limit) | (Optional) IMDSv2 hop limit. Defaults to 1 (Checkov CKV\_AWS\_341). | `number` | `1` | no |
 | <a name="input_http_tokens"></a> [http\_tokens](#input\_http\_tokens) | (Optional) IMDSv2 token requirement. Defaults to required. | `string` | `"required"` | no |
-| <a name="input_iam_instance_profile"></a> [iam\_instance\_profile](#input\_iam\_instance\_profile) | (Required) IAM instance profile name for SSM and instance permissions (e.g. ssm-role). | `string` | n/a | yes |
+| <a name="input_iam_instance_profile"></a> [iam\_instance\_profile](#input\_iam\_instance\_profile) | (Required) IAM instance profile name for SSM Session Manager (e.g. ssm-role). When source\_dest\_check is false and attach\_source\_dest\_check\_iam is true, this module attaches a narrow inline policy for ec2:ModifyInstanceAttribute on instances tagged role=zpa\_connector. | `string` | n/a | yes |
 | <a name="input_instance_metadata_tags"></a> [instance\_metadata\_tags](#input\_instance\_metadata\_tags) | (Optional) Expose instance tags via metadata. Defaults to enabled. | `string` | `"enabled"` | no |
 | <a name="input_instance_name_prefix"></a> [instance\_name\_prefix](#input\_instance\_name\_prefix) | (Optional) Name tag applied to instances launched by the ASG. | `string` | `"AWSZPAVPR"` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | (Optional) EC2 instance type. Defaults to m7i.large. Marketplace RHEL AMIs do not support flex variants. | `string` | `"m7i.large"` | no |
@@ -134,6 +137,7 @@ No modules.
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Root EBS volume size in GiB. Minimum 64 GiB required by the Zscaler Marketplace AMI. | `number` | `75` | no |
 | <a name="input_root_volume_type"></a> [root\_volume\_type](#input\_root\_volume\_type) | (Optional) Root EBS volume type. Defaults to gp3. | `string` | `"gp3"` | no |
 | <a name="input_sg_name"></a> [sg\_name](#input\_sg\_name) | (Optional) Name for the ZPA App Connector security group. | `string` | `"zpa_connector_asg_sg"` | no |
+| <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | (Optional) Desired source/destination check on connectors. Defaults to false (ZPA must forward proxied traffic). Launch templates cannot set this attribute (AWS API gap), so when false the bootstrap user\_data calls ModifyInstanceAttribute. Pair with attach\_source\_dest\_check\_iam unless the instance profile already allows that action. | `bool` | `false` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) Private subnet IDs spanning AZs. For one connector per AZ set desired\_capacity equal to length(subnet\_ids). | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Map of tags assigned to resources created by this module. | `map(string)` | `{}` | no |
 | <a name="input_termination_policies"></a> [termination\_policies](#input\_termination\_policies) | (Optional) Ordered termination policies. Defaults to OldestLaunchTemplate then OldestInstance. | `list(string)` | <pre>[<br/>  "OldestLaunchTemplate",<br/>  "OldestInstance"<br/>]</pre> | no |

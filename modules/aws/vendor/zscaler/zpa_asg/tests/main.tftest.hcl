@@ -33,6 +33,19 @@ mock_provider "aws" {
       arn = "arn:aws:autoscaling:us-west-2:123456789012:autoScalingGroup:uuid:autoScalingGroupName/zpa-test"
     }
   }
+
+  mock_data "aws_iam_instance_profile" {
+    defaults = {
+      role_name = "ssm-role-mock"
+      arn       = "arn:aws:iam::123456789012:instance-profile/ssm-role"
+    }
+  }
+
+  mock_resource "aws_iam_role_policy" {
+    defaults = {
+      id = "ssm-role-mock:zpa-test-source-dest-check"
+    }
+  }
 }
 
 variables {
@@ -91,6 +104,11 @@ run "valid_baseline_plans" {
   }
 
   assert {
+    condition     = length(aws_iam_role_policy.source_dest_check) == 1
+    error_message = "Expected source_dest_check IAM policy when source_dest_check defaults to false."
+  }
+
+  assert {
     condition     = length(aws_autoscaling_policy.cpu_target) == 0
     error_message = "CPU target tracking should be off by default."
   }
@@ -125,5 +143,18 @@ run "ami_override" {
   assert {
     condition     = aws_launch_template.zpa.image_id == "ami-11112222333344445"
     error_message = "Expected ami_id override on launch template."
+  }
+}
+
+run "source_dest_iam_skipped_when_disabled" {
+  command = plan
+
+  variables {
+    attach_source_dest_check_iam = false
+  }
+
+  assert {
+    condition     = length(aws_iam_role_policy.source_dest_check) == 0
+    error_message = "IAM policy should not be created when attach_source_dest_check_iam is false."
   }
 }
