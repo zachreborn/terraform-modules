@@ -54,18 +54,12 @@ locals {
     ]
   }) : null
 
-  # Subset of var.branches that get a custom domain association. Keys remain the
+  # Subset of var.branches that opted in to a custom domain. Keys remain the
   # branch names so existing aws_amplify_domain_association addresses are stable.
-  #
-  # Membership decides the for_each keys, so it must be known at plan time. An
-  # explicit enable_domain_association (true/false) is plan-known and always wins.
-  # Only when it is null do we infer membership from whether domain_name is set;
-  # that null check is itself unknown when domain_name is only known after apply,
-  # which would fail for_each. Callers passing an apply-time domain_name must set
-  # enable_domain_association = true.
+  # Membership is decided purely by domain_name != null, so domain_name must be
+  # known at plan time (an apply-time value would make the for_each keys unknown).
   branch_domain_associations = {
-    for name, branch in var.branches : name => branch
-    if(branch.enable_domain_association != null ? branch.enable_domain_association : branch.domain_name != null)
+    for name, branch in var.branches : name => branch if branch.domain_name != null
   }
 }
 
@@ -187,8 +181,8 @@ resource "aws_amplify_branch" "this" {
 ###########################
 resource "aws_amplify_domain_association" "this" {
   # The domain association is opt-in per branch: only branches that set
-  # domain_name (or set enable_domain_association = true) get one. Other
-  # branches are served only from the app's default amplifyapp.com domain.
+  # domain_name get one. Branches without it are served only from the app's
+  # default amplifyapp.com domain.
   for_each               = local.branch_domain_associations
   app_id                 = aws_amplify_app.this.id
   domain_name            = each.value.domain_name
