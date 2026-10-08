@@ -162,14 +162,14 @@ variable "repository" {
 ###########################
 
 variable "branches" {
-  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
+  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. domain_name is optional; omitting it skips the domain association for that branch, which is then served only from the app's default amplifyapp.com domain. domain_name must be known at plan time because it determines which domain associations are created. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
   type = map(object({
     basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
     custom_certificate_arn        = optional(string)                    # The ARN for the custom certificate.
     description                   = optional(string)                    # The description of the branch.
     display_name                  = optional(string)                    # The display name of the branch. This gets used as the default domain prefix.
-    domain_name                   = string                              # The domain name for the domain association.
+    domain_name                   = optional(string)                    # The domain name for the domain association. When null, no aws_amplify_domain_association is created and the branch is served only from the app's default amplifyapp.com domain.
     enable_auto_build             = optional(bool, true)                # Enable auto build for the branch.
     enable_auto_sub_domain        = optional(bool, false)               # Enable auto sub domain for the domain association.
     enable_basic_auth             = optional(bool)                      # Enable basic auth for the branch.
@@ -187,6 +187,17 @@ variable "branches" {
   }))
   default  = {}
   nullable = false
+
+  validation {
+    condition     = alltrue([for name, branch in var.branches : branch.domain_name != null || length(branch.sub_domains != null ? branch.sub_domains : []) == 0])
+    error_message = "A branch without a domain_name cannot set sub_domains; sub-domain prefixes only exist within a custom domain association."
+  }
+
+  validation {
+    condition     = alltrue([for name, branch in var.branches : branch.domain_name != null || branch.custom_certificate_arn == null])
+    error_message = "A branch without a domain_name cannot set custom_certificate_arn; a certificate is only attached through a domain association."
+  }
+
   # Example:
   # branches = {
   #   main = {
@@ -206,6 +217,12 @@ variable "branches" {
   #     domain_name            = "dev.example.org"
   #     enable_basic_auth      = true
   #     framework              = "Astro"
+  #   },
+  #   poc = {
+  #     # No domain_name: no domain association is created and the branch is
+  #     # served only from the default amplifyapp.com URL.
+  #     framework = "Astro"
+  #     stage     = "EXPERIMENTAL"
   #   }
 }
 
