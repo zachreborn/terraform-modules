@@ -459,6 +459,76 @@ run "mixed_branches_create_associations_only_where_domain_set" {
   }
 }
 
+# enable_domain_association = true opts a branch in explicitly. With a known domain_name it
+# behaves exactly like the implicit (null) default.
+run "enable_domain_association_true_creates_association" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        domain_name               = "example.org"
+        enable_domain_association = true
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 1
+    error_message = "enable_domain_association = true should plan exactly one domain association."
+  }
+
+  assert {
+    condition     = aws_amplify_domain_association.this["main"].domain_name == "example.org"
+    error_message = "domain_name should pass through unchanged when the association is explicitly enabled."
+  }
+}
+
+# enable_domain_association = false opts a branch out even when domain_name is set, and the
+# branch is still created and still gets a branch_urls entry.
+run "enable_domain_association_false_skips_association_even_with_domain_name" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        domain_name               = "example.org"
+        enable_domain_association = false
+      }
+      staging = {
+        domain_name = "staging.example.org"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 2
+    error_message = "Both branches should be planned regardless of enable_domain_association."
+  }
+
+  assert {
+    condition     = !contains(keys(aws_amplify_domain_association.this), "main")
+    error_message = "enable_domain_association = false must skip the association even though domain_name is set."
+  }
+
+  assert {
+    condition     = contains(keys(aws_amplify_domain_association.this), "staging")
+    error_message = "A sibling branch that leaves enable_domain_association null and sets domain_name should still get an association."
+  }
+
+  assert {
+    condition     = length(aws_amplify_domain_association.this) == 1
+    error_message = "Only the branch that did not opt out should get an association."
+  }
+
+  assert {
+    condition     = output.branch_urls["main"] == "https://main.d1234567890abc.amplifyapp.com"
+    error_message = "A branch that opted out of the association should still get its default Amplify URL."
+  }
+}
+
 run "branch_urls_output_is_built_from_default_domain" {
   command = plan
 
@@ -490,5 +560,37 @@ run "branch_urls_output_is_built_from_default_domain" {
   assert {
     condition     = aws_amplify_branch.this["feature/login"].display_name == "feature-login"
     error_message = "display_name should default to the branch name with / replaced by -, since the provider rejects / in display_name."
+  }
+}
+
+# display_name is Amplify's default domain prefix, so branch_urls must use it rather than the map
+# key. A branch that overrides display_name is served at https://<display_name>..., not
+# https://<branch>....
+run "branch_urls_output_honors_explicit_display_name" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        display_name = "preview"
+      }
+      "feature/login" = {}
+    }
+  }
+
+  assert {
+    condition     = output.branch_urls["main"] == "https://preview.d1234567890abc.amplifyapp.com"
+    error_message = "branch_urls should use the branch's explicit display_name as the URL prefix, not the branch name."
+  }
+
+  assert {
+    condition     = output.branch_urls["feature/login"] == "https://feature-login.d1234567890abc.amplifyapp.com"
+    error_message = "A branch without display_name should still fall back to the sanitized branch name."
+  }
+
+  assert {
+    condition     = length(output.branch_urls) == 2
+    error_message = "branch_urls should have one entry per branch."
   }
 }

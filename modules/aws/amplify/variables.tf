@@ -162,7 +162,7 @@ variable "repository" {
 ###########################
 
 variable "branches" {
-  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. domain_name is optional; omitting it skips the domain association for that branch, which is then served only from the app's default amplifyapp.com domain. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
+  description = "A map of branches for the Amplify App. The key becomes the branch name and the value is an object of branch attributes or settings. domain_name is optional; omitting it skips the domain association for that branch, which is then served only from the app's default amplifyapp.com domain. If a branch's domain_name is only known after apply, set enable_domain_association = true on that branch so the module can plan. Defaults to an empty map; passing null is coerced to {} so the module plans cleanly with zero branches and zero domain associations."
   type = map(object({
     basic_auth_credentials        = optional(string)                    # Basic auth credentials for the branch. Must be input as "username:password".
     certificate_type              = optional(string, "AMPLIFY_MANAGED") # The certificate type for the domain association. Valid values are AMPLIFY_MANAGED or CUSTOM.
@@ -174,6 +174,7 @@ variable "branches" {
     enable_auto_sub_domain        = optional(bool, false)               # Enable auto sub domain for the domain association.
     enable_basic_auth             = optional(bool)                      # Enable basic auth for the branch.
     enable_certificate            = optional(bool, true)                # Enable certificate for the domain association.
+    enable_domain_association     = optional(bool)                      # Explicitly create (true) or skip (false) the domain association for this branch. When null, the association is created only if domain_name is set. Set to true when domain_name is only known after apply: which branches get an association must be known at plan time, and whether an unknown domain_name is null is not.
     enable_notification           = optional(bool)                      # Enable notification for the branch.
     enable_performance_mode       = optional(bool)                      # Enable performance mode for the branch.
     enable_pull_request_preview   = optional(bool)                      # Enable pull request preview for the branch.
@@ -188,14 +189,22 @@ variable "branches" {
   default  = {}
   nullable = false
 
+  # A branch gets a domain association when enable_domain_association is true, or
+  # when it is null and domain_name is set (mirrors local.branch_domain_associations
+  # in main.tf; variable validations cannot reference locals).
   validation {
-    condition     = alltrue([for name, branch in var.branches : branch.domain_name != null || length(branch.sub_domains != null ? branch.sub_domains : []) == 0])
-    error_message = "A branch without a domain_name cannot set sub_domains; sub-domain prefixes only exist within a custom domain association."
+    condition     = alltrue([for name, branch in var.branches : (branch.enable_domain_association != null ? branch.enable_domain_association : branch.domain_name != null) || length(branch.sub_domains != null ? branch.sub_domains : []) == 0])
+    error_message = "A branch without a domain association (no domain_name, or enable_domain_association = false) cannot set sub_domains; sub-domain prefixes only exist within a custom domain association."
   }
 
   validation {
-    condition     = alltrue([for name, branch in var.branches : branch.domain_name != null || branch.custom_certificate_arn == null])
-    error_message = "A branch without a domain_name cannot set custom_certificate_arn; a certificate is only attached through a domain association."
+    condition     = alltrue([for name, branch in var.branches : (branch.enable_domain_association != null ? branch.enable_domain_association : branch.domain_name != null) || branch.custom_certificate_arn == null])
+    error_message = "A branch without a domain association (no domain_name, or enable_domain_association = false) cannot set custom_certificate_arn; a certificate is only attached through a domain association."
+  }
+
+  validation {
+    condition     = alltrue([for name, branch in var.branches : branch.enable_domain_association != true || branch.domain_name != null])
+    error_message = "A branch with enable_domain_association = true must set domain_name; a domain association cannot be created without one."
   }
 
   # Example:
