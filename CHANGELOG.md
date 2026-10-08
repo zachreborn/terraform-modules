@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.1.0](https://github.com/zachreborn/terraform-modules/compare/v17.0.0...v17.1.0) (2026-10-08)
+
+
+### Features
+
+* **amplify:** allow branches without a custom domain (skip aws_amplify_domain_association) ([#518](https://github.com/zachreborn/terraform-modules/issues/518)) ([e3a9d03](https://github.com/zachreborn/terraform-modules/commit/e3a9d03ca3b3727af5a892a843d4ebaa8aa88556))
+
 ## [17.0.0](https://github.com/zachreborn/terraform-modules/compare/v16.4.0...v17.0.0) (2026-09-30)
 
 
