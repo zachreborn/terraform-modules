@@ -33,7 +33,10 @@ sudo systemctl stop zpa-connector
 echo "Applying ZPA Provisioning Key..."
 sudo mkdir -p /opt/zscaler/var
 echo "$PROVISIONING_KEY" | sudo tee /opt/zscaler/var/provision_key
-sudo chmod 600 /opt/zscaler/var/provision_key
+# Zscaler docs use 644; 600 can leave 26.58+ unable to read the key (OAuth fallback).
+sudo chmod 644 /opt/zscaler/var/provision_key
+sudo touch /opt/zscaler/var/.oauth_enroll_disable
+sudo chmod 644 /opt/zscaler/var/.oauth_enroll_disable
 
 # 5. Start and enable the service
 echo "Starting and enabling zpa-connector service..."
