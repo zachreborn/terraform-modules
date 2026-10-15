@@ -30,8 +30,8 @@ output "created_date" {
 # Resource Outputs
 ###########################
 output "resources" {
-  description = "API Gateway resources created"
-  value       = { for k, v in aws_api_gateway_resource.this : k => v }
+  description = "API Gateway resources created (root and nested)"
+  value       = local.api_resources
 }
 
 ###########################
