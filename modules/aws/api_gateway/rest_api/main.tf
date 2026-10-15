@@ -2,7 +2,8 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # optional() object attributes require Terraform/OpenTofu >= 1.3.0
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -43,6 +44,28 @@ locals {
     stage_throttle        = var.stage_throttle_settings
   }
   deployment_hash = sha1(jsonencode(local.deployment_components))
+
+  # Nested parent_id self-references on a single for_each resource cycle the graph
+  # (both ternary branches are tracked). Split by depth so parents are separate addresses.
+  # depth 0 keeps the historical aws_api_gateway_resource.this address for root children.
+  root_resources = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key == null
+  }
+  nested_resources = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key != null && contains(keys(local.root_resources), resource.parent_resource_key)
+  }
+  nested_resources_2 = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key != null && contains(keys(local.nested_resources), resource.parent_resource_key)
+  }
+
+  api_resources = merge(
+    aws_api_gateway_resource.this,
+    aws_api_gateway_resource.nested,
+    aws_api_gateway_resource.nested_2,
+  )
 }
 
 ###########################
@@ -75,10 +98,26 @@ resource "aws_api_gateway_rest_api" "this" {
 # API Gateway Resources
 ############################################
 resource "aws_api_gateway_resource" "this" {
-  for_each = var.resources
+  for_each = local.root_resources
 
   rest_api_id = aws_api_gateway_rest_api.this.id
   parent_id   = aws_api_gateway_rest_api.this.root_resource_id
+  path_part   = each.value.path_part
+}
+
+resource "aws_api_gateway_resource" "nested" {
+  for_each = local.nested_resources
+
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.this[each.value.parent_resource_key].id
+  path_part   = each.value.path_part
+}
+
+resource "aws_api_gateway_resource" "nested_2" {
+  for_each = local.nested_resources_2
+
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.nested[each.value.parent_resource_key].id
   path_part   = each.value.path_part
 }
 
@@ -131,7 +170,7 @@ resource "aws_api_gateway_method" "this" {
   for_each = var.methods
 
   rest_api_id          = aws_api_gateway_rest_api.this.id
-  resource_id          = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id          = local.api_resources[each.value.resource].id
   http_method          = each.value.http_method
   authorization        = each.value.authorization
   authorizer_id        = each.value.authorizer_id != null ? (can(aws_api_gateway_authorizer.this[each.value.authorizer_id]) ? aws_api_gateway_authorizer.this[each.value.authorizer_id].id : each.value.authorizer_id) : null
@@ -169,7 +208,7 @@ resource "aws_api_gateway_method_response" "this" {
   for_each = var.method_responses
 
   rest_api_id         = aws_api_gateway_rest_api.this.id
-  resource_id         = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id         = local.api_resources[each.value.resource].id
   http_method         = aws_api_gateway_method.this[each.value.method].http_method
   status_code         = each.value.status_code
   response_models     = each.value.response_models
@@ -183,7 +222,7 @@ resource "aws_api_gateway_integration" "this" {
   for_each = var.integrations
 
   rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id             = local.api_resources[each.value.resource].id
   http_method             = aws_api_gateway_method.this[each.value.method].http_method
   type                    = each.value.type
   uri                     = each.value.uri
@@ -231,7 +270,7 @@ resource "aws_api_gateway_integration_response" "this" {
   for_each = var.integration_responses
 
   rest_api_id         = aws_api_gateway_rest_api.this.id
-  resource_id         = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id         = local.api_resources[each.value.resource].id
   http_method         = aws_api_gateway_method.this[each.value.method].http_method
   status_code         = each.value.status_code
   selection_pattern   = each.value.selection_pattern
@@ -279,6 +318,9 @@ resource "aws_api_gateway_deployment" "this" {
   }
 
   depends_on = [
+    aws_api_gateway_resource.this,
+    aws_api_gateway_resource.nested,
+    aws_api_gateway_resource.nested_2,
     aws_api_gateway_method.this,
     aws_api_gateway_method.root,
     aws_api_gateway_integration.this,

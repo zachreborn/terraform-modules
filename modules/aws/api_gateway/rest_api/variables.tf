@@ -91,11 +91,34 @@ variable "put_rest_api_mode" {
 # Resource Variables
 ###########################
 variable "resources" {
-  description = "A map of resources to create under the API. Each key is the resource path and the value is a map of resource settings."
+  description = "A map of API Gateway resources keyed by stable logical name. path_part is the single path segment. Optional parent_resource_key nests under another resources map key; omit it (or null) to attach under the REST API root."
   type = map(object({
-    path_part = string
+    path_part           = string
+    parent_resource_key = optional(string)
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for key, resource in var.resources :
+      resource.parent_resource_key == null || (
+        contains(keys(var.resources), resource.parent_resource_key) &&
+        resource.parent_resource_key != key
+      )
+    ])
+    error_message = "Each parent_resource_key must name a different key in var.resources."
+  }
+
+  # Depth is split across resource addresses (root / nested / nested_2). Deeper trees need a module change.
+  validation {
+    condition = alltrue([
+      for key, resource in var.resources :
+      resource.parent_resource_key == null ||
+      var.resources[resource.parent_resource_key].parent_resource_key == null ||
+      var.resources[var.resources[resource.parent_resource_key].parent_resource_key].parent_resource_key == null
+    ])
+    error_message = "Nested resources support at most two parent levels under a root path segment (for example /v1/leads/{id})."
+  }
 }
 
 ###########################

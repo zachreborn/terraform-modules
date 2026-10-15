@@ -65,6 +65,7 @@ This ensures API changes are automatically propagated without manual interventio
 ### Resource Relationships
 Resources are linked via map keys for flexibility:
 
+- **Resources** may nest via optional `parent_resource_key` (another `resources` map key). Omitted/null parents attach under the REST API root. Nested paths like `/v1/leads` use stable logical keys (`v1`, `leads`). Nesting is implemented as separate resource addresses by depth (`this` / `nested` / `nested_2`) so parent references do not cycle the graph; max depth is two parents under a root segment (e.g. `/v1/leads/{id}`).
 - **Methods** reference `resources` by key
 - **Integrations** reference both `resources` and `methods` by key
 - **Integration Responses** reference `resources`, `methods`, and implicitly `integrations`
@@ -85,7 +86,8 @@ resources = {
     path_part = "users"
   }
   "user_id" = {
-    path_part = "{id}"
+    path_part           = "{id}"
+    parent_resource_key = "users"
   }
 }
 
@@ -357,7 +359,7 @@ module "api" {
 
 ## Provider Requirements
 
-- **Terraform**: >= 1.0.0
+- **Terraform / OpenTofu**: >= 1.3.0 (`optional()` object attributes)
 - **AWS Provider**: >= 6.0.0
 
 ## Testing
@@ -405,9 +407,10 @@ The module provides comprehensive outputs for all created resources:
 
 ## Known Limitations
 
-1. **OpenAPI/Swagger Import**: The `body` parameter supports OpenAPI, but this module is primarily designed for explicit resource configuration
+1. **OpenAPI/Swagger Import**: The `body` parameter supports OpenAPI nested paths, but that surface should not be mixed casually with the typed `resources` / `methods` / `integrations` maps. Prefer `parent_resource_key` for map-based nested paths.
 2. **Deployment Stages**: Currently supports a single stage per module instance
 3. **VPC Link**: V1 VPC Links only (for REST APIs); use the v2 module for HTTP APIs
+4. **Parent cycles**: Unknown and self `parent_resource_key` values fail variable validation. Longer cycles are rejected by the OpenTofu dependency graph.
 
 ## Contributing
 
