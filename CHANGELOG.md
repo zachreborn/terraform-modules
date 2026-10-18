@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.3.0](https://github.com/zachreborn/terraform-modules/compare/v17.2.0...v17.3.0) (2026-10-18)
+
+
+### Features
+
+* **iam:** add standalone instance profile module ([#526](https://github.com/zachreborn/terraform-modules/issues/526)) ([3d326f9](https://github.com/zachreborn/terraform-modules/commit/3d326f952e4f889a5db46f880f2fb1828a1b6e82))
+
 ## [17.2.0](https://github.com/zachreborn/terraform-modules/compare/v17.1.0...v17.2.0) (2026-10-18)
 
 
