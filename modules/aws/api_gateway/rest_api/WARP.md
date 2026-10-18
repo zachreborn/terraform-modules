@@ -34,7 +34,7 @@ This module creates AWS API Gateway REST APIs with support for all major feature
 
 1. **ACM Certificate**: Use the `acm_certificate` module separately. API Gateway requires validated certificates, and validation creates circular dependencies if done within this module.
 
-2. **S3 Bucket for mTLS**: Use the `s3` module separately. The bucket stores the truststore.pem file and must exist before API Gateway domain configuration.
+2. **S3 Bucket for mTLS**: Use the `s3` module separately. The bucket stores the truststore.pem file and must exist before API Gateway domain configuration. Pass its name via `bucket_name`; the module builds `truststore_uri` as `s3://<bucket_name>/<mtls_config.truststore_key>` (key defaults to `truststore.pem`). An explicit `mtls_config.truststore_uri` always takes precedence.
 
 ### Deployment Strategy
 The module uses a **deployment hash** to automatically trigger redeployments when any configuration changes:
@@ -124,7 +124,7 @@ Comprehensive validation ensures correct configuration:
 
 - Enum values (e.g., authorizer types, response types, logging levels)
 - Number ranges (e.g., cache sizes, compression sizes)
-- Format validation (e.g., S3 bucket names)
+- Format validation (e.g., S3 bucket names, S3 truststore URIs and object keys)
 - Null-safe checks (avoiding `length()` on nullable variables)
 
 ## Common Use Cases
@@ -313,11 +313,18 @@ module "api" {
   domain_name     = "api.example.com"
   certificate_arn = module.certificate.arn
   enable_mtls     = true
-  
+
+  # truststore_uri resolves to s3://my-api-truststore/truststore/truststore.pem
+  bucket_name = "my-api-truststore"
   mtls_config = {
-    truststore_uri     = "s3://my-api-truststore/truststore/truststore.pem"
-    truststore_version = "version_id_from_s3"
+    truststore_key     = "truststore/truststore.pem" # Optional. Defaults to "truststore.pem"
+    truststore_version = "version_id_from_s3"         # Optional
   }
+
+  # Alternative: pass the full URI instead of bucket_name + truststore_key.
+  # mtls_config = {
+  #   truststore_uri = "s3://my-api-truststore/truststore/truststore.pem"
+  # }
 }
 ```
 

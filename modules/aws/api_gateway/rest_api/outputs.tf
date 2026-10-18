@@ -211,13 +211,13 @@ output "mtls_enabled" {
 }
 
 output "truststore_uri" {
-  description = "S3 URI of the truststore file used for mTLS (from configuration)"
-  value       = var.enable_mtls && var.mtls_config != null ? var.mtls_config.truststore_uri : null
+  description = "S3 URI of the truststore file used for mTLS (mtls_config.truststore_uri, or built from bucket_name and mtls_config.truststore_key). Null when mTLS is disabled."
+  value       = var.enable_mtls ? local.mtls_truststore_uri : null
 }
 
 output "truststore_version" {
-  description = "Version of the truststore file used for mTLS (from configuration)"
-  value       = var.enable_mtls && var.mtls_config != null ? var.mtls_config.truststore_version : null
+  description = "Version of the truststore file used for mTLS (from configuration). Null when mTLS is disabled."
+  value       = var.enable_mtls ? local.mtls_truststore_version : null
 }
 
 ###########################

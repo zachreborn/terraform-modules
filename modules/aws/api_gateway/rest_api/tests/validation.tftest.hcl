@@ -60,6 +60,93 @@ run "rejects_self_parent_resource_key" {
   expect_failures = [var.resources]
 }
 
+run "valid_mtls_inputs_do_not_fail" {
+  command = plan
+
+  variables {
+    name        = "example-api"
+    stage_name  = "prod"
+    bucket_name = "my-truststore-bucket"
+    mtls_config = {
+      truststore_uri = "s3://my-truststore-bucket/mtls/truststore.pem"
+      truststore_key = "mtls/truststore.pem"
+    }
+  }
+
+  assert {
+    condition     = var.mtls_config.truststore_key == "mtls/truststore.pem"
+    error_message = "Expected valid mTLS inputs to pass validation."
+  }
+}
+
+run "rejects_invalid_bucket_name" {
+  command = plan
+
+  variables {
+    name        = "example-api"
+    stage_name  = "prod"
+    bucket_name = "Invalid_Bucket"
+  }
+
+  expect_failures = [var.bucket_name]
+}
+
+run "rejects_truststore_uri_with_wrong_scheme" {
+  command = plan
+
+  variables {
+    name       = "example-api"
+    stage_name = "prod"
+    mtls_config = {
+      truststore_uri = "https://example.com/truststore.pem"
+    }
+  }
+
+  expect_failures = [var.mtls_config]
+}
+
+run "rejects_truststore_uri_without_object_key" {
+  command = plan
+
+  variables {
+    name       = "example-api"
+    stage_name = "prod"
+    mtls_config = {
+      truststore_uri = "s3://my-truststore-bucket"
+    }
+  }
+
+  expect_failures = [var.mtls_config]
+}
+
+run "rejects_truststore_key_with_leading_slash" {
+  command = plan
+
+  variables {
+    name       = "example-api"
+    stage_name = "prod"
+    mtls_config = {
+      truststore_key = "/truststore.pem"
+    }
+  }
+
+  expect_failures = [var.mtls_config]
+}
+
+run "rejects_empty_truststore_key" {
+  command = plan
+
+  variables {
+    name       = "example-api"
+    stage_name = "prod"
+    mtls_config = {
+      truststore_key = ""
+    }
+  }
+
+  expect_failures = [var.mtls_config]
+}
+
 # Do NOT delete, skip, or loosen an `expect_failures` case (or any assertion above) just to
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # `validation {}` block in variables.tf has a bug or the test's inputs are wrong -- find and

@@ -13,12 +13,6 @@ terraform {
 }
 
 ###########################
-# Data Sources
-###########################
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
-###########################
 # Locals
 ###########################
 locals {
@@ -65,6 +59,15 @@ locals {
     aws_api_gateway_resource.this,
     aws_api_gateway_resource.nested,
     aws_api_gateway_resource.nested_2,
+  )
+
+  # mTLS truststore resolution. An explicit mtls_config.truststore_uri always wins, which keeps existing callers
+  # working unchanged. Otherwise the URI is built as s3://<bucket_name>/<truststore_key>, where the key defaults to
+  # truststore.pem. try() covers mtls_config being null, since its attributes cannot be read in that case.
+  mtls_truststore_key     = coalesce(try(var.mtls_config.truststore_key, null), "truststore.pem")
+  mtls_truststore_version = try(var.mtls_config.truststore_version, null)
+  mtls_truststore_uri = try(var.mtls_config.truststore_uri, null) != null ? var.mtls_config.truststore_uri : (
+    var.bucket_name != null ? "s3://${var.bucket_name}/${local.mtls_truststore_key}" : null
   )
 }
 
@@ -402,14 +405,23 @@ resource "aws_api_gateway_domain_name" "this" {
 
   # mTLS configuration - S3 bucket and truststore must be created separately
   dynamic "mutual_tls_authentication" {
-    for_each = var.enable_mtls && var.mtls_config != null ? [var.mtls_config] : []
+    for_each = var.enable_mtls && local.mtls_truststore_uri != null ? [local.mtls_truststore_uri] : []
     content {
-      truststore_uri     = mutual_tls_authentication.value.truststore_uri
-      truststore_version = mutual_tls_authentication.value.truststore_version
+      truststore_uri     = mutual_tls_authentication.value
+      truststore_version = local.mtls_truststore_version
     }
   }
 
   tags = var.tags
+
+  lifecycle {
+    # Fail closed: without a truststore the domain would otherwise be created without mTLS even though the caller
+    # asked for it.
+    precondition {
+      condition     = !var.enable_mtls || local.mtls_truststore_uri != null
+      error_message = "enable_mtls = true requires a truststore. Set bucket_name (optionally with mtls_config.truststore_key) or mtls_config.truststore_uri."
+    }
+  }
 }
 
 ############################################

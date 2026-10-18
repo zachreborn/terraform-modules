@@ -183,10 +183,10 @@ module "api" {
   # mTLS Configuration
   certificate_arn = module.api_certificate.arn
   enable_mtls     = true
-  bucket_name     = module.truststore_bucket.s3_bucket_id
+  bucket_name     = module.truststore_bucket.s3_bucket_id # truststore_uri resolves to s3://<bucket_name>/<truststore_key>
   mtls_config = {
-    truststore_uri     = "s3://${module.truststore_bucket.s3_bucket_id}/truststore.pem"
-    truststore_version = null  # Uses latest version
+    truststore_key     = aws_s3_object.truststore.key        # Optional. Defaults to "truststore.pem"
+    truststore_version = aws_s3_object.truststore.version_id # Optional. Omit to use the latest version
   }
 
   # REST API configuration
@@ -228,6 +228,21 @@ module "api" {
 }
 ```
 
+### How the mTLS truststore location is resolved
+
+The module builds the `truststore_uri` for `mutual_tls_authentication` so you only pass the bucket name and, if it differs from the default, the object key:
+
+| Inputs | Resolved `truststore_uri` |
+| ------ | ------------------------- |
+| `bucket_name` only | `s3://<bucket_name>/truststore.pem` |
+| `bucket_name` + `mtls_config.truststore_key` | `s3://<bucket_name>/<truststore_key>` |
+| `mtls_config.truststore_uri` (with or without `bucket_name`) | The explicit URI. It always takes precedence, so existing callers keep working unchanged |
+
+- `mtls_config.truststore_version` is optional in every case and pins the S3 object version of the truststore.
+- The default key, `truststore.pem`, matches the file name used when generating a truststore from a Root CA.
+- `enable_mtls = true` with a custom domain requires one of the inputs above. If none resolves to a truststore, the plan fails instead of silently creating the domain without mTLS.
+- `bucket_name` and `truststore_key` are only used to build the URI. They do not create or upload anything, so the bucket and the truststore object still have to exist before API Gateway reads them.
+
 ### Testing mTLS Connectivity
 
 Once deployed, test your mTLS-enabled API:
@@ -268,7 +283,7 @@ _For more comprehensive examples including request validation, authorizers, and 
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.69.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -301,8 +316,6 @@ No modules.
 | [aws_api_gateway_usage_plan.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_usage_plan) | resource |
 | [aws_api_gateway_usage_plan_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_usage_plan_key) | resource |
 | [aws_api_gateway_vpc_link.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_vpc_link) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -315,7 +328,7 @@ No modules.
 | <a name="input_base_path"></a> [base\_path](#input\_base\_path) | Base path mapping for the custom domain | `string` | `null` | no |
 | <a name="input_binary_media_types"></a> [binary\_media\_types](#input\_binary\_media\_types) | A list of binary media types supported by the Rest API. | `list(string)` | `[]` | no |
 | <a name="input_body"></a> [body](#input\_body) | The body of the API definition in JSON format. | `string` | `null` | no |
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket for mTLS truststore. This is a reference only - the bucket must be created separately using the s3 module. | `string` | `null` | no |
+| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket that holds the mTLS truststore. Used to build the truststore URI (s3://<bucket\_name>/<mtls\_config.truststore\_key>, key defaults to truststore.pem) when mtls\_config.truststore\_uri is not set. The bucket must be created separately using the s3 module. | `string` | `null` | no |
 | <a name="input_cache_cluster_enabled"></a> [cache\_cluster\_enabled](#input\_cache\_cluster\_enabled) | Specifies whether a cache cluster is enabled for the stage | `bool` | `false` | no |
 | <a name="input_cache_cluster_size"></a> [cache\_cluster\_size](#input\_cache\_cluster\_size) | The size of the cache cluster for the stage, if enabled. Valid values are 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237 | `string` | `"0.5"` | no |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | ARN of the ACM certificate for the custom domain. Must be created separately using the acm\_certificate module. | `string` | `null` | no |
@@ -336,7 +349,7 @@ No modules.
 | <a name="input_methods"></a> [methods](#input\_methods) | A map of methods to create for the API. Each key is a unique identifier for the method. | <pre>map(object({<br/>    resource             = string # The resource key this method belongs to<br/>    http_method          = string<br/>    authorization        = string<br/>    authorizer_id        = optional(string) # Can be authorizer key or ARN<br/>    authorization_scopes = optional(list(string))<br/>    api_key_required     = optional(bool, false)<br/>    operation_name       = optional(string)<br/>    request_models       = optional(map(string))<br/>    request_parameters   = optional(map(string))<br/>    request_validator_id = optional(string) # Can be validator key or ID<br/>  }))</pre> | `{}` | no |
 | <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | The minimum compression size in bytes. Must be either an integer between -1 and 10485760 or set to null. Defaults to null, which disables compression. | `number` | `null` | no |
 | <a name="input_models"></a> [models](#input\_models) | A map of models for the API. Each key is the model name. | <pre>map(object({<br/>    content_type = string<br/>    description  = optional(string)<br/>    schema       = string # JSON schema as a string<br/>  }))</pre> | `{}` | no |
-| <a name="input_mtls_config"></a> [mtls\_config](#input\_mtls\_config) | mTLS configuration for the custom domain. S3 bucket and truststore must be created separately. Required when enable\_mtls is true and domain\_name is provided. | <pre>object({<br/>    truststore_uri     = string           # S3 URI to the truststore file (e.g., s3://bucket-name/path/to/truststore.pem)<br/>    truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)<br/>  })</pre> | `null` | no |
+| <a name="input_mtls_config"></a> [mtls\_config](#input\_mtls\_config) | Optional mTLS truststore settings for the custom domain. The truststore location is resolved from truststore\_uri when set; otherwise it is built as s3://<bucket\_name>/<truststore\_key> using the bucket\_name variable. The S3 bucket and truststore must be created separately. When enable\_mtls is true and domain\_name is provided, either bucket\_name or mtls\_config.truststore\_uri is required. | <pre>object({<br/>    truststore_uri     = optional(string) # Full S3 URI of the truststore (e.g., s3://bucket-name/path/to/truststore.pem). Takes precedence over bucket_name and truststore_key.<br/>    truststore_key     = optional(string) # S3 object key of the truststore within bucket_name. Defaults to truststore.pem. Ignored when truststore_uri is set.<br/>    truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)<br/>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the API. This is required. | `string` | n/a | yes |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | A map of API Gateway-specific parameters that can be used to configure the API. | `map(string)` | `{}` | no |
 | <a name="input_policy"></a> [policy](#input\_policy) | The resource policy for the API in JSON format. | `string` | `null` | no |
@@ -393,8 +406,8 @@ No modules.
 | <a name="output_stage_id"></a> [stage\_id](#output\_stage\_id) | ID of the API Gateway stage |
 | <a name="output_stage_invoke_url"></a> [stage\_invoke\_url](#output\_stage\_invoke\_url) | Invoke URL for the API Gateway stage |
 | <a name="output_stage_name"></a> [stage\_name](#output\_stage\_name) | Name of the API Gateway stage |
-| <a name="output_truststore_uri"></a> [truststore\_uri](#output\_truststore\_uri) | S3 URI of the truststore file used for mTLS (from configuration) |
-| <a name="output_truststore_version"></a> [truststore\_version](#output\_truststore\_version) | Version of the truststore file used for mTLS (from configuration) |
+| <a name="output_truststore_uri"></a> [truststore\_uri](#output\_truststore\_uri) | S3 URI of the truststore file used for mTLS (mtls\_config.truststore\_uri, or built from bucket\_name and mtls\_config.truststore\_key). Null when mTLS is disabled. |
+| <a name="output_truststore_version"></a> [truststore\_version](#output\_truststore\_version) | Version of the truststore file used for mTLS (from configuration). Null when mTLS is disabled. |
 | <a name="output_usage_plan_keys"></a> [usage\_plan\_keys](#output\_usage\_plan\_keys) | API Gateway usage plan key associations created |
 | <a name="output_usage_plans"></a> [usage\_plans](#output\_usage\_plans) | API Gateway usage plans created |
 | <a name="output_vpc_links"></a> [vpc\_links](#output\_vpc\_links) | VPC Links created by this module |

@@ -533,16 +533,27 @@ variable "enable_mtls" {
 }
 
 variable "mtls_config" {
-  description = "mTLS configuration for the custom domain. S3 bucket and truststore must be created separately. Required when enable_mtls is true and domain_name is provided."
+  description = "Optional mTLS truststore settings for the custom domain. The truststore location is resolved from truststore_uri when set; otherwise it is built as s3://<bucket_name>/<truststore_key> using the bucket_name variable. The S3 bucket and truststore must be created separately. When enable_mtls is true and domain_name is provided, either bucket_name or mtls_config.truststore_uri is required."
   type = object({
-    truststore_uri     = string           # S3 URI to the truststore file (e.g., s3://bucket-name/path/to/truststore.pem)
+    truststore_uri     = optional(string) # Full S3 URI of the truststore (e.g., s3://bucket-name/path/to/truststore.pem). Takes precedence over bucket_name and truststore_key.
+    truststore_key     = optional(string) # S3 object key of the truststore within bucket_name. Defaults to truststore.pem. Ignored when truststore_uri is set.
     truststore_version = optional(string) # Version of the truststore file (use S3 object version_id)
   })
   default = null
+
+  validation {
+    condition     = try(var.mtls_config.truststore_uri, null) == null || can(regex("^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+$", var.mtls_config.truststore_uri))
+    error_message = "mtls_config.truststore_uri must be an S3 URI that includes the bucket and object key, for example s3://bucket-name/path/to/truststore.pem."
+  }
+
+  validation {
+    condition     = try(var.mtls_config.truststore_key, null) == null || can(regex("^[^/]", var.mtls_config.truststore_key))
+    error_message = "mtls_config.truststore_key must be a non-empty S3 object key that does not start with '/'."
+  }
 }
 
 variable "bucket_name" {
-  description = "Name of the S3 bucket for mTLS truststore. This is a reference only - the bucket must be created separately using the s3 module."
+  description = "Name of the S3 bucket that holds the mTLS truststore. Used to build the truststore URI (s3://<bucket_name>/<mtls_config.truststore_key>, key defaults to truststore.pem) when mtls_config.truststore_uri is not set. The bucket must be created separately using the s3 module."
   type        = string
   default     = null
   validation {
