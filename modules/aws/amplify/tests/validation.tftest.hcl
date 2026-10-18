@@ -101,3 +101,52 @@ run "notifications_with_external_topic_and_no_emails_plans_successfully" {
 # make `tofu test` pass. A validation test that unexpectedly fails means either the
 # `validation {}`/`precondition {}` block has a bug or the test's inputs are wrong -- find
 # and fix the root cause, then re-run `tofu test` until it passes for the right reason.
+
+run "rejects_sub_domains_without_domain_name" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        sub_domains = ["www"]
+      }
+    }
+  }
+
+  expect_failures = [var.branches]
+}
+
+run "rejects_custom_certificate_arn_without_domain_name" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        custom_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+      }
+    }
+  }
+
+  expect_failures = [var.branches]
+}
+
+run "branch_without_domain_name_passes_validation" {
+  command = plan
+
+  variables {
+    name = "my-app"
+    branches = {
+      main = {
+        framework = "Astro"
+        stage     = "EXPERIMENTAL"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_amplify_branch.this) == 1
+    error_message = "A branch without domain_name and without domain-only settings should be accepted."
+  }
+}

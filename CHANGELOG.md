@@ -1,5 +1,19 @@
 # Changelog
 
+## [17.2.0](https://github.com/zachreborn/terraform-modules/compare/v17.1.0...v17.2.0) (2026-10-18)
+
+
+### Features
+
+* **aws/api_gateway/rest_api:** nest resources via parent_resource_key ([#524](https://github.com/zachreborn/terraform-modules/issues/524)) ([2dc970a](https://github.com/zachreborn/terraform-modules/commit/2dc970a1a5048bf4c86a9fd0020ac509ec748c20))
+
+## [17.1.0](https://github.com/zachreborn/terraform-modules/compare/v17.0.0...v17.1.0) (2026-10-08)
+
+
+### Features
+
+* **amplify:** allow branches without a custom domain (skip aws_amplify_domain_association) ([#518](https://github.com/zachreborn/terraform-modules/issues/518)) ([e3a9d03](https://github.com/zachreborn/terraform-modules/commit/e3a9d03ca3b3727af5a892a843d4ebaa8aa88556))
+
 ## [17.0.0](https://github.com/zachreborn/terraform-modules/compare/v16.4.0...v17.0.0) (2026-09-30)
 
 
