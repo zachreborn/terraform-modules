@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.2.0](https://github.com/zachreborn/terraform-modules/compare/v17.1.0...v17.2.0) (2026-10-18)
+
+
+### Features
+
+* **aws/api_gateway/rest_api:** nest resources via parent_resource_key ([#524](https://github.com/zachreborn/terraform-modules/issues/524)) ([2dc970a](https://github.com/zachreborn/terraform-modules/commit/2dc970a1a5048bf4c86a9fd0020ac509ec748c20))
+
 ## [17.1.0](https://github.com/zachreborn/terraform-modules/compare/v17.0.0...v17.1.0) (2026-10-08)
 
 
