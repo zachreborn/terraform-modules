@@ -175,6 +175,76 @@ run "plan_succeeds_with_nested_resources" {
   }
 }
 
+run "method_responses_are_included_in_deployment_trigger" {
+  command = plan
+
+  variables {
+    name       = "lead-api"
+    stage_name = "prod"
+
+    resources = {
+      v1 = {
+        path_part = "v1"
+      }
+      leads = {
+        path_part           = "leads"
+        parent_resource_key = "v1"
+      }
+    }
+
+    methods = {
+      post_leads = {
+        resource      = "leads"
+        http_method   = "POST"
+        authorization = "NONE"
+      }
+    }
+
+    method_responses = {
+      post_leads_200 = {
+        resource    = "leads"
+        method      = "post_leads"
+        status_code = "200"
+        response_parameters = {
+          "method.response.header.Access-Control-Allow-Origin" = true
+        }
+      }
+    }
+
+    integrations = {
+      post_leads_mock = {
+        resource = "leads"
+        method   = "post_leads"
+        type     = "MOCK"
+        uri      = ""
+        request_templates = {
+          "application/json" = "{\"statusCode\": 200}"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_api_gateway_method_response.this) == 1
+    error_message = "Expected method_responses to plan a method response resource."
+  }
+
+  assert {
+    condition     = contains(keys(local.deployment_components), "method_responses")
+    error_message = "deployment_components must include method_responses so CORS and status changes redeploy the stage."
+  }
+
+  assert {
+    condition     = length(local.deployment_components.method_responses) == 1
+    error_message = "deployment_components.method_responses must reflect the configured method_responses map."
+  }
+
+  assert {
+    condition     = aws_api_gateway_deployment.this.triggers["redeployment"] == local.deployment_hash
+    error_message = "Deployment redeployment trigger must be derived from local.deployment_hash."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.

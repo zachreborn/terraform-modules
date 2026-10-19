@@ -28,6 +28,7 @@ locals {
     resources             = var.resources
     methods               = var.methods
     root_methods          = var.root_methods
+    method_responses      = var.method_responses
     integrations          = var.integrations
     root_integrations     = var.root_integrations
     integration_responses = var.integration_responses
