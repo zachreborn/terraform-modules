@@ -15,6 +15,11 @@ variable "provider_configurations" {
                                 share with all environments.
       - export_shell_variables:   (Optional) Export provider variables into the run environment. Available for
                                 built-in (Scalr, AWS, AzureRM, Google) providers only.
+      - is_allowed_in_module_test: (Optional) Whether the provider configuration can be used as credentials for
+                                module tests, i.e. linked to a module test configuration via
+                                modules/scalr/module/test_provider_configuration. Defaults to false. Requires
+                                scalr provider >= 3.20.0. The read-only is_used_in_module_test output reports
+                                whether the configuration is currently linked to a module test.
       - owners:                   (Optional) Set of team IDs the provider configuration belongs to.
       - tag_ids:                  (Optional) Set of tag IDs associated with the provider configuration.
       - aws:                      (Optional) AWS provider settings. See below.
@@ -80,6 +85,8 @@ variable "provider_configurations" {
     export_shell_variables = optional(bool, false)
     owners                 = optional(set(string))
     tag_ids                = optional(set(string))
+
+    is_allowed_in_module_test = optional(bool, false)
 
     aws = optional(object({
       credentials_type    = string

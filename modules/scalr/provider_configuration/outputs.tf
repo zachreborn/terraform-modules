@@ -6,6 +6,11 @@ output "ids" {
   value       = { for k, v in scalr_provider_configuration.this : k => v.id }
 }
 
+output "is_used_in_module_test" {
+  description = "Map of whether each provider configuration is currently linked to a module test (read-only attribute), keyed by the same keys as var.provider_configurations."
+  value       = { for k, v in scalr_provider_configuration.this : k => v.is_used_in_module_test }
+}
+
 output "default_ids" {
   description = "Map of Provider Configuration Default IDs (from the companion ./default submodule), keyed by the same keys as var.provider_configuration_defaults."
   value       = module.default.ids
