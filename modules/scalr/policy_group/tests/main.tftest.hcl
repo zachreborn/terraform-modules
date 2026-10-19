@@ -89,6 +89,141 @@ run "full_kitchen_sink_entry_plans_successfully" {
   }
 }
 
+###########################################################
+# evaluate_on (provider v3.20.0)
+###########################################################
+
+run "evaluate_on_pre_plan_is_wired_through" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      early_checks = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "pre-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_policy_group.this["early_checks"].evaluate_on == "pre-plan"
+    error_message = "evaluate_on = \"pre-plan\" should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = output.evaluate_on["early_checks"] == "pre-plan"
+    error_message = "The evaluate_on output should surface the effective value (pre-plan)."
+  }
+}
+
+run "evaluate_on_post_plan_is_wired_through" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      late_checks = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "post-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_policy_group.this["late_checks"].evaluate_on == "post-plan"
+    error_message = "evaluate_on = \"post-plan\" should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = output.evaluate_on["late_checks"] == "post-plan"
+    error_message = "The evaluate_on output should surface the effective value (post-plan)."
+  }
+}
+
+run "evaluate_on_can_differ_per_policy_group" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      early_checks = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "pre-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+          path       = "policies/early"
+        }
+      }
+      late_checks = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "post-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+          path       = "policies/late"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(output.evaluate_on) == 2
+    error_message = "The evaluate_on output should contain one element per policy group."
+  }
+
+  assert {
+    condition = (
+      scalr_policy_group.this["early_checks"].evaluate_on == "pre-plan"
+      && scalr_policy_group.this["late_checks"].evaluate_on == "post-plan"
+    )
+    error_message = "Each policy group should keep its own evaluate_on value."
+  }
+}
+
+run "evaluate_on_with_linkage_composition_plans_successfully" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      early_checks = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "pre-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+    }
+    policy_group_linkages = {
+      early_checks_prod = {
+        policy_group_key = "early_checks"
+        environment_id   = "env-xxxxxxxxxx"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(output.linkage_ids) == 1 && scalr_policy_group.this["early_checks"].evaluate_on == "pre-plan"
+    error_message = "evaluate_on should not interfere with composing the linkage submodule."
+  }
+}
+
+run "empty_policy_groups_map_plans_no_evaluate_on_output" {
+  command = plan
+
+  assert {
+    condition     = length(scalr_policy_group.this) == 0 && length(output.evaluate_on) == 0
+    error_message = "An empty policy_groups map should plan no policy groups and an empty evaluate_on output."
+  }
+}
+
 run "policy_group_linkages_conditional_branch_creates_linkage" {
   command = plan
 

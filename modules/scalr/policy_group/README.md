@@ -9,6 +9,7 @@ Manages [`scalr_policy_group`](https://registry.terraform.io/providers/Scalr/sca
 - A `scalr_vcs_provider` (see `modules/scalr` root module) must already exist; its ID is passed in as `vcs_repo`'s `vcs_provider_id`.
 - The VCS repository referenced by `vcs_repo.identifier` must contain the OPA policies (and optionally a `common_functions_folder`) to enforce.
 - Any `environment_id` referenced by `policy_group_linkages` (directly, or via a `scalr_environment` resource elsewhere) must already exist.
+- Scalr provider `>= 3.20.0`. `evaluate_on` does not exist in earlier provider releases, and referencing it fails schema validation on an older provider even when it is left `null`.
 
 ### Usage
 
@@ -21,6 +22,7 @@ module "policy_group" {
       account_id      = "acc-xxxxxxxxxx"
       vcs_provider_id = "vcs-xxxxxxxxxx"
       opa_version     = "0.29.4"
+      evaluate_on     = "post-plan" # or "pre-plan"; changing it later re-creates the policy group
       vcs_repo = {
         identifier = "my-org/policies"
         path       = "policies/instance"
@@ -50,6 +52,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - A policy group's environment linkage can be managed two ways, matching the upstream provider: inline via `policy_groups.<key>.environments`, or explicitly via `policy_group_linkages` (backed by the `./linkage` companion submodule). Do not manage the same policy group/environment pair both ways simultaneously.
 - `policy_group_linkages` entries reference a policy group either by `policy_group_key` (an entry created by this same module call -- resolved internally to its ID) or by a literal, externally-managed `policy_group_id`. Exactly one of the two must be set.
 - This module accepts `account_id` per-entry rather than resolving it internally via `data.scalr_current_account`, so `tofu test` can run fully offline with `mock_provider`.
+- `evaluate_on` selects the stage of the run at which a policy group is evaluated: `pre-plan` or `post-plan`. It is validated against those two values (`null` is allowed). When it is left unset the provider defaults a new policy group to `post-plan`. **Changing `evaluate_on` on an existing policy group forces it to be destroyed and re-created** (the upstream provider marks it `RequiresReplace`), so review the plan before applying such a change. The `evaluate_on` output reports the effective value for each policy group.
+- The scalr provider floor is `>= 3.20.0` because this module now references `evaluate_on`. The companion `./linkage` submodule is unchanged and keeps its own, lower floor; the stricter constraint of the two wins when both are present. Callers pinned below 3.20.0 must upgrade the provider to use this module.
 
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
@@ -58,13 +62,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.20.0 |
 
 ## Modules
 
@@ -83,13 +87,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_policy_group_linkages"></a> [policy\_group\_linkages](#input\_policy\_group\_linkages) | Map of scalr\_policy\_group\_linkage resources to create, keyed by a caller-chosen logical name.<br/>Each entry links one policy group to one environment. Set exactly one of:<br/>  - policy\_group\_key: The map key of an entry in var.policy\_groups whose ID is resolved internally<br/>                      by this module (composition wiring).<br/>  - policy\_group\_id:  A literal, externally-managed policy group ID (format "pgrp-<RANDOM STRING>").<br/>Fields:<br/>  - environment\_id: (Required) ID of the environment, in the format "env-<RANDOM STRING>". | <pre>map(object({<br/>    policy_group_key = optional(string)<br/>    policy_group_id  = optional(string)<br/>    environment_id   = string<br/>  }))</pre> | `{}` | no |
-| <a name="input_policy_groups"></a> [policy\_groups](#input\_policy\_groups) | Map of Scalr Policy Groups (scalr\_policy\_group) to create, keyed by a caller-chosen logical<br/>name (e.g. "instance\_types"). Fields:<br/>  - name:                    (Optional) Name of the policy group. Defaults to the entry's map key.<br/>  - account\_id:               (Optional) The identifier of the Scalr account, in the format "acc-<RANDOM STRING>".<br/>  - vcs\_provider\_id:          (Required) The identifier of a VCS provider, in the format "vcs-<RANDOM STRING>".<br/>  - vcs\_repo.identifier:      (Required) The reference to the VCS repository, in the format ":org/:repo".<br/>  - vcs\_repo.branch:          (Optional) The branch of the repository the policy group is associated with.<br/>                              Defaults to the repository's default branch when unset.<br/>  - vcs\_repo.path:            (Optional) The subdirectory of the VCS repository where OPA policies are<br/>                              stored. Defaults to the repository root when unset.<br/>  - opa\_version:              (Optional) The version of Open Policy Agent to run policies against.<br/>                              Defaults to the system default version when unset.<br/>  - common\_functions\_folder:  (Optional) An absolute path from the repository root to the folder that<br/>                              contains common rego functions.<br/>  - environments:             (Optional) Set of environment IDs the policy group is linked to. Use<br/>                              ["*"] to enforce in all environments. To manage linkages, use either this<br/>                              attribute or var.policy\_group\_linkages (backed by the companion<br/>                              ./linkage submodule) -- not both for the same environment. | <pre>map(object({<br/>    name            = optional(string)<br/>    account_id      = optional(string)<br/>    vcs_provider_id = string<br/>    vcs_repo = object({<br/>      identifier = string<br/>      branch     = optional(string)<br/>      path       = optional(string)<br/>    })<br/>    opa_version             = optional(string)<br/>    common_functions_folder = optional(string)<br/>    environments            = optional(set(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_policy_groups"></a> [policy\_groups](#input\_policy\_groups) | Map of Scalr Policy Groups (scalr\_policy\_group) to create, keyed by a caller-chosen logical<br/>name (e.g. "instance\_types"). Fields:<br/>  - name:                    (Optional) Name of the policy group. Defaults to the entry's map key.<br/>  - account\_id:               (Optional) The identifier of the Scalr account, in the format "acc-<RANDOM STRING>".<br/>  - vcs\_provider\_id:          (Required) The identifier of a VCS provider, in the format "vcs-<RANDOM STRING>".<br/>  - vcs\_repo.identifier:      (Required) The reference to the VCS repository, in the format ":org/:repo".<br/>  - vcs\_repo.branch:          (Optional) The branch of the repository the policy group is associated with.<br/>                              Defaults to the repository's default branch when unset.<br/>  - vcs\_repo.path:            (Optional) The subdirectory of the VCS repository where OPA policies are<br/>                              stored. Defaults to the repository root when unset.<br/>  - opa\_version:              (Optional) The version of Open Policy Agent to run policies against.<br/>                              Defaults to the system default version when unset.<br/>  - evaluate\_on:              (Optional) The stage of the run at which the policy group is evaluated. One of<br/>                              "pre-plan" or "post-plan". When unset on creation, the provider defaults to<br/>                              "post-plan". WARNING: changing this value on an existing policy group forces the<br/>                              policy group to be destroyed and RE-CREATED (the upstream provider marks it<br/>                              RequiresReplace), so it gets a new ID. Review the plan before applying a change.<br/>                              Requires provider >= 3.20.0.<br/>  - common\_functions\_folder:  (Optional) An absolute path from the repository root to the folder that<br/>                              contains common rego functions.<br/>  - environments:             (Optional) Set of environment IDs the policy group is linked to. Use<br/>                              ["*"] to enforce in all environments. To manage linkages, use either this<br/>                              attribute or var.policy\_group\_linkages (backed by the companion<br/>                              ./linkage submodule) -- not both for the same environment. | <pre>map(object({<br/>    name            = optional(string)<br/>    account_id      = optional(string)<br/>    vcs_provider_id = string<br/>    vcs_repo = object({<br/>      identifier = string<br/>      branch     = optional(string)<br/>      path       = optional(string)<br/>    })<br/>    opa_version             = optional(string)<br/>    evaluate_on             = optional(string)<br/>    common_functions_folder = optional(string)<br/>    environments            = optional(set(string))<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_error_messages"></a> [error\_messages](#output\_error\_messages) | Map of detailed Policy Group processing error messages (if any), keyed by the same keys as var.policy\_groups. |
+| <a name="output_evaluate_on"></a> [evaluate\_on](#output\_evaluate\_on) | Map of the effective run stage ("pre-plan" or "post-plan") each Policy Group is evaluated at, keyed by the same keys as var.policy\_groups. Reflects the provider default ("post-plan") when var.policy\_groups[*].evaluate\_on is unset on creation. |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of Policy Group IDs, keyed by the same keys as var.policy\_groups. |
 | <a name="output_linkage_ids"></a> [linkage\_ids](#output\_linkage\_ids) | Map of Policy Group Linkage IDs (from the companion ./linkage submodule), keyed by the same keys as var.policy\_group\_linkages. |
 | <a name="output_policies"></a> [policies](#output\_policies) | Map of the list of OPA policies each Policy Group verifies, keyed by the same keys as var.policy\_groups. |

@@ -15,6 +15,12 @@ variable "policy_groups" {
                                   stored. Defaults to the repository root when unset.
       - opa_version:              (Optional) The version of Open Policy Agent to run policies against.
                                   Defaults to the system default version when unset.
+      - evaluate_on:              (Optional) The stage of the run at which the policy group is evaluated. One of
+                                  "pre-plan" or "post-plan". When unset on creation, the provider defaults to
+                                  "post-plan". WARNING: changing this value on an existing policy group forces the
+                                  policy group to be destroyed and RE-CREATED (the upstream provider marks it
+                                  RequiresReplace), so it gets a new ID. Review the plan before applying a change.
+                                  Requires provider >= 3.20.0.
       - common_functions_folder:  (Optional) An absolute path from the repository root to the folder that
                                   contains common rego functions.
       - environments:             (Optional) Set of environment IDs the policy group is linked to. Use
@@ -32,6 +38,7 @@ variable "policy_groups" {
       path       = optional(string)
     })
     opa_version             = optional(string)
+    evaluate_on             = optional(string)
     common_functions_folder = optional(string)
     environments            = optional(set(string))
   }))
@@ -55,6 +62,13 @@ variable "policy_groups" {
       for k, v in var.policy_groups : v.vcs_repo.identifier != ""
     ])
     error_message = "Each policy_groups entry's vcs_repo.identifier must be a non-empty string, e.g. \"org/repo\"."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.policy_groups : v.evaluate_on == null || contains(["pre-plan", "post-plan"], v.evaluate_on)
+    ])
+    error_message = "Each policy_groups entry's evaluate_on must be null, \"pre-plan\", or \"post-plan\". Note that changing evaluate_on on an existing policy group forces it to be re-created."
   }
 }
 
