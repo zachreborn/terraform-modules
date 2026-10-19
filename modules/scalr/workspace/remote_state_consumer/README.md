@@ -123,6 +123,41 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 <!-- terraform-docs output will be input automatically below-->
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
+
+## Providers
+
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.20.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+| ---- | ---- |
+| scalr_workspace_remote_state_consumer.this | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_workspace_remote_state_consumers"></a> [workspace\_remote\_state\_consumers](#input\_workspace\_remote\_state\_consumers) | (Required) Map of workspace remote state consumers (`scalr_workspace_remote_state_consumer`) to create,<br/>keyed by a caller-chosen logical name. Each entry allows one consumer workspace to read the state of one<br/>source workspace. Fields:<br/>  - workspace\_id: (Required) ID of the source workspace whose state is shared, in the format<br/>                  `ws-<RANDOM STRING>`. This workspace must have `remote_state_sharing = false`.<br/>  - consumer\_id:  (Required) ID of the workspace that is allowed to read the source workspace's state, in<br/>                  the format `ws-<RANDOM STRING>`. Must differ from workspace\_id: a workspace cannot be a<br/>                  remote state consumer of itself.<br/><br/>Changing either ID on an existing entry forces that entry to be re-created. To let several workspaces read<br/>the same source workspace, add one entry per consumer.<br/><br/>Example:<br/>  workspace\_remote\_state\_consumers = {<br/>    app\_reads\_network\_state = {<br/>      workspace\_id = "ws-xxxxxxxxxx"<br/>      consumer\_id  = "ws-yyyyyyyyyy"<br/>    }<br/>  } | <pre>map(object({<br/>    workspace_id = string<br/>    consumer_id  = string<br/>  }))</pre> | `{}` | no |
+
+## Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_ids"></a> [ids](#output\_ids) | Map of Scalr workspace remote state consumer resource IDs (format '<workspace\_id>/<consumer\_id>'), keyed by the same keys as var.workspace\_remote\_state\_consumers. |
+| <a name="output_links"></a> [links](#output\_links) | Map of the full resolved link (workspace\_id, consumer\_id, id) for each entry, keyed by the same keys as var.workspace\_remote\_state\_consumers. Useful for callers/tests that need to prove which workspace\_id/consumer\_id combination was actually wired into each resource. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
