@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.9.0"
+  # >= 1.3.0: optional() object attributes with defaults (variables.tf) were introduced in Terraform 1.3.0.
+  # Every other construct used here is older, and the validations reference only their own variable.
+  required_version = ">= 1.3.0"
   required_providers {
     scalr = {
       source = "registry.scalr.io/scalr/scalr"

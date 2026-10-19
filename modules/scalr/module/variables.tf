@@ -86,9 +86,11 @@ variable "modules" {
     error_message = "Each modules entry must not set both namespace_id and namespace_key; set at most one."
   }
 
+  # Conditional expressions (not `x == null || f(x)`) because Terraform evaluates both operands of
+  # ||/&& and f(null) would raise an evaluation error for entries that omit the optional field.
   validation {
     condition = alltrue([
-      for k, v in var.modules : v.namespace_key == null || contains(keys(var.module_namespaces), v.namespace_key)
+      for k, v in var.modules : v.namespace_key == null ? true : contains(keys(var.module_namespaces), v.namespace_key)
     ])
     error_message = "Each modules namespace_key must reference an existing key in var.module_namespaces."
   }

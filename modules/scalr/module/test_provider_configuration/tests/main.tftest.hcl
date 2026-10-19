@@ -143,6 +143,37 @@ run "rejects_empty_test_configuration_id" {
   expect_failures = [var.module_test_provider_configurations]
 }
 
+# Explicit nulls must fail validation cleanly instead of raising an evaluation error from startswith(null, ...).
+run "rejects_null_test_configuration_id" {
+  command = plan
+
+  variables {
+    module_test_provider_configurations = {
+      vpc_aws = {
+        test_configuration_id     = null
+        provider_configuration_id = "pcfg-xxxxxxxxxx"
+      }
+    }
+  }
+
+  expect_failures = [var.module_test_provider_configurations]
+}
+
+run "rejects_null_provider_configuration_id" {
+  command = plan
+
+  variables {
+    module_test_provider_configurations = {
+      vpc_aws = {
+        test_configuration_id     = "tc-xxxxxxxxxx"
+        provider_configuration_id = null
+      }
+    }
+  }
+
+  expect_failures = [var.module_test_provider_configurations]
+}
+
 run "rejects_provider_configuration_id_without_pcfg_prefix" {
   command = plan
 

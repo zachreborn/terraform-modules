@@ -36,14 +36,14 @@ variable "module_test_provider_configurations" {
 
   validation {
     condition = alltrue([
-      for key, value in var.module_test_provider_configurations : startswith(value.test_configuration_id, "tc-")
+      for key, value in var.module_test_provider_configurations : value.test_configuration_id == null ? false : startswith(value.test_configuration_id, "tc-")
     ])
     error_message = "Each module_test_provider_configurations entry's test_configuration_id must be a module test configuration ID starting with 'tc-', e.g. 'tc-xxxxxxxxxx'."
   }
 
   validation {
     condition = alltrue([
-      for key, value in var.module_test_provider_configurations : startswith(value.provider_configuration_id, "pcfg-")
+      for key, value in var.module_test_provider_configurations : value.provider_configuration_id == null ? false : startswith(value.provider_configuration_id, "pcfg-")
     ])
     error_message = "Each module_test_provider_configurations entry's provider_configuration_id must be a provider configuration ID starting with 'pcfg-', e.g. 'pcfg-xxxxxxxxxx'."
   }

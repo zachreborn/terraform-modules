@@ -205,6 +205,21 @@ run "rejects_empty_module_id" {
   expect_failures = [var.module_test_configurations]
 }
 
+# An explicit null must fail validation cleanly instead of raising an evaluation error from trimspace(null).
+run "rejects_null_module_id" {
+  command = plan
+
+  variables {
+    module_test_configurations = {
+      vpc = {
+        module_id = null
+      }
+    }
+  }
+
+  expect_failures = [var.module_test_configurations]
+}
+
 run "rejects_whitespace_module_id" {
   command = plan
 

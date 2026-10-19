@@ -126,6 +126,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Changing `test_configuration_id` replaces the link; changing `provider_configuration_id` updates it in place** (this is the provider's behavior).
 - The link ID (the `ids` output) has the format `tpcfgl-<RANDOM STRING>` and is also the import ID: `terraform import 'module.module_test_provider_configurations.scalr_module_test_provider_configuration.this["vpc_aws"]' tpcfgl-xxxxxxxxxx`.
 - The sibling `modules/scalr/provider_configuration` module exposes a read-only `is_used_in_module_test` output that reports whether a provider configuration is currently linked to a module test.
+- **Tool versions.** The module itself needs Terraform `>= 1.3.0` (for the `startswith()` function used in its validations); every OpenTofu release satisfies this. Its validations only reference their own variable, so the `>= 1.9.0` floor used by modules with cross-variable validation does not apply. Running the bundled tests (`tofu test`) additionally needs OpenTofu `>= 1.8.0` or Terraform `>= 1.7.0`, because they use `mock_provider`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -136,7 +137,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
 
 ## Providers

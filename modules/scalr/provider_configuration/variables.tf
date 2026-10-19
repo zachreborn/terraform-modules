@@ -153,44 +153,47 @@ variable "provider_configurations" {
     error_message = "Each provider_configurations entry must set exactly one of aws, azurerm, google, scalr, or custom."
   }
 
+  # The validations below use conditional expressions (not `x == null || f(x.attr)`) because
+  # Terraform evaluates both operands of ||/&& and f(null) / null.attr would raise an evaluation
+  # error for every entry that leaves an optional provider block or attribute unset.
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.aws == null || contains(["access_keys", "role_delegation", "oidc"], v.aws.credentials_type)
+      for k, v in var.provider_configurations : v.aws == null ? true : contains(["access_keys", "role_delegation", "oidc"], v.aws.credentials_type)
     ])
     error_message = "Each provider_configurations aws.credentials_type must be one of \"access_keys\", \"role_delegation\", or \"oidc\"."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.aws == null || v.aws.account_type == null || contains(["regular", "gov-cloud", "cn-cloud"], v.aws.account_type)
+      for k, v in var.provider_configurations : v.aws == null ? true : (v.aws.account_type == null ? true : contains(["regular", "gov-cloud", "cn-cloud"], v.aws.account_type))
     ])
     error_message = "Each provider_configurations aws.account_type must be one of \"regular\", \"gov-cloud\", or \"cn-cloud\"."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.aws == null || v.aws.trusted_entity_type == null || contains(["aws_account", "aws_service"], v.aws.trusted_entity_type)
+      for k, v in var.provider_configurations : v.aws == null ? true : (v.aws.trusted_entity_type == null ? true : contains(["aws_account", "aws_service"], v.aws.trusted_entity_type))
     ])
     error_message = "Each provider_configurations aws.trusted_entity_type must be one of \"aws_account\" or \"aws_service\"."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.azurerm == null || contains(["client-secrets", "oidc"], v.azurerm.auth_type)
+      for k, v in var.provider_configurations : v.azurerm == null ? true : contains(["client-secrets", "oidc"], v.azurerm.auth_type)
     ])
     error_message = "Each provider_configurations azurerm.auth_type must be one of \"client-secrets\" or \"oidc\"."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.google == null || contains(["service-account-key", "oidc"], v.google.auth_type)
+      for k, v in var.provider_configurations : v.google == null ? true : contains(["service-account-key", "oidc"], v.google.auth_type)
     ])
     error_message = "Each provider_configurations google.auth_type must be one of \"service-account-key\" or \"oidc\"."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configurations : v.custom == null || length(v.custom.arguments) >= 1
+      for k, v in var.provider_configurations : v.custom == null ? true : length(v.custom.arguments) >= 1
     ])
     error_message = "Each provider_configurations custom block must declare at least one argument."
   }
@@ -248,7 +251,7 @@ variable "provider_configuration_defaults" {
 
   validation {
     condition = alltrue([
-      for k, v in var.provider_configuration_defaults : v.provider_configuration_key == null || contains(keys(var.provider_configurations), v.provider_configuration_key)
+      for k, v in var.provider_configuration_defaults : v.provider_configuration_key == null ? true : contains(keys(var.provider_configurations), v.provider_configuration_key)
     ])
     error_message = "Each provider_configuration_defaults provider_configuration_key must reference an existing key in var.provider_configurations."
   }

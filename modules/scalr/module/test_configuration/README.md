@@ -110,6 +110,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Defaults mirror the provider:** `enabled = true`, `failure_behavior = "notify"`, and both trigger flags `false`. `failure_behavior` is validated against the provider's accepted values (`failure`, `notify`).
 - **Import** uses the module ID (not the `tc-` ID): `terraform import 'module.module_test_configurations.scalr_module_test_configuration.this["vpc"]' mod-xxxxxxxxxx`.
 - The `ids` output returns the `tc-...` test configuration IDs, which is what `modules/scalr/module/test_provider_configuration` expects as `test_configuration_id`.
+- **Tool versions.** The module itself needs Terraform `>= 1.3.0` (for `optional()` object attributes with defaults); every OpenTofu release satisfies this. Its validations only reference their own variable, so the `>= 1.9.0` floor used by modules with cross-variable validation does not apply. Running the bundled tests (`tofu test`) additionally needs OpenTofu `>= 1.8.0` or Terraform `>= 1.7.0`, because they use `mock_provider`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -120,7 +121,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
 
 ## Providers

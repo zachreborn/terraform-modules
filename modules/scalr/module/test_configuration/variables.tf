@@ -43,7 +43,7 @@ variable "module_test_configurations" {
 
   validation {
     condition = alltrue([
-      for key, value in var.module_test_configurations : trimspace(value.module_id) != ""
+      for key, value in var.module_test_configurations : value.module_id == null ? false : trimspace(value.module_id) != ""
     ])
     error_message = "Each module_test_configurations entry's module_id must be a non-empty module ID, e.g. 'mod-xxxxxxxxxx'."
   }

@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.9.0"
+  # >= 1.3.0: the startswith() function (variables.tf validations) was introduced in Terraform 1.3.0.
+  # The validations reference only their own variable, so no newer language feature is needed.
+  required_version = ">= 1.3.0"
   required_providers {
     scalr = {
       source = "registry.scalr.io/scalr/scalr"
