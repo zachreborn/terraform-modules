@@ -2,14 +2,16 @@
 
 ## scalr/vcs_provider
 
-Manages [`scalr_vcs_provider`](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/vcs_provider) resources, connecting Scalr to a version control system (GitHub, GitHub Enterprise, GitLab, GitLab Enterprise, or Bitbucket Enterprise) so environments can source workspaces from VCS-backed repositories.
+Manages [`scalr_vcs_provider`](https://registry.terraform.io/providers/Scalr/scalr/latest/docs/resources/vcs_provider) resources, connecting Scalr to a version control system (GitHub, GitHub Enterprise, GitLab, GitLab Enterprise, Bitbucket Enterprise, or Azure DevOps Services) so environments can source workspaces from VCS-backed repositories.
 
 ### Prerequisites
 
 - A personal access token for the target VCS provider, ready to pass via `vcs_provider_tokens` -- never inline it in `vcs_providers`.
   - GitHub token: https://github.com/settings/tokens/new?description=example-vcs-resouce&scopes=repo
   - GitLab token: https://gitlab.com/-/profile/personal_access_tokens?name=example-vcs-resouce&scopes=api,read_user,read_registry
+  - Azure DevOps token: https://docs.scalr.io/docs/azure-devops#personal-access-token
 - For self-hosted VCS types (`github_enterprise`, `gitlab_enterprise`, `bitbucket_enterprise`), the `url` field is required, and for `bitbucket_enterprise` the `username` field is also required.
+- For `azure_dev_ops_services`, Scalr provider `>= 3.20.0` is required (earlier releases reject that `vcs_type`). The `username` field is the Azure DevOps organization name and is only needed for organization-scoped tokens. No `url` is needed.
 - For self-hosted VCS providers connected via an agent, an existing agent pool ID to pass as `agent_pool_id`.
 
 ### Usage
@@ -32,12 +34,20 @@ module "vcs_provider" {
       url           = "https://gitlab.example.com"
       agent_pool_id = "apool-xxxxxxxxxx"
     }
+
+    # Requires Scalr provider >= 3.20.0.
+    azure_devops = {
+      name     = "azure-devops"
+      vcs_type = "azure_dev_ops_services"
+      username = "my-organization" # Azure DevOps organization name; only needed for organization-scoped tokens
+    }
   }
 
   # Sensitive values, keyed the same as the entries above.
   vcs_provider_tokens = {
     github_main        = var.github_token        # e.g. from a secret manager
     gitlab_self_hosted = var.gitlab_self_hosted_token
+    azure_devops       = var.azure_devops_token
   }
 }
 ```
@@ -54,6 +64,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - `account_id` can be set per-entry, or omitted to fall back to the module-wide `var.account_id`. An entry's own `account_id` always takes precedence over the module-wide default.
 - `environments` defaults to `["*"]` (shared with all environments) to match the most common usage pattern; override per-entry to scope a provider to specific environments.
 - `draft_pr_runs_enabled` defaults to `false`, matching the upstream provider's default.
+- `vcs_type = "azure_dev_ops_services"` is accepted by the `vcs_type` validation (Azure DevOps Services support shipped in Scalr provider v3.20.0). No other module validation blocks Azure DevOps entries: `url` and `agent_pool_id` stay optional, and `username` is optional because it is only needed for organization-scoped tokens (it is still required by Scalr for `bitbucket_enterprise`). The token requirement applies to Azure DevOps like every other type, so each entry needs a non-null `vcs_provider_tokens` entry.
+- **This module's provider floor stays at `>= 3.17.0`.** Accepting the new `vcs_type` value does not reference any new resource argument, so the module itself still initializes on older provider releases. A caller who sets `vcs_type = "azure_dev_ops_services"` must pin Scalr provider `>= 3.20.0`; an older provider rejects that value at validate time.
 
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
 <!-- BEGIN_TF_DOCS -->
@@ -68,7 +80,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | 3.20.0 |
 
 ## Modules
 
@@ -85,8 +97,8 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_account_id"></a> [account\_id](#input\_account\_id) | (Optional) Module-wide fallback account ID, in the format "acc-<RANDOM STRING>", used for any var.vcs\_providers entry that omits account\_id. | `string` | `null` | no |
-| <a name="input_vcs_provider_tokens"></a> [vcs\_provider\_tokens](#input\_vcs\_provider\_tokens) | Map of sensitive personal access tokens for var.vcs\_providers, keyed by the same logical key.<br/>Kept in a separate, wholly `sensitive = true` variable so that var.vcs\_providers itself can<br/>remain non-sensitive (required, since it is the for\_each source for scalr\_vcs\_provider.this).<br/>Every entry in var.vcs\_providers must have a corresponding entry here, since the underlying<br/>provider requires a token for every VCS provider.<br/>  - GitHub token can be generated at<br/>    https://github.com/settings/tokens/new?description=example-vcs-resouce&scopes=repo<br/>  - GitLab token can be generated at<br/>    https://gitlab.com/-/profile/personal_access_tokens?name=example-vcs-resouce&scopes=api,read_user,read_registry | `map(string)` | `{}` | no |
-| <a name="input_vcs_providers"></a> [vcs\_providers](#input\_vcs\_providers) | Map of Scalr VCS Providers (scalr\_vcs\_provider) to create, keyed by a caller-chosen logical<br/>name. Fields:<br/>  - name:                       (Optional) Name of the VCS provider. Defaults to the entry's<br/>                                map key.<br/>  - account\_id:                  (Optional) ID of the account, in the format<br/>                                "acc-<RANDOM STRING>". Falls back to var.account\_id when unset.<br/>  - agent\_pool\_id:                (Optional) The id of the agent pool to connect Scalr to a<br/>                                self-hosted VCS provider.<br/>  - comments\_enabled:             (Optional) Enable comments on pull requests for the VCS<br/>                                provider.<br/>  - draft\_pr\_runs\_enabled:        (Optional) Enable draft PR runs for the VCS provider.<br/>                                Defaults to false.<br/>  - environments:                 (Optional) Set of environment IDs the VCS provider is shared<br/>                                to. Use ["*"] to share with all environments. Defaults to<br/>                                ["*"].<br/>  - pr\_merge\_comments\_enabled:    (Optional) Enable comments after pull request merges for the<br/>                                VCS provider.<br/>  - url:                          (Optional) Required for self-hosted VCS providers.<br/>  - username:                     (Optional) Required for the "bitbucket\_enterprise" provider<br/>                                type.<br/>  - vcs\_type:                     (Optional) One of "github", "github\_enterprise", "gitlab",<br/>                                "gitlab\_enterprise", "bitbucket\_enterprise". Defaults to<br/>                                "github".<br/><br/>The sensitive personal access token for each entry is intentionally NOT part of this<br/>variable -- see var.vcs\_provider\_tokens. Keeping it out of this map lets var.vcs\_providers<br/>remain non-sensitive, which is required because it is this module's for\_each source<br/>(OpenTofu/Terraform disallow for\_each over a sensitive collection). | <pre>map(object({<br/>    name                      = optional(string)<br/>    account_id                = optional(string)<br/>    agent_pool_id             = optional(string)<br/>    comments_enabled          = optional(bool)<br/>    draft_pr_runs_enabled     = optional(bool, false)<br/>    environments              = optional(set(string), ["*"])<br/>    pr_merge_comments_enabled = optional(bool)<br/>    url                       = optional(string)<br/>    username                  = optional(string)<br/>    vcs_type                  = optional(string, "github")<br/>  }))</pre> | `{}` | no |
+| <a name="input_vcs_provider_tokens"></a> [vcs\_provider\_tokens](#input\_vcs\_provider\_tokens) | Map of sensitive personal access tokens for var.vcs\_providers, keyed by the same logical key.<br/>Kept in a separate, wholly `sensitive = true` variable so that var.vcs\_providers itself can<br/>remain non-sensitive (required, since it is the for\_each source for scalr\_vcs\_provider.this).<br/>Every entry in var.vcs\_providers must have a corresponding entry here, since the underlying<br/>provider requires a token for every VCS provider.<br/>  - GitHub token can be generated at<br/>    https://github.com/settings/tokens/new?description=example-vcs-resouce&scopes=repo<br/>  - GitLab token can be generated at<br/>    https://gitlab.com/-/profile/personal_access_tokens?name=example-vcs-resouce&scopes=api,read_user,read_registry<br/>  - Azure DevOps token can be generated as described at<br/>    https://docs.scalr.io/docs/azure-devops#personal-access-token | `map(string)` | `{}` | no |
+| <a name="input_vcs_providers"></a> [vcs\_providers](#input\_vcs\_providers) | Map of Scalr VCS Providers (scalr\_vcs\_provider) to create, keyed by a caller-chosen logical<br/>name. Fields:<br/>  - name:                       (Optional) Name of the VCS provider. Defaults to the entry's<br/>                                map key.<br/>  - account\_id:                  (Optional) ID of the account, in the format<br/>                                "acc-<RANDOM STRING>". Falls back to var.account\_id when unset.<br/>  - agent\_pool\_id:                (Optional) The id of the agent pool to connect Scalr to a<br/>                                self-hosted VCS provider.<br/>  - comments\_enabled:             (Optional) Enable comments on pull requests for the VCS<br/>                                provider.<br/>  - draft\_pr\_runs\_enabled:        (Optional) Enable draft PR runs for the VCS provider.<br/>                                Defaults to false.<br/>  - environments:                 (Optional) Set of environment IDs the VCS provider is shared<br/>                                to. Use ["*"] to share with all environments. Defaults to<br/>                                ["*"].<br/>  - pr\_merge\_comments\_enabled:    (Optional) Enable comments after pull request merges for the<br/>                                VCS provider.<br/>  - url:                          (Optional) Required for self-hosted VCS providers.<br/>  - username:                     (Optional) Required for the "bitbucket\_enterprise" provider<br/>                                type. For "azure\_dev\_ops\_services" it is the Azure DevOps<br/>                                organization name, required only for organization-scoped<br/>                                tokens.<br/>  - vcs\_type:                     (Optional) One of "github", "github\_enterprise", "gitlab",<br/>                                "gitlab\_enterprise", "bitbucket\_enterprise",<br/>                                "azure\_dev\_ops\_services". Defaults to "github".<br/>                                "azure\_dev\_ops\_services" requires the Scalr provider<br/>                                >= 3.20.0. This module's own provider constraint is not<br/>                                raised for it (no new schema argument is involved), so<br/>                                callers using it must pin provider 3.20.0 or later.<br/><br/>The sensitive personal access token for each entry is intentionally NOT part of this<br/>variable -- see var.vcs\_provider\_tokens. Keeping it out of this map lets var.vcs\_providers<br/>remain non-sensitive, which is required because it is this module's for\_each source<br/>(OpenTofu/Terraform disallow for\_each over a sensitive collection). | <pre>map(object({<br/>    name                      = optional(string)<br/>    account_id                = optional(string)<br/>    agent_pool_id             = optional(string)<br/>    comments_enabled          = optional(bool)<br/>    draft_pr_runs_enabled     = optional(bool, false)<br/>    environments              = optional(set(string), ["*"])<br/>    pr_merge_comments_enabled = optional(bool)<br/>    url                       = optional(string)<br/>    username                  = optional(string)<br/>    vcs_type                  = optional(string, "github")<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
