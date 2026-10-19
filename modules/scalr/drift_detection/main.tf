@@ -5,8 +5,9 @@ terraform {
   required_version = ">= 1.9.0"
   required_providers {
     scalr = {
-      source  = "registry.scalr.io/scalr/scalr"
-      version = ">= 3.17.0"
+      source = "registry.scalr.io/scalr/scalr"
+      # scalr_drift_detection time_window was introduced in provider v3.20.0.
+      version = ">= 3.20.0"
     }
   }
 }
@@ -28,6 +29,7 @@ resource "scalr_drift_detection" "this" {
   environment_id = each.value.environment_id
   check_period   = each.value.check_period
   run_mode       = each.value.run_mode
+  time_window    = each.value.time_window
 
   dynamic "workspace_filters" {
     for_each = each.value.workspace_filters != null ? [each.value.workspace_filters] : []
