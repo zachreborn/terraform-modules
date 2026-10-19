@@ -115,7 +115,7 @@ variable "wiz_client_secrets" {
     var.wiz_integrations itself can remain non-sensitive (required, since it is the for_each source
     for scalr_wiz_integration.this). Every key in var.wiz_integrations must have a non-empty entry
     here (at most 512 characters), because the underlying provider requires a client secret for
-    every integration. Entries without a matching integration are ignored.
+    every integration. Entries without a matching integration are ignored and are not validated.
 
     Example:
       wiz_client_secrets = {
@@ -135,10 +135,11 @@ variable "wiz_client_secrets" {
     error_message = "Every key in wiz_integrations needs a matching entry in wiz_client_secrets. Missing entries for: ${join(", ", [for key in keys(var.wiz_integrations) : key if !contains(nonsensitive(keys(var.wiz_client_secrets)), key)])}."
   }
 
+  # Only entries for configured integrations are content-checked; surplus entries are ignored.
   validation {
     condition = alltrue([
-      for key, value in var.wiz_client_secrets : try(trimspace(value) != "" && length(value) <= 512, false)
+      for key, value in var.wiz_client_secrets : try(trimspace(value) != "" && length(value) <= 512, false) if contains(keys(var.wiz_integrations), key)
     ])
-    error_message = "Each wiz_client_secrets value must be a non-empty string of at most 512 characters; null, empty, and whitespace-only client secrets are rejected."
+    error_message = "Each wiz_client_secrets value for a configured integration must be a non-empty string of at most 512 characters; null, empty, and whitespace-only client secrets are rejected."
   }
 }

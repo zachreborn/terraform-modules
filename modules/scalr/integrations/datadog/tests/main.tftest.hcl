@@ -198,6 +198,52 @@ run "extra_api_keys_without_an_integration_are_ignored" {
   }
 }
 
+run "invalid_unused_api_keys_do_not_block_valid_integrations" {
+  command = plan
+
+  variables {
+    datadog_integrations = {
+      primary = {
+        name = "datadog"
+      }
+    }
+    datadog_api_keys = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      primary      = "fake-datadog-api-key"
+      unused_null  = null
+      unused_empty = ""
+      unused_blank = "   "
+    }
+  }
+
+  assert {
+    condition     = length(scalr_datadog_integration.this) == 1
+    error_message = "Null, empty, or blank values under keys with no matching integration must not fail validation."
+  }
+
+  assert {
+    condition     = nonsensitive(scalr_datadog_integration.this["primary"].api_key) == "fake-datadog-api-key"
+    error_message = "The configured integration must still receive its own API key."
+  }
+}
+
+run "invalid_unused_api_keys_are_ignored_when_no_integrations_are_configured" {
+  command = plan
+
+  variables {
+    datadog_integrations = {}
+    datadog_api_keys = {
+      unused_null  = null
+      unused_empty = ""
+    }
+  }
+
+  assert {
+    condition     = length(scalr_datadog_integration.this) == 0
+    error_message = "With no integrations configured, every datadog_api_keys entry is unused and must be ignored, whatever its value."
+  }
+}
+
 ###########################################################
 # for_each branch coverage: empty map (default = {})
 ###########################################################

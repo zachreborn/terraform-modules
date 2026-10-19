@@ -260,6 +260,54 @@ run "extra_passwords_without_an_integration_are_ignored" {
   }
 }
 
+run "invalid_unused_passwords_do_not_block_valid_integrations" {
+  command = plan
+
+  variables {
+    docker_integrations = {
+      ghcr = {
+        name         = "ghcr"
+        registry_url = "https://ghcr.io"
+        username     = "my-user"
+      }
+    }
+    docker_passwords = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      ghcr         = "fake-registry-password"
+      unused_null  = null
+      unused_empty = ""
+      unused_blank = "   "
+    }
+  }
+
+  assert {
+    condition     = length(scalr_docker_integration.this) == 1
+    error_message = "Null, empty, or blank values under keys with no matching integration must not fail validation."
+  }
+
+  assert {
+    condition     = nonsensitive(scalr_docker_integration.this["ghcr"].password) == "fake-registry-password"
+    error_message = "The configured integration must still receive its own password."
+  }
+}
+
+run "invalid_unused_passwords_are_ignored_when_no_integrations_are_configured" {
+  command = plan
+
+  variables {
+    docker_integrations = {}
+    docker_passwords = {
+      unused_null  = null
+      unused_empty = ""
+    }
+  }
+
+  assert {
+    condition     = length(scalr_docker_integration.this) == 0
+    error_message = "With no integrations configured, every docker_passwords entry is unused and must be ignored, whatever its value."
+  }
+}
+
 ###########################################################
 # for_each branch coverage: empty map (default = {})
 ###########################################################

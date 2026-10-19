@@ -81,7 +81,7 @@ variable "docker_passwords" {
     var.docker_integrations itself can remain non-sensitive (required, since it is the for_each
     source for scalr_docker_integration.this). Every key in var.docker_integrations must have a
     non-empty entry here, because the underlying provider requires a password for every
-    integration. Entries without a matching integration are ignored.
+    integration. Entries without a matching integration are ignored and are not validated.
 
     Example:
       docker_passwords = {
@@ -101,10 +101,11 @@ variable "docker_passwords" {
     error_message = "Every key in docker_integrations needs a matching entry in docker_passwords. Missing entries for: ${join(", ", [for key in keys(var.docker_integrations) : key if !contains(nonsensitive(keys(var.docker_passwords)), key)])}."
   }
 
+  # Only entries for configured integrations are content-checked; surplus entries are ignored.
   validation {
     condition = alltrue([
-      for key, value in var.docker_passwords : try(trimspace(value) != "", false)
+      for key, value in var.docker_passwords : try(trimspace(value) != "", false) if contains(keys(var.docker_integrations), key)
     ])
-    error_message = "Each docker_passwords value must be a non-empty string; null, empty, and whitespace-only passwords are rejected."
+    error_message = "Each docker_passwords value for a configured integration must be a non-empty string; null, empty, and whitespace-only passwords are rejected."
   }
 }

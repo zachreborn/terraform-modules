@@ -310,6 +310,55 @@ run "extra_client_secrets_without_an_integration_are_ignored" {
   }
 }
 
+run "invalid_unused_client_secrets_do_not_block_valid_integrations" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      iac_scanning = {
+        name      = "wiz"
+        client_id = "svc-account-client-id"
+      }
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      iac_scanning     = "fake-wiz-client-secret"
+      unused_null      = null
+      unused_empty     = ""
+      unused_blank     = "   "
+      unused_oversized = join("", [for i in range(513) : "a"])
+    }
+  }
+
+  assert {
+    condition     = length(scalr_wiz_integration.this) == 1
+    error_message = "Null, empty, blank, or oversized values under keys with no matching integration must not fail validation."
+  }
+
+  assert {
+    condition     = nonsensitive(scalr_wiz_integration.this["iac_scanning"].client_secret) == "fake-wiz-client-secret"
+    error_message = "The configured integration must still receive its own client secret."
+  }
+}
+
+run "invalid_unused_client_secrets_are_ignored_when_no_integrations_are_configured" {
+  command = plan
+
+  variables {
+    wiz_integrations = {}
+    wiz_client_secrets = {
+      unused_null      = null
+      unused_empty     = ""
+      unused_oversized = join("", [for i in range(513) : "a"])
+    }
+  }
+
+  assert {
+    condition     = length(scalr_wiz_integration.this) == 0
+    error_message = "With no integrations configured, every wiz_client_secrets entry is unused and must be ignored, whatever its value."
+  }
+}
+
 ###########################################################
 # for_each branch coverage: empty map (default = {})
 ###########################################################

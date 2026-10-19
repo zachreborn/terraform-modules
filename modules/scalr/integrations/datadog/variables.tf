@@ -54,7 +54,7 @@ variable "datadog_api_keys" {
     can remain non-sensitive (required, since it is the for_each source for
     scalr_datadog_integration.this). Every key in var.datadog_integrations must have a non-empty
     entry here, because the underlying provider requires an API key for every integration.
-    Entries without a matching integration are ignored.
+    Entries without a matching integration are ignored and are not validated.
 
     Example:
       datadog_api_keys = {
@@ -74,10 +74,11 @@ variable "datadog_api_keys" {
     error_message = "Every key in datadog_integrations needs a matching entry in datadog_api_keys. Missing entries for: ${join(", ", [for key in keys(var.datadog_integrations) : key if !contains(nonsensitive(keys(var.datadog_api_keys)), key)])}."
   }
 
+  # Only entries for configured integrations are content-checked; surplus entries are ignored.
   validation {
     condition = alltrue([
-      for key, value in var.datadog_api_keys : try(trimspace(value) != "", false)
+      for key, value in var.datadog_api_keys : try(trimspace(value) != "", false) if contains(keys(var.datadog_integrations), key)
     ])
-    error_message = "Each datadog_api_keys value must be a non-empty string; null, empty, and whitespace-only API keys are rejected."
+    error_message = "Each datadog_api_keys value for a configured integration must be a non-empty string; null, empty, and whitespace-only API keys are rejected."
   }
 }
