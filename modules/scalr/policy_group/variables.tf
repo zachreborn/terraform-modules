@@ -65,8 +65,11 @@ variable "policy_groups" {
   }
 
   validation {
+    # A conditional, not `v.evaluate_on == null || contains(...)`: Terraform evaluates both operands of `||`,
+    # so contains() would still be called with null for an omitted evaluate_on and raise "argument must not
+    # be null". A conditional only reports errors from the branch it selects.
     condition = alltrue([
-      for k, v in var.policy_groups : v.evaluate_on == null || contains(["pre-plan", "post-plan"], v.evaluate_on)
+      for k, v in var.policy_groups : v.evaluate_on == null ? true : contains(["pre-plan", "post-plan"], v.evaluate_on)
     ])
     error_message = "Each policy_groups entry's evaluate_on must be null, \"pre-plan\", or \"post-plan\". Note that changing evaluate_on on an existing policy group forces it to be re-created."
   }

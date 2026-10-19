@@ -187,6 +187,46 @@ run "evaluate_on_can_differ_per_policy_group" {
   }
 }
 
+# A non-empty map where only some policy groups set evaluate_on exercises both sides of the validation's null
+# handling. Terraform evaluates every operand of `||`, so the validation uses a conditional; this proves the
+# omitted-field path stays valid next to entries that do set it. (The omitted entry's effective evaluate_on is
+# computed by the provider, so only the set entry's value is asserted.)
+run "evaluate_on_may_be_set_on_some_policy_groups_and_omitted_on_others" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      explicit_stage = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "pre-plan"
+        vcs_repo = {
+          identifier = "my-org/policies"
+          path       = "policies/explicit"
+        }
+      }
+      default_stage = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        vcs_repo = {
+          identifier = "my-org/policies"
+          path       = "policies/default"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(scalr_policy_group.this) == 2
+    error_message = "Both the policy group that sets evaluate_on and the one that omits it should plan."
+  }
+
+  assert {
+    condition     = scalr_policy_group.this["explicit_stage"].evaluate_on == "pre-plan"
+    error_message = "The policy group that sets evaluate_on should keep its value."
+  }
+}
+
 run "evaluate_on_with_linkage_composition_plans_successfully" {
   command = plan
 

@@ -2,7 +2,9 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.9.0"
+  # variables.tf uses `nullable = false` (Terraform 1.1) and its validations reference only their own variable, so
+  # the cross-variable validation floor (1.9) does not apply here.
+  required_version = ">= 1.1.0"
   required_providers {
     scalr = {
       source = "registry.scalr.io/scalr/scalr"

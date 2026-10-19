@@ -241,6 +241,42 @@ run "time_window_combines_with_run_mode_and_workspace_filters" {
   }
 }
 
+# A non-empty map where only some entries set time_window exercises both sides of the validation's null
+# handling. Terraform evaluates every operand of `||`, so the validation uses a conditional; this proves the
+# omitted-field path stays valid next to entries that do set it.
+run "time_window_may_be_set_on_some_entries_and_omitted_on_others" {
+  command = plan
+
+  variables {
+    drift_detections = {
+      with_window = {
+        environment_id = "env-xxxxxxxxxx"
+        check_period   = "daily"
+        time_window    = "04:00-08:00"
+      }
+      without_window = {
+        environment_id = "env-yyyyyyyyyy"
+        check_period   = "weekly"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(scalr_drift_detection.this) == 2
+    error_message = "Both the entry that sets time_window and the entry that omits it should plan."
+  }
+
+  assert {
+    condition     = scalr_drift_detection.this["with_window"].time_window == "04:00-08:00"
+    error_message = "The entry that sets time_window should keep its value."
+  }
+
+  assert {
+    condition     = scalr_drift_detection.this["without_window"].time_window == null
+    error_message = "The entry that omits time_window should leave it null."
+  }
+}
+
 ###########################################################
 # Validation: expect_failures
 ###########################################################
@@ -405,6 +441,26 @@ run "rejects_invalid_time_window_when_other_entries_are_valid" {
       }
       broken = {
         environment_id = "env-xxxxxxxxxx"
+        check_period   = "weekly"
+        time_window    = "25:00-26:00"
+      }
+    }
+  }
+
+  expect_failures = [var.drift_detections]
+}
+
+run "rejects_invalid_time_window_when_other_entries_omit_it" {
+  command = plan
+
+  variables {
+    drift_detections = {
+      omits = {
+        environment_id = "env-xxxxxxxxxx"
+        check_period   = "weekly"
+      }
+      broken = {
+        environment_id = "env-yyyyyyyyyy"
         check_period   = "weekly"
         time_window    = "25:00-26:00"
       }

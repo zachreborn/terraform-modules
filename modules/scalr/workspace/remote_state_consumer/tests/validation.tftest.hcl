@@ -95,6 +95,63 @@ run "rejects_whitespace_only_consumer_id" {
 }
 
 ###########################################################
+# Null IDs are rejected with the module's own message, not a raw function error
+###########################################################
+
+run "rejects_null_workspace_id" {
+  command = plan
+
+  variables {
+    workspace_remote_state_consumers = {
+      broken = {
+        workspace_id = null
+        consumer_id  = "ws-yyyyyyyyyy"
+      }
+    }
+  }
+
+  expect_failures = [var.workspace_remote_state_consumers]
+}
+
+run "rejects_null_consumer_id" {
+  command = plan
+
+  variables {
+    workspace_remote_state_consumers = {
+      broken = {
+        workspace_id = "ws-xxxxxxxxxx"
+        consumer_id  = null
+      }
+    }
+  }
+
+  expect_failures = [var.workspace_remote_state_consumers]
+}
+
+run "rejects_null_ids_in_several_entries_next_to_a_valid_one" {
+  command = plan
+
+  variables {
+    workspace_remote_state_consumers = {
+      valid_entry = {
+        workspace_id = "ws-aaaaaaaaaa"
+        consumer_id  = "ws-bbbbbbbbbb"
+      }
+      null_source_one = {
+        workspace_id = null
+        consumer_id  = "ws-cccccccccc"
+      }
+      null_source_two = {
+        workspace_id = null
+        consumer_id  = "ws-cccccccccc"
+      }
+    }
+  }
+
+  expect_failures = [var.workspace_remote_state_consumers]
+}
+
+###########################################################
 # The same workspace_id/consumer_id pair must not be listed twice
 ###########################################################
 

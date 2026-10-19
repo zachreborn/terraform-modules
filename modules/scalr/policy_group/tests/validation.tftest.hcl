@@ -197,6 +197,32 @@ run "rejects_invalid_evaluate_on_when_other_entries_are_valid" {
   expect_failures = [var.policy_groups]
 }
 
+run "rejects_invalid_evaluate_on_when_other_entries_omit_it" {
+  command = plan
+
+  variables {
+    policy_groups = {
+      omits = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+      broken = {
+        account_id      = "acc-xxxxxxxxxx"
+        vcs_provider_id = "vcs-xxxxxxxxxx"
+        evaluate_on     = "never"
+        vcs_repo = {
+          identifier = "my-org/policies"
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.policy_groups]
+}
+
 run "rejects_policy_group_linkages_entry_with_both_key_and_id" {
   command = plan
 

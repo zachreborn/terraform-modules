@@ -71,9 +71,12 @@ variable "drift_detections" {
   }
 
   validation {
+    # A conditional, not `value.time_window == null || contains(...)`: Terraform evaluates both operands of
+    # `||`, so contains() would still be called with null for an omitted time_window and raise "argument must
+    # not be null". A conditional only reports errors from the branch it selects.
     condition = alltrue([
       for key, value in var.drift_detections : (
-        value.time_window == null ||
+        value.time_window == null ? true :
         contains(["00:00-04:00", "04:00-08:00", "08:00-12:00", "12:00-16:00", "16:00-20:00", "20:00-24:00"], value.time_window)
       )
     ])

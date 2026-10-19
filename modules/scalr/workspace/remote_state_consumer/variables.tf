@@ -32,10 +32,16 @@ variable "workspace_remote_state_consumers" {
   nullable = false
 
   validation {
+    # Conditional, not a bare `trimspace(...) != "" && ...`: Terraform evaluates every operand of `&&`/`||`, so
+    # trimspace(null) would raise a raw "argument must not be null" error instead of this message when an ID is
+    # null. The conditional only reports errors from the branch it selects.
     condition = alltrue([
-      for k, v in var.workspace_remote_state_consumers : trimspace(v.workspace_id) != "" && trimspace(v.consumer_id) != ""
+      for k, v in var.workspace_remote_state_consumers : (
+        v.workspace_id == null || v.consumer_id == null ? false :
+        trimspace(v.workspace_id) != "" && trimspace(v.consumer_id) != ""
+      )
     ])
-    error_message = "Each workspace_remote_state_consumers entry's workspace_id and consumer_id must be non-empty workspace IDs."
+    error_message = "Each workspace_remote_state_consumers entry's workspace_id and consumer_id must be set to non-empty workspace IDs (not null or blank)."
   }
 
   validation {
@@ -46,8 +52,14 @@ variable "workspace_remote_state_consumers" {
   }
 
   validation {
+    # A null ID cannot be interpolated into the pair key, so such an entry gets a unique placeholder key here and
+    # is reported by the blank/null validation above instead.
     condition = (
-      length(distinct([for k, v in var.workspace_remote_state_consumers : "${v.workspace_id}/${v.consumer_id}"]))
+      length(distinct([
+        for k, v in var.workspace_remote_state_consumers : (
+          v.workspace_id == null || v.consumer_id == null ? "null-id:${k}" : "${v.workspace_id}/${v.consumer_id}"
+        )
+      ]))
       == length(var.workspace_remote_state_consumers)
     )
     error_message = "Each workspace_remote_state_consumers entry must be a unique workspace_id/consumer_id pair; the same consumer cannot be granted access to the same workspace twice."
