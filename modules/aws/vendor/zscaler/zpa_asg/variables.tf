@@ -78,9 +78,9 @@ variable "attach_source_dest_check_iam" {
 }
 
 variable "encrypted" {
-  description = "(Optional) Encrypt the root EBS volume via launch-template block_device_mappings. Defaults to false: the Zscaler Marketplace AMI is already vendor-pre-encrypted, and Sunward Gen2 production connectors use encrypted=false because AWS has rejected re-encryption on this AMI path. Callers may set true and validate in plan/apply if desired."
+  description = "(Optional) Encrypt the root EBS volume via launch-template block_device_mappings. Defaults to true (matches Zscaler terraform-zsac-asg-aws ebs_encrypted and AGENTS.md secure defaults). The Marketplace zpa-connector-el9 root snapshot is unencrypted; encrypt-on-launch is supported. Set false only to match an existing unencrypted fleet."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "root_device_name" {
@@ -96,9 +96,9 @@ variable "root_delete_on_termination" {
 }
 
 variable "root_volume_size" {
-  description = "(Optional) Root EBS volume size in GiB. Minimum 64 GiB required by the Zscaler Marketplace AMI."
+  description = "(Optional) Root EBS volume size in GiB. Must be >= the Marketplace AMI snapshot size (current zpa-connector-el9 images are 80 GiB)."
   type        = number
-  default     = 75
+  default     = 80
 }
 
 variable "root_volume_type" {

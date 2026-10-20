@@ -121,17 +121,14 @@ resource "aws_launch_template" "zpa" {
 
   # Root device must match AMI (zpa-connector-el9* uses /dev/xvda). Wrong name
   # silently skips size/type/encryption overrides on the real boot volume.
-  # encrypted defaults false: Marketplace AMI is vendor-pre-encrypted; Gen2 prod
-  # connectors use encrypted=false because AWS has rejected re-encryption here.
   block_device_mappings {
     device_name = var.root_device_name
 
     ebs {
       delete_on_termination = var.root_delete_on_termination
-      #tfsec:ignore:aws-ec2-encrypted-volumes
-      encrypted   = var.encrypted
-      volume_size = var.root_volume_size
-      volume_type = var.root_volume_type
+      encrypted             = var.encrypted
+      volume_size           = var.root_volume_size
+      volume_type           = var.root_volume_type
     }
   }
 

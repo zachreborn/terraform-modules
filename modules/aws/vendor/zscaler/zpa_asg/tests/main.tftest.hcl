@@ -104,6 +104,11 @@ run "valid_baseline_plans" {
   }
 
   assert {
+    condition     = tobool(aws_launch_template.zpa.block_device_mappings[0].ebs[0].encrypted)
+    error_message = "Expected default encrypted=true on root volume."
+  }
+
+  assert {
     condition     = length(aws_iam_role_policy.source_dest_check) == 1
     error_message = "Expected source_dest_check IAM policy when source_dest_check defaults to false."
   }
