@@ -167,6 +167,169 @@ run "valid_baseline_passes_all_validations" {
   }
 }
 
+run "rejects_unknown_package_type" {
+  command = plan
+
+  variables {
+    function_name    = "example-function"
+    filename         = "function.zip"
+    source_code_hash = "abc123hash=="
+    role             = "arn:aws:iam::123456789012:role/example-lambda-role"
+    package_type     = "Container"
+  }
+
+  expect_failures = [var.package_type]
+}
+
+run "rejects_wrong_case_package_type" {
+  command = plan
+
+  variables {
+    function_name = "example-function"
+    role          = "arn:aws:iam::123456789012:role/example-lambda-role"
+    package_type  = "image"
+    image_uri     = "123456789012.dkr.ecr.us-east-1.amazonaws.com/example:v1.0.0"
+  }
+
+  expect_failures = [var.package_type]
+}
+
+run "rejects_empty_architectures" {
+  command = plan
+
+  variables {
+    function_name    = "example-function"
+    filename         = "function.zip"
+    source_code_hash = "abc123hash=="
+    role             = "arn:aws:iam::123456789012:role/example-lambda-role"
+    architectures    = []
+  }
+
+  expect_failures = [var.architectures]
+}
+
+run "rejects_multiple_architectures" {
+  command = plan
+
+  variables {
+    function_name    = "example-function"
+    filename         = "function.zip"
+    source_code_hash = "abc123hash=="
+    role             = "arn:aws:iam::123456789012:role/example-lambda-role"
+    architectures    = ["x86_64", "arm64"]
+  }
+
+  expect_failures = [var.architectures]
+}
+
+run "rejects_unknown_architecture" {
+  command = plan
+
+  variables {
+    function_name    = "example-function"
+    filename         = "function.zip"
+    source_code_hash = "abc123hash=="
+    role             = "arn:aws:iam::123456789012:role/example-lambda-role"
+    architectures    = ["amd64"]
+  }
+
+  expect_failures = [var.architectures]
+}
+
+run "rejects_ephemeral_storage_size_below_minimum" {
+  command = plan
+
+  variables {
+    function_name          = "example-function"
+    filename               = "function.zip"
+    source_code_hash       = "abc123hash=="
+    role                   = "arn:aws:iam::123456789012:role/example-lambda-role"
+    ephemeral_storage_size = 511
+  }
+
+  expect_failures = [var.ephemeral_storage_size]
+}
+
+run "rejects_ephemeral_storage_size_above_maximum" {
+  command = plan
+
+  variables {
+    function_name          = "example-function"
+    filename               = "function.zip"
+    source_code_hash       = "abc123hash=="
+    role                   = "arn:aws:iam::123456789012:role/example-lambda-role"
+    ephemeral_storage_size = 10241
+  }
+
+  expect_failures = [var.ephemeral_storage_size]
+}
+
+run "accepts_ephemeral_storage_size_boundaries" {
+  command = plan
+
+  variables {
+    function_name          = "example-function"
+    filename               = "function.zip"
+    source_code_hash       = "abc123hash=="
+    role                   = "arn:aws:iam::123456789012:role/example-lambda-role"
+    ephemeral_storage_size = 10240
+  }
+
+  assert {
+    condition     = aws_lambda_function.lambda_function.ephemeral_storage[0].size == 10240
+    error_message = "the 10240 MB maximum should be accepted."
+  }
+}
+
+run "accepts_ephemeral_storage_size_lower_boundary" {
+  command = plan
+
+  variables {
+    function_name          = "example-function"
+    filename               = "function.zip"
+    source_code_hash       = "abc123hash=="
+    role                   = "arn:aws:iam::123456789012:role/example-lambda-role"
+    ephemeral_storage_size = 512
+  }
+
+  assert {
+    condition     = aws_lambda_function.lambda_function.ephemeral_storage[0].size == 512
+    error_message = "the 512 MB minimum should be accepted."
+  }
+}
+
+run "valid_image_baseline_passes_all_validations" {
+  command = plan
+
+  variables {
+    function_name = "example-function"
+    role          = "arn:aws:iam::123456789012:role/example-lambda-role"
+    package_type  = "Image"
+    image_uri     = "123456789012.dkr.ecr.us-east-1.amazonaws.com/example:v1.0.0"
+    architectures = ["arm64"]
+    image_config = {
+      command = ["app.handler"]
+    }
+    ephemeral_storage_size = 1024
+    vpc_config = {
+      subnet_ids         = ["subnet-aaaaaaaa"]
+      security_group_ids = ["sg-11111111"]
+    }
+    reserved_concurrent_executions = 5
+    dead_letter_config = {
+      target_arn = "arn:aws:sqs:us-east-1:123456789012:example-dlq"
+    }
+    tracing_config = {
+      mode = "Active"
+    }
+  }
+
+  assert {
+    condition     = aws_lambda_function.lambda_function.package_type == "Image"
+    error_message = "a valid image baseline with every optional input set simultaneously should plan successfully without the validations interfering with one another."
+  }
+}
+
 # Every expect_failures case above must fail *because* the corresponding validation rejects the
 # input. Do NOT weaken these assertions (or any you add) to force a pass -- if a `run` block
 # fails to fail (or fails for the wrong reason), fix the validation condition in variables.tf,

@@ -6,7 +6,56 @@ variable "description" {
 
 variable "filename" {
   type        = string
-  description = "(Optional) The path to the function's deployment package within the local filesystem. If defined, The s3_-prefixed options cannot be used. When omitted (null), a function created without a local package source requires an alternative source (e.g. S3 or a container image) configured outside this module today."
+  description = "(Optional) The path to the function's deployment package within the local filesystem. If defined, The s3_-prefixed options cannot be used. Required for zip functions (the default `package_type`); must be null when `package_type` is \"Image\" (use `image_uri` instead)."
+  default     = null
+}
+
+variable "image_uri" {
+  type        = string
+  description = "(Optional) ECR image URI containing the function's deployment package, including a tag or digest (for example `123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:v1.0.0`). Required when `package_type` is \"Image\" and not allowed otherwise. Exactly one of `filename` or `image_uri` must be supplied."
+  default     = null
+}
+
+variable "package_type" {
+  type        = string
+  description = "(Optional) Lambda deployment package type: \"Zip\" or \"Image\". When omitted (null), the provider default (\"Zip\") is used. Set to \"Image\" to deploy a container image from `image_uri`; `handler` and `runtime` are then ignored because the image defines them."
+  default     = null
+
+  validation {
+    condition     = var.package_type == null ? true : contains(["Zip", "Image"], var.package_type)
+    error_message = "package_type must be null, \"Zip\", or \"Image\" (case-sensitive)."
+  }
+}
+
+variable "architectures" {
+  type        = list(string)
+  description = "(Optional) Instruction set architecture for the function. Exactly one of `x86_64` or `arm64`. When omitted (null), the provider default (`x86_64`) is used. A container image must be built for the architecture selected here."
+  default     = null
+
+  validation {
+    condition     = var.architectures == null ? true : length(var.architectures) == 1 && contains(["x86_64", "arm64"], var.architectures[0])
+    error_message = "architectures must be null or a list with exactly one entry, either \"x86_64\" or \"arm64\"."
+  }
+}
+
+variable "ephemeral_storage_size" {
+  type        = number
+  description = "(Optional) Size in MB of the function's /tmp directory, from 512 to 10240. When omitted (null), the provider default (512 MB) is used."
+  default     = null
+
+  validation {
+    condition     = var.ephemeral_storage_size == null ? true : var.ephemeral_storage_size >= 512 && var.ephemeral_storage_size <= 10240
+    error_message = "ephemeral_storage_size must be null or between 512 and 10240 (MB)."
+  }
+}
+
+variable "image_config" {
+  type = object({
+    command           = optional(list(string))
+    entry_point       = optional(list(string))
+    working_directory = optional(string)
+  })
+  description = "(Optional) Overrides for a container image's CMD (`command`), ENTRYPOINT (`entry_point`) and WORKDIR (`working_directory`). Only meaningful when `package_type` is \"Image\". When omitted (null), the image's own settings are used."
   default     = null
 }
 
@@ -28,7 +77,7 @@ variable "role" {
 
 variable "handler" {
   type        = string
-  description = "(Required) The function entrypoint in your code."
+  description = "(Required for zip functions) The function entrypoint in your code. Ignored when `package_type` is \"Image\"."
   default     = "main.handler"
 }
 
@@ -40,7 +89,7 @@ variable "memory_size" {
 
 variable "runtime" {
   type        = string
-  description = "(Required) See Runtimes for valid values."
+  description = "(Required for zip functions) See Runtimes for valid values. Ignored when `package_type` is \"Image\"."
   default     = "python3.6"
 }
 

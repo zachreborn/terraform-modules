@@ -117,10 +117,67 @@ module "vpc_test" {
 }
 ```
 
-All inputs above except `function_name`, `role`, and `handler` are genuinely optional --
-`description`, `filename`, and `source_code_hash` now default to `null`, and `tags`,
-`vpc_config`, `reserved_concurrent_executions`, `dead_letter_config`, and `tracing_config`
-all default to a no-op value that reproduces the provider's own defaults.
+A container-image function. Set `package_type = "Image"` and supply `image_uri` instead of
+`filename`; `handler` and `runtime` are then ignored (the image defines them), so there is no
+need to override their zip-oriented defaults:
+
+```hcl
+module "image_test" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/lambda"
+
+  function_name = "image-test"
+  role          = module.test_role.arn
+  package_type  = "Image"
+  image_uri     = "${module.test_ecr.repository_url}:v1.0.0"
+  architectures = ["x86_64"]
+
+  memory_size            = 2048
+  timeout                = 300
+  ephemeral_storage_size = 2048
+
+  vpc_config = {
+    subnet_ids         = ["subnet-0123456789abcdef0"]
+    security_group_ids = ["sg-0123456789abcdef0"]
+  }
+
+  # Optional: override the image's CMD/ENTRYPOINT/WORKDIR.
+  # image_config = {
+  #   command = ["app.handler"]
+  # }
+}
+```
+
+All inputs above except `function_name`, `role`, and (for zip functions) `handler` are
+genuinely optional -- `description`, `filename`, `source_code_hash`, `image_uri`, `package_type`,
+`architectures`, `ephemeral_storage_size`, and `image_config` default to `null` (the provider's
+own default applies), and `tags`, `vpc_config`, `reserved_concurrent_executions`,
+`dead_letter_config`, and `tracing_config` all default to a no-op value that reproduces the
+provider's own defaults.
+
+### Prerequisites
+
+- An IAM execution role for the function (`role`). For a function attached to a VPC, it needs ENI
+  permissions equivalent to the `AWSLambdaVPCAccessExecutionRole` managed policy.
+- For container images: an ECR repository (see `modules/aws/ecr`) that already contains the image
+  referenced by `image_uri`, built for the architecture selected in `architectures`. The image
+  must exist before `apply`, or the function creation fails.
+
+### Notes / design decisions
+
+- **Zip behavior is unchanged.** With `package_type` left `null`, the module behaves exactly as
+  before: `handler` and `runtime` pass through and `filename` is the package source.
+- **Image functions null out `handler` and `runtime`.** The provider rejects both for
+  `package_type = "Image"`, and their defaults (`main.handler`, `python3.6`) are non-null, so the
+  module forces them to `null` for image functions instead of making callers do it.
+- **Cross-variable rules are resource preconditions.** `image_uri` is required for `Image`, `image_uri`
+  is not allowed otherwise, and `filename` cannot be set for `Image`. They are `lifecycle`
+  preconditions (rather than variable validations) so the module keeps working on
+  OpenTofu/Terraform 1.3+, since a variable validation referencing another variable needs 1.9+.
+- **Image tags and updates.** Terraform only redeploys when `image_uri` changes. If the ECR
+  repository has immutable tags (the `modules/aws/ecr` default), pass a new tag (for example a git
+  SHA) on each release. A mutable tag such as `latest` will not trigger an update.
+- **Not covered by this module:** S3-based deployment packages (`s3_bucket`, `s3_key`, ...), layers,
+  KMS-encrypted environment variables, and function URLs. Use `filename` or `image_uri`.
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
@@ -140,7 +197,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.69.1 |
 
 ## Modules
 
@@ -156,15 +213,20 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_architectures"></a> [architectures](#input\_architectures) | (Optional) Instruction set architecture for the function. Exactly one of `x86_64` or `arm64`. When omitted (null), the provider default (`x86_64`) is used. A container image must be built for the architecture selected here. | `list(string)` | `null` | no |
 | <a name="input_dead_letter_config"></a> [dead\_letter\_config](#input\_dead\_letter\_config) | (Optional) Dead-letter queue configuration. `target_arn` must be an SQS queue or SNS topic ARN, and the function's execution role must be granted `sqs:SendMessage` / `sns:Publish` on it (not managed by this module). | <pre>object({<br/>    target_arn = string<br/>  })</pre> | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Description of what your Lambda Function does. When omitted (null), the provider does not set a description on the function. | `string` | `null` | no |
-| <a name="input_filename"></a> [filename](#input\_filename) | (Optional) The path to the function's deployment package within the local filesystem. If defined, The s3\_-prefixed options cannot be used. When omitted (null), a function created without a local package source requires an alternative source (e.g. S3 or a container image) configured outside this module today. | `string` | `null` | no |
+| <a name="input_ephemeral_storage_size"></a> [ephemeral\_storage\_size](#input\_ephemeral\_storage\_size) | (Optional) Size in MB of the function's /tmp directory, from 512 to 10240. When omitted (null), the provider default (512 MB) is used. | `number` | `null` | no |
+| <a name="input_filename"></a> [filename](#input\_filename) | (Optional) The path to the function's deployment package within the local filesystem. If defined, The s3\_-prefixed options cannot be used. Required for zip functions (the default `package_type`); must be null when `package_type` is "Image" (use `image_uri` instead). | `string` | `null` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | (Required) A unique name for your Lambda Function. | `string` | n/a | yes |
-| <a name="input_handler"></a> [handler](#input\_handler) | (Required) The function entrypoint in your code. | `string` | `"main.handler"` | no |
+| <a name="input_handler"></a> [handler](#input\_handler) | (Required for zip functions) The function entrypoint in your code. Ignored when `package_type` is "Image". | `string` | `"main.handler"` | no |
+| <a name="input_image_config"></a> [image\_config](#input\_image\_config) | (Optional) Overrides for a container image's CMD (`command`), ENTRYPOINT (`entry_point`) and WORKDIR (`working_directory`). Only meaningful when `package_type` is "Image". When omitted (null), the image's own settings are used. | <pre>object({<br/>    command           = optional(list(string))<br/>    entry_point       = optional(list(string))<br/>    working_directory = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_image_uri"></a> [image\_uri](#input\_image\_uri) | (Optional) ECR image URI containing the function's deployment package, including a tag or digest (for example `123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:v1.0.0`). Required when `package_type` is "Image" and not allowed otherwise. Exactly one of `filename` or `image_uri` must be supplied. | `string` | `null` | no |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to 128. See Limits | `string` | `128` | no |
+| <a name="input_package_type"></a> [package\_type](#input\_package\_type) | (Optional) Lambda deployment package type: "Zip" or "Image". When omitted (null), the provider default ("Zip") is used. Set to "Image" to deploy a container image from `image_uri`; `handler` and `runtime` are then ignored because the image defines them. | `string` | `null` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | (Optional) Amount of reserved concurrent executions for this function. `0` disables the function (throttles all invocations); omit (or `null`) to leave the function unreserved, which is the provider's own default. | `number` | `null` | no |
 | <a name="input_role"></a> [role](#input\_role) | (Required) IAM role attached to the Lambda Function. This governs both who or what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See Lambda Permission Model for more details. | `string` | n/a | yes |
-| <a name="input_runtime"></a> [runtime](#input\_runtime) | (Required) See Runtimes for valid values. | `string` | `"python3.6"` | no |
+| <a name="input_runtime"></a> [runtime](#input\_runtime) | (Required for zip functions) See Runtimes for valid values. Ignored when `package_type` is "Image". | `string` | `"python3.6"` | no |
 | <a name="input_source_code_hash"></a> [source\_code\_hash](#input\_source\_code\_hash) | (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either filename or s3\_key | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to the Lambda function. A `Name` tag is merged automatically from `function_name`; a caller-supplied `Name` wins. | `map(string)` | `{}` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to 180. See Limits | `number` | `180` | no |
