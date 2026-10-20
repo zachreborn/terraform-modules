@@ -188,9 +188,28 @@ resource "aws_autoscaling_group" "zpa" {
   capacity_rebalance        = var.capacity_rebalance
   enabled_metrics           = var.enabled_metrics
 
+  # Pin numeric latest_version (not $Latest) so LT changes update the ASG and can
+  # trigger instance_refresh. $Latest does not change in Terraform state.
   launch_template {
     id      = aws_launch_template.zpa.id
-    version = "$Latest"
+    version = aws_launch_template.zpa.latest_version
+  }
+
+  dynamic "instance_refresh" {
+    for_each = var.enable_instance_refresh ? [1] : []
+    content {
+      strategy = "Rolling"
+
+      preferences {
+        min_healthy_percentage = var.instance_refresh_min_healthy_percentage
+        max_healthy_percentage = var.instance_refresh_max_healthy_percentage
+        instance_warmup        = var.instance_refresh_instance_warmup != null ? var.instance_refresh_instance_warmup : var.health_check_grace_period
+        auto_rollback          = var.instance_refresh_auto_rollback
+        skip_matching          = var.instance_refresh_skip_matching
+      }
+
+      triggers = var.instance_refresh_triggers
+    }
   }
 
   dynamic "tag" {

@@ -163,3 +163,16 @@ run "source_dest_iam_skipped_when_disabled" {
     error_message = "IAM policy should not be created when attach_source_dest_check_iam is false."
   }
 }
+
+run "instance_refresh_can_disable" {
+  command = plan
+
+  variables {
+    enable_instance_refresh = false
+  }
+
+  assert {
+    condition     = aws_autoscaling_group.zpa.launch_template[0].version == tostring(aws_launch_template.zpa.latest_version)
+    error_message = "ASG must pin launch template latest_version."
+  }
+}

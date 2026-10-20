@@ -312,6 +312,52 @@ variable "cpu_target_value" {
 }
 
 ###########################
+# Instance refresh (rolling replace)
+###########################
+
+variable "enable_instance_refresh" {
+  description = "(Optional) Enable rolling ASG instance refresh when the group is updated (including launch template version changes). Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "instance_refresh_min_healthy_percentage" {
+  description = "(Optional) Minimum healthy percentage during instance refresh. Defaults to 66 (keep ~2 of 3 connectors up with max_size headroom)."
+  type        = number
+  default     = 66
+}
+
+variable "instance_refresh_max_healthy_percentage" {
+  description = "(Optional) Maximum healthy percentage during instance refresh. Defaults to 133 (allow one extra instance when max_size permits)."
+  type        = number
+  default     = 133
+}
+
+variable "instance_refresh_instance_warmup" {
+  description = "(Optional) Seconds for instance warmup during refresh. Defaults to null (uses health_check_grace_period)."
+  type        = number
+  default     = null
+}
+
+variable "instance_refresh_auto_rollback" {
+  description = "(Optional) Automatically roll back a failed instance refresh. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "instance_refresh_skip_matching" {
+  description = "(Optional) Skip instances already matching the desired LT/config. Defaults to false so encryption and LT bumps replace the fleet."
+  type        = bool
+  default     = false
+}
+
+variable "instance_refresh_triggers" {
+  description = "(Optional) Extra ASG attributes that trigger instance refresh (in addition to LT/launch config changes)."
+  type        = set(string)
+  default     = ["tag"]
+}
+
+###########################
 # General Variables
 ###########################
 
