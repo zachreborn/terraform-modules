@@ -81,7 +81,7 @@ module "zpa_connectors_asg" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.68.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -114,7 +114,7 @@ No modules.
 | <a name="input_enable_cpu_target_tracking"></a> [enable\_cpu\_target\_tracking](#input\_enable\_cpu\_target\_tracking) | (Optional) Attach a CPU target-tracking scaling policy. Defaults to false. | `bool` | `false` | no |
 | <a name="input_enable_host_os_update"></a> [enable\_host\_os\_update](#input\_enable\_host\_os\_update) | (Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to false (opt-in). Enabling on a full ASG launch updates every instance at once with no health-gated stagger; a bad kernel/package update can take out the whole group. Prefer a canary LT version or ASG instance refresh with high MinHealthyPercentage when enabling. | `bool` | `false` | no |
 | <a name="input_enable_ssm_agent"></a> [enable\_ssm\_agent](#input\_enable\_ssm\_agent) | (Optional) Install and enable amazon-ssm-agent on first boot. Defaults to true. | `bool` | `true` | no |
-| <a name="input_enabled_metrics"></a> [enabled\_metrics](#input\_enabled\_metrics) | (Optional) List of ASG group metrics to enable. | `list(string)` | `[]` | no |
+| <a name="input_enabled_metrics"></a> [enabled\_metrics](#input\_enabled\_metrics) | (Optional) List of ASG group metrics to enable. Empty list leaves ASG group metrics disabled. | `list(string)` | `[]` | no |
 | <a name="input_encrypted"></a> [encrypted](#input\_encrypted) | (Optional) Encrypt the root EBS volume via launch-template block\_device\_mappings. Defaults to false: the Zscaler Marketplace AMI is already vendor-pre-encrypted, and Sunward Gen2 production connectors use encrypted=false because AWS has rejected re-encryption on this AMI path. Callers may set true and validate in plan/apply if desired. | `bool` | `false` | no |
 | <a name="input_health_check_grace_period"></a> [health\_check\_grace\_period](#input\_health\_check\_grace\_period) | (Optional) Seconds after launch before health checks. Defaults to 1200 (20 minutes). | `number` | `1200` | no |
 | <a name="input_health_check_type"></a> [health\_check\_type](#input\_health\_check\_type) | (Optional) ASG health check type. Defaults to EC2. | `string` | `"EC2"` | no |

@@ -103,3 +103,13 @@ run "rejects_invalid_termination_policies" {
   expect_failures = [var.termination_policies]
 }
 
+run "rejects_invalid_enabled_metrics" {
+  command = plan
+
+  variables {
+    enabled_metrics = ["GroupDesiredCapacit"]
+  }
+
+  expect_failures = [var.enabled_metrics]
+}
+

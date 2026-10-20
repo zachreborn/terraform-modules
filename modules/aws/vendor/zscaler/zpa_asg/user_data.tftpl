@@ -116,30 +116,32 @@ fi
 if [ "$ENABLE_SSM_AGENT" = "true" ]; then
 	log "Installing amazon-ssm-agent..."
 	if ! systemctl is-active --quiet amazon-ssm-agent 2>/dev/null; then
-		SSM_RPM_URLS=(
-			"https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm"
-			"https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm"
-		)
-		SSM_INSTALLED=false
-		for SSM_URL in "$${SSM_RPM_URLS[@]}"; do
+		# Sequential URL tries avoid bash arrays (shellcheck/tftpl $${} escaping).
+		install_ssm_rpm() {
+			SSM_URL="$1"
 			rm -f /tmp/amazon-ssm-agent.rpm
 			if ! curl -fsSL -o /tmp/amazon-ssm-agent.rpm "$SSM_URL"; then
 				log "WARN: failed to download SSM agent from $SSM_URL"
-				continue
+				return 1
 			fi
-			# Prefer dnf/yum with imported key when possible.
 			if command -v rpm >/dev/null 2>&1; then
 				rpm --import https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.gpg 2>/dev/null || true
 			fi
 			if yum install -y /tmp/amazon-ssm-agent.rpm 2>/dev/null ||
 				dnf install -y /tmp/amazon-ssm-agent.rpm 2>/dev/null ||
 				rpm -Uvh --nogpgcheck /tmp/amazon-ssm-agent.rpm 2>/dev/null; then
-				SSM_INSTALLED=true
 				log "amazon-ssm-agent installed from $SSM_URL"
-				break
+				return 0
 			fi
 			log "WARN: install failed for $SSM_URL"
-		done
+			return 1
+		}
+
+		SSM_INSTALLED=false
+		if install_ssm_rpm "https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm" ||
+			install_ssm_rpm "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm"; then
+			SSM_INSTALLED=true
+		fi
 		rm -f /tmp/amazon-ssm-agent.rpm
 		if [ "$SSM_INSTALLED" != "true" ]; then
 			log "WARN: amazon-ssm-agent install failed; SSM will be unavailable until fixed"

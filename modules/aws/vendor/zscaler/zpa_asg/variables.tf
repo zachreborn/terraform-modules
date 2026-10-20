@@ -266,9 +266,37 @@ variable "capacity_rebalance" {
 }
 
 variable "enabled_metrics" {
-  description = "(Optional) List of ASG group metrics to enable."
+  description = "(Optional) List of ASG group metrics to enable. Empty list leaves ASG group metrics disabled."
   type        = list(string)
   default     = []
+
+  validation {
+    condition = alltrue([
+      for m in var.enabled_metrics : contains([
+        "GroupMinSize",
+        "GroupMaxSize",
+        "GroupDesiredCapacity",
+        "GroupInServiceInstances",
+        "GroupPendingInstances",
+        "GroupStandbyInstances",
+        "GroupTerminatingInstances",
+        "GroupTotalInstances",
+        "GroupInServiceCapacity",
+        "GroupPendingCapacity",
+        "GroupStandbyCapacity",
+        "GroupTerminatingCapacity",
+        "GroupTotalCapacity",
+        "WarmPoolDesiredCapacity",
+        "WarmPoolWarmedCapacity",
+        "WarmPoolPendingCapacity",
+        "WarmPoolTerminatingCapacity",
+        "WarmPoolTotalCapacity",
+        "GroupAndWarmPoolDesiredCapacity",
+        "GroupAndWarmPoolTotalCapacity",
+      ], m)
+    ])
+    error_message = "enabled_metrics entries must be valid ASG group metric names (e.g. GroupDesiredCapacity, GroupInServiceInstances)."
+  }
 }
 
 variable "enable_cpu_target_tracking" {
