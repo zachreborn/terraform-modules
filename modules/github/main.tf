@@ -194,7 +194,6 @@ resource "github_repository" "this" {
   allow_squash_merge                      = each.value.allow_squash_merge
   allow_rebase_merge                      = each.value.allow_rebase_merge
   allow_auto_merge                        = each.value.allow_auto_merge
-  allow_forking                           = each.value.allow_forking
   allow_update_branch                     = each.value.allow_update_branch
   delete_branch_on_merge                  = each.value.delete_branch_on_merge
   web_commit_signoff_required             = each.value.web_commit_signoff_required

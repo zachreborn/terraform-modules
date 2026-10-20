@@ -109,6 +109,7 @@ Never disable `prevent_destroy` or use repository deletion or automatic archivin
 - Topics are trimmed, lowercased, deduplicated, and sorted. Supplemental status-check names are trimmed, deduplicated, and sorted.
 - A sparse nested `security_and_analysis` override changes only named fields.
 - GitHub always enables advanced security on public repositories. Leave `advanced_security` unset for public repositories as required by the provider.
+- `allow_forking` stays in profiles/overrides for inventory documentation only. The resource does not set it: organizations that disallow private repository forking reject that field on the GitHub API, including an explicit `false`, which aborts create/update after the repository already exists.
 - Repository merge-method reads can require GitHub App repository `Contents: write` permission in addition to repository `Administration: read/write`. Verify the exact installation permissions before adoption.
 
 <!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->

@@ -290,7 +290,6 @@ run "wires_creation_and_legacy_repository_options" {
   assert {
     condition = (
       github_repository.this["example"].has_downloads == false &&
-      github_repository.this["example"].allow_forking == false &&
       github_repository.this["example"].archive_on_destroy == false
     )
     error_message = "Optional and legacy repository settings must retain explicit false values."
