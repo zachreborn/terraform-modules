@@ -175,25 +175,63 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 `target_accounts` changed from `set(string)` to `map(string)`: the key is a static, caller-defined label (e.g. an account name/alias) that must be known at plan time, and the value is the AWS account ID, which may be a computed reference (e.g. a newly created account's `id`). Previously the account ID itself drove the `aws_ssoadmin_account_assignment` `for_each` key, so a computed account ID made the key unknown at plan time and planning failed with `The for_each value depends on resource attributes that cannot be determined until apply.` -- meaning a brand-new account and its permission set assignment could never be created in the same apply. Keying by a static label instead fixes this: the label is always known at plan time, and the account ID is only ever consumed as the `target_id` resource attribute.
 
-Convert existing `target_accounts` list literals to maps (see the examples above), choosing any stable, caller-meaningful label per account. Two constraints are enforced on the map:
+Convert existing `target_accounts` list literals to maps (see the examples above), choosing any stable, caller-meaningful label per account. Account ID values must be unique across labels: assigning the same account ID under two different labels would create two `aws_ssoadmin_account_assignment` resources managing the identical AWS assignment under separate addresses -- which can conflict on create and inconsistently revoke access if either address is later destroyed.
 
-- **Labels must not contain an underscore (`_`).** The `for_each` key is derived as `"<group_name>_<label>"`; without this constraint, two different (group, label) pairs could concatenate to the same string (e.g. group `"a"` + label `"b_c"` collides with group `"a_b"` + label `"c"`), which fails at plan time with a confusing duplicate-object-key error instead of this module's clear validation message.
-- **Account ID values must be unique across labels.** Assigning the same account ID under two different labels would create two `aws_ssoadmin_account_assignment` resources managing the identical AWS assignment under separate addresses -- which can conflict on create and inconsistently revoke access if either address is later destroyed.
+### Assignment addressing: one `group_assignment` module per group (breaking) -- fixes [issue #510](https://github.com/zachreborn/terraform-modules/issues/510)
 
-**State migration:** the `for_each` key for `aws_ssoadmin_account_assignment.this` changes from `"<group_name>_<account_id>"` (e.g. `"admins_123456789012"`) to `"<group_name>_<label>"` (e.g. `"admins_organization"`), and `assignment_ids` (see below) is re-keyed identically. Without a state migration, every existing assignment plans as **destroy + create**, which revokes the group's access to that account until the create completes.
+Account assignments are created by the [`group_assignment`](./group_assignment) child module, called once per group. Each assignment is addressed as:
 
-Migrate state with a `tofu state mv` / `terraform state mv` command per assignment, mapping each old key to its new label-based key -- scriptable for many accounts:
-```sh
-tofu state mv \
-  'module.admins_permissions.aws_ssoadmin_account_assignment.this["admins_123456789012"]' \
-  'module.admins_permissions.aws_ssoadmin_account_assignment.this["admins_organization"]'
+```
+module.<name>.module.group_assignments["<group>"].aws_ssoadmin_account_assignment.this["<label>"]
 ```
 
-The module cannot ship a generic `moved` block for this migration -- `moved` requires static, literal addresses, and the old key embeds caller-specific account IDs. Unlike `state mv`, a `moved` block can only be *declared inside the module that instantiates the resource*, never from a caller's root module, so a root-level `moved` block referencing `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]` is not a usable migration path for callers consuming this module by source reference. `state mv` is therefore the supported migration path; a `moved` block is only an option if you fork or vendor this module and add it directly inside its own `main.tf`.
+The group name is the module instance key and the `target_accounts` label is the resource key inside it, so every (group, label) pair has a unique address by construction. Nothing is concatenated or encoded, which means:
 
-### `assignment_ids` output key changed (breaking)
+- **Group names and labels may contain any characters** -- underscores, hyphens, spaces, `@`, and so on. Previously the key was `"<group_name>_<label>"`, so `"a"` + `"b_c"` and `"a_b"` + `"c"` both became `"a_b_c"`; the module rejected underscores in labels to avoid that. That restriction is gone:
 
-`assignment_ids` is now keyed by `"<group_name>_<label>"` (the `target_accounts` map label, not the account ID -- the same key already used by the underlying `aws_ssoadmin_account_assignment` `for_each`) instead of `"<principal_id>_<account_id>"` (parsed from the assignment resource's own runtime `id`). The old derivation re-parsed a value from the resource's `id` to build a map key, which could collide if two assignments ever resolved to the same parsed key, and made it impossible to write native `tofu test` coverage of multiple assignments together, since mocked resource attributes are not unique per instance. If you index this output by the old `<principal_id>_<account_id>` or `<group_name>_<account_id>` shape, update those references to the new `<group_name>_<label>` key before upgrading.
+  ```hcl
+  target_accounts = {
+    sunward_organization_account = module.organizations.account_ids["sunward_organization_account"]
+  }
+  ```
+
+- **Keys still depend only on the group name and the label** -- never on a group ID or an account ID -- so a newly created group or account whose ID is known only after apply still plans (issues #121 and #456). This is covered by `tests/computed_ids.tftest.hcl`.
+
+**State migration:** earlier releases addressed each assignment directly in this module as `aws_ssoadmin_account_assignment.this["<group_name>_<label>"]` (e.g. `"Administrators_organization"`). Without a state migration, every existing assignment plans as **destroy + create**, which revokes the group's access to that account until the create completes.
+
+Migrate state with a `tofu state mv` / `terraform state mv` command per assignment:
+
+```sh
+tofu state mv \
+  'module.admins_permissions.aws_ssoadmin_account_assignment.this["Administrators_organization"]' \
+  'module.admins_permissions.module.group_assignments["Administrators"].aws_ssoadmin_account_assignment.this["organization"]'
+```
+
+The old key cannot be reliably split back into a group and a label (either may contain an underscore), so list them explicitly when scripting many assignments:
+
+```sh
+for group in Administrators ReadOnly; do
+  for label in organization security; do
+    tofu state mv \
+      "module.admins_permissions.aws_ssoadmin_account_assignment.this[\"${group}_${label}\"]" \
+      "module.admins_permissions.module.group_assignments[\"${group}\"].aws_ssoadmin_account_assignment.this[\"${label}\"]"
+  done
+done
+```
+
+If your state still uses account-ID keys from before the `map(string)` change above (`"<group_name>_<account_id>"`), use that as the source key instead. After migrating, `tofu plan` should show no changes to the assignments.
+
+The module cannot ship a generic `moved` block for this migration -- `moved` requires static, literal addresses, and both the old and new addresses contain caller-specific group names and labels. Unlike `state mv`, a `moved` block can only be *declared inside the module that instantiates the resource*, never from a caller's root module, so a root-level `moved` block referencing `module.admins_permissions.aws_ssoadmin_account_assignment.this[...]` is not a usable migration path for callers consuming this module by source reference. `state mv` is therefore the supported migration path; a `moved` block is only an option if you fork or vendor this module and add it directly inside its own `main.tf`.
+
+### `assignment_ids` output is now nested (breaking)
+
+`assignment_ids` is a nested map -- group name, then `target_accounts` label (not the account ID), then the parsed assignment -- mirroring the resource addresses above:
+
+```hcl
+module.admins_permissions.assignment_ids["Administrators"]["organization"].target_id
+```
+
+It was previously a flat map keyed by `"<group_name>_<label>"` (and before that by `"<principal_id>_<account_id>"`, parsed from the assignment resource's own runtime `id`). Update any references that index the old flat keys before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -215,13 +253,14 @@ The module cannot ship a generic `moved` block for this migration -- `moved` req
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_group_assignments"></a> [group\_assignments](#module\_group\_assignments) | ./group_assignment | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
-| [aws_ssoadmin_account_assignment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment) | resource |
 | [aws_ssoadmin_customer_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
 | [aws_ssoadmin_managed_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
 | [aws_ssoadmin_permission_set.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set) | resource |
@@ -245,14 +284,14 @@ No modules.
 | <a name="input_relay_state"></a> [relay\_state](#input\_relay\_state) | (Optional) The relay state URL used to redirect users within the application during the federation authentication process. | `string` | `null` | no |
 | <a name="input_session_duration"></a> [session\_duration](#input\_session\_duration) | (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. | `string` | `"PT1H"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) Key-value map of resource tags. | `map(string)` | `{}` | no |
-| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) Map of AWS accounts to assign the permission set to. The key is a static,<br/>caller-defined label (e.g. an account name/alias) that must be known at plan time and must not<br/>contain an underscore ('\_'); the value is the AWS account ID, which may be a computed reference<br/>(e.g. a newly created account's id) that is only known after apply. Keying by a static label --<br/>instead of the account ID itself -- keeps the underlying aws\_ssoadmin\_account\_assignment for\_each<br/>key plan-time-known even when the account ID is not, which is what allows a brand-new account and<br/>its permission set assignment to be created together in the same apply. Each account ID value<br/>must also be unique across labels: the module assigns one aws\_ssoadmin\_account\_assignment per<br/>group x label pair, so reusing the same account ID under two labels would create two resources<br/>managing the identical AWS assignment under separate addresses. | `map(string)` | n/a | yes |
+| <a name="input_target_accounts"></a> [target\_accounts](#input\_target\_accounts) | (Required) Map of AWS accounts to assign the permission set to. The key is a static,<br/>caller-defined label (e.g. an account name/alias) that must be known at plan time; the value is<br/>the AWS account ID, which may be a computed reference (e.g. a newly created account's id) that<br/>is only known after apply. Labels may contain any characters. Keying by a static label -- instead<br/>of the account ID itself -- keeps the underlying aws\_ssoadmin\_account\_assignment for\_each key<br/>plan-time-known even when the account ID is not, which is what allows a brand-new account and<br/>its permission set assignment to be created together in the same apply. Each account ID value<br/>must also be unique across labels: the module assigns one aws\_ssoadmin\_account\_assignment per<br/>group x label pair, so reusing the same account ID under two labels would create two resources<br/>managing the identical AWS assignment under separate addresses. | `map(string)` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the permission set |
-| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Map of the IDs of the permission set assignments and their corresponding configuration, keyed by '<group\_name>\_<label>' (the target\_accounts map label, not the account ID) -- the same key already used by the underlying for\_each, which is guaranteed unique by construction (unlike re-deriving a key from the resource's own runtime id). |
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | Nested map of the permission set's account assignments: group name -> target\_accounts label (not the account ID) -> parsed assignment configuration. The nesting mirrors the module.group\_assignments["<group>"] / aws\_ssoadmin\_account\_assignment.this["<label>"] resource addresses. |
 | <a name="output_created_date"></a> [created\_date](#output\_created\_date) | The date the permission set was created |
 | <a name="output_group_attribute_path"></a> [group\_attribute\_path](#output\_group\_attribute\_path) | The group attribute path actually used for the name-based aws\_identitystore\_group data source lookup (var.group\_attribute\_path, echoed back for callers/tests to confirm wiring without inspecting the underlying data source directly). |
 | <a name="output_group_ids"></a> [group\_ids](#output\_group\_ids) | Map of the effective resolved group display name to Identity Store group ID actually used for assignments -- the merge of name-based data source lookups and the group\_ids input. |

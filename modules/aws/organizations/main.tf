@@ -1,5 +1,8 @@
 terraform {
-  required_version = ">= 1.0.0"
+  # >= 1.3.0: expression-valued error_message in the tags validation blocks (variables.tf) requires
+  # >= 1.2.0, and the object-attribute defaults already used in variables.tf (optional(<type>, <default>))
+  # require >= 1.3.0. The aws provider constraint is unchanged -- no provider feature is involved.
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

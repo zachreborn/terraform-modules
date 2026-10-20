@@ -16,6 +16,11 @@ output "statuses" {
   value       = { for k, v in scalr_module.this : k => v.status }
 }
 
+output "source_types" {
+  description = "Map of the upstream source type of each module (\"vcs\" or \"docker\"), keyed by the same keys as var.modules."
+  value       = { for k, v in scalr_module.this : k => v.source_type }
+}
+
 output "namespace_ids" {
   description = "Map of Module Namespace IDs (from the companion ./namespace submodule), keyed by the same keys as var.module_namespaces."
   value       = module.namespace.ids

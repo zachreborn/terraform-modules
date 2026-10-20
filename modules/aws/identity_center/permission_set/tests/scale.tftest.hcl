@@ -55,7 +55,7 @@ run "large_group_ids_map_scales_without_data_source_reads" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 250
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 250
     error_message = "Expected 50 groups x 5 target_accounts = 250 account assignments."
   }
 
@@ -80,7 +80,7 @@ run "large_groups_set_scales_via_data_source" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 50
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 50
     error_message = "Expected 50 groups x 1 target_account = 50 account assignments."
   }
 }
@@ -106,7 +106,7 @@ run "large_mixed_groups_and_group_ids_scales" {
   }
 
   assert {
-    condition     = length(aws_ssoadmin_account_assignment.this) == 200
+    condition     = length(flatten([for m in values(output.assignment_ids) : keys(m)])) == 200
     error_message = "Expected (25 + 25) groups x 4 target_accounts = 200 account assignments."
   }
 }
