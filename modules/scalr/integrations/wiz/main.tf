@@ -14,6 +14,9 @@ terraform {
 ###########################
 # Scalr Wiz Integration
 ###########################
+# for_each keeps the map-of-objects input shape shared with the sibling integration modules ({} = no
+# integration, one key = one integration). Scalr allows only one Wiz connection per account, so
+# var.wiz_integrations is validated to contain at most one entry.
 resource "scalr_wiz_integration" "this" {
   for_each = var.wiz_integrations
 

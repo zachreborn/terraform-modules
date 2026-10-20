@@ -10,6 +10,10 @@ variable "wiz_integrations" {
     var.wiz_integrations remain non-sensitive, which is required because it is this module's
     for_each source (OpenTofu/Terraform disallow for_each over a sensitive collection).
 
+    Scalr allows one Wiz connection per account; this map must contain at most one entry (an
+    empty map creates none). Use endpoint_mode to select the commercial, govcloud, or fedramp
+    Wiz tenant on that single connection instead of adding entries.
+
     Fields:
       - name:              (Required) Name of the Wiz integration. Must not be blank and must be at
                             most 128 characters.
@@ -55,6 +59,15 @@ variable "wiz_integrations" {
   }))
   default  = {}
   nullable = false
+
+  # Scalr account scope: one Wiz connection only. A second create passes plan but is rejected by
+  # the Scalr API at apply time (409 "The account already has a Wiz integration").
+  # https://docs.scalr.io/docs/wiz
+  # https://docs.scalr.io/reference/create_wiz_integration
+  validation {
+    condition     = length(var.wiz_integrations) <= 1
+    error_message = "Scalr allows one Wiz integration per account. Provide at most one entry in wiz_integrations (use endpoint_mode to select commercial, govcloud, or fedramp)."
+  }
 
   validation {
     condition = alltrue([

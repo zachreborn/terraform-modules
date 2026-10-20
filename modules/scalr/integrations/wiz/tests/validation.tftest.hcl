@@ -12,6 +12,89 @@ mock_provider "scalr" {
 }
 
 ###########################################################
+# wiz_integrations: one Wiz connection per Scalr account
+###########################################################
+
+run "rejects_two_integrations" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      commercial = {
+        name          = "wiz-commercial"
+        client_id     = "client-commercial"
+        endpoint_mode = "commercial"
+      }
+      govcloud = {
+        name          = "wiz-govcloud"
+        client_id     = "client-govcloud"
+        endpoint_mode = "govcloud"
+      }
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      commercial = "fake-secret-commercial"
+      govcloud   = "fake-secret-govcloud"
+    }
+  }
+
+  expect_failures = [var.wiz_integrations]
+}
+
+run "rejects_three_integrations" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      commercial = {
+        name      = "wiz-commercial"
+        client_id = "client-commercial"
+      }
+      govcloud = {
+        name          = "wiz-govcloud"
+        client_id     = "client-govcloud"
+        endpoint_mode = "govcloud"
+      }
+      fedramp = {
+        name          = "wiz-fedramp"
+        client_id     = "client-fedramp"
+        endpoint_mode = "fedramp"
+      }
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      commercial = "fake-secret-commercial"
+      govcloud   = "fake-secret-govcloud"
+      fedramp    = "fake-secret-fedramp"
+    }
+  }
+
+  expect_failures = [var.wiz_integrations]
+}
+
+run "accepts_exactly_one_integration" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      iac_scanning = {
+        name      = "wiz"
+        client_id = "svc-account-client-id"
+      }
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      iac_scanning = "fake-wiz-client-secret"
+    }
+  }
+
+  assert {
+    condition     = length(scalr_wiz_integration.this) == 1
+    error_message = "A single Wiz integration is the supported maximum and must be accepted."
+  }
+}
+
+###########################################################
 # wiz_integrations: name
 ###########################################################
 
@@ -286,14 +369,11 @@ run "rejects_integration_without_matching_client_secret" {
         name      = "wiz-prod"
         client_id = "client-prod"
       }
-      dev = {
-        name      = "wiz-dev"
-        client_id = "client-dev"
-      }
     }
+    # A secret exists, but under a different key than the integration's.
     wiz_client_secrets = {
       # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
-      prod = "fake-secret-prod"
+      dev = "fake-secret-dev"
     }
   }
 

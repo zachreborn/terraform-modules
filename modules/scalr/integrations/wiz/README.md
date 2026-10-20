@@ -9,7 +9,7 @@
 
 <h3 align="center">Scalr Wiz Integration Module</h3>
   <p align="center">
-    This module manages <code>scalr_wiz_integration</code> resources in Scalr, connecting Scalr to Wiz so runs can be scanned with <code>wizcli</code> using a Wiz service account.
+    This module manages the <code>scalr_wiz_integration</code> resource in Scalr (one Wiz connection per account), connecting Scalr to Wiz so runs can be scanned with <code>wizcli</code> using a Wiz service account.
     <br />
     <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
     <br />
@@ -46,7 +46,8 @@
 ### Prerequisites
 
 - Scalr provider `>= 3.20.0`. The `scalr_wiz_integration` resource first shipped in that release.
-- A Wiz service account (client ID and client secret) for each integration. Never commit the secret; pass it in from a secret store or a sensitive variable.
+- A Wiz service account (client ID and client secret). Never commit the secret; pass it in from a secret store or a sensitive variable.
+- No existing Wiz connection on the Scalr account. Scalr allows only one Wiz connection per account ([docs](https://docs.scalr.io/docs/wiz)), so import an existing one (see below) instead of creating a second.
 - A Scalr instance that supports Wiz integrations. The provider's v3.20.0 release notes do not yet state a minimum Scalr server version, so confirm support before applying against a live instance.
 
 ### Simple Example
@@ -80,35 +81,31 @@ module "wiz_integration" {
 }
 ```
 
-### Multiple Wiz Tenants
+### Endpoint Mode (Commercial / GovCloud / FedRAMP)
+
+Scalr allows **one** Wiz connection per account ([docs](https://docs.scalr.io/docs/wiz)). Pick the Wiz tenant with `endpoint_mode` on that single entry instead of adding more map keys. The module rejects more than one entry at plan time.
 
 ```hcl
-module "wiz_integrations" {
+module "wiz_integration" {
   source = "github.com/zachreborn/terraform-modules//modules/scalr/integrations/wiz"
 
   wiz_integrations = {
-    commercial = {
-      name         = "wiz-commercial"
-      client_id    = "commercial-client-id"
-      environments = ["*"] # all current and future environments
-    }
-    govcloud = {
+    iac_scanning = {
       name          = "wiz-govcloud"
       client_id     = "govcloud-client-id"
-      endpoint_mode = "govcloud"
+      endpoint_mode = "govcloud" # commercial | govcloud | fedramp
       autofail      = true
       environments  = ["env-xxxxxxxxxx", "env-yyyyyyyyyy"]
     }
   }
 
   wiz_client_secrets = {
-    commercial = var.wiz_commercial_client_secret
-    govcloud   = var.wiz_govcloud_client_secret
+    iac_scanning = var.wiz_client_secret
   }
 }
 
 output "wiz_integration_ids" {
-  value = module.wiz_integrations.ids
+  value = module.wiz_integration.ids
 }
 ```
 
@@ -157,7 +154,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_wiz_client_secrets"></a> [wiz\_client\_secrets](#input\_wiz\_client\_secrets) | Map of sensitive Wiz service-account client secrets for var.wiz\_integrations, keyed by the same<br/>logical key. Kept in a separate, wholly `sensitive = true` variable so that<br/>var.wiz\_integrations itself can remain non-sensitive (required, since it is the for\_each source<br/>for scalr\_wiz\_integration.this). Every key in var.wiz\_integrations must have a non-empty entry<br/>here (at most 512 characters), because the underlying provider requires a client secret for<br/>every integration. Entries without a matching integration are ignored and are not validated.<br/><br/>Example:<br/>  wiz\_client\_secrets = {<br/>    iac\_scanning = var.wiz\_client\_secret<br/>  } | `map(string)` | `{}` | no |
-| <a name="input_wiz_integrations"></a> [wiz\_integrations](#input\_wiz\_integrations) | Map of Scalr Wiz integrations keyed by a caller-chosen logical name. Each entry manages one<br/>`scalr_wiz_integration` resource, which lets Scalr run `wizcli` IaC scans as part of a run.<br/>The sensitive Wiz service-account client secret for each entry is intentionally NOT part of<br/>this variable -- see var.wiz\_client\_secrets. Keeping it out of this map lets<br/>var.wiz\_integrations remain non-sensitive, which is required because it is this module's<br/>for\_each source (OpenTofu/Terraform disallow for\_each over a sensitive collection).<br/><br/>Fields:<br/>  - name:              (Required) Name of the Wiz integration. Must not be blank and must be at<br/>                        most 128 characters.<br/>  - client\_id:         (Required) Wiz service-account client ID. Must not be blank and must be<br/>                        at most 255 characters.<br/>  - default\_policies:  (Optional) Set of Wiz CI/CD policy names passed to `wizcli` as<br/>                        `--policies`, one set element per policy. Elements must not be blank.<br/>  - default\_scan\_name: (Optional) Default scan name passed to `wizcli` as `--name`. When unset,<br/>                        scans are named "{workspace}-{run}". Must not be blank and must be at<br/>                        most 255 characters.<br/>  - endpoint\_mode:     (Optional) Wiz tenant region: the commercial, GovCloud, or FedRAMP<br/>                        auth/API host. Valid values are "commercial", "govcloud", and<br/>                        "fedramp". Defaults to "commercial".<br/>  - autofail:          (Optional) Block the run when the Wiz scan fails or cannot run. When<br/>                        false, Wiz failures are reported in the following Scalr policy check<br/>                        and do not block the Wiz stage. Defaults to false.<br/>  - environments:      (Optional) Set of environment IDs (env-<RANDOM STRING>) the integration<br/>                        is linked to. Use ["*"] to allow it in all current and future<br/>                        environments; "*" must then be the only element. When unset, the<br/>                        integration is created without environment links and the provider<br/>                        does not manage them afterwards.<br/><br/>Example:<br/>  wiz\_integrations = {<br/>    iac\_scanning = {<br/>      name             = "wiz"<br/>      client\_id        = "svc-account-client-id"<br/>      default\_policies = ["Default IaC policy"]<br/>      endpoint\_mode    = "commercial"<br/>      autofail         = false<br/>      environments     = ["env-xxxxxxxxxx"]<br/>    }<br/>  } | <pre>map(object({<br/>    name              = string<br/>    client_id         = string<br/>    default_policies  = optional(set(string))<br/>    default_scan_name = optional(string)<br/>    endpoint_mode     = optional(string, "commercial")<br/>    autofail          = optional(bool, false)<br/>    environments      = optional(set(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_wiz_integrations"></a> [wiz\_integrations](#input\_wiz\_integrations) | Map of Scalr Wiz integrations keyed by a caller-chosen logical name. Each entry manages one<br/>`scalr_wiz_integration` resource, which lets Scalr run `wizcli` IaC scans as part of a run.<br/>The sensitive Wiz service-account client secret for each entry is intentionally NOT part of<br/>this variable -- see var.wiz\_client\_secrets. Keeping it out of this map lets<br/>var.wiz\_integrations remain non-sensitive, which is required because it is this module's<br/>for\_each source (OpenTofu/Terraform disallow for\_each over a sensitive collection).<br/><br/>Scalr allows one Wiz connection per account; this map must contain at most one entry (an<br/>empty map creates none). Use endpoint\_mode to select the commercial, govcloud, or fedramp<br/>Wiz tenant on that single connection instead of adding entries.<br/><br/>Fields:<br/>  - name:              (Required) Name of the Wiz integration. Must not be blank and must be at<br/>                        most 128 characters.<br/>  - client\_id:         (Required) Wiz service-account client ID. Must not be blank and must be<br/>                        at most 255 characters.<br/>  - default\_policies:  (Optional) Set of Wiz CI/CD policy names passed to `wizcli` as<br/>                        `--policies`, one set element per policy. Elements must not be blank.<br/>  - default\_scan\_name: (Optional) Default scan name passed to `wizcli` as `--name`. When unset,<br/>                        scans are named "{workspace}-{run}". Must not be blank and must be at<br/>                        most 255 characters.<br/>  - endpoint\_mode:     (Optional) Wiz tenant region: the commercial, GovCloud, or FedRAMP<br/>                        auth/API host. Valid values are "commercial", "govcloud", and<br/>                        "fedramp". Defaults to "commercial".<br/>  - autofail:          (Optional) Block the run when the Wiz scan fails or cannot run. When<br/>                        false, Wiz failures are reported in the following Scalr policy check<br/>                        and do not block the Wiz stage. Defaults to false.<br/>  - environments:      (Optional) Set of environment IDs (env-<RANDOM STRING>) the integration<br/>                        is linked to. Use ["*"] to allow it in all current and future<br/>                        environments; "*" must then be the only element. When unset, the<br/>                        integration is created without environment links and the provider<br/>                        does not manage them afterwards.<br/><br/>Example:<br/>  wiz\_integrations = {<br/>    iac\_scanning = {<br/>      name             = "wiz"<br/>      client\_id        = "svc-account-client-id"<br/>      default\_policies = ["Default IaC policy"]<br/>      endpoint\_mode    = "commercial"<br/>      autofail         = false<br/>      environments     = ["env-xxxxxxxxxx"]<br/>    }<br/>  } | <pre>map(object({<br/>    name              = string<br/>    client_id         = string<br/>    default_policies  = optional(set(string))<br/>    default_scan_name = optional(string)<br/>    endpoint_mode     = optional(string, "commercial")<br/>    autofail          = optional(bool, false)<br/>    environments      = optional(set(string))<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
@@ -171,6 +168,7 @@ No modules.
 - **Secrets live in a separate sensitive map.** `wiz_integrations` stays non-sensitive so it can drive `for_each` (OpenTofu/Terraform refuse `for_each` over a sensitive collection). Each integration's client secret is looked up by the same key from the wholly sensitive `wiz_client_secrets` map, the same pattern as `modules/scalr/vcs_provider`. The `client_id` is not a secret and stays in the main map.
 - **Every integration must have a client secret.** A cross-variable validation on `wiz_client_secrets` fails the plan, naming the missing keys, when an integration has no entry. Null, empty, whitespace-only, and longer-than-512-character secrets are rejected too, but only for configured integrations: surplus entries in `wiz_client_secrets` are ignored and are not validated. Cross-variable validation needs OpenTofu or Terraform `>= 1.9.0`.
 - **No whole-object output.** Unlike some sibling modules, this module does not output the full `scalr_wiz_integration` objects because they carry the sensitive `client_secret`. It outputs only the explicit non-sensitive `ids` projection, keyed by the logical name. The resource has no other read-only attributes.
+- **One Wiz connection per account.** Scalr allows only one Wiz integration per account ([docs](https://docs.scalr.io/docs/wiz)), and a second create is rejected by the API with a `409` at apply time, not at plan time. The module keeps the map-of-objects input shape shared with the sibling integration modules (an empty map creates nothing, one key creates the connection) but validates that `wiz_integrations` has at most one entry so the mistake surfaces at plan time. To target a different Wiz tenant, change `endpoint_mode` on the single entry. The provider schema does not encode this limit.
 - **`endpoint_mode` is validated.** It must be `commercial`, `govcloud`, or `fedramp` (default `commercial`), matching the provider schema.
 - **`environments` and the `"*"` wildcard.** Use `["*"]` to allow the integration in all current and future environments. The provider only recognizes `"*"` when it is the sole element, so the module rejects `"*"` mixed with explicit environment IDs. The provider treats `environments` as optional and computed: when it is omitted the integration is created without environment links and the provider does not manage them afterwards, so omit it only if the links are managed elsewhere.
 - **`autofail` defaults to `false`.** When `false`, Wiz scan failures appear in the following Scalr policy check and do not block the Wiz stage. Set it to `true` to block the run when the scan fails or cannot run.

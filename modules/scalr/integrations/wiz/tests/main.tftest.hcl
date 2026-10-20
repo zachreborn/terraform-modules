@@ -152,22 +152,60 @@ run "explicit_null_endpoint_mode_and_autofail_fall_back_to_defaults" {
   }
 }
 
-run "endpoint_mode_accepts_every_documented_value" {
+# Scalr allows one Wiz connection per account, so each documented endpoint_mode is exercised with
+# its own single-entry run rather than three entries in one map.
+run "endpoint_mode_commercial_is_accepted" {
   command = plan
 
   variables {
     wiz_integrations = {
-      commercial = {
+      iac_scanning = {
         name          = "wiz-commercial"
         client_id     = "client-commercial"
         endpoint_mode = "commercial"
       }
-      govcloud = {
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      iac_scanning = "fake-secret-commercial"
+    }
+  }
+
+  assert {
+    condition     = scalr_wiz_integration.this["iac_scanning"].endpoint_mode == "commercial"
+    error_message = "endpoint_mode 'commercial' should reach the resource."
+  }
+}
+
+run "endpoint_mode_govcloud_is_accepted" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      iac_scanning = {
         name          = "wiz-govcloud"
         client_id     = "client-govcloud"
         endpoint_mode = "govcloud"
       }
-      fedramp = {
+    }
+    wiz_client_secrets = {
+      # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+      iac_scanning = "fake-secret-govcloud"
+    }
+  }
+
+  assert {
+    condition     = scalr_wiz_integration.this["iac_scanning"].endpoint_mode == "govcloud"
+    error_message = "endpoint_mode 'govcloud' should reach the resource."
+  }
+}
+
+run "endpoint_mode_fedramp_is_accepted" {
+  command = plan
+
+  variables {
+    wiz_integrations = {
+      iac_scanning = {
         name          = "wiz-fedramp"
         client_id     = "client-fedramp"
         endpoint_mode = "fedramp"
@@ -175,19 +213,13 @@ run "endpoint_mode_accepts_every_documented_value" {
     }
     wiz_client_secrets = {
       # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
-      commercial = "fake-secret-commercial"
-      govcloud   = "fake-secret-govcloud"
-      fedramp    = "fake-secret-fedramp"
+      iac_scanning = "fake-secret-fedramp"
     }
   }
 
   assert {
-    condition = (
-      scalr_wiz_integration.this["commercial"].endpoint_mode == "commercial" &&
-      scalr_wiz_integration.this["govcloud"].endpoint_mode == "govcloud" &&
-      scalr_wiz_integration.this["fedramp"].endpoint_mode == "fedramp"
-    )
-    error_message = "Each documented endpoint_mode value should reach the matching resource."
+    condition     = scalr_wiz_integration.this["iac_scanning"].endpoint_mode == "fedramp"
+    error_message = "endpoint_mode 'fedramp' should reach the resource."
   }
 }
 
@@ -242,10 +274,10 @@ run "environments_accepts_empty_set" {
 }
 
 ###########################################################
-# for_each scaling: each entry receives its own client secret
+# Secret lookup: the entry receives the secret stored under its own key
 ###########################################################
 
-run "multiple_integrations_each_get_their_own_client_secret" {
+run "single_integration_receives_the_secret_stored_under_its_own_key" {
   command = plan
 
   variables {
@@ -255,35 +287,27 @@ run "multiple_integrations_each_get_their_own_client_secret" {
         client_id    = "client-prod"
         environments = ["*"]
       }
-      dev = {
-        name         = "wiz-dev"
-        client_id    = "client-dev"
-        environments = ["env-xxxxxxxxxx"]
-      }
     }
     wiz_client_secrets = {
       # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
-      prod = "fake-secret-prod"
       dev  = "fake-secret-dev"
+      prod = "fake-secret-prod"
     }
   }
 
   assert {
-    condition     = length(scalr_wiz_integration.this) == 2
-    error_message = "Expected one resource instance per wiz_integrations entry."
+    condition     = length(scalr_wiz_integration.this) == 1
+    error_message = "Expected one resource instance for the single wiz_integrations entry."
   }
 
   assert {
-    condition = (
-      nonsensitive(scalr_wiz_integration.this["prod"].client_secret) == "fake-secret-prod" &&
-      nonsensitive(scalr_wiz_integration.this["dev"].client_secret) == "fake-secret-dev"
-    )
-    error_message = "Each integration must receive the client secret stored under its own key (no cross-wiring)."
+    condition     = nonsensitive(scalr_wiz_integration.this["prod"].client_secret) == "fake-secret-prod"
+    error_message = "The integration must receive the client secret stored under its own key, not another entry's."
   }
 
   assert {
-    condition     = toset(keys(output.ids)) == toset(["prod", "dev"])
-    error_message = "ids output should contain one entry per logical key."
+    condition     = toset(keys(output.ids)) == toset(["prod"])
+    error_message = "ids output should contain exactly the one logical key."
   }
 }
 
