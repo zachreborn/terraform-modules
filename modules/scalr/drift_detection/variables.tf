@@ -13,6 +13,11 @@ variable "drift_detections" {
                          and "weekly".
       - run_mode:       (Optional, default "refresh-only") Run mode for drift detection. Valid
                          values are "refresh-only" and "plan".
+      - time_window:    (Optional) Preferred UTC time window within which drift checks are
+                         scheduled. Valid values are "00:00-04:00", "04:00-08:00",
+                         "08:00-12:00", "12:00-16:00", "16:00-20:00", and "20:00-24:00". When
+                         unset (null), checks are not bound to a specific window. Requires
+                         provider >= 3.20.0.
       - workspace_filters: (Optional) Filters for which workspaces are included in drift
                          detection. At most one of name_patterns, environment_types, or tags may
                          be set per entry.
@@ -30,6 +35,7 @@ variable "drift_detections" {
           environment_id = "env-xxxxxxxxxx"
           check_period   = "weekly"
           run_mode       = "plan"
+          time_window    = "00:00-04:00"
           workspace_filters = {
             name_patterns = ["prod", "stage-*"]
           }
@@ -40,6 +46,7 @@ variable "drift_detections" {
     environment_id = string
     check_period   = string
     run_mode       = optional(string, "refresh-only")
+    time_window    = optional(string)
     workspace_filters = optional(object({
       name_patterns     = optional(set(string))
       environment_types = optional(set(string))
@@ -61,6 +68,19 @@ variable "drift_detections" {
       for key, value in var.drift_detections : contains(["refresh-only", "plan"], value.run_mode)
     ])
     error_message = "Each drift_detections entry's run_mode must be one of 'refresh-only' or 'plan'."
+  }
+
+  validation {
+    # A conditional, not `value.time_window == null || contains(...)`: Terraform evaluates both operands of
+    # `||`, so contains() would still be called with null for an omitted time_window and raise "argument must
+    # not be null". A conditional only reports errors from the branch it selects.
+    condition = alltrue([
+      for key, value in var.drift_detections : (
+        value.time_window == null ? true :
+        contains(["00:00-04:00", "04:00-08:00", "08:00-12:00", "12:00-16:00", "16:00-20:00", "20:00-24:00"], value.time_window)
+      )
+    ])
+    error_message = "Each drift_detections entry's time_window must be null or one of '00:00-04:00', '04:00-08:00', '08:00-12:00', '12:00-16:00', '16:00-20:00', or '20:00-24:00'."
   }
 
   validation {
