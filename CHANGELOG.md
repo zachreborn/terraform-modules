@@ -1,5 +1,14 @@
 # Changelog
 
+## [17.4.0](https://github.com/zachreborn/terraform-modules/compare/v17.3.0...v17.4.0) (2026-10-20)
+
+
+### Features
+
+* **scalr:** add Datadog, Docker, and Wiz integration modules ([#529](https://github.com/zachreborn/terraform-modules/issues/529)) ([7fe00c6](https://github.com/zachreborn/terraform-modules/commit/7fe00c60ef7c45f9da438a541514d4ecc700de6d))
+* **scalr:** add module test configuration modules and OCI module sources ([#530](https://github.com/zachreborn/terraform-modules/issues/530)) ([a92b85c](https://github.com/zachreborn/terraform-modules/commit/a92b85c6becaafb12ba29b589a35c2f90f790431))
+* **scalr:** add workspace remote state consumer module and v3.20.0 argument updates ([#528](https://github.com/zachreborn/terraform-modules/issues/528)) ([9d81f96](https://github.com/zachreborn/terraform-modules/commit/9d81f96fb2ccae3e2cdaf327333eac42a24ba1fc))
+
 ## [17.3.0](https://github.com/zachreborn/terraform-modules/compare/v17.2.0...v17.3.0) (2026-10-18)
 
 
