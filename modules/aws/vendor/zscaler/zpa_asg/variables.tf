@@ -1,0 +1,368 @@
+###########################
+# Data Source Variables
+###########################
+
+variable "ami_id" {
+  description = "(Optional) AMI ID override for the ZPA App Connector. When null, the latest Marketplace zpa-connector-el9* AMI is selected."
+  type        = string
+  default     = null
+  validation {
+    condition     = var.ami_id == null || can(regex("^ami-", var.ami_id))
+    error_message = "ami_id must be null or a valid AMI ID beginning with 'ami-'."
+  }
+}
+
+###########################
+# Security Group Variables
+###########################
+
+variable "sg_name" {
+  description = "(Optional) Name for the ZPA App Connector security group."
+  type        = string
+  default     = "zpa_connector_asg_sg"
+}
+
+variable "vpc_id" {
+  description = "(Required, Forces new resource) VPC ID for the connector security group."
+  type        = string
+}
+
+###########################
+# Launch Template Variables
+###########################
+
+variable "name" {
+  description = "(Required) Base name for the Auto Scaling group and launch template prefix."
+  type        = string
+}
+
+variable "instance_name_prefix" {
+  description = "(Optional) Name tag applied to instances launched by the ASG."
+  type        = string
+  default     = "AWSZPAVPR"
+}
+
+variable "instance_type" {
+  description = "(Optional) EC2 instance type. Defaults to m7i.large. Marketplace RHEL AMIs do not support flex variants."
+  type        = string
+  default     = "m7i.large"
+}
+
+variable "key_name" {
+  description = "(Optional) EC2 Key Pair name for emergency console access. SSM is preferred."
+  type        = string
+  default     = null
+}
+
+variable "iam_instance_profile" {
+  description = "(Required) IAM instance profile name for SSM Session Manager (e.g. ssm-role). When source_dest_check is false and attach_source_dest_check_iam is true, this module attaches a narrow inline policy for ec2:ModifyInstanceAttribute on instances tagged role=zpa_connector."
+  type        = string
+}
+
+variable "associate_public_ip_address" {
+  description = "(Optional) Associate a public IP. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "source_dest_check" {
+  description = "(Optional) Desired source/destination check on connectors. Defaults to false (ZPA must forward proxied traffic). Launch templates cannot set this attribute (AWS API gap), so when false the bootstrap user_data calls ModifyInstanceAttribute. Pair with attach_source_dest_check_iam unless the instance profile already allows that action."
+  type        = bool
+  default     = false
+}
+
+variable "attach_source_dest_check_iam" {
+  description = "(Optional) Attach an inline policy to the iam_instance_profile role granting ec2:ModifyInstanceAttribute when source_dest_check is false. Defaults to true. Set false if the role already has the permission or policy must be managed elsewhere."
+  type        = bool
+  default     = true
+}
+
+variable "encrypted" {
+  description = "(Optional) Encrypt the root EBS volume via launch-template block_device_mappings. Defaults to true (matches Zscaler terraform-zsac-asg-aws ebs_encrypted and AGENTS.md secure defaults). The Marketplace zpa-connector-el9 root snapshot is unencrypted; encrypt-on-launch is supported. Set false only to match an existing unencrypted fleet."
+  type        = bool
+  default     = true
+}
+
+variable "root_device_name" {
+  description = "(Optional) Root device name for the launch-template block_device_mappings override. Must match the AMI root device or size/type/encryption overrides are silently ignored. zpa-connector-el9* uses /dev/xvda (verified 2026-09 against Marketplace AMI and live Gen2 instances)."
+  type        = string
+  default     = "/dev/xvda"
+}
+
+variable "root_delete_on_termination" {
+  description = "(Optional) Delete root volume on termination. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "root_volume_size" {
+  description = "(Optional) Root EBS volume size in GiB. Must be >= the Marketplace AMI snapshot size (current zpa-connector-el9 images are 80 GiB)."
+  type        = number
+  default     = 80
+}
+
+variable "root_volume_type" {
+  description = "(Optional) Root EBS volume type. Defaults to gp3."
+  type        = string
+  default     = "gp3"
+  validation {
+    condition     = contains(["standard", "gp2", "gp3", "io1", "io2", "sc1", "st1"], var.root_volume_type)
+    error_message = "root_volume_type must be one of: standard, gp2, gp3, io1, io2, sc1, st1."
+  }
+}
+
+variable "http_endpoint" {
+  description = "(Optional) Instance metadata service. Valid values: enabled, disabled."
+  type        = string
+  default     = "enabled"
+  validation {
+    condition     = contains(["enabled", "disabled"], var.http_endpoint)
+    error_message = "http_endpoint must be enabled or disabled."
+  }
+}
+
+variable "http_tokens" {
+  description = "(Optional) IMDSv2 token requirement. Defaults to required."
+  type        = string
+  default     = "required"
+  validation {
+    condition     = contains(["optional", "required"], var.http_tokens)
+    error_message = "http_tokens must be optional or required."
+  }
+}
+
+variable "http_put_response_hop_limit" {
+  description = "(Optional) IMDSv2 hop limit. Defaults to 1 (Checkov CKV_AWS_341)."
+  type        = number
+  default     = 1
+}
+
+variable "instance_metadata_tags" {
+  description = "(Optional) Expose instance tags via metadata. Defaults to enabled."
+  type        = string
+  default     = "enabled"
+  validation {
+    condition     = contains(["enabled", "disabled"], var.instance_metadata_tags)
+    error_message = "instance_metadata_tags must be enabled or disabled."
+  }
+}
+
+variable "monitoring" {
+  description = "(Optional) Enable detailed CloudWatch monitoring. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+###########################
+# Bootstrap / user_data
+###########################
+
+variable "provisioning_key" {
+  description = "(Required) ZPA App Connector provisioning key from the ZPA admin portal. Mark sensitive in the calling workspace."
+  type        = string
+  sensitive   = true
+}
+
+variable "enable_ssm_agent" {
+  description = "(Optional) Install and enable amazon-ssm-agent on first boot. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "enable_host_os_update" {
+  description = "(Optional) Run yum update -y on first boot per Zscaler host OS guidance, then reboot. Defaults to false (opt-in). Enabling on a full ASG launch updates every instance at once with no health-gated stagger; a bad kernel/package update can take out the whole group. Prefer a canary LT version or ASG instance refresh with high MinHealthyPercentage when enabling."
+  type        = bool
+  default     = false
+}
+
+###########################
+# Auto Scaling Group
+###########################
+
+variable "subnet_ids" {
+  description = "(Required) Private subnet IDs spanning AZs. For one connector per AZ set desired_capacity equal to length(subnet_ids)."
+  type        = list(string)
+  validation {
+    condition     = length(var.subnet_ids) >= 1
+    error_message = "subnet_ids must contain at least one subnet."
+  }
+}
+
+variable "min_size" {
+  description = "(Optional) Minimum number of connectors. Defaults to 3."
+  type        = number
+  default     = 3
+}
+
+variable "desired_capacity" {
+  description = "(Optional) Desired number of connectors. Defaults to 3."
+  type        = number
+  default     = 3
+}
+
+variable "max_size" {
+  description = "(Optional) Maximum number of connectors. Defaults to 4 for one extra during rolling replace."
+  type        = number
+  default     = 4
+}
+
+variable "health_check_type" {
+  description = "(Optional) ASG health check type. Defaults to EC2."
+  type        = string
+  default     = "EC2"
+  validation {
+    condition     = contains(["EC2", "ELB"], var.health_check_type)
+    error_message = "health_check_type must be EC2 or ELB."
+  }
+}
+
+variable "health_check_grace_period" {
+  description = "(Optional) Seconds after launch before health checks. Defaults to 1200 (20 minutes)."
+  type        = number
+  default     = 1200
+}
+
+variable "default_cooldown" {
+  description = "(Optional) ASG default cooldown in seconds. Defaults to 300."
+  type        = number
+  default     = 300
+}
+
+variable "termination_policies" {
+  description = "(Optional) Ordered termination policies. Defaults to OldestLaunchTemplate then OldestInstance."
+  type        = list(string)
+  default     = ["OldestLaunchTemplate", "OldestInstance"]
+
+  validation {
+    condition = alltrue([
+      for p in var.termination_policies : contains([
+        "OldestInstance",
+        "NewestInstance",
+        "OldestLaunchConfiguration",
+        "ClosestToNextInstanceHour",
+        "OldestLaunchTemplate",
+        "AllocationStrategy",
+        "Default",
+      ], p)
+    ])
+    error_message = "termination_policies entries must be one of: OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, OldestLaunchTemplate, AllocationStrategy, Default."
+  }
+}
+
+variable "max_instance_lifetime" {
+  description = "(Optional) Maximum instance lifetime in seconds. Defaults to 7776000 (90 days). Use 0 to disable."
+  type        = number
+  default     = 7776000
+  validation {
+    condition     = var.max_instance_lifetime == 0 || (var.max_instance_lifetime >= 86400 && var.max_instance_lifetime <= 31536000)
+    error_message = "max_instance_lifetime must be 0 (disabled) or between 86400 and 31536000 seconds."
+  }
+}
+
+variable "capacity_rebalance" {
+  description = "(Optional) Enable capacity rebalance. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "enabled_metrics" {
+  description = "(Optional) List of ASG group metrics to enable. Empty list leaves ASG group metrics disabled."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for m in var.enabled_metrics : contains([
+        "GroupMinSize",
+        "GroupMaxSize",
+        "GroupDesiredCapacity",
+        "GroupInServiceInstances",
+        "GroupPendingInstances",
+        "GroupStandbyInstances",
+        "GroupTerminatingInstances",
+        "GroupTotalInstances",
+        "GroupInServiceCapacity",
+        "GroupPendingCapacity",
+        "GroupStandbyCapacity",
+        "GroupTerminatingCapacity",
+        "GroupTotalCapacity",
+        "WarmPoolDesiredCapacity",
+        "WarmPoolWarmedCapacity",
+        "WarmPoolPendingCapacity",
+        "WarmPoolTerminatingCapacity",
+        "WarmPoolTotalCapacity",
+        "GroupAndWarmPoolDesiredCapacity",
+        "GroupAndWarmPoolTotalCapacity",
+      ], m)
+    ])
+    error_message = "enabled_metrics entries must be valid ASG group metric names (e.g. GroupDesiredCapacity, GroupInServiceInstances)."
+  }
+}
+
+variable "enable_cpu_target_tracking" {
+  description = "(Optional) Attach a CPU target-tracking scaling policy. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "cpu_target_value" {
+  description = "(Optional) Target average CPU percent when enable_cpu_target_tracking is true."
+  type        = number
+  default     = 50
+}
+
+###########################
+# Instance refresh (rolling replace)
+###########################
+
+variable "enable_instance_refresh" {
+  description = "(Optional) Enable rolling ASG instance refresh when the group is updated (including launch template version changes). Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "instance_refresh_min_healthy_percentage" {
+  description = "(Optional) Minimum healthy percentage during instance refresh. Defaults to 66 (keep ~2 of 3 connectors up with max_size headroom)."
+  type        = number
+  default     = 66
+}
+
+variable "instance_refresh_max_healthy_percentage" {
+  description = "(Optional) Maximum healthy percentage during instance refresh. Defaults to 133 (allow one extra instance when max_size permits)."
+  type        = number
+  default     = 133
+}
+
+variable "instance_refresh_instance_warmup" {
+  description = "(Optional) Seconds for instance warmup during refresh. Defaults to null (uses health_check_grace_period)."
+  type        = number
+  default     = null
+}
+
+variable "instance_refresh_auto_rollback" {
+  description = "(Optional) Automatically roll back a failed instance refresh. Defaults to true."
+  type        = bool
+  default     = true
+}
+
+variable "instance_refresh_skip_matching" {
+  description = "(Optional) Skip instances already matching the desired LT/config. Defaults to false so encryption and LT bumps replace the fleet."
+  type        = bool
+  default     = false
+}
+
+variable "instance_refresh_triggers" {
+  description = "(Optional) Extra ASG attributes that trigger instance refresh (in addition to LT/launch config changes)."
+  type        = set(string)
+  default     = ["tag"]
+}
+
+###########################
+# General Variables
+###########################
+
+variable "tags" {
+  description = "(Optional) Map of tags assigned to resources created by this module."
+  type        = map(string)
+  default     = {}
+}
