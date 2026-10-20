@@ -46,6 +46,7 @@
 ### Prerequisites
 
 - The environment referenced by `environment_id` must already exist.
+- Scalr provider `>= 3.20.0`. `time_window` does not exist in earlier provider releases, and referencing it fails schema validation on an older provider even when it is left `null`.
 
 ### Simple Example
 
@@ -81,6 +82,25 @@ module "drift_detection" {
 }
 ```
 
+### With a Preferred Time Window
+
+`time_window` is a UTC window within which the drift checks are scheduled. Leave it unset (`null`) to leave
+checks unbound to a specific window.
+
+```hcl
+module "drift_detection" {
+  source = "github.com/zachreborn/terraform-modules//modules/scalr/drift_detection"
+
+  drift_detections = {
+    prod_weekly = {
+      environment_id = "env-xxxxxxxxxx"
+      check_period   = "weekly"
+      time_window    = "00:00-04:00" # UTC
+    }
+  }
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -93,13 +113,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.20.0 |
 
 ## Modules
 
@@ -115,7 +135,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_drift_detections"></a> [drift\_detections](#input\_drift\_detections) | Map of Scalr drift detection schedulers keyed by a caller-supplied logical name. Each entry<br/>manages one `scalr_drift_detection` resource, periodically checking one or more workspaces<br/>in an environment for infrastructure drift.<br/><br/>Fields:<br/>  - environment\_id: (Required) ID of the environment, in the format "env-<RANDOM STRING>".<br/>  - check\_period:   (Required) Check period for drift detection. Valid values are "daily"<br/>                     and "weekly".<br/>  - run\_mode:       (Optional, default "refresh-only") Run mode for drift detection. Valid<br/>                     values are "refresh-only" and "plan".<br/>  - workspace\_filters: (Optional) Filters for which workspaces are included in drift<br/>                     detection. At most one of name\_patterns, environment\_types, or tags may<br/>                     be set per entry.<br/>      - name\_patterns:     (Optional) Workspace name patterns to include. Supports the "*"<br/>                            wildcard (e.g. "prod-*").<br/>      - environment\_types: (Optional) Workspace environment types to include. Valid values<br/>                            are "production", "staging", "testing", "development", and<br/>                            "unmapped".<br/>      - tags:              (Optional) Workspace tags to include. A workspace matches if it<br/>                            has at least one of the specified tags.<br/><br/>Example:<br/>  drift\_detections = {<br/>    prod\_weekly = {<br/>      environment\_id = "env-xxxxxxxxxx"<br/>      check\_period   = "weekly"<br/>      run\_mode       = "plan"<br/>      workspace\_filters = {<br/>        name\_patterns = ["prod", "stage-*"]<br/>      }<br/>    }<br/>  } | <pre>map(object({<br/>    environment_id = string<br/>    check_period   = string<br/>    run_mode       = optional(string, "refresh-only")<br/>    workspace_filters = optional(object({<br/>      name_patterns     = optional(set(string))<br/>      environment_types = optional(set(string))<br/>      tags              = optional(set(string))<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_drift_detections"></a> [drift\_detections](#input\_drift\_detections) | Map of Scalr drift detection schedulers keyed by a caller-supplied logical name. Each entry<br/>manages one `scalr_drift_detection` resource, periodically checking one or more workspaces<br/>in an environment for infrastructure drift.<br/><br/>Fields:<br/>  - environment\_id: (Required) ID of the environment, in the format "env-<RANDOM STRING>".<br/>  - check\_period:   (Required) Check period for drift detection. Valid values are "daily"<br/>                     and "weekly".<br/>  - run\_mode:       (Optional, default "refresh-only") Run mode for drift detection. Valid<br/>                     values are "refresh-only" and "plan".<br/>  - time\_window:    (Optional) Preferred UTC time window within which drift checks are<br/>                     scheduled. Valid values are "00:00-04:00", "04:00-08:00",<br/>                     "08:00-12:00", "12:00-16:00", "16:00-20:00", and "20:00-24:00". When<br/>                     unset (null), checks are not bound to a specific window. Requires<br/>                     provider >= 3.20.0.<br/>  - workspace\_filters: (Optional) Filters for which workspaces are included in drift<br/>                     detection. At most one of name\_patterns, environment\_types, or tags may<br/>                     be set per entry.<br/>      - name\_patterns:     (Optional) Workspace name patterns to include. Supports the "*"<br/>                            wildcard (e.g. "prod-*").<br/>      - environment\_types: (Optional) Workspace environment types to include. Valid values<br/>                            are "production", "staging", "testing", "development", and<br/>                            "unmapped".<br/>      - tags:              (Optional) Workspace tags to include. A workspace matches if it<br/>                            has at least one of the specified tags.<br/><br/>Example:<br/>  drift\_detections = {<br/>    prod\_weekly = {<br/>      environment\_id = "env-xxxxxxxxxx"<br/>      check\_period   = "weekly"<br/>      run\_mode       = "plan"<br/>      time\_window    = "00:00-04:00"<br/>      workspace\_filters = {<br/>        name\_patterns = ["prod", "stage-*"]<br/>      }<br/>    }<br/>  } | <pre>map(object({<br/>    environment_id = string<br/>    check_period   = string<br/>    run_mode       = optional(string, "refresh-only")<br/>    time_window    = optional(string)<br/>    workspace_filters = optional(object({<br/>      name_patterns     = optional(set(string))<br/>      environment_types = optional(set(string))<br/>      tags              = optional(set(string))<br/>    }))<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
@@ -128,7 +148,9 @@ No modules.
 ## Notes / Design Decisions
 
 - **At most one workspace filter type.** The provider only supports a single filter dimension per `workspace_filters` block; a validation rule rejects any entry that sets more than one of `name_patterns`, `environment_types`, or `tags`.
-- **Enum validation.** `check_period` and `run_mode` are validated against the provider's documented enums; `workspace_filters.environment_types` entries are validated against Scalr's workspace environment type enum.
+- **Enum validation.** `check_period`, `run_mode`, and `time_window` are validated against the provider's documented enums; `workspace_filters.environment_types` entries are validated against Scalr's workspace environment type enum.
+- **`time_window` allows exactly six UTC windows.** The accepted values are `00:00-04:00`, `04:00-08:00`, `08:00-12:00`, `12:00-16:00`, `16:00-20:00`, and `20:00-24:00` (the last window ends at `24:00`, not `00:00`). Any other string, including spacing variants such as `00:00 - 04:00`, is rejected at plan time. `null` is allowed and is the default: no window is sent and checks are not bound to one.
+- **Provider floor `>= 3.20.0`.** This module references `time_window`, which was introduced in provider v3.20.0. Callers pinned below 3.20.0 must upgrade the provider to use this module.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

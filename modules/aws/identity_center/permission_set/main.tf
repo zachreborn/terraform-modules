@@ -41,35 +41,6 @@ locals {
     { for g, d in data.aws_identitystore_group.this : g => d.group_id },
     var.group_ids
   )
-
-  # Creates a map of objects with the following structure:
-  # assignments = {
-  #   "group_name_label" = {
-  #     group_name = group_name
-  #     group_id   = group_id
-  #     account_id = account_id
-  #     label      = label
-  #   }
-  # }
-  # Keyed by the caller-supplied target_accounts label (never the account_id itself), so the key
-  # stays known at plan time even when the account_id value is only known after apply -- e.g. a
-  # newly created aws_organizations_account's id. This is the fix for issue #121.
-  #
-  # "${group_name}_${label}" is guaranteed unique because var.target_accounts's own validation
-  # (variables.tf) rejects underscores in labels and rejects duplicate account_id values -- see that
-  # variable's validation blocks for the full rationale.
-  assignments = {
-    for item in flatten([
-      for group in keys(local.group_id_map) : [
-        for label, account in var.target_accounts : {
-          group_name = group
-          group_id   = local.group_id_map[group]
-          account_id = account
-          label      = label
-        }
-      ]
-    ]) : "${item.group_name}_${item.label}" => item
-  }
 }
 
 ###########################
@@ -114,12 +85,19 @@ resource "aws_ssoadmin_permission_set_inline_policy" "this" {
 # Account Assignments
 ###########################
 
-resource "aws_ssoadmin_account_assignment" "this" {
-  for_each           = local.assignments
+# One child module instance per group. The group name is the module instance key, and the
+# target_accounts label is the resource key inside it, so the two-level address
+#   module.group_assignments["<group>"].aws_ssoadmin_account_assignment.this["<label>"]
+# is unique by construction -- no concatenation or encoding is needed.
+#
+# for_each uses toset(keys(...)) so only the (plan-time-known) group names are instance keys; the
+# group IDs themselves -- which may be known only after apply -- flow through as plain inputs.
+module "group_assignments" {
+  source   = "./group_assignment"
+  for_each = toset(keys(local.group_id_map))
+
+  group_id           = local.group_id_map[each.key]
   instance_arn       = aws_ssoadmin_permission_set.this.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this.arn
-  principal_id       = each.value.group_id
-  principal_type     = "GROUP"
-  target_id          = each.value.account_id
-  target_type        = "AWS_ACCOUNT"
+  target_accounts    = var.target_accounts
 }

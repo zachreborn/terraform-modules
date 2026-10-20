@@ -1,5 +1,99 @@
 # Changelog
 
+## [17.4.0](https://github.com/zachreborn/terraform-modules/compare/v17.3.0...v17.4.0) (2026-10-20)
+
+
+### Features
+
+* **scalr:** add Datadog, Docker, and Wiz integration modules ([#529](https://github.com/zachreborn/terraform-modules/issues/529)) ([7fe00c6](https://github.com/zachreborn/terraform-modules/commit/7fe00c60ef7c45f9da438a541514d4ecc700de6d))
+* **scalr:** add module test configuration modules and OCI module sources ([#530](https://github.com/zachreborn/terraform-modules/issues/530)) ([a92b85c](https://github.com/zachreborn/terraform-modules/commit/a92b85c6becaafb12ba29b589a35c2f90f790431))
+* **scalr:** add workspace remote state consumer module and v3.20.0 argument updates ([#528](https://github.com/zachreborn/terraform-modules/issues/528)) ([9d81f96](https://github.com/zachreborn/terraform-modules/commit/9d81f96fb2ccae3e2cdaf327333eac42a24ba1fc))
+
+## [17.3.0](https://github.com/zachreborn/terraform-modules/compare/v17.2.0...v17.3.0) (2026-10-18)
+
+
+### Features
+
+* **iam:** add standalone instance profile module ([#526](https://github.com/zachreborn/terraform-modules/issues/526)) ([3d326f9](https://github.com/zachreborn/terraform-modules/commit/3d326f952e4f889a5db46f880f2fb1828a1b6e82))
+
+## [17.2.0](https://github.com/zachreborn/terraform-modules/compare/v17.1.0...v17.2.0) (2026-10-18)
+
+
+### Features
+
+* **aws/api_gateway/rest_api:** nest resources via parent_resource_key ([#524](https://github.com/zachreborn/terraform-modules/issues/524)) ([2dc970a](https://github.com/zachreborn/terraform-modules/commit/2dc970a1a5048bf4c86a9fd0020ac509ec748c20))
+
+## [17.1.0](https://github.com/zachreborn/terraform-modules/compare/v17.0.0...v17.1.0) (2026-10-08)
+
+
+### Features
+
+* **amplify:** allow branches without a custom domain (skip aws_amplify_domain_association) ([#518](https://github.com/zachreborn/terraform-modules/issues/518)) ([e3a9d03](https://github.com/zachreborn/terraform-modules/commit/e3a9d03ca3b3727af5a892a843d4ebaa8aa88556))
+
+## [17.0.0](https://github.com/zachreborn/terraform-modules/compare/v16.4.0...v17.0.0) (2026-09-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **identity_center:** allow underscore account labels ([#511](https://github.com/zachreborn/terraform-modules/issues/511))
+
+### Features
+
+* **identity_center:** allow underscore account labels ([#511](https://github.com/zachreborn/terraform-modules/issues/511)) ([664d99a](https://github.com/zachreborn/terraform-modules/commit/664d99af819b82d1e6894e6831090833a1281cbe))
+
+## [16.4.0](https://github.com/zachreborn/terraform-modules/compare/v16.3.0...v16.4.0) (2026-09-26)
+
+
+### Features
+
+* **aws/vpc:** output subnet ARNs for all subnet tiers ([#491](https://github.com/zachreborn/terraform-modules/issues/491)) ([3b4d9dd](https://github.com/zachreborn/terraform-modules/commit/3b4d9dd2bfa23369b679b2017eb1dcb77b6e511b))
+
+## [16.3.0](https://github.com/zachreborn/terraform-modules/compare/v16.2.0...v16.3.0) (2026-09-25)
+
+
+### Features
+
+* **eventbridge_scheduler:** add new module wrapping aws_scheduler_schedule ([#506](https://github.com/zachreborn/terraform-modules/issues/506)) ([23fa0cb](https://github.com/zachreborn/terraform-modules/commit/23fa0cb5dc0d834a5eba8fc701ea3b7b05bde964))
+
+## [16.2.0](https://github.com/zachreborn/terraform-modules/compare/v16.1.1...v16.2.0) (2026-09-25)
+
+
+### Features
+
+* **lambda:** add tags, vpc_config, more outputs, and optional package defaults ([#505](https://github.com/zachreborn/terraform-modules/issues/505)) ([329d4ed](https://github.com/zachreborn/terraform-modules/commit/329d4ed80cc2b6f0412df38952570577d6ee25af))
+
+## [16.1.1](https://github.com/zachreborn/terraform-modules/compare/v16.1.0...v16.1.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **organizations:** validate account/OU tag characters at plan time ([#499](https://github.com/zachreborn/terraform-modules/issues/499)) ([c12efc7](https://github.com/zachreborn/terraform-modules/commit/c12efc7bd1886e177b13191d4c6eef76e8048ef1))
+
+## [16.1.0](https://github.com/zachreborn/terraform-modules/compare/v16.0.0...v16.1.0) (2026-09-19)
+
+
+### Features
+
+* **sagemaker,glue:** add Glue catalog database and SageMaker domain/user profile modules ([#357](https://github.com/zachreborn/terraform-modules/issues/357)) ([e50f2a8](https://github.com/zachreborn/terraform-modules/commit/e50f2a8d3411417a0ed0a3183d9cc85ccd8f8aec))
+
+## [16.0.0](https://github.com/zachreborn/terraform-modules/compare/v15.3.0...v16.0.0) (2026-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433))
+
+### Features
+
+* **vpc:** modernize vpc module for AGENTS.md compliance ([#433](https://github.com/zachreborn/terraform-modules/issues/433)) ([d8e9280](https://github.com/zachreborn/terraform-modules/commit/d8e9280fd0826926482733d24a5e9f678ca0c277))
+
+## [15.3.0](https://github.com/zachreborn/terraform-modules/compare/v15.2.0...v15.3.0) (2026-09-17)
+
+
+### Features
+
+* **drs:** add AWS Elastic Disaster Recovery module ([#493](https://github.com/zachreborn/terraform-modules/issues/493)) ([fc8716a](https://github.com/zachreborn/terraform-modules/commit/fc8716a90244370d25363514a614743f6e1c92bc))
+
 ## [15.2.0](https://github.com/zachreborn/terraform-modules/compare/v15.1.0...v15.2.0) (2026-08-28)
 
 

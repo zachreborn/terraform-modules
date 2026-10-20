@@ -22,10 +22,16 @@ variable "vcs_providers" {
                                     VCS provider.
       - url:                          (Optional) Required for self-hosted VCS providers.
       - username:                     (Optional) Required for the "bitbucket_enterprise" provider
-                                    type.
+                                    type. For "azure_dev_ops_services" it is the Azure DevOps
+                                    organization name, required only for organization-scoped
+                                    tokens.
       - vcs_type:                     (Optional) One of "github", "github_enterprise", "gitlab",
-                                    "gitlab_enterprise", "bitbucket_enterprise". Defaults to
-                                    "github".
+                                    "gitlab_enterprise", "bitbucket_enterprise",
+                                    "azure_dev_ops_services". Defaults to "github".
+                                    "azure_dev_ops_services" requires the Scalr provider
+                                    >= 3.20.0. This module's own provider constraint is not
+                                    raised for it (no new schema argument is involved), so
+                                    callers using it must pin provider 3.20.0 or later.
 
     The sensitive personal access token for each entry is intentionally NOT part of this
     variable -- see var.vcs_provider_tokens. Keeping it out of this map lets var.vcs_providers
@@ -49,11 +55,11 @@ variable "vcs_providers" {
   validation {
     condition = alltrue([
       for k, v in var.vcs_providers : contains(
-        ["github", "github_enterprise", "gitlab", "gitlab_enterprise", "bitbucket_enterprise"],
+        ["github", "github_enterprise", "gitlab", "gitlab_enterprise", "bitbucket_enterprise", "azure_dev_ops_services"],
         v.vcs_type
       )
     ])
-    error_message = "Each vcs_providers vcs_type must be one of \"github\", \"github_enterprise\", \"gitlab\", \"gitlab_enterprise\", or \"bitbucket_enterprise\"."
+    error_message = "Each vcs_providers vcs_type must be one of \"github\", \"github_enterprise\", \"gitlab\", \"gitlab_enterprise\", \"bitbucket_enterprise\", or \"azure_dev_ops_services\" (\"azure_dev_ops_services\" requires Scalr provider >= 3.20.0)."
   }
 }
 
@@ -68,6 +74,8 @@ variable "vcs_provider_tokens" {
         https://github.com/settings/tokens/new?description=example-vcs-resouce&scopes=repo
       - GitLab token can be generated at
         https://gitlab.com/-/profile/personal_access_tokens?name=example-vcs-resouce&scopes=api,read_user,read_registry
+      - Azure DevOps token can be generated as described at
+        https://docs.scalr.io/docs/azure-devops#personal-access-token
   EOT
   type        = map(string)
   sensitive   = true
