@@ -22,7 +22,7 @@ mock_provider "github" {
 
 variables {
   profiles = {
-    aws_dev = {
+    default = {
       description      = "Development profile"
       homepage_url     = "https://example.com/development"
       visibility       = "private"
@@ -40,10 +40,7 @@ variables {
         secret_scanning_push_protection = "enabled"
       }
     }
-    aws_test      = {}
-    aws_prod      = {}
-    control_plane = {}
-    factory       = {}
+    inventory = {}
   }
 
   organization_policy = {
@@ -59,7 +56,7 @@ run "merges_profile_and_sparse_nested_overrides" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           description = "Repository override"
@@ -93,13 +90,31 @@ run "merges_profile_and_sparse_nested_overrides" {
 
 }
 
+
+run "uses_default_profile_when_omitted" {
+  command = plan
+
+  variables {
+    repositories = {
+      example = {
+        management_stage = "managed"
+      }
+    }
+  }
+
+  assert {
+    condition     = github_repository.this["example"].visibility == "private"
+    error_message = "Omitting profile must resolve settings from the default profile."
+  }
+}
+
 run "normalizes_topics_deterministically" {
   command = plan
 
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           topics = [" Zeta ", "alpha", "ALPHA"]
@@ -120,7 +135,7 @@ run "excludes_inventory_repositories" {
   variables {
     repositories = {
       inventoried = {
-        profile          = "aws_test"
+        profile          = "inventory"
         management_stage = "inventory"
       }
     }
@@ -143,7 +158,7 @@ run "creates_normalized_additive_supplemental_rules" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           extra_status_checks = [" Zeta / check ", "alpha / check"]
@@ -183,7 +198,7 @@ run "omits_empty_supplemental_rules" {
   variables {
     repositories = {
       example = {
-        profile            = "aws_dev"
+        profile            = "default"
         management_stage   = "managed"
         supplemental_rules = {}
       }
@@ -202,7 +217,7 @@ run "renders_pages_and_template_blocks" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           pages = {
@@ -239,15 +254,10 @@ run "wires_creation_and_legacy_repository_options" {
 
   variables {
     profiles = {
-      aws_dev       = {}
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
-      factory       = {}
+      default = {}
     }
     repositories = {
       example = {
-        profile          = "aws_dev"
         management_stage = "managed"
         overrides = {
           fork                                    = "true"
@@ -293,7 +303,7 @@ run "exports_managed_repository_identifiers" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
       }
     }

@@ -3,9 +3,10 @@
 ###########################
 variable "profiles" {
   description = <<-EOT
-    Repository setting profiles keyed by profile name. The map must contain aws_dev, aws_test,
-    aws_prod, control_plane, and factory. Every setting is optional so an import-first caller can
-    represent the current GitHub value without forcing unrelated standardization.
+    Repository setting profiles keyed by caller-defined profile name. Include a "default" profile
+    when repositories omit profile, or name every repository profile explicitly. Every setting is
+    optional so an import-first caller can represent the current GitHub value without forcing
+    unrelated standardization.
   EOT
 
   type = map(object({
@@ -74,13 +75,12 @@ variable "profiles" {
     error_message = "Each profile fork must be null, \"true\", or \"false\"."
   }
 
-
   validation {
     condition = length(setsubtract(
-      toset(["aws_dev", "aws_test", "aws_prod", "control_plane", "factory"]),
+      toset(var.required_profile_keys),
       toset(keys(var.profiles))
     )) == 0
-    error_message = "profiles must contain aws_dev, aws_test, aws_prod, control_plane, and factory."
+    error_message = "profiles must contain every key listed in required_profile_keys."
   }
 
   validation {
@@ -113,12 +113,32 @@ variable "profiles" {
 }
 
 ###########################
+# Required Profile Keys
+###########################
+variable "required_profile_keys" {
+  description = <<-EOT
+    Optional profile keys the caller requires in profiles. Defaults to none so profile names stay
+    caller-defined. Set this when an organization wants a fixed profile catalog enforced at plan time.
+  EOT
+
+  type    = set(string)
+  default = []
+
+  validation {
+    condition = alltrue([
+      for key in var.required_profile_keys : trimspace(key) != ""
+    ])
+    error_message = "required_profile_keys must not contain empty or whitespace-only names."
+  }
+}
+
+###########################
 # Repository Inventory
 ###########################
 variable "repositories" {
   description = <<-EOT
     Repository inventory keyed by exact GitHub repository name.
-      - profile: One key from profiles.
+      - profile: Optional profiles key. Defaults to "default".
       - management_stage: inventory records reviewable data; managed creates a resource address.
       - overrides: Sparse repository settings. Nested security settings merge field by field.
       - supplemental_rules: Optional additive checks or an approval count that cannot be lower than
@@ -128,7 +148,7 @@ variable "repositories" {
   EOT
 
   type = map(object({
-    profile          = string
+    profile          = optional(string, "default")
     management_stage = string
 
     overrides = optional(object({

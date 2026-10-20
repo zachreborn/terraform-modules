@@ -51,6 +51,11 @@ fork_optional = re.findall(
 msg = "Profile and override fork inputs must match provider string schema"
 assert len(fork_optional) == 2, msg
 
+msg = "Profile catalogs must remain caller-defined"
+assert 'toset(["aws_dev", "aws_test", "aws_prod", "control_plane", "factory"])' not in VARIABLE_SOURCE, msg
+assert "variable \"required_profile_keys\"" in VARIABLE_SOURCE, msg
+assert 'profile          = optional(string, "default")' in VARIABLE_SOURCE, msg
+
 repository_arguments = {
     "name",
     "description",

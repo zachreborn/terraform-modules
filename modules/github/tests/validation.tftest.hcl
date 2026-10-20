@@ -2,11 +2,7 @@ mock_provider "github" {}
 
 variables {
   profiles = {
-    aws_dev       = {}
-    aws_test      = {}
-    aws_prod      = {}
-    control_plane = {}
-    factory       = {}
+    default = {}
   }
 
   organization_policy = {
@@ -22,7 +18,7 @@ run "accepts_valid_baseline" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
       }
     }
@@ -39,11 +35,7 @@ run "rejects_invalid_profile_fork_value" {
 
   variables {
     profiles = {
-      aws_dev       = { fork = "yes" }
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
-      factory       = {}
+      default = { fork = "yes" }
     }
     repositories = {}
   }
@@ -51,20 +43,55 @@ run "rejects_invalid_profile_fork_value" {
   expect_failures = [var.profiles]
 }
 
-run "rejects_missing_required_profile" {
+run "rejects_missing_required_profile_keys" {
   command = plan
 
   variables {
+    required_profile_keys = ["default", "production"]
     profiles = {
-      aws_dev       = {}
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
+      default = {}
     }
     repositories = {}
   }
 
   expect_failures = [var.profiles]
+}
+
+run "accepts_required_profile_keys_when_present" {
+  command = plan
+
+  variables {
+    required_profile_keys = ["default", "production"]
+    profiles = {
+      default    = {}
+      production = {}
+    }
+    repositories = {
+      example = {
+        profile          = "production"
+        management_stage = "managed"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(github_repository.this) == 1
+    error_message = "Caller-defined required profile keys must plan when all keys exist."
+  }
+}
+
+run "rejects_empty_required_profile_key" {
+  command = plan
+
+  variables {
+    required_profile_keys = [" "]
+    profiles = {
+      default = {}
+    }
+    repositories = {}
+  }
+
+  expect_failures = [var.required_profile_keys]
 }
 
 run "rejects_invalid_profile_visibility" {
@@ -72,11 +99,7 @@ run "rejects_invalid_profile_visibility" {
 
   variables {
     profiles = {
-      aws_dev       = { visibility = "secret" }
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
-      factory       = {}
+      default = { visibility = "secret" }
     }
     repositories = {}
   }
@@ -89,11 +112,7 @@ run "rejects_empty_profile_topic" {
 
   variables {
     profiles = {
-      aws_dev       = { topics = [" "] }
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
-      factory       = {}
+      default = { topics = [" "] }
     }
     repositories = {}
   }
@@ -106,15 +125,11 @@ run "rejects_invalid_profile_security_status" {
 
   variables {
     profiles = {
-      aws_dev = {
+      default = {
         security_and_analysis = {
           secret_scanning = "unknown"
         }
       }
-      aws_test      = {}
-      aws_prod      = {}
-      control_plane = {}
-      factory       = {}
     }
     repositories = {}
   }
@@ -128,7 +143,7 @@ run "rejects_invalid_override_fork_value" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           fork = "yes"
@@ -161,7 +176,7 @@ run "rejects_unknown_management_stage" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "adopted"
       }
     }
@@ -176,7 +191,7 @@ run "rejects_invalid_repository_name" {
   variables {
     repositories = {
       "" = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
       }
     }
@@ -191,7 +206,7 @@ run "rejects_overlong_repository_name" {
   variables {
     repositories = {
       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
       }
     }
@@ -206,7 +221,7 @@ run "rejects_invalid_override_visibility" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           visibility = "secret"
@@ -224,7 +239,7 @@ run "rejects_empty_override_topic" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           topics = [""]
@@ -242,7 +257,7 @@ run "rejects_invalid_override_security_status" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         overrides = {
           security_and_analysis = {
@@ -262,7 +277,7 @@ run "rejects_empty_status_check" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           extra_status_checks = [" "]
@@ -280,7 +295,7 @@ run "rejects_weaker_supplemental_approval_count" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           required_approvals = 0
@@ -298,7 +313,7 @@ run "rejects_excessive_supplemental_approval_count" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           required_approvals = 11
@@ -316,7 +331,7 @@ run "rejects_fractional_supplemental_approval_count" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           required_approvals = 1.5
@@ -334,7 +349,7 @@ run "rejects_supplemental_bypass_actors" {
   variables {
     repositories = {
       example = {
-        profile          = "aws_dev"
+        profile          = "default"
         management_stage = "managed"
         supplemental_rules = {
           bypass_actors = [{
