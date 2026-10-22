@@ -139,6 +139,7 @@ No modules.
 | <a name="input_enable_key_rotation"></a> [enable\_key\_rotation](#input\_enable\_key\_rotation) | (Optional) Specifies whether key rotation is enabled. | `bool` | `true` | no |
 | <a name="input_is_enabled"></a> [is\_enabled](#input\_is\_enabled) | (Optional) Specifies whether the key is enabled. | `bool` | `true` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
+| <a name="input_multi_region"></a> [multi\_region](#input\_multi\_region) | (Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This cannot be changed after the key is created; changing it forces a new key. | `bool` | `false` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your\_name\_prefix). | `string` | n/a | yes |
 | <a name="input_policy"></a> [policy](#input\_policy) | (Optional) A valid policy JSON document. | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | (Optional) Region where this KMS key and its alias are managed. Defaults to the Region set in the provider configuration. | `string` | `null` | no |
@@ -154,6 +155,7 @@ No modules.
 | <a name="output_description"></a> [description](#output\_description) | n/a |
 | <a name="output_enable_key_rotation"></a> [enable\_key\_rotation](#output\_enable\_key\_rotation) | n/a |
 | <a name="output_key_id"></a> [key\_id](#output\_key\_id) | n/a |
+| <a name="output_multi_region"></a> [multi\_region](#output\_multi\_region) | n/a |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
