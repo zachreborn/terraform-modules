@@ -172,31 +172,13 @@ resource "aws_lb_listener" "listener" {
   dynamic "default_action" {
     for_each = [each.value.default_action]
     content {
-      # Common settings
       type = default_action.value.type
-      # An explicit target_group_arn (e.g. for an externally managed target
-      # group not present in var.target_groups) takes precedence over
-      # target_group_key; only fall back to looking up target_group_key in
-      # the module-managed map when target_group_arn is not set.
+      # target_group_arn only for single-TG forward. Nested forward{weight=0} fails CreateListener.
       target_group_arn = (
         default_action.value.type != "forward" ? null :
         default_action.value.target_group_arn != null ? default_action.value.target_group_arn :
         aws_lb_target_group.target_group[default_action.value.target_group_key].arn
       )
-
-      # Forward configuration (for both ALB and NLB)
-      dynamic "forward" {
-        for_each = default_action.value.type == "forward" ? [1] : []
-        content {
-          target_group {
-            arn = (
-              default_action.value.target_group_arn != null ? default_action.value.target_group_arn :
-              aws_lb_target_group.target_group[default_action.value.target_group_key].arn
-            )
-            weight = 0
-          }
-        }
-      }
 
       # Application Load Balancer specific fixed response action
       dynamic "fixed_response" {

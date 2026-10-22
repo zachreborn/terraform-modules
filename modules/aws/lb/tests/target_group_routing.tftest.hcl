@@ -128,8 +128,8 @@ run "default_action_with_explicit_target_group_key_routes_to_secondary" {
   }
 
   assert {
-    condition     = one(aws_lb_listener.listener["http"].default_action[0].forward[0].target_group).arn == aws_lb_target_group.target_group["secondary"].arn
-    error_message = "The default_action's forward.target_group block should also route to the secondary target group's ARN."
+    condition     = length(aws_lb_listener.listener["http"].default_action[0].forward) == 0
+    error_message = "Single-TG default_action must not emit a nested forward block (weight=0 fails CreateListener)."
   }
 }
 
@@ -226,8 +226,8 @@ run "default_action_with_explicit_target_group_arn_ignores_missing_target_groups
   }
 
   assert {
-    condition     = one(aws_lb_listener.listener["http"].default_action[0].forward[0].target_group).arn == "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/externally-managed-tg/cccccccccccccccc"
-    error_message = "The default_action's forward.target_group block should also use the explicit target_group_arn verbatim."
+    condition     = length(aws_lb_listener.listener["http"].default_action[0].forward) == 0
+    error_message = "Single-TG default_action must not emit a nested forward block (weight=0 fails CreateListener)."
   }
 }
 

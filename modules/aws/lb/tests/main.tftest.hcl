@@ -109,6 +109,16 @@ run "plan_succeeds_with_baseline_nlb" {
     condition     = output.name == aws_lb.load_balancer.name
     error_message = "name output should equal the load balancer resource's name."
   }
+
+  assert {
+    condition     = aws_lb_listener.listener["tcp"].default_action[0].target_group_arn == aws_lb_target_group.target_group["main"].arn
+    error_message = "Baseline NLB listener must forward via target_group_arn to the main target group."
+  }
+
+  assert {
+    condition     = length(aws_lb_listener.listener["tcp"].default_action[0].forward) == 0
+    error_message = "Baseline NLB listener must not emit nested forward (weight=0 fails CreateListener on new NLBs)."
+  }
 }
 
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block
