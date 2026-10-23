@@ -387,7 +387,7 @@ module "example_org_redirect_bucket" {
 
 This module enables server-side encryption by default and exposes the full set of S3 encryption controls.
 
-- **`sse_algorithm` defaults to `aws:kms`.** With `enable_kms_key = false` (the default), the bucket is encrypted with the AWS-managed `aws/s3` KMS key. This is intentional: using SSE-KMS (rather than `AES256`/SSE-S3) produces a CloudTrail audit trail of key usage and aligns with CIS AWS Foundations Benchmark recommendations. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse` (Dual-Layer Server-Side Encryption with KMS keys). Callers who want a customer-managed key can set `enable_kms_key = true` (a new key per bucket) or pass an existing key with `kms_master_key_id`. `enable_kms_key = true` takes precedence when both are set.
+- **`sse_algorithm` defaults to `aws:kms`.** With `enable_kms_key = false` (the default), the bucket is encrypted with the AWS-managed `aws/s3` KMS key. This is intentional: using SSE-KMS (rather than `AES256`/SSE-S3) produces a CloudTrail audit trail of key usage and aligns with CIS AWS Foundations Benchmark recommendations. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse` (Dual-Layer Server-Side Encryption with KMS keys). Callers who want a customer-managed key can set `enable_kms_key = true` (a new key per bucket) or pass an existing key with `kms_master_key_id`. Set one or the other; setting both fails validation.
 - **`bucket_key_enabled` defaults to `true`.** S3 Bucket Keys reduce KMS request costs for SSE-KMS buckets. This setting only applies to SSE-KMS (`aws:kms` / `aws:kms:dsse`); when `sse_algorithm = "AES256"` the module internally resolves the effective value to `false` so plans for `AES256` buckets do not surface a spurious `bucket_key_enabled` change.
 - **`blocked_encryption_types` defaults to `["SSE-C"]`.** This blocks object uploads that use server-side encryption with customer-provided keys (SSE-C), aligning with the AWS enforcement that automatically blocks SSE-C for new buckets starting April 2026. Callers who rely on SSE-C uploads can opt out by setting `blocked_encryption_types = []` or `blocked_encryption_types = ["NONE"]`.
 
@@ -439,7 +439,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
@@ -509,7 +509,7 @@ No modules.
 | <a name="input_key_name_prefix"></a> [key\_name\_prefix](#input\_key\_name\_prefix) | (Optional) Creates an unique alias beginning with the specified prefix. The name must start with the word alias followed by a forward slash (alias/). | `string` | `"alias/s3_key_"` | no |
 | <a name="input_key_policy"></a> [key\_policy](#input\_key\_policy) | (Optional) A valid policy JSON document. Although this is a key policy, not an IAM policy, an aws\_iam\_policy\_document, in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the AWS IAM Policy Document Guide. | `string` | `""` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
-| <a name="input_kms_master_key_id"></a> [kms\_master\_key\_id](#input\_kms\_master\_key\_id) | (Optional) ARN or ID of an existing KMS key to use for SSE-KMS default encryption. Use this to share one customer managed key across buckets or accounts. Ignored when enable\_kms\_key = true, in which case the module-created key is used. When null and sse\_algorithm is aws:kms or aws:kms:dsse, S3 uses the AWS managed aws/s3 key. | `string` | `null` | no |
+| <a name="input_kms_master_key_id"></a> [kms\_master\_key\_id](#input\_kms\_master\_key\_id) | (Optional) ARN, ID, or alias of an existing KMS key to use for SSE-KMS default encryption. Use this to share one customer managed key across buckets or accounts. Cannot be combined with enable\_kms\_key = true. Requires sse\_algorithm of aws:kms or aws:kms:dsse. When null and sse\_algorithm is aws:kms or aws:kms:dsse, S3 uses the AWS managed aws/s3 key. | `string` | `null` | no |
 | <a name="input_lifecycle_rules"></a> [lifecycle\_rules](#input\_lifecycle\_rules) | (Optional) Configuration of object lifecycle management (LCM). Can have several rules as a list of maps where each map is the lifecycle rule configuration. | `any` | `null` | no |
 | <a name="input_logging_target_bucket"></a> [logging\_target\_bucket](#input\_logging\_target\_bucket) | (Optional) The name of the bucket that will receive the logs. Required if logging of the S3 bucket is set to true. | `string` | `null` | no |
 | <a name="input_logging_target_prefix"></a> [logging\_target\_prefix](#input\_logging\_target\_prefix) | (Optional) The prefix that is prepended to all log object keys. If not set, the logs are stored in the root of the bucket. | `string` | `"log/"` | no |

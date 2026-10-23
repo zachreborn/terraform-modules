@@ -53,7 +53,26 @@ run "external_kms_key_is_used" {
   }
 }
 
-run "module_kms_key_takes_precedence" {
+run "module_kms_key_creates_per_bucket_key" {
+  command = plan
+
+  variables {
+    bucket_prefix  = "example-"
+    enable_kms_key = true
+  }
+
+  assert {
+    condition     = length(aws_kms_key.s3) == 1
+    error_message = "enable_kms_key = true should create one module KMS key."
+  }
+
+  assert {
+    condition     = one(aws_s3_bucket_server_side_encryption_configuration.this.rule).apply_server_side_encryption_by_default[0].kms_master_key_id == "arn:aws:kms:us-west-2:123456789012:key/module-key-id"
+    error_message = "enable_kms_key = true should encrypt the bucket with the module-created key."
+  }
+}
+
+run "rejects_both_key_sources" {
   command = plan
 
   variables {
@@ -62,9 +81,44 @@ run "module_kms_key_takes_precedence" {
     kms_master_key_id = "arn:aws:kms:us-west-2:123456789012:key/external-key-id"
   }
 
+  expect_failures = [var.kms_master_key_id]
+}
+
+run "rejects_external_key_with_aes256" {
+  command = plan
+
+  variables {
+    bucket_prefix     = "example-"
+    sse_algorithm     = "AES256"
+    kms_master_key_id = "arn:aws:kms:us-west-2:123456789012:key/external-key-id"
+  }
+
+  expect_failures = [var.kms_master_key_id]
+}
+
+run "rejects_empty_external_key" {
+  command = plan
+
+  variables {
+    bucket_prefix     = "example-"
+    kms_master_key_id = "  "
+  }
+
+  expect_failures = [var.kms_master_key_id]
+}
+
+run "accepts_external_key_with_dsse" {
+  command = plan
+
+  variables {
+    bucket_prefix     = "example-"
+    sse_algorithm     = "aws:kms:dsse"
+    kms_master_key_id = "arn:aws:kms:us-west-2:123456789012:key/external-key-id"
+  }
+
   assert {
-    condition     = one(aws_s3_bucket_server_side_encryption_configuration.this.rule).apply_server_side_encryption_by_default[0].kms_master_key_id == "arn:aws:kms:us-west-2:123456789012:key/module-key-id"
-    error_message = "When enable_kms_key = true, the module-created key should be used and kms_master_key_id ignored."
+    condition     = one(aws_s3_bucket_server_side_encryption_configuration.this.rule).apply_server_side_encryption_by_default[0].sse_algorithm == "aws:kms:dsse"
+    error_message = "sse_algorithm aws:kms:dsse should be accepted with kms_master_key_id."
   }
 }
 
