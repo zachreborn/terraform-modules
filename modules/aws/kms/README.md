@@ -98,6 +98,33 @@ module "s3_bucket_kms" {
 }
 ```
 
+### Multi-Region Primary Key Example
+
+`multi_region = true` creates only the multi-Region **primary** key. No key exists in any other Region until you create a replica with `aws_kms_replica_key`, using a provider configured for the replica Region. `multi_region` cannot be changed after creation; changing it replaces the key.
+
+The principal that applies this needs `iam:CreateServiceLinkedRole` in addition to the usual KMS permissions. AWS KMS creates the `AWSServiceRoleForKeyManagementServiceMultiRegionKeys` service-linked role the first time a multi-Region key is created in the account, and the apply fails without that permission. Creating a replica also needs `kms:ReplicateKey` in the primary Region and `kms:CreateKey` in the replica Region.
+
+```
+provider "aws" {
+  alias  = "dr_region"
+  region = "us-east-2"
+}
+
+module "backups_kms" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/kms"
+
+  description  = "Multi-Region key for backups"
+  name_prefix  = "backups"
+  multi_region = true
+}
+
+resource "aws_kms_replica_key" "backups_dr" {
+  provider        = aws.dr_region
+  primary_key_arn = module.backups_kms.arn
+  description     = "us-east-2 replica of the backups key"
+}
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -139,7 +166,7 @@ No modules.
 | <a name="input_enable_key_rotation"></a> [enable\_key\_rotation](#input\_enable\_key\_rotation) | (Optional) Specifies whether key rotation is enabled. | `bool` | `true` | no |
 | <a name="input_is_enabled"></a> [is\_enabled](#input\_is\_enabled) | (Optional) Specifies whether the key is enabled. | `bool` | `true` | no |
 | <a name="input_key_usage"></a> [key\_usage](#input\_key\_usage) | (Optional) Specifies the intended use of the key. Defaults to ENCRYPT\_DECRYPT, and only symmetric encryption and decryption are supported. | `string` | `"ENCRYPT_DECRYPT"` | no |
-| <a name="input_multi_region"></a> [multi\_region](#input\_multi\_region) | (Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This cannot be changed after the key is created; changing it forces a new key. | `bool` | `false` | no |
+| <a name="input_multi_region"></a> [multi\_region](#input\_multi\_region) | (Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This creates only the primary key; create replicas in other Regions with aws\_kms\_replica\_key. The caller needs iam:CreateServiceLinkedRole the first time a multi-Region key is created in the account. This cannot be changed after the key is created; changing it forces a new key. | `bool` | `false` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your\_name\_prefix). | `string` | n/a | yes |
 | <a name="input_policy"></a> [policy](#input\_policy) | (Optional) A valid policy JSON document. | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | (Optional) Region where this KMS key and its alias are managed. Defaults to the Region set in the provider configuration. | `string` | `null` | no |

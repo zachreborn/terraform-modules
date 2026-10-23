@@ -48,7 +48,7 @@ variable "is_enabled" {
 
 variable "multi_region" {
   type        = bool
-  description = "(Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This cannot be changed after the key is created; changing it forces a new key."
+  description = "(Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This creates only the primary key; create replicas in other Regions with aws_kms_replica_key. The caller needs iam:CreateServiceLinkedRole the first time a multi-Region key is created in the account. This cannot be changed after the key is created; changing it forces a new key."
   default     = false
 }
 
