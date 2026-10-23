@@ -19,6 +19,10 @@ output "enable_key_rotation" {
   value = aws_kms_key.this.enable_key_rotation
 }
 
+output "multi_region" {
+  value = aws_kms_key.this.multi_region
+}
+
 output "alias_name_prefix" {
   value = aws_kms_alias.this.name_prefix
 }
