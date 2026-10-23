@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
     aws = {
@@ -244,7 +244,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
     bucket_key_enabled       = local.bucket_key_enabled
     blocked_encryption_types = var.blocked_encryption_types
     apply_server_side_encryption_by_default {
-      kms_master_key_id = var.enable_kms_key ? aws_kms_key.s3[0].arn : null
+      kms_master_key_id = var.enable_kms_key ? aws_kms_key.s3[0].arn : var.kms_master_key_id
       sse_algorithm     = var.sse_algorithm
     }
   }

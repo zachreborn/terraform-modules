@@ -333,6 +333,27 @@ variable "bucket_key_enabled" {
   }
 }
 
+variable "kms_master_key_id" {
+  type        = string
+  description = "(Optional) ARN, ID, or alias of an existing KMS key to use for SSE-KMS default encryption. Use this to share one customer managed key across buckets or accounts. Cannot be combined with enable_kms_key = true. Requires sse_algorithm of aws:kms or aws:kms:dsse. When null and sse_algorithm is aws:kms or aws:kms:dsse, S3 uses the AWS managed aws/s3 key."
+  default     = null
+
+  validation {
+    condition     = !(var.enable_kms_key && var.kms_master_key_id != null)
+    error_message = "Set either enable_kms_key = true or kms_master_key_id, not both. enable_kms_key creates a per-bucket key; kms_master_key_id uses an existing key."
+  }
+
+  validation {
+    condition     = var.kms_master_key_id == null || contains(["aws:kms", "aws:kms:dsse"], var.sse_algorithm)
+    error_message = "kms_master_key_id requires sse_algorithm of aws:kms or aws:kms:dsse."
+  }
+
+  validation {
+    condition     = var.kms_master_key_id == null || length(trimspace(coalesce(var.kms_master_key_id, " "))) > 0
+    error_message = "kms_master_key_id must be null or a non-empty KMS key ARN, ID, or alias."
+  }
+}
+
 variable "sse_algorithm" {
   type        = string
   description = "(Optional) The server-side encryption algorithm to use. Valid values are AES256, aws:kms, and aws:kms:dsse."
