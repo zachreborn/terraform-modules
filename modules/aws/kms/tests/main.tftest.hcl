@@ -46,7 +46,7 @@ run "plan_succeeds_with_valid_input" {
 
   assert {
     condition     = output.multi_region == false
-    error_message = "multi_region output should expose the key's multi_region attribute."
+    error_message = "multi_region output should be false by default."
   }
 
   assert {
@@ -125,7 +125,7 @@ run "overrides_are_honored" {
 
   assert {
     condition     = output.multi_region == true
-    error_message = "multi_region output should expose the key's multi_region attribute."
+    error_message = "multi_region output should be true when multi_region = true."
   }
 
   assert {
