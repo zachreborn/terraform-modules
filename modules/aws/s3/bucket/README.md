@@ -387,7 +387,7 @@ module "example_org_redirect_bucket" {
 
 This module enables server-side encryption by default and exposes the full set of S3 encryption controls.
 
-- **`sse_algorithm` defaults to `aws:kms`.** With `enable_kms_key = false` (the default), the bucket is encrypted with the AWS-managed `aws/s3` KMS key. This is intentional: using SSE-KMS (rather than `AES256`/SSE-S3) produces a CloudTrail audit trail of key usage and aligns with CIS AWS Foundations Benchmark recommendations. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse` (Dual-Layer Server-Side Encryption with KMS keys). Callers who want a customer-managed key can set `enable_kms_key = true`.
+- **`sse_algorithm` defaults to `aws:kms`.** With `enable_kms_key = false` (the default), the bucket is encrypted with the AWS-managed `aws/s3` KMS key. This is intentional: using SSE-KMS (rather than `AES256`/SSE-S3) produces a CloudTrail audit trail of key usage and aligns with CIS AWS Foundations Benchmark recommendations. Valid values are `AES256`, `aws:kms`, and `aws:kms:dsse` (Dual-Layer Server-Side Encryption with KMS keys). Callers who want a customer-managed key can set `enable_kms_key = true` (a new key per bucket) or pass an existing key with `kms_master_key_id`. `enable_kms_key = true` takes precedence when both are set.
 - **`bucket_key_enabled` defaults to `true`.** S3 Bucket Keys reduce KMS request costs for SSE-KMS buckets. This setting only applies to SSE-KMS (`aws:kms` / `aws:kms:dsse`); when `sse_algorithm = "AES256"` the module internally resolves the effective value to `false` so plans for `AES256` buckets do not surface a spurious `bucket_key_enabled` change.
 - **`blocked_encryption_types` defaults to `["SSE-C"]`.** This blocks object uploads that use server-side encryption with customer-provided keys (SSE-C), aligning with the AWS enforcement that automatically blocks SSE-C for new buckets starting April 2026. Callers who rely on SSE-C uploads can opt out by setting `blocked_encryption_types = []` or `blocked_encryption_types = ["NONE"]`.
 
@@ -396,6 +396,30 @@ module "dsse_bucket" {
   source        = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
   bucket_prefix = "octo-prod-dsse-"
   sse_algorithm = "aws:kms:dsse"
+  tags = {
+    created_by  = "<YOUR_NAME>"
+    environment = "prod"
+    terraform   = "true"
+  }
+}
+```
+
+### Shared Customer-Managed KMS Key Example
+
+Use `kms_master_key_id` to encrypt several buckets with one customer-managed key created by the `kms` module. Unlike the AWS-managed `aws/s3` key, a customer-managed key can be granted to principals in other accounts through its key policy.
+
+```
+module "shared_kms" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/kms"
+
+  description = "Shared key for application buckets"
+  name_prefix = "app-buckets"
+}
+
+module "app_bucket" {
+  source            = "github.com/zachreborn/terraform-modules//modules/aws/s3/bucket"
+  bucket_prefix     = "octo-prod-app-"
+  kms_master_key_id = module.shared_kms.arn
   tags = {
     created_by  = "<YOUR_NAME>"
     environment = "prod"
