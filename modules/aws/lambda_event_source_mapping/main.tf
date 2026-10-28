@@ -205,6 +205,10 @@ resource "aws_lambda_event_source_mapping" "this" {
       error_message = "Partial batch responses require SQS, Kinesis, DynamoDB or Kafka."
     }
     precondition {
+      condition     = var.metrics_config == null ? true : (local.kafka || length(setintersection(var.metrics_config.metrics, toset(["ErrorCount", "KafkaMetrics"]))) == 0)
+      error_message = "ErrorCount and KafkaMetrics require an Amazon MSK or self-managed Kafka source; use EventCount for other supported sources."
+    }
+    precondition {
       condition     = (!local.sqs && !local.mq) || (local.position == null && local.timestamp == null)
       error_message = "SQS and MQ do not accept stream starting-position arguments."
     }
@@ -251,6 +255,10 @@ resource "aws_lambda_event_source_mapping" "this" {
     precondition {
       condition     = var.provisioned_poller_config == null || local.kafka || local.sqs
       error_message = "Provisioned pollers require Kafka or SQS."
+    }
+    precondition {
+      condition     = try(var.provisioned_poller_config.poller_group_name, null) == null || local.kafka
+      error_message = "poller_group_name requires an Amazon MSK or self-managed Kafka source; omit the group name for SQS."
     }
     precondition {
       condition     = !local.sqs || try(var.provisioned_poller_config.minimum_pollers, null) == null ? true : var.provisioned_poller_config.minimum_pollers >= 2

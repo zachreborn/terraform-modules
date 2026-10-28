@@ -162,7 +162,7 @@ variable "kms_key_arn" {
 }
 
 variable "metrics_config" {
-  description = "Enhanced event source metrics: EventCount, ErrorCount and/or KafkaMetrics."
+  description = "Enhanced event source metrics: EventCount, ErrorCount and/or KafkaMetrics. ErrorCount and KafkaMetrics require Amazon MSK or self-managed Kafka."
   type        = object({ metrics = set(string) })
   default     = null
   validation {
@@ -182,7 +182,7 @@ variable "scaling_config" {
 }
 
 variable "provisioned_poller_config" {
-  description = "Dedicated Kafka/SQS pollers: minimum 1..200 (SQS 2..200), maximum 1..2000, optional group name."
+  description = "Dedicated Kafka/SQS pollers: minimum 1..200 (SQS 2..200), maximum 1..2000. Optional poller_group_name is Kafka-only."
   type = object({
     minimum_pollers   = optional(number)
     maximum_pollers   = optional(number)

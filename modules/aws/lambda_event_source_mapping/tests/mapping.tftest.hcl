@@ -157,10 +157,10 @@ run "clear_sqs_scaling" {
 run "sqs_provisioned_pollers" {
   command = plan
   variables {
-    provisioned_poller_config = { minimum_pollers = 2, maximum_pollers = 2000, poller_group_name = "workers" }
+    provisioned_poller_config = { minimum_pollers = 2, maximum_pollers = 2000 }
   }
   assert {
-    condition     = aws_lambda_event_source_mapping.this.provisioned_poller_config[0].minimum_pollers == 2 && aws_lambda_event_source_mapping.this.provisioned_poller_config[0].maximum_pollers == 2000 && aws_lambda_event_source_mapping.this.provisioned_poller_config[0].poller_group_name == "workers"
+    condition     = aws_lambda_event_source_mapping.this.provisioned_poller_config[0].minimum_pollers == 2 && aws_lambda_event_source_mapping.this.provisioned_poller_config[0].maximum_pollers == 2000 && try(var.provisioned_poller_config.poller_group_name, null) == null
     error_message = "sqs_provisioned_pollers: exact resource/output wiring changed."
   }
 }
@@ -178,7 +178,7 @@ run "kinesis_optional_controls" {
     parallelization_factor               = 10
     tumbling_window_in_seconds           = 900
     destination_config                   = { on_failure = { destination_arn = "arn:aws:sqs:us-east-1:123456789012:work" } }
-    metrics_config                       = { metrics = ["EventCount", "ErrorCount"] }
+    metrics_config                       = { metrics = ["EventCount"] }
     kms_key_arn                          = "arn:aws:kms:us-east-1:123456789012:key/00000000-0000-0000-0000-000000000000"
     filter_criteria                      = { filter = [{ pattern = "{\"data\":{\"kind\":[\"created\"]}}" }] }
     region                               = "us-west-2"
@@ -203,7 +203,7 @@ run "kinesis_optional_controls" {
     error_message = "kinesis_optional_controls: exact resource/output wiring changed."
   }
   assert {
-    condition     = aws_lambda_event_source_mapping.this.metrics_config[0].metrics == toset(["EventCount", "ErrorCount"])
+    condition     = aws_lambda_event_source_mapping.this.metrics_config[0].metrics == toset(["EventCount"])
     error_message = "kinesis_optional_controls: exact resource/output wiring changed."
   }
   assert {

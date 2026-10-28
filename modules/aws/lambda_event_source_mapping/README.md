@@ -124,6 +124,11 @@ module "stream_mapping" {
   SQS pollers have a minimum of two and cannot combine with maximum-concurrency
   scaling. Kafka minimum pollers may be one. No arbitrary concurrency ceiling
   is imposed.
+- `metrics_config` accepts `EventCount`; the additional `ErrorCount` and
+  `KafkaMetrics` selections require Amazon MSK or self-managed Kafka. SQS,
+  Kinesis and DynamoDB configurations must not select those Kafka-only metrics.
+  `provisioned_poller_config.poller_group_name` is also Kafka-only; SQS may
+  configure minimum/maximum poller counts but must omit the group name.
 - Null optional blocks are omitted. Empty `scaling_config={}` remains supported
   to clear concurrency. Up to ten filters are accepted by the provider; six
   through ten require an account quota increase. No quota is changed here.
@@ -194,6 +199,8 @@ production-state migration verification.
 - [Provider registry documentation](https://registry.terraform.io/providers/hashicorp/aws/6.54.0/docs/resources/lambda_event_source_mapping)
 - [AWS CreateEventSourceMapping](https://docs.aws.amazon.com/lambda/latest/api/API_CreateEventSourceMapping.html)
 - [SQS mapping parameters](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-parameters.html)
+- [AWS event-source metric configuration](https://docs.aws.amazon.com/lambda/latest/api/API_EventSourceMappingMetricsConfig.html)
+- [AWS provisioned poller configuration](https://docs.aws.amazon.com/lambda/latest/api/API_ProvisionedPollerConfig.html)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -237,9 +244,9 @@ No modules.
 | <a name="input_maximum_batching_window_in_seconds"></a> [maximum\_batching\_window\_in\_seconds](#input\_maximum\_batching\_window\_in\_seconds) | Integer batching window 0..300; null preserves source defaults (including 500ms). | `number` | `null` | no |
 | <a name="input_maximum_record_age_in_seconds"></a> [maximum\_record\_age\_in\_seconds](#input\_maximum\_record\_age\_in\_seconds) | Discard old stream/Kafka records: -1 for infinite, or integer 60..604800 seconds. | `number` | `null` | no |
 | <a name="input_maximum_retry_attempts"></a> [maximum\_retry\_attempts](#input\_maximum\_retry\_attempts) | Stream/Kafka retry limit: integer -1 (infinite) through 10000. | `number` | `null` | no |
-| <a name="input_metrics_config"></a> [metrics\_config](#input\_metrics\_config) | Enhanced event source metrics: EventCount, ErrorCount and/or KafkaMetrics. | `object({ metrics = set(string) })` | `null` | no |
+| <a name="input_metrics_config"></a> [metrics\_config](#input\_metrics\_config) | Enhanced event source metrics: EventCount, ErrorCount and/or KafkaMetrics. ErrorCount and KafkaMetrics require Amazon MSK or self-managed Kafka. | `object({ metrics = set(string) })` | `null` | no |
 | <a name="input_parallelization_factor"></a> [parallelization\_factor](#input\_parallelization\_factor) | Concurrent batches per Kinesis/DynamoDB shard, integer 1..10. | `number` | `null` | no |
-| <a name="input_provisioned_poller_config"></a> [provisioned\_poller\_config](#input\_provisioned\_poller\_config) | Dedicated Kafka/SQS pollers: minimum 1..200 (SQS 2..200), maximum 1..2000, optional group name. | <pre>object({<br/>    minimum_pollers   = optional(number)<br/>    maximum_pollers   = optional(number)<br/>    poller_group_name = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_provisioned_poller_config"></a> [provisioned\_poller\_config](#input\_provisioned\_poller\_config) | Dedicated Kafka/SQS pollers: minimum 1..200 (SQS 2..200), maximum 1..2000. Optional poller\_group\_name is Kafka-only. | <pre>object({<br/>    minimum_pollers   = optional(number)<br/>    maximum_pollers   = optional(number)<br/>    poller_group_name = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_queues"></a> [queues](#input\_queues) | One MQ destination queue name, 1..1000 characters; empty for other sources. | `list(string)` | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | Resource region override; null inherits the provider region. | `string` | `null` | no |
 | <a name="input_scaling_config"></a> [scaling\_config](#input\_scaling\_config) | SQS maximum concurrency, integer >=2. An empty object clears the setting. | `object({ maximum_concurrency = optional(number) })` | `null` | no |
