@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.5.0](https://github.com/zachreborn/terraform-modules/compare/v17.4.0...v17.5.0) (2026-10-28)
+
+
+### Features
+
+* **kms:** add multi_region variable and output ([#535](https://github.com/zachreborn/terraform-modules/issues/535)) ([cb19d1e](https://github.com/zachreborn/terraform-modules/commit/cb19d1e8bb65477ce9f30e9482ce478ca0b6b1dd))
+
 ## [17.4.0](https://github.com/zachreborn/terraform-modules/compare/v17.3.0...v17.4.0) (2026-10-20)
 
 
