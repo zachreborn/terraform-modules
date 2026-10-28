@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.6.0](https://github.com/zachreborn/terraform-modules/compare/v17.5.0...v17.6.0) (2026-10-28)
+
+
+### Features
+
+* **dynamodb:** add keyed table module ([#543](https://github.com/zachreborn/terraform-modules/issues/543)) ([3b2e588](https://github.com/zachreborn/terraform-modules/commit/3b2e5880512a7ed0c010eb9ce5804de6d96cc2ec))
+
 ## [17.5.0](https://github.com/zachreborn/terraform-modules/compare/v17.4.0...v17.5.0) (2026-10-28)
 
 
