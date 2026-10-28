@@ -130,7 +130,10 @@ module "indexed_tables" {
 
 - `billing_mode` defaults to `PAY_PER_REQUEST`; provisioned normal creation and
   import require positive integer read/write capacities on the table and each
-  global secondary index. Restores may omit capacities inherited from the source.
+  global secondary index. Only restored base tables may omit both capacities
+  inherited from the source. Every explicitly configured global secondary index
+  still requires positive integer read/write capacities during a provisioned
+  restore, whether restoring from a backup, source name or source table ARN.
 - `table_class` defaults to `STANDARD`. `region` defaults to the provider's
   region. `deletion_protection_enabled` defaults to true.
 - Table and replica point-in-time recovery are enabled by default. Table

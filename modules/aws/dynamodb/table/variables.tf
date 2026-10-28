@@ -153,13 +153,14 @@ variable "tables" {
     error_message = "Local secondary indexes require the base table range_key."
   }
   validation {
+    # Only the first entry is the base table; explicitly configured GSIs never inherit units.
     condition = alltrue([for t in var.tables : try(alltrue([
-      for x in concat([{ read_capacity = t.read_capacity, write_capacity = t.write_capacity }], [for i in t.global_secondary_index : { read_capacity = i.read_capacity, write_capacity = i.write_capacity }]) :
+      for position, x in concat([{ read_capacity = t.read_capacity, write_capacity = t.write_capacity }], [for i in t.global_secondary_index : { read_capacity = i.read_capacity, write_capacity = i.write_capacity }]) :
       t.billing_mode == "PAY_PER_REQUEST" ? (x.read_capacity == null && x.write_capacity == null) :
-      (length(compact([t.restore_backup_arn, t.restore_source_name, t.restore_source_table_arn])) > 0 && x.read_capacity == null && x.write_capacity == null ? true :
+      (position == 0 && length(compact([t.restore_backup_arn, t.restore_source_name, t.restore_source_table_arn])) > 0 && x.read_capacity == null && x.write_capacity == null ? true :
       try(x.read_capacity > 0 && floor(x.read_capacity) == x.read_capacity && x.write_capacity > 0 && floor(x.write_capacity) == x.write_capacity, false))
     ]), false)])
-    error_message = "PROVISIONED creation/import and GSIs require positive integer read/write capacities; PAY_PER_REQUEST forbids them."
+    error_message = "PROVISIONED tables and GSIs require positive integer read/write capacities; only restored base tables may omit both. PAY_PER_REQUEST forbids them."
   }
   validation {
     condition = alltrue([for t in var.tables : try(alltrue([
