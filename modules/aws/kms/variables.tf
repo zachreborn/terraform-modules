@@ -46,6 +46,12 @@ variable "is_enabled" {
   default     = true
 }
 
+variable "multi_region" {
+  type        = bool
+  description = "(Optional) Indicates whether the KMS key is a multi-Region (true) or regional (false) key. This creates only the primary key; create replicas in other Regions with aws_kms_replica_key. The caller needs iam:CreateServiceLinkedRole the first time a multi-Region key is created in the account. This cannot be changed after the key is created; changing it forces a new key."
+  default     = false
+}
+
 variable "name_prefix" {
   type        = string
   description = "(Required) Creates an unique alias beginning with the specified prefix. The name will automatically include the word alias followed by a forward slash (alias/your_name_prefix)."
