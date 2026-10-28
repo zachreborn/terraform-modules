@@ -9,8 +9,11 @@ terraform {
   required_providers {
     scalr = {
       source = "registry.scalr.io/scalr/scalr"
-      # >= 3.17.0 is required by the google provider_configuration's default_labels block.
-      version = ">= 3.17.0"
+      # >= 3.20.0 is required by the composed ./workspace submodule (remote_state_sharing and
+      # runner_image_version_id) and ./provider_configuration submodule (is_allowed_in_module_test),
+      # both of which declare a 3.20.0 floor, so this root must be at least as high. The earlier
+      # 3.17.0 floor was driven by the google provider_configuration's default_labels block.
+      version = ">= 3.20.0"
     }
   }
 }
@@ -79,12 +82,13 @@ locals {
   # a single ID namespace (local.provider_configuration_ids) once merged.
   pc_aws = {
     for name, cfg in local.aws_provider_config : name => {
-      account_id             = local.account_id
-      apply_only             = try(cfg.apply_only, false)
-      environments           = try(cfg.environments, var.aws_environments)
-      export_shell_variables = try(cfg.export_shell_variables, var.aws_export_shell_variables)
-      owners                 = try(cfg.owners, var.aws_owners)
-      tag_ids                = try(cfg.tag_ids, null)
+      account_id                = local.account_id
+      apply_only                = try(cfg.apply_only, false)
+      environments              = try(cfg.environments, var.aws_environments)
+      export_shell_variables    = try(cfg.export_shell_variables, var.aws_export_shell_variables)
+      is_allowed_in_module_test = try(cfg.is_allowed_in_module_test, var.aws_is_allowed_in_module_test)
+      owners                    = try(cfg.owners, var.aws_owners)
+      tag_ids                   = try(cfg.tag_ids, null)
       aws = {
         credentials_type    = try(cfg.credentials_type, var.aws_credentials_type)
         access_key          = try(cfg.access_key, var.aws_access_key)
@@ -105,13 +109,14 @@ locals {
 
   pc_azurerm = {
     for name, cfg in local.azurerm_provider_config : name => {
-      account_id             = local.account_id
-      apply_only             = false
-      environments           = try(cfg.environments, var.azurerm_environments)
-      export_shell_variables = try(cfg.export_shell_variables, var.azurerm_export_shell_variables)
-      owners                 = try(cfg.owners, var.azurerm_owners)
-      tag_ids                = try(cfg.tag_ids, var.azurerm_tag_ids)
-      aws                    = null
+      account_id                = local.account_id
+      apply_only                = false
+      environments              = try(cfg.environments, var.azurerm_environments)
+      export_shell_variables    = try(cfg.export_shell_variables, var.azurerm_export_shell_variables)
+      is_allowed_in_module_test = try(cfg.is_allowed_in_module_test, var.azurerm_is_allowed_in_module_test)
+      owners                    = try(cfg.owners, var.azurerm_owners)
+      tag_ids                   = try(cfg.tag_ids, var.azurerm_tag_ids)
+      aws                       = null
       azurerm = {
         client_id       = try(cfg.client_id, var.azurerm_client_id)
         tenant_id       = try(cfg.tenant_id, var.azurerm_tenant_id)
@@ -127,14 +132,15 @@ locals {
 
   pc_google = {
     for name, cfg in local.google_provider_config : name => {
-      account_id             = local.account_id
-      apply_only             = false
-      environments           = try(cfg.environments, var.google_environments)
-      export_shell_variables = try(cfg.export_shell_variables, var.google_export_shell_variables)
-      owners                 = try(cfg.owners, var.google_owners)
-      tag_ids                = try(cfg.tag_ids, var.google_tag_ids)
-      aws                    = null
-      azurerm                = null
+      account_id                = local.account_id
+      apply_only                = false
+      environments              = try(cfg.environments, var.google_environments)
+      export_shell_variables    = try(cfg.export_shell_variables, var.google_export_shell_variables)
+      is_allowed_in_module_test = try(cfg.is_allowed_in_module_test, var.google_is_allowed_in_module_test)
+      owners                    = try(cfg.owners, var.google_owners)
+      tag_ids                   = try(cfg.tag_ids, var.google_tag_ids)
+      aws                       = null
+      azurerm                   = null
       google = {
         auth_type              = try(cfg.auth_type, var.google_auth_type)
         project                = try(cfg.project, var.google_project)
@@ -153,16 +159,17 @@ locals {
 
   pc_custom = {
     for name, cfg in local.custom_provider_config : name => {
-      account_id             = local.account_id
-      apply_only             = false
-      environments           = try(cfg.environments, var.custom_environments)
-      export_shell_variables = try(cfg.export_shell_variables, var.custom_export_shell_variables)
-      owners                 = try(cfg.owners, var.custom_owners)
-      tag_ids                = try(cfg.tag_ids, var.custom_tag_ids)
-      aws                    = null
-      azurerm                = null
-      google                 = null
-      scalr                  = null
+      account_id                = local.account_id
+      apply_only                = false
+      environments              = try(cfg.environments, var.custom_environments)
+      export_shell_variables    = try(cfg.export_shell_variables, var.custom_export_shell_variables)
+      is_allowed_in_module_test = try(cfg.is_allowed_in_module_test, var.custom_is_allowed_in_module_test)
+      owners                    = try(cfg.owners, var.custom_owners)
+      tag_ids                   = try(cfg.tag_ids, var.custom_tag_ids)
+      aws                       = null
+      azurerm                   = null
+      google                    = null
+      scalr                     = null
       custom = {
         provider_name = try(cfg.provider_name, var.custom_provider_name)
         arguments = [
@@ -267,15 +274,21 @@ locals {
       module_version_id           = try(ws.module_version_id, var.workspace_module_version_id)
       operations                  = try(ws.operations, null)
       remote_backend              = try(ws.remote_backend, var.workspace_remote_backend)
-      remote_state_consumers      = try(ws.remote_state_consumers, var.workspace_remote_state_consumers)
-      run_operation_timeout       = try(ws.run_operation_timeout, var.workspace_run_operation_timeout)
-      ssh_key_id                  = try(ws.ssh_key_id, var.workspace_ssh_key_id)
-      tag_ids                     = try(ws.tag_ids, var.workspace_tag_ids)
-      terraform_version           = try(ws.terraform_version, var.workspace_terraform_version)
-      type                        = try(ws.type, var.workspace_type)
-      var_files                   = try(ws.var_files, var.workspace_var_files)
-      vcs_provider_id             = try(ws.vcs_provider_id, var.vcs_provider_id)
-      working_directory           = try(ws.working_directory, var.workspace_working_directory)
+      # remote_state_consumers (deprecated) and remote_state_sharing are mutually exclusive in the
+      # provider. A value set on the workspace in YAML suppresses the module-wide default of its
+      # counterpart, so choosing one attribute per workspace never collides with a module-wide default
+      # for the other. Setting both explicitly on one workspace is still rejected by ./workspace.
+      remote_state_consumers  = try(ws.remote_state_consumers, try(ws.remote_state_sharing, null) != null ? null : var.workspace_remote_state_consumers)
+      remote_state_sharing    = try(ws.remote_state_sharing, try(ws.remote_state_consumers, null) != null ? null : var.workspace_remote_state_sharing)
+      run_operation_timeout   = try(ws.run_operation_timeout, var.workspace_run_operation_timeout)
+      runner_image_version_id = try(ws.runner_image_version_id, var.workspace_runner_image_version_id)
+      ssh_key_id              = try(ws.ssh_key_id, var.workspace_ssh_key_id)
+      tag_ids                 = try(ws.tag_ids, var.workspace_tag_ids)
+      terraform_version       = try(ws.terraform_version, var.workspace_terraform_version)
+      type                    = try(ws.type, var.workspace_type)
+      var_files               = try(ws.var_files, var.workspace_var_files)
+      vcs_provider_id         = try(ws.vcs_provider_id, var.vcs_provider_id)
+      working_directory       = try(ws.working_directory, var.workspace_working_directory)
 
       hooks = try(ws.hooks, null) != null ? {
         post_apply = try(ws.hooks.post_apply, null)

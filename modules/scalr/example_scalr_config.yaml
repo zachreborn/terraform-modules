@@ -43,6 +43,9 @@ environment-2-all-options:
         - name: "aws_provider_1"
           alias: "primary"
       remote_backend: true
+      # remote_state_consumers is deprecated by the Scalr provider and conflicts with remote_state_sharing.
+      # Prefer remote_state_sharing: false with the ./workspace/remote_state_consumer submodule (see
+      # workspace-4-state-sharing below).
       remote_state_consumers:
         - "consumer-1"
         - "consumer-2"
@@ -63,3 +66,11 @@ environment-2-all-options:
         identifier: "org/repo"
         ingress_submodules: false
         trigger_patterns: "*.tf" # conflicts with trigger_prefixes; a single glob-style string, not a list
+    workspace-4-state-sharing:
+      description: "This is workspace 4 in environment 2, using the scalr provider 3.20.0 attributes"
+      # Do not share state with every workspace in the environment; manage the consumers with the
+      # ./workspace/remote_state_consumer submodule instead. Conflicts with remote_state_consumers.
+      remote_state_sharing: false # requires scalr provider >= 3.20.0
+      # Container image version used as the runner image. Only works with Scalr-managed agent pools
+      # (do not combine with an agent_pool_id that points to a self-hosted agent pool).
+      runner_image_version_id: "cimgv-xxxxxxxxxx" # requires scalr provider >= 3.20.0

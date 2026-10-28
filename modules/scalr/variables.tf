@@ -33,18 +33,18 @@ variable "vcs_provider_url" {
 }
 
 variable "vcs_provider_username" {
-  description = "The username for the VCS Provider. Required for 'bitbucket_enterprise'."
+  description = "The username for the VCS Provider. Required for 'bitbucket_enterprise'. For 'azure_dev_ops_services' it is the Azure DevOps organization name, required only for organization-scoped tokens."
   type        = string
   default     = null
 }
 
 variable "vcs_provider_vcs_type" {
-  description = "The type of VCS Provider. Valid values are 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', and 'bitbucket_enterprise'."
+  description = "The type of VCS Provider. Valid values are 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', 'bitbucket_enterprise', and 'azure_dev_ops_services' (Azure DevOps Services, which requires scalr provider >= 3.20.0)."
   type        = string
   default     = "github"
   validation {
-    condition     = contains(["github", "github_enterprise", "gitlab", "gitlab_enterprise", "bitbucket_enterprise"], var.vcs_provider_vcs_type)
-    error_message = "The vcs_type must be one of 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', or 'bitbucket_enterprise'."
+    condition     = contains(["github", "github_enterprise", "gitlab", "gitlab_enterprise", "bitbucket_enterprise", "azure_dev_ops_services"], var.vcs_provider_vcs_type)
+    error_message = "The vcs_type must be one of 'github', 'github_enterprise', 'gitlab', 'gitlab_enterprise', 'bitbucket_enterprise', or 'azure_dev_ops_services'."
   }
 }
 
@@ -99,6 +99,12 @@ variable "aws_export_shell_variables" {
 variable "aws_external_id" {
   description = "The external ID to use when assuming the role. Required if aws_credentials_type is set to 'role_delegation' and the role requires an external ID."
   type        = string
+  default     = null
+}
+
+variable "aws_is_allowed_in_module_test" {
+  description = "Whether the AWS provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0."
+  type        = bool
   default     = null
 }
 
@@ -173,6 +179,12 @@ variable "azurerm_export_shell_variables" {
   description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the AzureRM provider configuration."
   type        = bool
   default     = false
+}
+
+variable "azurerm_is_allowed_in_module_test" {
+  description = "Whether the AzureRM provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0."
+  type        = bool
+  default     = null
 }
 
 variable "azurerm_owners" {
@@ -251,6 +263,12 @@ variable "google_export_shell_variables" {
   description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the Google provider configuration."
   type        = bool
   default     = false
+}
+
+variable "google_is_allowed_in_module_test" {
+  description = "Whether the Google provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0."
+  type        = bool
+  default     = null
 }
 
 variable "google_owners" {
@@ -341,6 +359,12 @@ variable "custom_export_shell_variables" {
   description = "Whether to export provider credentials as shell variables when using the Scalr CLI with the custom provider configuration."
   type        = bool
   default     = false
+}
+
+variable "custom_is_allowed_in_module_test" {
+  description = "Whether the custom provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0."
+  type        = bool
+  default     = null
 }
 
 variable "custom_owners" {
@@ -488,8 +512,14 @@ variable "workspace_remote_backend" {
 }
 
 variable "workspace_remote_state_consumers" {
-  description = "List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file."
+  description = "DEPRECATED by the upstream provider. List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file. Conflicts with remote_state_sharing: a workspace that sets remote_state_sharing in the YAML file ignores this module-wide default. Prefer remote_state_sharing = false together with the ./workspace/remote_state_consumer submodule."
   type        = list(string)
+  default     = null
+}
+
+variable "workspace_remote_state_sharing" {
+  description = "Whether the state of the workspace is shared with all workspaces within the environment. Set to false to manage the list of consumers with the ./workspace/remote_state_consumer submodule. Can be overridden per workspace in the YAML file. Conflicts with remote_state_consumers: a workspace that sets remote_state_consumers in the YAML file ignores this module-wide default. Left unset (null) so the account's workspace state sharing setting applies. Requires scalr provider >= 3.20.0."
+  type        = bool
   default     = null
 }
 
@@ -497,6 +527,17 @@ variable "workspace_run_operation_timeout" {
   description = "The maximum time, in minutes, that a run operation (plan or apply) can take before it is automatically canceled. Can be overridden per workspace in the YAML file."
   type        = number
   default     = 60
+}
+
+variable "workspace_runner_image_version_id" {
+  description = "The ID of the container image version used as the runner image, in the format 'cimgv-<RANDOM STRING>' (look it up with the scalr_container_image_version data source). Can be overridden per workspace in the YAML file. Only works with Scalr-managed agent pools: it cannot be combined with an agent pool ID that points to a self-hosted agent pool. Left unset (null) so the account default runner image is used. Requires scalr provider >= 3.20.0."
+  type        = string
+  default     = null
+  validation {
+    # Conditional (not ||) so regex is only evaluated for non-null values: || does not short-circuit on Terraform.
+    condition     = var.workspace_runner_image_version_id == null ? true : can(regex("^cimgv-[A-Za-z0-9]+$", var.workspace_runner_image_version_id))
+    error_message = "The workspace_runner_image_version_id must be null or a container image version ID in the format 'cimgv-<RANDOM STRING>'."
+  }
 }
 
 variable "workspace_ssh_key_id" {

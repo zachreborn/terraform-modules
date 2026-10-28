@@ -186,3 +186,60 @@ run "accepts_null_google_default_labels_strategy" {
     error_message = "google_default_labels_strategy should accept a null value (provider default)."
   }
 }
+
+###########################
+# vcs_provider_vcs_type: azure_dev_ops_services (scalr provider >= 3.20.0)
+###########################
+run "accepts_azure_dev_ops_services_vcs_provider_vcs_type" {
+  command = plan
+
+  variables {
+    vcs_provider_vcs_type = "azure_dev_ops_services"
+  }
+
+  assert {
+    condition     = var.vcs_provider_vcs_type == "azure_dev_ops_services"
+    error_message = "vcs_provider_vcs_type should accept 'azure_dev_ops_services'."
+  }
+}
+
+###########################
+# workspace_runner_image_version_id
+###########################
+run "rejects_invalid_workspace_runner_image_version_id" {
+  command = plan
+
+  variables {
+    workspace_runner_image_version_id = "not-a-cimgv-id"
+  }
+
+  expect_failures = [var.workspace_runner_image_version_id]
+}
+
+run "accepts_valid_workspace_runner_image_version_id" {
+  command = plan
+
+  variables {
+    workspace_runner_image_version_id = "cimgv-abc123"
+  }
+
+  assert {
+    condition     = var.workspace_runner_image_version_id == "cimgv-abc123"
+    error_message = "workspace_runner_image_version_id should accept a 'cimgv-<RANDOM STRING>' value."
+  }
+}
+
+# The validation uses a conditional (not ||) so regex is never evaluated for null, which would error on
+# Terraform where || does not short-circuit.
+run "accepts_null_workspace_runner_image_version_id" {
+  command = plan
+
+  variables {
+    workspace_runner_image_version_id = null
+  }
+
+  assert {
+    condition     = var.workspace_runner_image_version_id == null
+    error_message = "workspace_runner_image_version_id should accept a null value (account default runner image)."
+  }
+}
