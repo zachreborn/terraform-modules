@@ -188,11 +188,11 @@ def run(tool, root, arguments, timeout):
     print(f"Running: {tool} {root.name} {' '.join(arguments[:2])}", flush=True)
     with subprocess.Popen(
         command,
+        start_new_session=True,
         env=offline_environment(),
+        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True,
-        start_new_session=True,
     ) as process:
         try:
             stdout, stderr = process.communicate(timeout=timeout)
