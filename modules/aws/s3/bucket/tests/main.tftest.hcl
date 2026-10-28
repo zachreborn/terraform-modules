@@ -72,7 +72,7 @@ run "module_kms_key_creates_per_bucket_key" {
   }
 }
 
-run "rejects_both_key_sources" {
+run "module_kms_key_wins_over_external_key" {
   command = plan
 
   variables {
@@ -81,19 +81,15 @@ run "rejects_both_key_sources" {
     kms_master_key_id = "arn:aws:kms:us-west-2:123456789012:key/external-key-id"
   }
 
-  expect_failures = [var.kms_master_key_id]
-}
-
-run "rejects_external_key_with_aes256" {
-  command = plan
-
-  variables {
-    bucket_prefix     = "example-"
-    sse_algorithm     = "AES256"
-    kms_master_key_id = "arn:aws:kms:us-west-2:123456789012:key/external-key-id"
+  assert {
+    condition     = length(aws_kms_key.s3) == 1
+    error_message = "enable_kms_key = true should create the module KMS key even when kms_master_key_id is set."
   }
 
-  expect_failures = [var.kms_master_key_id]
+  assert {
+    condition     = one(aws_s3_bucket_server_side_encryption_configuration.this.rule).apply_server_side_encryption_by_default[0].kms_master_key_id == "arn:aws:kms:us-west-2:123456789012:key/module-key-id"
+    error_message = "enable_kms_key = true should take precedence over kms_master_key_id."
+  }
 }
 
 run "rejects_empty_external_key" {
