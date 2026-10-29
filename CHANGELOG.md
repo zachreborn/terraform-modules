@@ -1,5 +1,22 @@
 # Changelog
 
+## [18.0.0](https://github.com/zachreborn/terraform-modules/compare/v17.6.0...v18.0.0) (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **aws/ram:** support list of resource ARNs for multi-resource shares ([#483](https://github.com/zachreborn/terraform-modules/issues/483))
+* **apigateway:** Gateway v2 now requires Terraform 1.3.0 and AWS provider 6.29.0. Previously ignored nested settings, authorizer controls, stage settings and tags now take effect; malformed or conflicting combinations are rejected. Existing singleton/keyed addresses and legacy no-op name aliases remain stable. Review the complete migration guidance and a consumer plan before adoption. The raised floors require a major release.
+* **lambda:** The module requires Terraform 1.3.0 and AWS provider 6.54.0. Previously ignored stream starting-position inputs now take effect and can require replacement. Existing singleton resource identity and effective batch/enabled defaults remain stable. Review the documented source/window restrictions and consumer plan before adoption.
+* **sqs:** The queue module requires Terraform 1.3.0 and AWS provider 6.8.0. Preserve encryption settings, queue names and delivery controls during adoption. The unchanged queue address and permanent key/alias moved declarations are documented. A major release is required for the toolchain floor increase.
+
+### Features
+
+* **apigateway:** complete gateway v2 adoption controls ([#546](https://github.com/zachreborn/terraform-modules/issues/546)) ([ae1ec27](https://github.com/zachreborn/terraform-modules/commit/ae1ec27ae5734eae6a9ca58c41b94941faf7f380))
+* **aws/ram:** support list of resource ARNs for multi-resource shares ([#483](https://github.com/zachreborn/terraform-modules/issues/483)) ([ee2b7bf](https://github.com/zachreborn/terraform-modules/commit/ee2b7bf42b099d10e6a22515d02a3745bc5e9011))
+* **lambda:** complete event source mapping controls ([#545](https://github.com/zachreborn/terraform-modules/issues/545)) ([9db3226](https://github.com/zachreborn/terraform-modules/commit/9db3226ab84862a09814b803ae12ed97be34e4e4))
+* **sqs:** complete queue adoption controls ([#544](https://github.com/zachreborn/terraform-modules/issues/544)) ([c2920cb](https://github.com/zachreborn/terraform-modules/commit/c2920cb63dbd91ddf501951d5e20dab37e7ea2fd))
+
 ## [17.6.0](https://github.com/zachreborn/terraform-modules/compare/v17.5.0...v17.6.0) (2026-10-28)
 
 
