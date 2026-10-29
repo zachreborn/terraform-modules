@@ -808,6 +808,9 @@ run "stage_logging_level_default_route_settings_invalid" {
       "bad" = {
         "default_route_settings" = {
           "logging_level" = "INVALID"
+
+          "throttling_burst_limit" = 10
+          "throttling_rate_limit"  = 10
         }
       }
     }
@@ -824,6 +827,9 @@ run "stage_logging_level_route_settings_invalid" {
         "route_settings" = {
           "$default" = {
             "logging_level" = "INVALID"
+
+            "throttling_burst_limit" = 10
+            "throttling_rate_limit"  = 10
           }
         }
       }
@@ -840,6 +846,8 @@ run "stage_throttling_burst_limit_default_route_settings_negative" {
       "bad" = {
         "default_route_settings" = {
           "throttling_burst_limit" = -1
+
+          "throttling_rate_limit" = 10
         }
       }
     }
@@ -855,6 +863,8 @@ run "stage_throttling_burst_limit_default_route_settings_fraction" {
       "bad" = {
         "default_route_settings" = {
           "throttling_burst_limit" = 1.5
+
+          "throttling_rate_limit" = 10
         }
       }
     }
@@ -871,6 +881,8 @@ run "stage_throttling_burst_limit_route_settings_negative" {
         "route_settings" = {
           "$default" = {
             "throttling_burst_limit" = -1
+
+            "throttling_rate_limit" = 10
           }
         }
       }
@@ -888,6 +900,8 @@ run "stage_throttling_burst_limit_route_settings_fraction" {
         "route_settings" = {
           "$default" = {
             "throttling_burst_limit" = 1.5
+
+            "throttling_rate_limit" = 10
           }
         }
       }
@@ -904,6 +918,8 @@ run "stage_throttling_rate_limit_default_route_settings_negative" {
       "bad" = {
         "default_route_settings" = {
           "throttling_rate_limit" = -1
+
+          "throttling_burst_limit" = 10
         }
       }
     }
@@ -920,6 +936,8 @@ run "stage_throttling_rate_limit_route_settings_negative" {
         "route_settings" = {
           "$default" = {
             "throttling_rate_limit" = -1
+
+            "throttling_burst_limit" = 10
           }
         }
       }
@@ -1821,6 +1839,9 @@ run "http_stage_default_route_settings_data_trace_enabled" {
       "bad" = {
         "default_route_settings" = {
           "data_trace_enabled" = true
+
+          "throttling_burst_limit" = 10
+          "throttling_rate_limit"  = 10
         }
       }
     }
@@ -1835,6 +1856,9 @@ run "http_stage_default_route_settings_logging_level" {
       "bad" = {
         "default_route_settings" = {
           "logging_level" = "INFO"
+
+          "throttling_burst_limit" = 10
+          "throttling_rate_limit"  = 10
         }
       }
     }
@@ -1850,6 +1874,9 @@ run "http_stage_route_settings_data_trace_enabled" {
         "route_settings" = {
           "GET /" = {
             "data_trace_enabled" = true
+
+            "throttling_burst_limit" = 10
+            "throttling_rate_limit"  = 10
           }
         }
       }
@@ -1866,6 +1893,9 @@ run "http_stage_route_settings_logging_level" {
         "route_settings" = {
           "GET /" = {
             "logging_level" = "INFO"
+
+            "throttling_burst_limit" = 10
+            "throttling_rate_limit"  = 10
           }
         }
       }

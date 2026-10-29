@@ -307,6 +307,10 @@ variable "integrations" {
     error_message = "Response parameters require non-null objects with a three-digit status_code from 200 through 599."
   }
   validation {
+    condition     = alltrue([for v in coalesce(var.integrations, {}) : v == null ? true : length(distinct([for p in v.response_parameters : p.status_code if p != null])) == length([for p in v.response_parameters : p if p != null])])
+    error_message = "Response parameter status codes must be unique within each integration."
+  }
+  validation {
     condition     = alltrue([for v in coalesce(var.integrations, {}) : v == null ? true : v.integration_subtype == null || v.integration_type == "AWS_PROXY"])
     error_message = "integration_subtype requires integration_type AWS_PROXY."
   }
@@ -407,6 +411,10 @@ variable "routes" {
     condition     = alltrue(flatten([for v in coalesce(var.routes, {}) : v == null ? [] : [for p in v.request_parameter : p != null]]))
     error_message = "request_parameter entries must not be null."
   }
+  validation {
+    condition     = alltrue([for v in coalesce(var.routes, {}) : v == null ? true : length(distinct([for p in v.request_parameter : p.request_parameter_key if p != null])) == length([for p in v.request_parameter : p if p != null])])
+    error_message = "request_parameter_key values must be unique within each route."
+  }
 }
 
 ###########################
@@ -468,6 +476,10 @@ variable "stages" {
   validation {
     condition     = alltrue([for s in flatten([for v in coalesce(var.stages, {}) : v == null ? [] : concat(v.default_route_settings == null ? [] : [v.default_route_settings], values(v.route_settings))]) : s != null])
     error_message = "Route settings entries must not be null."
+  }
+  validation {
+    condition     = alltrue([for s in flatten([for v in coalesce(var.stages, {}) : v == null ? [] : concat(v.default_route_settings == null ? [] : [v.default_route_settings], values(v.route_settings))]) : s == null ? true : s.throttling_burst_limit != null && s.throttling_rate_limit != null])
+    error_message = "Every default or per-route settings block requires explicit throttling_burst_limit and throttling_rate_limit; zero is allowed but omitted values would be sent as zero by the provider."
   }
   validation {
     condition     = alltrue([for s in flatten([for v in coalesce(var.stages, {}) : v == null ? [] : concat(v.default_route_settings == null ? [] : [v.default_route_settings], values(v.route_settings))]) : s == null ? true : s.logging_level == null ? true : contains(["ERROR", "INFO", "OFF"], s.logging_level)])

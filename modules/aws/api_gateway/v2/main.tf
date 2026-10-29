@@ -130,6 +130,10 @@ resource "aws_apigatewayv2_authorizer" "this" {
       error_message = "Both authorizer TTL aliases, including zero, are supported only for HTTP REQUEST authorizers."
     }
     precondition {
+      condition     = each.value.authorizer_payload_format_version == null || each.value.authorizer_type == "REQUEST"
+      error_message = "Authorizer payload format is supported only for Lambda REQUEST authorizers."
+    }
+    precondition {
       condition     = var.protocol_type != "HTTP" || each.value.authorizer_type != "REQUEST" || each.value.authorizer_payload_format_version != null
       error_message = "HTTP REQUEST authorizers require authorizer_payload_format_version."
     }
@@ -226,6 +230,10 @@ resource "aws_apigatewayv2_integration" "this" {
     precondition {
       condition     = var.body == null && var.target == null
       error_message = "Explicit integrations cannot overlap OpenAPI body or quick-create target."
+    }
+    precondition {
+      condition     = each.value.tls_config == null || (var.protocol_type == "HTTP" && each.value.integration_type == "HTTP_PROXY" && each.value.connection_type == "VPC_LINK")
+      error_message = "tls_config requires a private HTTP_PROXY integration with connection_type VPC_LINK."
     }
     precondition {
       condition     = each.value.connection_id == null || each.value.vpc_link_key == null

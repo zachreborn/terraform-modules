@@ -488,9 +488,6 @@ run "http_advanced" {
             }
           }
         }
-        "tls_config" = {
-          "server_name_to_verify" = "example.invalid"
-        }
         "timeout_milliseconds" = 30000
       }
     }
@@ -533,7 +530,7 @@ run "http_advanced" {
     }
   }
   assert {
-    condition     = aws_apigatewayv2_integration.this["advanced"].integration_subtype == "SQS-SendMessage" && aws_apigatewayv2_integration.this["advanced"].template_selection_expression == "$request.header.content-type" && aws_apigatewayv2_integration.this["advanced"].request_parameters["QueueUrl"] == "https://sqs.us-west-2.amazonaws.com/123456789012/fake" && one(aws_apigatewayv2_integration.this["advanced"].response_parameters).status_code == "200" && one(aws_apigatewayv2_integration.this["advanced"].response_parameters).mappings["append:header.x-fixture"] == "ok" && aws_apigatewayv2_integration.this["advanced"].tls_config[0].server_name_to_verify == "example.invalid" && aws_apigatewayv2_integration.this["advanced"].timeout_milliseconds == 30000
+    condition     = aws_apigatewayv2_integration.this["advanced"].integration_subtype == "SQS-SendMessage" && aws_apigatewayv2_integration.this["advanced"].template_selection_expression == "$request.header.content-type" && aws_apigatewayv2_integration.this["advanced"].request_parameters["QueueUrl"] == "https://sqs.us-west-2.amazonaws.com/123456789012/fake" && one(aws_apigatewayv2_integration.this["advanced"].response_parameters).status_code == "200" && one(aws_apigatewayv2_integration.this["advanced"].response_parameters).mappings["append:header.x-fixture"] == "ok" && aws_apigatewayv2_integration.this["advanced"].timeout_milliseconds == 30000
     error_message = "Integration optional arguments are wired."
   }
   assert {
@@ -1182,6 +1179,9 @@ run "http_private_wiring" {
         "integration_method" = "ANY"
         "connection_type"    = "VPC_LINK"
         "vpc_link_key"       = "private"
+        "tls_config" = {
+          "server_name_to_verify" = "example.invalid"
+        }
       }
       "external" = {
         "integration_type" = "HTTP_PROXY"
@@ -1197,6 +1197,10 @@ run "http_private_wiring" {
   assert {
     condition     = aws_apigatewayv2_integration.this["external"].connection_id == "external-vpc"
     error_message = "Literal connection IDs are preserved."
+  }
+  assert {
+    condition     = aws_apigatewayv2_integration.this["internal"].tls_config[0].server_name_to_verify == "example.invalid"
+    error_message = "Private HTTP TLS server name reaches the provider exactly."
   }
 }
 
@@ -1249,11 +1253,17 @@ run "websocket_other_enums" {
         "default_route_settings" = {
           "logging_level"      = "OFF"
           "data_trace_enabled" = false
+
+          "throttling_burst_limit" = 10
+          "throttling_rate_limit"  = 10
         }
         "route_settings" = {
           "$default" = {
             "logging_level"      = "OFF"
             "data_trace_enabled" = false
+
+            "throttling_burst_limit" = 10
+            "throttling_rate_limit"  = 10
           }
         }
       }

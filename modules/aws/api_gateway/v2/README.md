@@ -274,6 +274,13 @@ only for HTTP REQUEST authorizers, as specified by the
 [AWS authorizer API](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-authorizers.html).
 Ownership guards live on integrations, routes and stages so callers can pass
 API-dependent child inputs and externally managed deployment IDs without cycles.
+Every configured default or per-route settings block must supply both throttling
+limits. Omitting them would make the provider send zero rather than inherit
+account/stage limits; intentional zero values remain supported. To inherit
+limits, omit the settings block entirely.
+Integration `tls_config` requires HTTP_PROXY with VPC_LINK. Authorizer payload
+formats and simple responses require Lambda REQUEST authorizers. Response status
+codes and request parameter keys must be unique within their integration/route.
 
 ```sh
 tofu init -backend=false
