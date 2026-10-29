@@ -1,3 +1,7 @@
+terraform {
+  # terraform_data was introduced in Terraform 1.4.0.
+  required_version = ">= 1.4.0"
+}
 # The built-in resource's output is unknown during the initial plan, even
 # though its input is literal. Do not mock this resource: that would hide the
 # for_each regression this fixture exercises.
