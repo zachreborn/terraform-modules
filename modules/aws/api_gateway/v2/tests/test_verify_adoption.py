@@ -52,9 +52,10 @@ class MigrationPropertiesTest(unittest.TestCase):
                     item = mapping_change()
                     item["type"] = resource_type
                     item["change"]["before"] = {attribute: None}
-                    item["change"]["after"] = {
-                        attribute: json.dumps("changed") if attribute == "redrive_policy" else "changed",
-                    }
+                    mutation = "changed"
+                    if attribute == "redrive_policy":
+                        mutation = json.dumps(mutation)
+                    item["change"]["after"] = {attribute: mutation}
                     with self.assertRaisesRegex(AssertionError, attribute):
                         verifier.assert_configurable_properties(item)
 
@@ -63,14 +64,22 @@ class MigrationPropertiesTest(unittest.TestCase):
         item = mapping_change()
         item["change"]["after"]["function_response_types"] = []
         with self.assertRaisesRegex(AssertionError, "function_response_types"):
-            verifier.assert_transition({"resource_changes": [item]}, [item["address"]], {})
+            verifier.assert_transition(
+                {"resource_changes": [item]},
+                [item["address"]],
+                {},
+            )
 
     def test_batching_window_reset(self):
         """Resetting the batching window is not an allowed repair."""
         item = mapping_change()
         item["change"]["after"]["maximum_batching_window_in_seconds"] = 0
         with self.assertRaisesRegex(AssertionError, "maximum_batching_window"):
-            verifier.assert_transition({"resource_changes": [item]}, [item["address"]], {})
+            verifier.assert_transition(
+                {"resource_changes": [item]},
+                [item["address"]],
+                {},
+            )
 
     def test_unknown_configured_value(self):
         """An unknown protected result must not silently pass."""
@@ -117,7 +126,10 @@ class TerminationTest(unittest.TestCase):
 
     def test_sigterm_reaps_command_group(self):
         """Cancel the wrapper and verify both isolated descendants stop."""
-        with tempfile.TemporaryDirectory(prefix="verifier-sigterm-") as temporary, ExitStack() as processes:
+        with ExitStack() as processes:
+            temporary = processes.enter_context(
+                tempfile.TemporaryDirectory(prefix="verifier-sigterm-"),
+            )
             root = Path(temporary)
             tool = root / "fake-engine"
             pids_file = root / "pids.json"
@@ -150,7 +162,10 @@ class TerminationTest(unittest.TestCase):
                 deadline = time.monotonic() + 10
                 while not pids_file.exists() and time.monotonic() < deadline:
                     time.sleep(0.05)
-                self.assertTrue(pids_file.exists(), "Fake engine must start before cancellation.")
+                self.assertTrue(
+                    pids_file.exists(),
+                    "Fake engine must start before cancellation.",
+                )
                 pids = json.loads(pids_file.read_text())
                 process.terminate()
                 process.communicate(timeout=10)
@@ -162,8 +177,10 @@ class TerminationTest(unittest.TestCase):
                         text=True,
                         check=False,
                     )
+                    stopped = not result.stdout.strip()
+                    zombie = result.stdout.strip().startswith("Z")
                     self.assertTrue(
-                        not result.stdout.strip() or result.stdout.strip().startswith("Z"),
+                        stopped or zombie,
                         f"Command/provider process {pid} survived cancellation.",
                     )
             finally:

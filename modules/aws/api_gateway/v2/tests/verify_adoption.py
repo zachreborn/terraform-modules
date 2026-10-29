@@ -474,7 +474,8 @@ def assert_configurable_properties(item):
         after = copy.deepcopy(change["after"].get(attribute))
         unknown = copy.deepcopy(change.get("after_unknown", {}).get(attribute, False))
         # AWS-managed encryption keys are computed inside a configurable block.
-        if resource_type == "aws_dynamodb_table" and attribute == "server_side_encryption":
+        managed_encryption = resource_type == "aws_dynamodb_table"
+        if managed_encryption and attribute == "server_side_encryption":
             for blocks in (before, after, unknown):
                 if isinstance(blocks, list):
                     for block in blocks:
