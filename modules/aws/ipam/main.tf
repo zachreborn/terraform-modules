@@ -222,7 +222,7 @@ module "ram" {
   for_each = local.ram_shares
 
   name                      = each.value.name
-  resource_arn              = local.all_pools[each.value.pool_key].arn
+  resource_arns             = { (each.value.pool_key) = local.all_pools[each.value.pool_key].arn }
   principal                 = each.value.principal
   allow_external_principals = false
   tags                      = var.tags

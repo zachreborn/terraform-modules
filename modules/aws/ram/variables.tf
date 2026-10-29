@@ -25,9 +25,9 @@ variable "principal" {
   default     = null
 }
 
-variable "resource_arn" {
-  description = "The ARN of the resource to associate with the resource share."
-  type        = string
+variable "resource_arns" {
+  description = "Map of resource ARNs to associate with the resource share, keyed by stable logical names known at plan time. Values may be unknown until apply."
+  type        = map(string)
 }
 
 ###########################
