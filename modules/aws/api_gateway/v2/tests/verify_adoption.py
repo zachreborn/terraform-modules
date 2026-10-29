@@ -182,6 +182,20 @@ def stop_process(process):
     process.communicate()
 
 
+@contextmanager
+def termination_cleanup():
+    """Unwind active subprocess cleanup on SIGTERM and restore the caller's handler."""
+
+    def terminate(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    previous = signal.signal(signal.SIGTERM, terminate)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
 def run(tool, root, arguments, timeout):
     """Execute a bounded offline command and reap its entire process group."""
     command = [tool, f"-chdir={root}", *arguments]
@@ -446,6 +460,45 @@ def assert_transition(document, expected, moves):
             item.get("previous_address") == moves.get(item["address"]),
             f"Missing or incorrect moved address at {address}.",
         )
+        assert_configurable_properties(item)
+
+
+def assert_configurable_properties(item):
+    """Permit tag/policy repairs, never changes to protected fixture configuration."""
+    change = item["change"]
+    resource_type = item["type"]
+    for attribute in CONFIGURABLE[resource_type]:
+        if attribute in {"tags", "policy"}:
+            continue
+        before = copy.deepcopy(change["before"].get(attribute))
+        after = copy.deepcopy(change["after"].get(attribute))
+        unknown = copy.deepcopy(change.get("after_unknown", {}).get(attribute, False))
+        # AWS-managed encryption keys are computed inside a configurable block.
+        if resource_type == "aws_dynamodb_table" and attribute == "server_side_encryption":
+            for blocks in (before, after, unknown):
+                if isinstance(blocks, list):
+                    for block in blocks:
+                        block.pop("kms_key_arn", None)
+        check(
+            not contains_unknown(unknown),
+            f"Protected {item['address']}.{attribute} became unknown during migration.",
+        )
+        if attribute == "redrive_policy":
+            before = json.loads(before) if before else before
+            after = json.loads(after) if after else after
+        check(
+            before == after,
+            f"Protected {item['address']}.{attribute} changed during migration.",
+        )
+
+
+def contains_unknown(value):
+    """Inspect nested plan unknown masks without treating false masks as unknown."""
+    if isinstance(value, dict):
+        return any(contains_unknown(item) for item in value.values())
+    if isinstance(value, list):
+        return any(contains_unknown(item) for item in value)
+    return value is True
 
 
 def declarative_moves(moves):
@@ -768,4 +821,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    with termination_cleanup():
+        main()

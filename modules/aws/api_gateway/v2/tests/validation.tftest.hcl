@@ -1038,7 +1038,7 @@ run "body_integrations" {
       }
     }
   }
-  expect_failures = [aws_apigatewayv2_api.this]
+  expect_failures = [aws_apigatewayv2_integration.this["bad"]]
 }
 
 run "body_routes" {
@@ -1051,7 +1051,7 @@ run "body_routes" {
       }
     }
   }
-  expect_failures = [aws_apigatewayv2_api.this]
+  expect_failures = [aws_apigatewayv2_route.this["bad"]]
 }
 
 run "body_cors" {
@@ -1084,7 +1084,7 @@ run "quick_integrations" {
       }
     }
   }
-  expect_failures = [aws_apigatewayv2_api.this]
+  expect_failures = [aws_apigatewayv2_integration.this["bad"]]
 }
 
 run "quick_routes" {
@@ -1097,7 +1097,7 @@ run "quick_routes" {
       }
     }
   }
-  expect_failures = [aws_apigatewayv2_api.this]
+  expect_failures = [aws_apigatewayv2_route.this["bad"]]
 }
 
 run "quick_stages" {
@@ -1108,7 +1108,7 @@ run "quick_stages" {
       "bad" = {}
     }
   }
-  expect_failures = [aws_apigatewayv2_api.this]
+  expect_failures = [aws_apigatewayv2_stage.this["bad"]]
 }
 
 run "websocket_target" {

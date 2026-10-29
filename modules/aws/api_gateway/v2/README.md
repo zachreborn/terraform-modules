@@ -269,6 +269,11 @@ mock tests verify configuration/wiring, not any production state or delivery
 guarantee. Cross-module adoption/migration fixtures are maintained separately.
 
 ## Offline validation
+Authorizer cache TTL inputs (both aliases, including explicit zero) are supported
+only for HTTP REQUEST authorizers, as specified by the
+[AWS authorizer API](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-authorizers.html).
+Ownership guards live on integrations, routes and stages so callers can pass
+API-dependent child inputs and externally managed deployment IDs without cycles.
 
 ```sh
 tofu init -backend=false
@@ -290,6 +295,7 @@ From this module directory, run:
 
 ```sh
 python3 tests/verify_adoption.py
+python3 -B -m unittest discover -s tests -p 'test_verify_adoption.py'
 ```
 
 The native `tests/adoption.tftest.hcl` fixture composes the real table, queue,
@@ -304,14 +310,18 @@ callers. A separate transition exercises both actual queue-module key moves
 and checks legacy key, alias and queue properties against independently frozen
 defaults. Creates, destroys, replacements and missing moves fail verification;
 policy/tag repairs may remain in-place updates.
+The verifier also rejects protected configurable-field changes and unknown
+protected values, including partial-response removal and batching-window resets.
+Provider-computed identifiers are not treated as caller configuration.
 
 Real-provider planning is refresh-disabled and uses only dummy credentials.
 The DynamoDB provider nevertheless performs a plan-time `DescribeTable` read;
 a local-only stub accepts that exact fabricated table read and rejects every
 other operation. Credential files and alternate workspace/data-directory
 settings are excluded. Commands have bounded timeouts and clean up provider
-children on timeout or interruption. No real cloud resource, state or backend
-is accessed. This is synthetic address-transition evidence, not certification
+children on timeout or interruption. SIGTERM unwinds the same process-group
+cleanup used for timeouts. No real cloud resource, state or backend is accessed.
+This is synthetic address-transition evidence, not certification
 of any consumer's production plan.
 
 Generate documentation without local lockfile selections so it matches the

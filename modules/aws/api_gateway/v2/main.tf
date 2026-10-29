@@ -82,12 +82,8 @@ resource "aws_apigatewayv2_api" "this" {
       error_message = "OpenAPI body is supported only on HTTP APIs."
     }
     precondition {
-      condition     = var.body == null || (length(local.integrations) == 0 && length(local.routes) == 0 && !local.cors_configured && var.api_version == null)
-      error_message = "OpenAPI body cannot overlap explicit integrations/routes, meaningful CORS or api_version."
-    }
-    precondition {
-      condition     = var.target == null || (length(local.integrations) == 0 && length(local.routes) == 0 && length(local.stages) == 0)
-      error_message = "Quick-create target cannot overlap explicit integrations, routes or stages."
+      condition     = var.body == null || (!local.cors_configured && var.api_version == null)
+      error_message = "OpenAPI body cannot overlap meaningful CORS or api_version."
     }
     precondition {
       condition     = var.protocol_type == "HTTP" || (var.target == null && var.route_key == null && var.credentials_arn == null && var.fail_on_warnings != true)
@@ -129,6 +125,10 @@ resource "aws_apigatewayv2_authorizer" "this" {
     }
   }
   lifecycle {
+    precondition {
+      condition     = (each.value.authorizer_result_ttl == null && each.value.authorizer_result_ttl_in_seconds == null) || (var.protocol_type == "HTTP" && each.value.authorizer_type == "REQUEST")
+      error_message = "Both authorizer TTL aliases, including zero, are supported only for HTTP REQUEST authorizers."
+    }
     precondition {
       condition     = var.protocol_type != "HTTP" || each.value.authorizer_type != "REQUEST" || each.value.authorizer_payload_format_version != null
       error_message = "HTTP REQUEST authorizers require authorizer_payload_format_version."
@@ -223,6 +223,10 @@ resource "aws_apigatewayv2_integration" "this" {
     }
   }
   lifecycle {
+    precondition {
+      condition     = var.body == null && var.target == null
+      error_message = "Explicit integrations cannot overlap OpenAPI body or quick-create target."
+    }
     precondition {
       condition     = each.value.connection_id == null || each.value.vpc_link_key == null
       error_message = "Specify connection_id or vpc_link_key, not both."
@@ -331,6 +335,10 @@ resource "aws_apigatewayv2_route" "this" {
   }
   lifecycle {
     precondition {
+      condition     = var.body == null && var.target == null
+      error_message = "Explicit routes cannot overlap OpenAPI body or quick-create target."
+    }
+    precondition {
       condition     = each.value.target == null || each.value.integration_key == null
       error_message = "Specify target or integration_key, not both."
     }
@@ -431,6 +439,10 @@ resource "aws_apigatewayv2_stage" "this" {
     }
   }
   lifecycle {
+    precondition {
+      condition     = var.target == null
+      error_message = "Explicit stages cannot overlap quick-create target."
+    }
     precondition {
       condition     = var.protocol_type != "HTTP" || each.value.client_certificate_id == null
       error_message = "Stage client certificates are WebSocket-only."
