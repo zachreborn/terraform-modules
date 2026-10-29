@@ -455,6 +455,9 @@ run "rejects_amazon_managed_kafka_event_source_config_group_long" {
 run "rejects_amazon_managed_kafka_event_source_config_format" {
   command = plan
   variables {
+    topics                                   = ["orders"]
+    provisioned_poller_config                = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = { schema_registry_config = { event_record_format = "XML" } }
   }
   expect_failures = [var.amazon_managed_kafka_event_source_config]
@@ -463,6 +466,9 @@ run "rejects_amazon_managed_kafka_event_source_config_format" {
 run "rejects_amazon_managed_kafka_event_source_config_access_enum" {
   command = plan
   variables {
+    topics                                   = ["orders"]
+    provisioned_poller_config                = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = { schema_registry_config = { access_config = [{ type = "VPC_SUBNET" }] } }
   }
   expect_failures = [var.amazon_managed_kafka_event_source_config]
@@ -471,6 +477,9 @@ run "rejects_amazon_managed_kafka_event_source_config_access_enum" {
 run "rejects_amazon_managed_kafka_event_source_config_attribute_enum" {
   command = plan
   variables {
+    topics                                   = ["orders"]
+    provisioned_poller_config                = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = { schema_registry_config = { schema_validation_config = [{ attribute = "HEADER" }] } }
   }
   expect_failures = [var.amazon_managed_kafka_event_source_config]
@@ -495,6 +504,10 @@ run "rejects_self_managed_kafka_event_source_config_group_long" {
 run "rejects_self_managed_kafka_event_source_config_format" {
   command = plan
   variables {
+    topics                                 = ["orders"]
+    provisioned_poller_config              = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                       = null
+    self_managed_event_source              = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     self_managed_kafka_event_source_config = { schema_registry_config = { event_record_format = "XML" } }
   }
   expect_failures = [var.self_managed_kafka_event_source_config]
@@ -503,6 +516,10 @@ run "rejects_self_managed_kafka_event_source_config_format" {
 run "rejects_self_managed_kafka_event_source_config_access_enum" {
   command = plan
   variables {
+    topics                                 = ["orders"]
+    provisioned_poller_config              = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                       = null
+    self_managed_event_source              = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     self_managed_kafka_event_source_config = { schema_registry_config = { access_config = [{ type = "VPC_SUBNET" }] } }
   }
   expect_failures = [var.self_managed_kafka_event_source_config]
@@ -511,6 +528,10 @@ run "rejects_self_managed_kafka_event_source_config_access_enum" {
 run "rejects_self_managed_kafka_event_source_config_attribute_enum" {
   command = plan
   variables {
+    topics                                 = ["orders"]
+    provisioned_poller_config              = { minimum_pollers = 1, maximum_pollers = 1 }
+    event_source_arn                       = null
+    self_managed_event_source              = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     self_managed_kafka_event_source_config = { schema_registry_config = { schema_validation_config = [{ attribute = "HEADER" }] } }
   }
   expect_failures = [var.self_managed_kafka_event_source_config]
@@ -527,6 +548,7 @@ run "rejects_no_source" {
 run "rejects_both_sources" {
   command = plan
   variables {
+    topics                    = ["orders"]
     self_managed_event_source = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
   }
   expect_failures = [aws_lambda_event_source_mapping.this]
@@ -571,6 +593,7 @@ run "rejects_fifo_positive_window" {
 run "rejects_mq_partial_response" {
   command = plan
   variables {
+    queues                  = ["orders"]
     event_source_arn        = "arn:aws:mq:us-east-1:123456789012:broker:events:b-00000000-0000-0000-0000-000000000000"
     function_response_types = ["ReportBatchItemFailures"]
   }
@@ -605,6 +628,7 @@ run "rejects_sqs_timestamp" {
 run "rejects_mq_position" {
   command = plan
   variables {
+    queues            = ["orders"]
     event_source_arn  = "arn:aws:mq:us-east-1:123456789012:broker:events:b-00000000-0000-0000-0000-000000000000"
     starting_position = "LATEST"
   }
@@ -667,6 +691,7 @@ run "rejects_managed_kafka_wrong_source" {
 run "rejects_managed_kafka_with_self_source" {
   command = plan
   variables {
+    topics                                   = ["orders"]
     event_source_arn                         = null
     self_managed_event_source                = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     amazon_managed_kafka_event_source_config = {}
@@ -677,6 +702,7 @@ run "rejects_managed_kafka_with_self_source" {
 run "rejects_both_kafka_configs" {
   command = plan
   variables {
+    topics                                   = ["orders"]
     event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = {}
     self_managed_kafka_event_source_config   = {}
@@ -720,6 +746,7 @@ run "rejects_queues_wrong_source" {
 run "rejects_scaling_wrong_source" {
   command = plan
   variables {
+    topics           = ["orders"]
     event_source_arn = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     scaling_config   = {}
   }
@@ -737,6 +764,7 @@ run "rejects_document_config_wrong_source" {
 run "rejects_pollers_wrong_source" {
   command = plan
   variables {
+    queues                    = ["orders"]
     event_source_arn          = "arn:aws:mq:us-east-1:123456789012:broker:events:b-00000000-0000-0000-0000-000000000000"
     provisioned_poller_config = {}
   }

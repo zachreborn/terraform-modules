@@ -120,7 +120,13 @@ module "stream_mapping" {
   current AWS API, notwithstanding older registry wording.
 - Kafka supports partial responses, failure destinations, retries and record
   age under current AWS documentation. Do not infer feature availability solely
-  from stale registry prose. Provisioned pollers support Kafka and SQS;
+  from stale registry prose. Partial responses, explicitly configured retry or
+  record-age controls, enabled batch splitting, and schema registry blocks
+  require a non-null `provisioned_poller_config` for both managed and
+  self-managed Kafka. Omit retry/record-age inputs for on-demand defaults.
+  Failure destinations alone remain supported in Kafka on-demand mode, and
+  explicitly disabling batch splitting does not enable a provisioned-only feature.
+  Provisioned pollers support Kafka and SQS;
   SQS pollers have a minimum of two and cannot combine with maximum-concurrency
   scaling. Kafka minimum pollers may be one. No arbitrary concurrency ceiling
   is imposed.
@@ -129,6 +135,8 @@ module "stream_mapping" {
   Kinesis and DynamoDB configurations must not select those Kafka-only metrics.
   `provisioned_poller_config.poller_group_name` is also Kafka-only; SQS may
   configure minimum/maximum poller counts but must omit the group name.
+- Kafka requires exactly one `topics` entry; Amazon MQ requires exactly one
+  `queues` entry. Those collections must be empty for other source types.
 - Null optional blocks are omitted. Empty `scaling_config={}` remains supported
   to clear concurrency. Up to ten filters are accepted by the provider; six
   through ten require an account quota increase. No quota is changed here.
@@ -201,6 +209,8 @@ production-state migration verification.
 - [SQS mapping parameters](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-parameters.html)
 - [AWS event-source metric configuration](https://docs.aws.amazon.com/lambda/latest/api/API_EventSourceMappingMetricsConfig.html)
 - [AWS provisioned poller configuration](https://docs.aws.amazon.com/lambda/latest/api/API_ProvisionedPollerConfig.html)
+- [Kafka error-handling mode requirements](https://docs.aws.amazon.com/lambda/latest/dg/kafka-retry-configurations.html)
+- [Kafka schema-registry mode requirements](https://docs.aws.amazon.com/lambda/latest/dg/services-consume-kafka-events.html)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -230,34 +240,34 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_amazon_managed_kafka_event_source_config"></a> [amazon\_managed\_kafka\_event\_source\_config](#input\_amazon\_managed\_kafka\_event\_source\_config) | MSK consumer group and optional schema registry settings. | <pre>object({<br/>    consumer_group_id = optional(string)<br/>    schema_registry_config = optional(object({<br/>      access_config            = optional(set(object({ type = optional(string), uri = optional(string) })), [])<br/>      event_record_format      = optional(string)<br/>      schema_registry_uri      = optional(string)<br/>      schema_validation_config = optional(set(object({ attribute = optional(string) })), [])<br/>    }))<br/>  })</pre> | `null` | no |
+| <a name="input_amazon_managed_kafka_event_source_config"></a> [amazon\_managed\_kafka\_event\_source\_config](#input\_amazon\_managed\_kafka\_event\_source\_config) | MSK consumer group and optional schema registry settings. Configured schema registries require provisioned mode. | <pre>object({<br/>    consumer_group_id = optional(string)<br/>    schema_registry_config = optional(object({<br/>      access_config            = optional(set(object({ type = optional(string), uri = optional(string) })), [])<br/>      event_record_format      = optional(string)<br/>      schema_registry_uri      = optional(string)<br/>      schema_validation_config = optional(set(object({ attribute = optional(string) })), [])<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_batch_size"></a> [batch\_size](#input\_batch\_size) | Maximum records per invocation. Legacy numeric string input; effective default remains 10 for every source. | `string` | `"10"` | no |
-| <a name="input_bisect_batch_on_function_error"></a> [bisect\_batch\_on\_function\_error](#input\_bisect\_batch\_on\_function\_error) | Split failed batches for stream/Kafka sources. | `bool` | `null` | no |
-| <a name="input_destination_config"></a> [destination\_config](#input\_destination\_config) | Destination for discarded stream/Kafka records. Caller provisions destination and permissions. | <pre>object({<br/>    on_failure = optional(object({ destination_arn = string }))<br/>  })</pre> | `null` | no |
+| <a name="input_bisect_batch_on_function_error"></a> [bisect\_batch\_on\_function\_error](#input\_bisect\_batch\_on\_function\_error) | Split failed batches for stream/Kafka sources. Enabling this for Kafka requires provisioned mode. | `bool` | `null` | no |
+| <a name="input_destination_config"></a> [destination\_config](#input\_destination\_config) | Destination for discarded stream/Kafka records, including Kafka on-demand mode. Caller provisions destination and permissions. | <pre>object({<br/>    on_failure = optional(object({ destination_arn = string }))<br/>  })</pre> | `null` | no |
 | <a name="input_document_db_event_source_config"></a> [document\_db\_event\_source\_config](#input\_document\_db\_event\_source\_config) | DocumentDB database, optional collection and full-document mode. | <pre>object({<br/>    database_name   = string<br/>    collection_name = optional(string)<br/>    full_document   = optional(string, "Default")<br/>  })</pre> | `null` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Whether polling is enabled. Legacy boolean string input; accepts convertible booleans. | `string` | `"true"` | no |
 | <a name="input_event_source_arn"></a> [event\_source\_arn](#input\_event\_source\_arn) | Kinesis, DynamoDB stream, SQS, MQ, MSK or DocumentDB ARN; omit for self-managed Kafka. | `string` | `null` | no |
 | <a name="input_filter_criteria"></a> [filter\_criteria](#input\_filter\_criteria) | Up to ten JSON event filters (six through ten require an increased service quota). | <pre>object({<br/>    filter = optional(set(object({ pattern = optional(string) })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name or ARN of the subscribing Lambda function. | `string` | n/a | yes |
-| <a name="input_function_response_types"></a> [function\_response\_types](#input\_function\_response\_types) | Empty or ReportBatchItemFailures; the function must implement partial failure responses. | `set(string)` | `[]` | no |
+| <a name="input_function_response_types"></a> [function\_response\_types](#input\_function\_response\_types) | Empty or ReportBatchItemFailures; the function must implement partial failure responses. Kafka requires provisioned mode. | `set(string)` | `[]` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | Existing customer managed key ARN for encrypting filter criteria. No key is created. | `string` | `null` | no |
 | <a name="input_maximum_batching_window_in_seconds"></a> [maximum\_batching\_window\_in\_seconds](#input\_maximum\_batching\_window\_in\_seconds) | Integer batching window 0..300; null preserves source defaults (including 500ms). | `number` | `null` | no |
-| <a name="input_maximum_record_age_in_seconds"></a> [maximum\_record\_age\_in\_seconds](#input\_maximum\_record\_age\_in\_seconds) | Discard old stream/Kafka records: -1 for infinite, or integer 60..604800 seconds. | `number` | `null` | no |
-| <a name="input_maximum_retry_attempts"></a> [maximum\_retry\_attempts](#input\_maximum\_retry\_attempts) | Stream/Kafka retry limit: integer -1 (infinite) through 10000. | `number` | `null` | no |
+| <a name="input_maximum_record_age_in_seconds"></a> [maximum\_record\_age\_in\_seconds](#input\_maximum\_record\_age\_in\_seconds) | Discard old stream/Kafka records: -1 for infinite, or integer 60..604800 seconds. Explicit Kafka configuration requires provisioned mode. | `number` | `null` | no |
+| <a name="input_maximum_retry_attempts"></a> [maximum\_retry\_attempts](#input\_maximum\_retry\_attempts) | Stream/Kafka retry limit: integer -1 (infinite) through 10000. Explicit Kafka configuration requires provisioned mode. | `number` | `null` | no |
 | <a name="input_metrics_config"></a> [metrics\_config](#input\_metrics\_config) | Enhanced event source metrics: EventCount, ErrorCount and/or KafkaMetrics. ErrorCount and KafkaMetrics require Amazon MSK or self-managed Kafka. | `object({ metrics = set(string) })` | `null` | no |
 | <a name="input_parallelization_factor"></a> [parallelization\_factor](#input\_parallelization\_factor) | Concurrent batches per Kinesis/DynamoDB shard, integer 1..10. | `number` | `null` | no |
 | <a name="input_provisioned_poller_config"></a> [provisioned\_poller\_config](#input\_provisioned\_poller\_config) | Dedicated Kafka/SQS pollers: minimum 1..200 (SQS 2..200), maximum 1..2000. Optional poller\_group\_name is Kafka-only. | <pre>object({<br/>    minimum_pollers   = optional(number)<br/>    maximum_pollers   = optional(number)<br/>    poller_group_name = optional(string)<br/>  })</pre> | `null` | no |
-| <a name="input_queues"></a> [queues](#input\_queues) | One MQ destination queue name, 1..1000 characters; empty for other sources. | `list(string)` | `[]` | no |
+| <a name="input_queues"></a> [queues](#input\_queues) | Exactly one destination queue name of 1..1000 characters is required for MQ; empty for other sources. | `list(string)` | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | Resource region override; null inherits the provider region. | `string` | `null` | no |
 | <a name="input_scaling_config"></a> [scaling\_config](#input\_scaling\_config) | SQS maximum concurrency, integer >=2. An empty object clears the setting. | `object({ maximum_concurrency = optional(number) })` | `null` | no |
 | <a name="input_self_managed_event_source"></a> [self\_managed\_event\_source](#input\_self\_managed\_event\_source) | Self-managed Kafka bootstrap endpoints (KAFKA\_BOOTSTRAP\_SERVERS => comma-separated brokers). Conflicts with an ARN source. | `object({ endpoints = map(string) })` | `null` | no |
-| <a name="input_self_managed_kafka_event_source_config"></a> [self\_managed\_kafka\_event\_source\_config](#input\_self\_managed\_kafka\_event\_source\_config) | Self-managed Kafka consumer group and optional schema registry settings. | <pre>object({<br/>    consumer_group_id = optional(string)<br/>    schema_registry_config = optional(object({<br/>      access_config            = optional(set(object({ type = optional(string), uri = optional(string) })), [])<br/>      event_record_format      = optional(string)<br/>      schema_registry_uri      = optional(string)<br/>      schema_validation_config = optional(set(object({ attribute = optional(string) })), [])<br/>    }))<br/>  })</pre> | `null` | no |
+| <a name="input_self_managed_kafka_event_source_config"></a> [self\_managed\_kafka\_event\_source\_config](#input\_self\_managed\_kafka\_event\_source\_config) | Self-managed Kafka consumer group and optional schema registry settings. Configured schema registries require provisioned mode. | <pre>object({<br/>    consumer_group_id = optional(string)<br/>    schema_registry_config = optional(object({<br/>      access_config            = optional(set(object({ type = optional(string), uri = optional(string) })), [])<br/>      event_record_format      = optional(string)<br/>      schema_registry_uri      = optional(string)<br/>      schema_validation_config = optional(set(object({ attribute = optional(string) })), [])<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_source_access_configuration"></a> [source\_access\_configuration](#input\_source\_access\_configuration) | Source authentication and network access configuration; existing secrets/network resources only. | `set(object({ type = string, uri = string }))` | `[]` | no |
 | <a name="input_starting_position"></a> [starting\_position](#input\_starting\_position) | LATEST, TRIM\_HORIZON or AT\_TIMESTAMP; empty string omits the argument. Not supported by SQS or MQ. | `string` | `""` | no |
 | <a name="input_starting_position_timestamp"></a> [starting\_position\_timestamp](#input\_starting\_position\_timestamp) | RFC3339 starting timestamp for AT\_TIMESTAMP; empty string omits the argument. | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Mapping tags merged over Name=function\_name; caller Name wins. | `map(string)` | `{}` | no |
 | <a name="input_timeouts"></a> [timeouts](#input\_timeouts) | Optional create, update and delete operation timeout overrides. | <pre>object({<br/>    create = optional(string)<br/>    update = optional(string)<br/>    delete = optional(string)<br/>  })</pre> | `null` | no |
-| <a name="input_topics"></a> [topics](#input\_topics) | One Kafka topic, 1..249 characters; empty for other sources. | `set(string)` | `[]` | no |
+| <a name="input_topics"></a> [topics](#input\_topics) | Exactly one topic of 1..249 characters is required for Kafka; empty for other sources. | `set(string)` | `[]` | no |
 | <a name="input_tumbling_window_in_seconds"></a> [tumbling\_window\_in\_seconds](#input\_tumbling\_window\_in\_seconds) | Kinesis/DynamoDB aggregation window, integer 0..900. | `number` | `null` | no |
 | <a name="input_use_resource_timeout_for_propagation"></a> [use\_resource\_timeout\_for\_propagation](#input\_use\_resource\_timeout\_for\_propagation) | Use operation timeouts for mapping propagation instead of the provider propagation timeout. | `bool` | `false` | no |
 

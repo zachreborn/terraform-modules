@@ -313,6 +313,7 @@ run "managed_kafka_full" {
 run "managed_kafka_without_registry" {
   command = plan
   variables {
+    topics                                   = ["orders"]
     event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = { consumer_group_id = "x" }
   }
@@ -325,6 +326,8 @@ run "managed_kafka_without_registry" {
 run "managed_kafka_empty_registry" {
   command = plan
   variables {
+    topics                                   = ["orders"]
+    provisioned_poller_config                = { minimum_pollers = 1, maximum_pollers = 1 }
     event_source_arn                         = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     amazon_managed_kafka_event_source_config = { schema_registry_config = {} }
   }
@@ -405,6 +408,7 @@ run "self_kafka_full" {
 run "self_kafka_without_registry" {
   command = plan
   variables {
+    topics                                 = ["orders"]
     event_source_arn                       = null
     self_managed_kafka_event_source_config = { consumer_group_id = "x" }
     self_managed_event_source              = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
@@ -418,6 +422,8 @@ run "self_kafka_without_registry" {
 run "self_kafka_empty_registry" {
   command = plan
   variables {
+    topics                                 = ["orders"]
+    provisioned_poller_config              = { minimum_pollers = 1, maximum_pollers = 1 }
     event_source_arn                       = null
     self_managed_kafka_event_source_config = { schema_registry_config = {} }
     self_managed_event_source              = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
@@ -665,6 +671,7 @@ run "computed_output_contract" {
 run "mq_default_window" {
   command = plan
   variables {
+    queues           = ["orders"]
     event_source_arn = "arn:aws:mq:us-east-1:123456789012:broker:events:b-00000000-0000-0000-0000-000000000000"
   }
   assert {
@@ -687,6 +694,7 @@ run "documentdb_default_window" {
 run "kafka_default_window" {
   command = plan
   variables {
+    topics           = ["orders"]
     event_source_arn = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
   }
   assert {
@@ -815,6 +823,7 @@ run "self_registry_source_boundaries" {
 run "all_source_access_enums" {
   command = plan
   variables {
+    topics                      = ["orders"]
     event_source_arn            = null
     self_managed_event_source   = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     source_access_configuration = [{ type = "BASIC_AUTH", uri = "fake" }, { type = "VPC_SUBNET", uri = "fake" }, { type = "VPC_SECURITY_GROUP", uri = "fake" }, { type = "SASL_SCRAM_512_AUTH", uri = "fake" }, { type = "SASL_SCRAM_256_AUTH", uri = "fake" }, { type = "VIRTUAL_HOST", uri = "fake" }, { type = "CLIENT_CERTIFICATE_TLS_AUTH", uri = "fake" }, { type = "SERVER_ROOT_CA_CERTIFICATE", uri = "fake" }]
@@ -828,6 +837,7 @@ run "all_source_access_enums" {
 run "source_access_count_boundary" {
   command = plan
   variables {
+    topics                      = ["orders"]
     event_source_arn            = null
     self_managed_event_source   = { endpoints = { KAFKA_BOOTSTRAP_SERVERS = "broker.example.invalid:9092" } }
     source_access_configuration = [{ type = "VPC_SUBNET", uri = "subnet:subnet-00000000" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000001" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000002" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000003" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000004" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000005" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000006" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000007" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000008" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000009" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000010" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000011" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000012" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000013" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000014" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000015" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000016" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000017" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000018" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000019" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000020" }, { type = "VPC_SUBNET", uri = "subnet:subnet-00000021" }]
@@ -877,6 +887,7 @@ run "documentdb_timestamp" {
 run "poller_empty_object" {
   command = plan
   variables {
+    topics                    = ["orders"]
     event_source_arn          = "arn:aws:kafka:us-east-1:123456789012:cluster/events/00000000-0000-0000-0000-000000000000-1"
     provisioned_poller_config = {}
   }

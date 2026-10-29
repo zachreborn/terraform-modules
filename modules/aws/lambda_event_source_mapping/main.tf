@@ -23,6 +23,15 @@ locals {
   mq          = local.service == "mq"
   position    = var.starting_position == "" ? null : var.starting_position
   timestamp   = var.starting_position_timestamp == "" ? null : var.starting_position_timestamp
+  # Failure destinations alone remain available in Kafka on-demand mode.
+  kafka_requires_provisioned = (
+    length(var.function_response_types) > 0 ||
+    var.maximum_retry_attempts != null ||
+    var.maximum_record_age_in_seconds != null ||
+    var.bisect_batch_on_function_error == true ||
+    try(var.amazon_managed_kafka_event_source_config.schema_registry_config, null) != null ||
+    try(var.self_managed_kafka_event_source_config.schema_registry_config, null) != null
+  )
 }
 
 ###########################
@@ -205,6 +214,10 @@ resource "aws_lambda_event_source_mapping" "this" {
       error_message = "Partial batch responses require SQS, Kinesis, DynamoDB or Kafka."
     }
     precondition {
+      condition     = !local.kafka || !local.kafka_requires_provisioned || var.provisioned_poller_config != null
+      error_message = "Kafka partial responses, configured retry/record-age controls, enabled batch splitting and schema registries require provisioned_poller_config. Failure destinations alone remain supported in on-demand mode."
+    }
+    precondition {
       condition     = var.metrics_config == null ? true : (local.kafka || length(setintersection(var.metrics_config.metrics, toset(["ErrorCount", "KafkaMetrics"]))) == 0)
       error_message = "ErrorCount and KafkaMetrics require an Amazon MSK or self-managed Kafka source; use EventCount for other supported sources."
     }
@@ -237,12 +250,12 @@ resource "aws_lambda_event_source_mapping" "this" {
       error_message = "Self-managed Kafka settings require self_managed_event_source and conflict with ARN/managed settings."
     }
     precondition {
-      condition     = length(var.topics) == 0 || local.kafka
-      error_message = "topics is supported only by Kafka sources."
+      condition     = local.kafka ? length(var.topics) == 1 : length(var.topics) == 0
+      error_message = "Kafka sources require exactly one topic; omit topics for all other sources."
     }
     precondition {
-      condition     = length(var.queues) == 0 || local.mq
-      error_message = "queues is supported only by MQ sources."
+      condition     = local.mq ? length(var.queues) == 1 : length(var.queues) == 0
+      error_message = "Amazon MQ sources require exactly one destination queue; omit queues for all other sources."
     }
     precondition {
       condition     = var.scaling_config == null || local.sqs

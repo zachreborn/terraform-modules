@@ -61,7 +61,7 @@ variable "starting_position_timestamp" {
 # Processing controls
 ###########################
 variable "function_response_types" {
-  description = "Empty or ReportBatchItemFailures; the function must implement partial failure responses."
+  description = "Empty or ReportBatchItemFailures; the function must implement partial failure responses. Kafka requires provisioned mode."
   type        = set(string)
   default     = []
   nullable    = false
@@ -82,7 +82,7 @@ variable "maximum_batching_window_in_seconds" {
 }
 
 variable "maximum_record_age_in_seconds" {
-  description = "Discard old stream/Kafka records: -1 for infinite, or integer 60..604800 seconds."
+  description = "Discard old stream/Kafka records: -1 for infinite, or integer 60..604800 seconds. Explicit Kafka configuration requires provisioned mode."
   type        = number
   default     = null
   validation {
@@ -92,7 +92,7 @@ variable "maximum_record_age_in_seconds" {
 }
 
 variable "maximum_retry_attempts" {
-  description = "Stream/Kafka retry limit: integer -1 (infinite) through 10000."
+  description = "Stream/Kafka retry limit: integer -1 (infinite) through 10000. Explicit Kafka configuration requires provisioned mode."
   type        = number
   default     = null
   validation {
@@ -122,13 +122,13 @@ variable "tumbling_window_in_seconds" {
 }
 
 variable "bisect_batch_on_function_error" {
-  description = "Split failed batches for stream/Kafka sources."
+  description = "Split failed batches for stream/Kafka sources. Enabling this for Kafka requires provisioned mode."
   type        = bool
   default     = null
 }
 
 variable "destination_config" {
-  description = "Destination for discarded stream/Kafka records. Caller provisions destination and permissions."
+  description = "Destination for discarded stream/Kafka records, including Kafka on-demand mode. Caller provisions destination and permissions."
   type = object({
     on_failure = optional(object({ destination_arn = string }))
   })
@@ -225,7 +225,7 @@ variable "document_db_event_source_config" {
 }
 
 variable "queues" {
-  description = "One MQ destination queue name, 1..1000 characters; empty for other sources."
+  description = "Exactly one destination queue name of 1..1000 characters is required for MQ; empty for other sources."
   type        = list(string)
   default     = []
   nullable    = false
@@ -236,7 +236,7 @@ variable "queues" {
 }
 
 variable "topics" {
-  description = "One Kafka topic, 1..249 characters; empty for other sources."
+  description = "Exactly one topic of 1..249 characters is required for Kafka; empty for other sources."
   type        = set(string)
   default     = []
   nullable    = false
@@ -268,7 +268,7 @@ variable "source_access_configuration" {
 }
 
 variable "amazon_managed_kafka_event_source_config" {
-  description = "MSK consumer group and optional schema registry settings."
+  description = "MSK consumer group and optional schema registry settings. Configured schema registries require provisioned mode."
   type = object({
     consumer_group_id = optional(string)
     schema_registry_config = optional(object({
@@ -298,7 +298,7 @@ variable "amazon_managed_kafka_event_source_config" {
 }
 
 variable "self_managed_kafka_event_source_config" {
-  description = "Self-managed Kafka consumer group and optional schema registry settings."
+  description = "Self-managed Kafka consumer group and optional schema registry settings. Configured schema registries require provisioned mode."
   type = object({
     consumer_group_id = optional(string)
     schema_registry_config = optional(object({
