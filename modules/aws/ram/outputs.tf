@@ -13,6 +13,6 @@ output "id" {
 }
 
 output "resource_association_ids" {
-  description = "A map of resource ARN to the ID of the aws_ram_resource_association created for it."
+  description = "Map of logical resource key to the ID of its aws_ram_resource_association."
   value       = { for k, v in aws_ram_resource_association.this : k => v.id }
 }

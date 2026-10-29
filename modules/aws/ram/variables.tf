@@ -26,8 +26,8 @@ variable "principal" {
 }
 
 variable "resource_arns" {
-  description = "List of resource ARNs to associate with the resource share."
-  type        = list(string)
+  description = "Map of resource ARNs to associate with the resource share, keyed by stable logical names known at plan time. Values may be unknown until apply."
+  type        = map(string)
 }
 
 ###########################

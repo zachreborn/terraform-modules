@@ -46,6 +46,9 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#notes--design-decisions">Notes / Design Decisions</a></li>
+    <li><a href="#migration">Migration</a></li>
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#providers">Providers</a></li>
     <li><a href="#modules">Modules</a></li>
@@ -66,12 +69,14 @@
 
 This example shares a transit gateway with the current AWS organization. This allows all accounts in the organization to use the transit gateway and attach VPCs from other accounts.
 
-```
+```hcl
 module "tgw_ram_share" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/ram"
 
-  name          = "transit_tgw"
-  resource_arns = [module.transit_gateway.arn]
+  name = "transit_tgw"
+  resource_arns = {
+    transit = module.transit_gateway.arn
+  }
 }
 ```
 
@@ -79,19 +84,111 @@ module "tgw_ram_share" {
 
 This example shares two managed prefix lists in a single resource share, consolidating what would otherwise require two separate module calls.
 
-```
+```hcl
 module "prefix_list_ram_share" {
   source = "github.com/zachreborn/terraform-modules//modules/aws/ram"
 
   name = "managed_prefix_lists"
-  resource_arns = [
-    module.zpa_app_connectors_prefix_list.arn,
-    module.cisco_switches_prefix_list.arn,
-  ]
+  resource_arns = {
+    app_connectors = module.zpa_app_connectors_prefix_list.arn
+    switches       = module.cisco_switches_prefix_list.arn
+  }
 }
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+## Prerequisites
+
+- Resources supported by AWS Resource Access Manager (RAM). They may be created
+  in the same plan as this module.
+- An AWS Organization with organization sharing enabled in RAM when using the
+  default organization principal. Set `principal` to share with a specific
+  account, organization, or organizational unit instead. The module always
+  reads the current organization, so the provider needs permission to describe it.
+
+## Notes / Design Decisions
+
+- One module instance manages one resource share, with one association per
+  `resource_arns` entry.
+- `resource_arns` is a required `map(string)`. Keys are stable, caller-defined
+  logical names that must be known at plan time; values are resource Amazon
+  Resource Names (ARNs) and may remain unknown until apply. Do not derive keys
+  from newly created resource identifiers or convert a list of unknown ARNs
+  into a set for `for_each`.
+- `resource_association_ids` uses the same logical keys. For example,
+  `module.tgw_ram_share.resource_association_ids["transit"]` selects the transit
+  gateway association. Changing a key changes its state address; use a `moved`
+  block when renaming a key without changing the associated resource.
+- Use each resource ARN only once per share. An empty map (`{}`) is allowed and
+  creates a share with no resource associations.
+- External principals remain disabled by default.
+
+## Migration
+
+This is a breaking change. The original required `resource_arn` string input
+has been replaced by the `resource_arns` map. The association also moves from a
+singleton state address to a logical-keyed address.
+
+### From the original singleton input
+
+Replace `resource_arn = module.transit_gateway.arn` with the map shown in the
+simple example above. Before applying, add this block in the caller's
+configuration, alongside the module block:
+
+```hcl
+moved {
+  from = module.tgw_ram_share.aws_ram_resource_association.this
+  to   = module.tgw_ram_share.aws_ram_resource_association.this["transit"]
+}
+```
+
+Use your actual module address and the same key used in `resource_arns`.
+No resource-share or principal-association move is needed. The module cannot
+provide a universal move because the destination key is chosen by each caller.
+
+### From the unreleased list-based implementation
+
+If you already applied the list-based version of this change, convert each
+list entry to a logical-keyed map entry and move each ARN-keyed association:
+
+```hcl
+moved {
+  from = module.tgw_ram_share.aws_ram_resource_association.this["arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-0123456789abcdef0"]
+  to   = module.tgw_ram_share.aws_ram_resource_association.this["transit"]
+}
+```
+
+Replace the example ARN with the exact key in your existing state. Update any
+`resource_association_ids` lookups from ARN keys to logical keys as well.
+Use only the migration matching your current state; do not add both moves for
+the same association.
+
+### Existing address-management module callers
+
+The `modules/aws/ipam` module now passes a map keyed by the pool's logical name.
+Its public inputs are unchanged. For an existing organization share of the
+`primary` pool, migrate the nested singleton association from the root caller:
+
+```hcl
+moved {
+  from = module.ipam.module.ram["primary-org"].aws_ram_resource_association.this
+  to   = module.ipam.module.ram["primary-org"].aws_ram_resource_association.this["primary"]
+}
+```
+
+Repeat for every existing share. For explicit-principal shares, use the existing
+share key such as `"primary-0"` instead of `"primary-org"`. If you applied the
+unreleased ARN-keyed version, use that keyed address as the source instead.
+
+### Verify the migration
+
+Run `tofu plan` (or `terraform plan`) before applying. With unchanged resources
+and sharing settings, existing associations should be reported as moved, not
+destroyed and recreated. Newly added resources will still create associations.
+Stop and correct the addresses if the plan proposes replacing an existing
+association. Keep the migration blocks until every consuming state has upgraded.
+Terraform callers using `moved` blocks need Terraform 1.1 or later; all supported
+OpenTofu versions support them.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -132,7 +229,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | The name of the resource share. | `string` | n/a | yes |
 | <a name="input_permission_arns"></a> [permission\_arns](#input\_permission\_arns) | The ARNs of the permissions to associate with the resource share. | `list(string)` | `null` | no |
 | <a name="input_principal"></a> [principal](#input\_principal) | The principal to associate with the resource share. | `string` | `null` | no |
-| <a name="input_resource_arns"></a> [resource\_arns](#input\_resource\_arns) | List of resource ARNs to associate with the resource share. | `list(string)` | n/a | yes |
+| <a name="input_resource_arns"></a> [resource\_arns](#input\_resource\_arns) | Map of resource ARNs to associate with the resource share, keyed by stable logical names known at plan time. Values may be unknown until apply. | `map(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource share. | `map(string)` | <pre>{<br/>  "created_by": "terraform",<br/>  "environment": "prod",<br/>  "terraform": "true"<br/>}</pre> | no |
 
 ## Outputs
@@ -141,7 +238,7 @@ No modules.
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the resource share. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the resource share. |
-| <a name="output_resource_association_ids"></a> [resource\_association\_ids](#output\_resource\_association\_ids) | A map of resource ARN to the ID of the aws\_ram\_resource\_association created for it. |
+| <a name="output_resource_association_ids"></a> [resource\_association\_ids](#output\_resource\_association\_ids) | Map of logical resource key to the ID of its aws\_ram\_resource\_association. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
