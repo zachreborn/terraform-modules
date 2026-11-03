@@ -32,7 +32,9 @@ def discover(module):
                 continue
             terraform_test = path.name.endswith((".tftest.hcl", ".tftest.json"))
             stem, _, extension = path.name.rpartition(".tftest.")
-            override = path.with_name(f"{stem}.tofutest.{extension}") if terraform_test else path
+            override = path
+            if terraform_test:
+                override = path.with_name(f"{stem}.tofutest.{extension}")
             if terraform_test and override.is_file():
                 continue
             files.append(path.relative_to(module))
@@ -74,7 +76,13 @@ def run_module(module, engine="tofu"):
     for number, path in enumerate(files, start=1):
         emit("test_file_start", file=path.as_posix(), index=number, total=len(files))
         code = supervise(
-            [engine, f"-chdir={module}", "test", "-no-color", f"-filter={path.as_posix()}"],
+            [
+                engine,
+                f"-chdir={module}",
+                "test",
+                "-no-color",
+                f"-filter={path.as_posix()}",
+            ],
             "test",
         )
         emit("test_file_exit", file=path.as_posix(), exit_code=code)

@@ -60,9 +60,15 @@ class MetricsTests(unittest.TestCase):
             (cgroup / "job/memory.current").write_text("80", encoding="ascii")
             (cgroup / "job/memory.max").write_text("max", encoding="ascii")
             cpu_file = cgroup / "job/cpu.stat"
-            cpu_file.write_text("nr_throttled 7\nthrottled_usec 123\n", encoding="ascii")
+            cpu_file.write_text(
+                "nr_throttled 7\nthrottled_usec 123\n",
+                encoding="ascii",
+            )
             result = telemetry.snapshot(42, proc, cgroup)
-            self.assertEqual(result["memory_kib"], {"MemTotal": 100, "MemAvailable": 40})
+            self.assertEqual(
+                result["memory_kib"],
+                {"MemTotal": 100, "MemAvailable": 40},
+            )
             self.assertEqual(result["vm"], {"oom_kill": 2, "pswpin": 3})
             self.assertEqual(result["cpu_ticks"], list(range(1, 9)))
             self.assertEqual(
@@ -75,7 +81,10 @@ class MetricsTests(unittest.TestCase):
                 },
             )
             self.assertEqual(result["cgroup_memory_events"], {"oom": 4, "oom_kill": 2})
-            self.assertEqual(result["cgroup_cpu"], {"nr_throttled": 7, "throttled_usec": 123})
+            self.assertEqual(
+                result["cgroup_cpu"],
+                {"nr_throttled": 7, "throttled_usec": 123},
+            )
             self.assertEqual(result["memory.current"], 80)
             self.assertEqual(result["memory.max"], "unlimited")
             self.assertNotIn("excluded", json.dumps(result))
@@ -118,7 +127,8 @@ class SupervisorTests(unittest.TestCase):
 
     def test_monitor_error_reaps_command_and_restores_handlers(self):
         """Unexpected monitoring errors must propagate after process cleanup."""
-        previous = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+        signals = (signal.SIGINT, signal.SIGTERM)
+        previous = {sig: signal.getsignal(sig) for sig in signals}
 
         def failed(child, *_args, owned, failure):
             owned.append(child)
@@ -135,7 +145,10 @@ class SupervisorTests(unittest.TestCase):
                 contextlib.redirect_stdout(output),
                 self.assertRaisesRegex(type(error), "monitor error"),
             ):
-                telemetry.supervise([sys.executable, "-c", "import time; time.sleep(60)"], "test")
+                telemetry.supervise(
+                    [sys.executable, "-c", "import time; time.sleep(60)"],
+                    "test",
+                )
             self.assertEqual(len(children), 1)
             self.assertIsNotNone(children[0].poll())
             self.assertNotIn("launch_failed", output.getvalue())
@@ -216,7 +229,10 @@ sys.exit(19)
             contextlib.redirect_stdout(io.StringIO()),
         ):
             self.assertEqual(
-                telemetry.supervise([sys.executable, "-c", "raise SystemExit(17)"], "init"),
+                telemetry.supervise(
+                    [sys.executable, "-c", "raise SystemExit(17)"],
+                    "init",
+                ),
                 17,
             )
 
@@ -240,7 +256,10 @@ sys.exit(19)
 
     def check_interrupt(self, signum, behavior):
         """Wait for child readiness before signaling only the supervisor."""
-        with tempfile.TemporaryDirectory() as temporary, contextlib.ExitStack() as processes:
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            contextlib.ExitStack() as processes,
+        ):
             ready = Path(temporary) / "ready"
             program = (
                 "import os,signal,subprocess,sys,time; from pathlib import Path; "
@@ -275,7 +294,10 @@ sys.exit(19)
                 deadline = time.monotonic() + 10
                 while not ready.exists() and time.monotonic() < deadline:
                     time.sleep(0.02)
-                self.assertTrue(ready.exists(), "Child must be ready before interruption")
+                self.assertTrue(
+                    ready.exists(),
+                    "Child must be ready before interruption",
+                )
                 descendant = int(ready.read_text(encoding="ascii"))
                 process.send_signal(signum)
                 stdout, stderr = process.communicate(timeout=8)
@@ -287,7 +309,8 @@ sys.exit(19)
                 self.assertNotIn("subprocess.Popen", stdout)
                 if sys.platform == "linux":
                     try:
-                        contents = Path(f"/proc/{descendant}/stat").read_text(encoding="ascii")
+                        stat_file = Path(f"/proc/{descendant}/stat")
+                        contents = stat_file.read_text(encoding="ascii")
                         state = contents.rsplit(")", 1)[1].split()[0]
                     except FileNotFoundError:
                         state = ""
@@ -298,7 +321,10 @@ sys.exit(19)
                         text=True,
                         check=False,
                     ).stdout.strip()
-                self.assertTrue(not state or state.startswith("Z"), "Descendant survived")
+                self.assertTrue(
+                    not state or state.startswith("Z"),
+                    "Descendant survived",
+                )
             finally:
                 if process.poll() is None:
                     process.kill()

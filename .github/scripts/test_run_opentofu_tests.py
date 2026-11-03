@@ -74,7 +74,10 @@ class RunnerTests(unittest.TestCase):
     def test_interruption_stops_scheduling(self):
         """Never start later process groups after SIGINT/SIGTERM or launch error."""
         for status in (127, 130, 137, 143):
-            with self.subTest(status=status), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(status=status),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 module = Path(temporary)
                 for name in ("a", "b"):
                     (module / f"{name}.tftest.hcl").touch()
@@ -91,7 +94,10 @@ class RunnerTests(unittest.TestCase):
             (".tftest.hcl", "  expect_failures = [var.value]\n"),
             (".tftest.json", '"expect_failures": ["var.value"],\n'),
         ]:
-            with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(suffix=suffix),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 module = Path(temporary)
                 (module / f"a{suffix}").touch()
                 (module / f"z{suffix}").write_text(

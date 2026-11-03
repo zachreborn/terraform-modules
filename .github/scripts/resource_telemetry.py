@@ -103,7 +103,8 @@ def snapshot(group, proc=Path("/proc"), cgroup=Path("/sys/fs/cgroup")):
             continue
         try:
             # comm may contain spaces or parentheses; discard it entirely.
-            stat = (entry / "stat").read_text(encoding="ascii").rsplit(")", 1)[1].split()
+            contents = (entry / "stat").read_text(encoding="ascii")
+            stat = contents.rsplit(")", 1)[1].split()
             metrics["processes"]["count"] += 1
             if int(stat[2]) == group:
                 metrics["processes"]["group_count"] += 1
@@ -164,7 +165,8 @@ def interruption_signals():
         if not received:
             received.append(signum)
 
-    previous = {sig: signal.signal(sig, interrupted) for sig in (signal.SIGINT, signal.SIGTERM)}
+    signals = (signal.SIGINT, signal.SIGTERM)
+    previous = {sig: signal.signal(sig, interrupted) for sig in signals}
     try:
         yield received
     finally:
