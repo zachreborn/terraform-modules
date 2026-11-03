@@ -195,17 +195,22 @@ jobs:
           persist-credentials: false
 
       - name: Restore OpenTofu provider plugins
-        # Read-only restore, using the exact same per-run-and-attempt key the
-        # warm-cache job just saved above (not just the restore-keys prefix): matrix
-        # jobs start only after that job completes, so this key is always present and
-        # always the freshest entry - never an older, stale exact match left over
-        # from a previous run OR a previous attempt of this same run.
+        # Read-only restore prefers the current run/attempt's warmed cache.
+        # Failed-job-only reruns can reuse the previous warmer result without
+        # writing an attempt-specific cache, so they may use restore-keys instead.
+        # The action logs the matched key to preserve that diagnostic distinction.
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.terraform.d/plugin-cache
           key: tofu-providers-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             tofu-providers-${{ runner.os }}-
+
+      - name: Test resource telemetry supervisor
+        # Run once, not in every module job. The aggregate depends on this matrix
+        # result, so supervisor regressions cannot silently pass required checks.
+        if: ${{ matrix.module == 'modules/aws/api_gateway/v2' }}
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py' -v
 
       - name: OpenTofu test
         id: test
@@ -226,9 +231,14 @@ jobs:
           export TF_PLUGIN_CACHE_DIR="${HOME}/.terraform.d/plugin-cache"
           mkdir -p "${TF_PLUGIN_CACHE_DIR}"
           echo "::group::tofu test - ${MODULE}"
-          cd "${MODULE}"
-          tofu init -backend=false
-          tofu test
+          # Stream numeric metrics throughout init/test: a dead runner cannot
+          # reliably upload artifacts or execute a final diagnostics step.
+          telemetry="${GITHUB_WORKSPACE}/.github/scripts/resource_telemetry.py"
+          python3 "${telemetry}" --phase version -- tofu version
+          python3 "${telemetry}" --phase init -- tofu "-chdir=${MODULE}" init -backend=false -no-color
+          # Fresh command per file releases providers retained by OpenTofu #4694.
+          # The runner preflights the complete inventory and never rewrites tests.
+          python3 .github/scripts/run_opentofu_tests.py --module "${MODULE}"
           echo "::endgroup::"
 
   test_opentofu:
