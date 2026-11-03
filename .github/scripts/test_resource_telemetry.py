@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 
@@ -54,18 +55,14 @@ class MetricsTests(unittest.TestCase):
                 encoding="ascii",
             )
             (proc / "42/cmdline").write_text("excluded", encoding="ascii")
-            (cgroup / "job/memory.events").write_text(
-                "oom 4\noom_kill 2\nprivate 99\n", encoding="ascii"
-            )
+            events_file = cgroup / "job/memory.events"
+            events_file.write_text("oom 4\noom_kill 2\nprivate 99\n", encoding="ascii")
             (cgroup / "job/memory.current").write_text("80", encoding="ascii")
             (cgroup / "job/memory.max").write_text("max", encoding="ascii")
-            (cgroup / "job/cpu.stat").write_text(
-                "nr_throttled 7\nthrottled_usec 123\n", encoding="ascii"
-            )
+            cpu_file = cgroup / "job/cpu.stat"
+            cpu_file.write_text("nr_throttled 7\nthrottled_usec 123\n", encoding="ascii")
             result = telemetry.snapshot(42, proc, cgroup)
-            self.assertEqual(
-                result["memory_kib"], {"MemTotal": 100, "MemAvailable": 40}
-            )
+            self.assertEqual(result["memory_kib"], {"MemTotal": 100, "MemAvailable": 40})
             self.assertEqual(result["vm"], {"oom_kill": 2, "pswpin": 3})
             self.assertEqual(result["cpu_ticks"], list(range(1, 9)))
             self.assertEqual(
@@ -78,9 +75,7 @@ class MetricsTests(unittest.TestCase):
                 },
             )
             self.assertEqual(result["cgroup_memory_events"], {"oom": 4, "oom_kill": 2})
-            self.assertEqual(
-                result["cgroup_cpu"], {"nr_throttled": 7, "throttled_usec": 123}
-            )
+            self.assertEqual(result["cgroup_cpu"], {"nr_throttled": 7, "throttled_usec": 123})
             self.assertEqual(result["memory.current"], 80)
             self.assertEqual(result["memory.max"], "unlimited")
             self.assertNotIn("excluded", json.dumps(result))
@@ -121,6 +116,32 @@ class MetricsTests(unittest.TestCase):
 class SupervisorTests(unittest.TestCase):
     """Exercise real isolated children without cloud services or credentials."""
 
+    def test_monitor_error_reaps_command_and_restores_handlers(self):
+        """Unexpected monitoring errors must propagate after process cleanup."""
+        previous = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+
+        def failed(child, *_args, owned, failure):
+            owned.append(child)
+            raise failure
+
+        for error in (RuntimeError("monitor error"), OSError("monitor error")):
+            children = []
+            callback = partial(failed, owned=children, failure=error)
+
+            output = io.StringIO()
+            with (
+                self.subTest(error=type(error).__name__),
+                patch.object(telemetry, "monitor", side_effect=callback),
+                contextlib.redirect_stdout(output),
+                self.assertRaisesRegex(type(error), "monitor error"),
+            ):
+                telemetry.supervise([sys.executable, "-c", "import time; time.sleep(60)"], "test")
+            self.assertEqual(len(children), 1)
+            self.assertIsNotNone(children[0].poll())
+            self.assertNotIn("launch_failed", output.getvalue())
+            for sig, handler in previous.items():
+                self.assertEqual(signal.getsignal(sig), handler)
+
     def test_periodic_samples(self):
         """Stream samples during a command, rather than relying on final cleanup."""
         with (
@@ -137,6 +158,11 @@ class SupervisorTests(unittest.TestCase):
 
     def test_child_output_is_not_captured_or_rewritten(self):
         """Leave native test stdout/stderr visible and preserve nonzero exit."""
+        program = """import sys
+print('native-output')
+print('native-error', file=sys.stderr)
+sys.exit(19)
+"""
         result = subprocess.run(
             [
                 sys.executable,
@@ -147,7 +173,7 @@ class SupervisorTests(unittest.TestCase):
                 "--",
                 sys.executable,
                 "-c",
-                "import sys; print('native-output'); print('native-error', file=sys.stderr); sys.exit(19)",
+                program,
             ],
             capture_output=True,
             text=True,
@@ -190,9 +216,7 @@ class SupervisorTests(unittest.TestCase):
             contextlib.redirect_stdout(io.StringIO()),
         ):
             self.assertEqual(
-                telemetry.supervise(
-                    [sys.executable, "-c", "raise SystemExit(17)"], "init"
-                ),
+                telemetry.supervise([sys.executable, "-c", "raise SystemExit(17)"], "init"),
                 17,
             )
 
@@ -216,41 +240,42 @@ class SupervisorTests(unittest.TestCase):
 
     def check_interrupt(self, signum, behavior):
         """Wait for child readiness before signaling only the supervisor."""
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory() as temporary, contextlib.ExitStack() as processes:
             ready = Path(temporary) / "ready"
             program = (
                 "import os,signal,subprocess,sys,time; from pathlib import Path; "
                 f"signal.signal(signal.SIGINT, {behavior}); "
                 f"signal.signal(signal.SIGTERM, {behavior}); "
                 "child=subprocess.Popen([sys.executable, '-c', "
-                "'import signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)']); "
+                "'import signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+                "time.sleep(60)']); "
                 f"Path({str(ready)!r}).write_text(str(child.pid)); "
                 "time.sleep(60)"
             )
-            process = subprocess.Popen(
-                [
-                    sys.executable,
-                    "-B",
-                    str(Path(telemetry.__file__)),
-                    "--phase",
-                    "test",
-                    "--",
-                    sys.executable,
-                    "-c",
-                    program,
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
+            process = processes.enter_context(
+                subprocess.Popen(
+                    [
+                        sys.executable,
+                        "-B",
+                        str(Path(telemetry.__file__)),
+                        "--phase",
+                        "test",
+                        "--",
+                        sys.executable,
+                        "-c",
+                        program,
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
             )
             descendant = None
             try:
                 deadline = time.monotonic() + 10
                 while not ready.exists() and time.monotonic() < deadline:
                     time.sleep(0.02)
-                self.assertTrue(
-                    ready.exists(), "Child must be ready before interruption"
-                )
+                self.assertTrue(ready.exists(), "Child must be ready before interruption")
                 descendant = int(ready.read_text(encoding="ascii"))
                 process.send_signal(signum)
                 stdout, stderr = process.communicate(timeout=8)
@@ -262,12 +287,8 @@ class SupervisorTests(unittest.TestCase):
                 self.assertNotIn("subprocess.Popen", stdout)
                 if sys.platform == "linux":
                     try:
-                        state = (
-                            Path(f"/proc/{descendant}/stat")
-                            .read_text(encoding="ascii")
-                            .rsplit(")", 1)[1]
-                            .split()[0]
-                        )
+                        contents = Path(f"/proc/{descendant}/stat").read_text(encoding="ascii")
+                        state = contents.rsplit(")", 1)[1].split()[0]
                     except FileNotFoundError:
                         state = ""
                 else:
@@ -277,9 +298,7 @@ class SupervisorTests(unittest.TestCase):
                         text=True,
                         check=False,
                     ).stdout.strip()
-                self.assertTrue(
-                    not state or state.startswith("Z"), "Descendant survived"
-                )
+                self.assertTrue(not state or state.startswith("Z"), "Descendant survived")
             finally:
                 if process.poll() is None:
                     process.kill()

@@ -210,7 +210,7 @@ jobs:
         # Run once, not in every module job. The aggregate depends on this matrix
         # result, so supervisor regressions cannot silently pass required checks.
         if: ${{ matrix.module == 'modules/aws/api_gateway/v2' }}
-        run: python3 -B -m unittest discover -s .github/scripts -p 'test_resource_telemetry.py' -v
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py' -v
 
       - name: OpenTofu test
         id: test
@@ -236,7 +236,9 @@ jobs:
           telemetry="${GITHUB_WORKSPACE}/.github/scripts/resource_telemetry.py"
           python3 "${telemetry}" --phase version -- tofu version
           python3 "${telemetry}" --phase init -- tofu "-chdir=${MODULE}" init -backend=false -no-color
-          python3 "${telemetry}" --phase test -- tofu "-chdir=${MODULE}" test -no-color
+          # Fresh command per file releases providers retained by OpenTofu #4694.
+          # The runner preflights the complete inventory and never rewrites tests.
+          python3 .github/scripts/run_opentofu_tests.py --module "${MODULE}"
           echo "::endgroup::"
 
   test_opentofu:

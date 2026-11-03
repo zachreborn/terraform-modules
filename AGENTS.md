@@ -237,6 +237,18 @@ Full coverage means the test suite includes, at minimum:
 
 Tests must run **offline** — use `mock_provider` / `mock_resource` blocks so `tofu test` never requires real cloud credentials or a real backend. `tofu init -backend=false && tofu test`, run from the module's own directory, must pass with no manual setup.
 
+**Temporary OpenTofu test-lifetime workaround (#549 / upstream OpenTofu #4694):**
+The workflow runs each native test file in a fresh supervised process group via
+`.github/scripts/run_opentofu_tests.py --module <module_path>` after initialization.
+Keep each file at or below **20 `expect_failures` declarations**; oversized files
+fail preflight before any tests execute. The large validation suites use **10-run
+shards** for additional measured headroom. Split only independent plan cases into
+static files, copying their file-level mock providers and variables unchanged.
+Never separate stateful/dependent run blocks or remove assertions to meet the
+budget. The runner executes the entire discovered inventory, respects `.tofutest`
+overrides, preserves failures, and stops on interruption. This bounds retained
+provider lifetimes; it is not an upstream engine fix or a fixed process-count cap.
+
 **Never weaken a test to make it pass.** Do not narrow an `assert` condition, delete or skip a `run` block, loosen an `expect_failures` case, or mock away the exact behavior under test merely to turn a failing test green. A failing test is a signal that something is wrong — find and fix the root cause in the module's `.tf` code. Only change the test itself if the test's logic is demonstrably incorrect (e.g., it asserts the wrong expected value), and even then, fix the assertion to be *correct*, not weaker. Re-run `tofu test` until every case passes for the right reason.
 
 ### 7. Provider and Tool Version Constraints
