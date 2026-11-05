@@ -1,97 +1,356 @@
-<!-- Blank module readme template: Do a search and replace with your text editor for the following: `module_name`, `module_description` -->
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
+# API Gateway v2
 
+Manages one Amazon API Gateway v2 HTTP or WebSocket API and keyed collections
+of integrations, routes, stages, authorizers, domains, models, responses and
+VPC links. The REST API module is separate. No deployment, API mapping, Lambda,
+permission, role, certificate, DNS record or log group is created implicitly.
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+## Prerequisites and versions
 
+- OpenTofu is the default runner. The module language minimum is Terraform
+  1.3.0 (optional object defaults; also covers resource preconditions).
+- AWS provider `hashicorp/aws >= 6.29.0`: domain `routing_mode` first appears in
+  6.29.0; address-family controls predate that floor and resource region
+  overrides are available since 6.0.0.
+- Mocked native tests require OpenTofu 1.9+ (or Terraform 1.7+). The suite is
+  also verified unchanged with Terraform 1.10.0; the module uses no post-fork
+  language features.
+- Provision Lambda functions and their API Gateway invocation permissions,
+  access-log destinations and required logging permissions separately.
+  Custom domains require certificates, an optional external S3 truststore,
+  DNS and API mappings. Private integrations require existing networking.
+  WebSocket execution logging needs the caller's API Gateway account logging
+  role configuration.
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <a href="https://github.com/zachreborn/terraform-modules">
-    <img src="/images/terraform_modules_logo.webp" alt="Logo" width="300" height="300">
-  </a>
+The immutable coverage baseline is the
+[6.29.0 provider source](https://github.com/hashicorp/terraform-provider-aws/tree/v6.29.0/internal/service/apigatewayv2),
+cross-checked with the [registry documentation](https://registry.terraform.io/providers/hashicorp/aws/6.29.0/docs/resources/apigatewayv2_api).
 
-<h3 align="center">API Gateway</h3>
-  <p align="center">
-    This module creates an AWS API Gateway v2 configuration.
-    <br />
-    <a href="https://github.com/zachreborn/terraform-modules"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://zacharyhill.co">Zachary Hill</a>
-    ·
-    <a href="https://github.com/zachreborn/terraform-modules/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/zachreborn/terraform-modules/issues">Request Feature</a>
-  </p>
-</div>
+## HTTP webhook usage
 
+The required adoption shape explicitly retains integration method POST, payload
+2.0, application-managed authentication and auto-deployment. Identifiers below
+are fake; substitute existing caller resources. Pin `source` to the eventual
+released tag or reviewed commit (`?ref=<release-tag-or-commit>`); no future
+release tag is assumed here.
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#requirements">Requirements</a></li>
-    <li><a href="#providers">Providers</a></li>
-    <li><a href="#modules">Modules</a></li>
-    <li><a href="#Resources">Resources</a></li>
-    <li><a href="#inputs">Inputs</a></li>
-    <li><a href="#outputs">Outputs</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+```hcl
+module "http" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/api_gateway/v2"
 
-
-<!-- USAGE EXAMPLES -->
-## Usage
-### Basic HTTP API Gateway Example
-This example creates a basic HTTP API Gateway.
-```
-module "example_api_gateway" {
-  source = "github.com/zachreborn/terraform-modules//modules/aws/api_gateway"
-
-  name          = "example-api"
+  name          = "webhook"
   protocol_type = "HTTP"
+
+  integrations = {
+    webhook = {
+      integration_type       = "AWS_PROXY"
+      integration_method     = "POST"
+      integration_uri        = "arn:aws:lambda:us-east-1:123456789012:function:fake-webhook"
+      payload_format_version = "2.0"
+    }
+  }
+  routes = {
+    webhook = {
+      route_key          = "POST /webhook/{token}"
+      authorization_type = "NONE"
+      integration_key    = "webhook"
+    }
+  }
+  stages = {
+    "$default" = {
+      auto_deploy = true
+      access_log_settings = {
+        destination_arn = "arn:aws:logs:us-east-1:123456789012:log-group:fake-access"
+        format = jsonencode({
+          requestId      = "$context.requestId"
+          status         = "$context.status"
+          responseLength = "$context.responseLength"
+          latency        = "$context.responseLatency"
+        })
+      }
+    }
+  }
 }
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
+The log format deliberately excludes path, raw path, route key, request body,
+headers and authorization data: a token-bearing route must not leak into logs.
+`NONE` does not implement authentication; the application must validate tokens.
+Logging is opt-in to preserve existing defaults, but enabled in this example.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Scalable map/YAML configuration
 
-<!-- terraform-docs output will be input automatically below-->
-<!-- terraform-docs markdown table --output-file README.md --output-mode inject .-->
+Collection keys are stable state identities, not display names. A single module
+can consume multiple integrations, routes and stages without repeated declarations:
+
+```hcl
+locals {
+  http = yamldecode(file("${path.module}/http.yaml"))
+}
+
+module "http" {
+  source = "github.com/zachreborn/terraform-modules//modules/aws/api_gateway/v2"
+
+  name          = local.http.name
+  protocol_type = "HTTP"
+  integrations  = local.http.integrations
+  routes        = local.http.routes
+  stages        = local.http.stages
+}
+```
+
+```yaml
+name: application
+integrations:
+  primary:
+    integration_type: HTTP_PROXY
+    integration_method: ANY
+    integration_uri: https://primary.example.invalid
+  secondary:
+    integration_type: HTTP_PROXY
+    integration_method: ANY
+    integration_uri: https://secondary.example.invalid
+routes:
+  primary:
+    route_key: ANY /primary
+    integration_key: primary
+    authorization_type: AWS_IAM
+  secondary:
+    route_key: ANY /secondary
+    integration_key: secondary
+    authorization_type: AWS_IAM
+stages:
+  staging:
+    auto_deploy: true
+  production:
+    auto_deploy: true
+    access_log_settings:
+      destination_arn: arn:aws:logs:us-east-1:123456789012:log-group:fake-access
+      format: '{"requestId":"$context.requestId","status":"$context.status"}'
+```
+
+## Design decisions and compatibility repairs
+
+- All resource maps accept `{}` or explicit null as empty. Null map elements
+  fail validation. Optional nested blocks are absent when null.
+- Default CORS expands to false credentials, zero max age and null lists.
+  False/zero-only and null/empty-list configurations omit the provider block.
+  Meaningful CORS requires HTTP and conflicts with OpenAPI `body`.
+- `body` owns routes/integrations; do not also configure those maps, CORS,
+  `api_version`, or quick-create settings. `target` quick create owns an
+  integration, route and default stage; do not overlap those explicit maps.
+- Defaults remain payload format **1.0**, connection type **INTERNET**, stage
+  auto-deploy **false**, execute-api endpoint enabled, fail-on-warnings false,
+  route selection `$request.method $request.path`, API key selection
+  `$request.header.x-api-key`, and shared tags `{ terraform = "true" }`.
+  WebSocket callers usually override route selection to `$request.body.action`.
+- Physical authorizer/model/stage names remain their map keys. Legacy
+  `authorizers[*].name`, required `models[*].name`, and `stages[*].stage_name`
+  are deprecated no-op aliases, even when different. Authorizer
+  `provider_arns`, `scopes` and `token_validation_expression` remain deprecated
+  no-ops: they are not v2 provider arguments. Use route authorization scopes
+  or the appropriate authentication system instead.
+- `authorizer_result_ttl_in_seconds` takes precedence over the legacy
+  `authorizer_result_ttl`; zero disables caching and is not lost. Unequal
+  simultaneous values fail validation. Nested JWT and domain mutual TLS
+  configuration takes precedence over global fallback; conflicting duplicates
+  fail. Global JWT is ignored for REQUEST and is never emitted as an empty
+  block. HTTP REQUEST authorizers require a payload version; simple responses
+  require 2.0. JWT authorizers require audience and issuer.
+- Route `request_parameter` is the canonical typed block map. Deprecated
+  plural `request_parameters` accepts parameter-key => `"true"`/`"false"` and
+  converts those strings to booleans. Do not supply both nonempty maps.
+  These parameters and model/response resources are WebSocket-only. HTTP
+  stages support access logs, metrics and throttling, not execution logging
+  level or data tracing; explicit incompatible requests fail instead of
+  silently disappearing.
+- Internal `integration_key`, `authorizer_key` and `vpc_link_key` resolve
+  existing map keys. Literal targets retain `integrations/<id>`. Optional
+  references may omit both forms; response parents require exactly one ID or
+  key. Route-response `route_key` is a **logical parent map key**, not the
+  actual HTTP/WebSocket route string. Guarded references report precondition
+  errors, not invalid-index diagnostics.
+- `region` is applied to every resource. Taggable resources merge a generated
+  Name, then shared tags, then supported per-entry stage/VPC-link tags.
+  Caller values win. The additive Name tag and repaired per-link tags can
+  cause in-place tag updates for legacy callers.
+- Provider-shaped `cors_configuration` output is preserved. Keyed ID/ARN,
+  invoke URL, tag and domain outputs retain caller keys; absent resources
+  return empty maps. No unsupported provider arguments or lifecycle ignores
+  are introduced.
+
+### Release and adoption considerations
+
+The AWS floor increase from 4.0.0 to 6.29.0 and language floor increase from
+1.0.0 to 1.3.0 are **breaking toolchain changes** under repository versioning.
+Ship the combined existing-module changes in a major release unless maintainers
+split them. New capabilities are additive; previously ignored nested schemas,
+TTL, stage descriptions/logging and tags now take effect. Malformed values and
+conflicting ownership/protocol settings now fail intentionally.
+
+Preserve physical names, API protocol, integration URI/method/payload,
+authorization, stage auto-deploy/logging and every keyed address during adoption.
+API protocol and quick-create credentials/route_key/target, integration type
+and subtype, stage name, domain name, and VPC-link networking can be ForceNew
+under the provider schema. Review plans before changing them; aliases must not
+be used to rename existing keyed resources. Do not use `ignore_changes` or
+destroy/recreate as an adoption procedure.
+
+## Declarative moves and imports
+
+For resources **already in the same state**, use these copyable address moves
+alongside the HTTP example and remove the old resource declarations:
+
+```hcl
+moved {
+  from = aws_apigatewayv2_api.webhook
+  to   = module.http.aws_apigatewayv2_api.this
+}
+moved {
+  from = aws_apigatewayv2_integration.webhook
+  to   = module.http.aws_apigatewayv2_integration.this["webhook"]
+}
+moved {
+  from = aws_apigatewayv2_route.webhook
+  to   = module.http.aws_apigatewayv2_route.this["webhook"]
+}
+moved {
+  from = aws_apigatewayv2_stage.webhook
+  to   = module.http.aws_apigatewayv2_stage.this["$default"]
+}
+```
+
+The remaining unchanged keyed address inventory (substitute each actual key):
+
+- `module.http.aws_apigatewayv2_authorizer.this["key"]`
+- `module.http.aws_apigatewayv2_domain_name.this["api.example.invalid"]`
+- `module.http.aws_apigatewayv2_integration_response.this["key"]`
+- `module.http.aws_apigatewayv2_model.this["key"]`
+- `module.http.aws_apigatewayv2_route_response.this["key"]`
+- `module.http.aws_apigatewayv2_vpc_link.this["key"]`
+
+Use imports only for resources **not already in state**, never to manage the
+same remote object twice. Import identifiers from provider 6.29.0:
+
+- API: `api-id`
+- Integration, route, authorizer, model: `api-id/resource-id`
+- Stage: `api-id/stage-name` (including literal `$default`)
+- Integration response: `api-id/integration-id/integration-response-id`
+- Route response: `api-id/route-id/route-response-id`
+- Domain: the domain name
+- VPC link: the VPC-link ID
+
+For example, with Terraform 1.5+ import-block support (CLI import is available
+at the module's lower language floor):
+
+```hcl
+import {
+  to = module.http.aws_apigatewayv2_api.this
+  id = "api123"
+}
+import {
+  to = module.http.aws_apigatewayv2_integration.this["webhook"]
+  id = "api123/int123"
+}
+import {
+  to = module.http.aws_apigatewayv2_route.this["webhook"]
+  id = "api123/route123"
+}
+import {
+  to = module.http.aws_apigatewayv2_stage.this["$default"]
+  id = "api123/$default"
+}
+```
+
+Quick-create managed integration/route resources cannot be imported as
+independently managed resources. Pin a reviewed release/commit and require
+no unintended destroys or replacements in the consumer's own plan. Offline
+mock tests verify configuration/wiring, not any production state or delivery
+guarantee. Cross-module adoption/migration fixtures are maintained separately.
+
+## Offline validation
+Authorizer cache TTL inputs (both aliases, including explicit zero) are supported
+only for HTTP REQUEST authorizers, as specified by the
+[AWS authorizer API](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-authorizers.html).
+Ownership guards live on integrations, routes and stages so callers can pass
+API-dependent child inputs and externally managed deployment IDs without cycles.
+Every configured default or per-route settings block must supply both throttling
+limits. Omitting them would make the provider send zero rather than inherit
+account/stage limits; intentional zero values remain supported. To inherit
+limits, omit the settings block entirely.
+Integration `tls_config` requires HTTP_PROXY with VPC_LINK. Authorizer payload
+formats and simple responses require Lambda REQUEST authorizers. Response status
+codes and request parameter keys must be unique within their integration/route.
+
+```sh
+tofu init -backend=false
+tofu validate
+tofu test
+tofu fmt -check -diff -recursive
+terraform-docs markdown table --output-file README.md --output-mode inject .
+```
+
+Native tests mock every AWS resource and use only fake external identifiers.
+No backend, AWS credentials, AWS data source, or cloud request is needed.
+Deterministic mocked apply cases verify computed outputs; plan cases cover
+optional settings, null maps, legacy compatibility and each validation failure.
+Security scanning uses the repository `.checkov.yaml`; caller-selected
+authorization and logging remain configurable, with no new suppressions.
+### Cross-module adoption and migration verification
+
+From this module directory, run:
+
+```sh
+python3 tests/verify_adoption.py
+python3 -B -m unittest discover -s tests -p 'test_verify_adoption.py'
+```
+
+The native `tests/adoption.tftest.hcl` fixture composes the real table, queue,
+mapping and gateway modules. It verifies eight application resources, no keys,
+dead-letter redrive, work-queue mapping, internal integration references and
+token-safe access logs.
+
+The Python verifier captures mocked resource metadata and builds disposable
+synthetic state. Each transition retains one root and state lineage while
+switching from native addresses to the production modules, including keyed
+callers. A separate transition exercises both actual queue-module key moves
+and checks legacy key, alias and queue properties against independently frozen
+defaults. Creates, destroys, replacements and missing moves fail verification;
+policy/tag repairs may remain in-place updates.
+The verifier also rejects protected configurable-field changes and unknown
+protected values, including partial-response removal and batching-window resets.
+Provider-computed identifiers are not treated as caller configuration.
+
+Real-provider planning is refresh-disabled and uses only dummy credentials.
+The DynamoDB provider nevertheless performs a plan-time `DescribeTable` read;
+a local-only stub accepts that exact fabricated table read and rejects every
+other operation. Credential files and alternate workspace/data-directory
+settings are excluded. Commands have bounded timeouts and clean up provider
+children on timeout or interruption. SIGTERM unwinds the same process-group
+cleanup used for timeouts. No real cloud resource, state or backend is accessed.
+This is synthetic address-transition evidence, not certification
+of any consumer's production plan.
+
+Generate documentation without local lockfile selections so it matches the
+clean-checkout build:
+
+```sh
+terraform-docs --config ../../../.terraform-docs.yml --lockfile=false .
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.29.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.29.0 |
 
 ## Modules
 
@@ -111,38 +370,38 @@ No modules.
 | [aws_apigatewayv2_route_response.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route_response) | resource |
 | [aws_apigatewayv2_stage.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage) | resource |
 | [aws_apigatewayv2_vpc_link.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_vpc_link) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_api_key_selection_expression"></a> [api\_key\_selection\_expression](#input\_api\_key\_selection\_expression) | API key selection expression for the API Gateway | `string` | `"$request.header.x-api-key"` | no |
-| <a name="input_api_version"></a> [api\_version](#input\_api\_version) | Version identifier for the API Gateway. Must be between 1 and 64 characters in length or null. | `string` | `null` | no |
-| <a name="input_authorizers"></a> [authorizers](#input\_authorizers) | Map of authorizers to create for the API Gateway | <pre>map(object({<br/>    authorizer_credentials_arn  = optional(string)       # ARN of the credentials to use for the authorizer.<br/>    authorizer_result_ttl       = optional(number)       # TTL in seconds for the authorizer.<br/>    authorizer_type             = optional(string)       # Type of the authorizer. Valid values are "REQUEST" and "JWT".<br/>    authorizer_uri              = optional(string)       # URI of the authorizer.<br/>    identity_sources            = optional(list(string)) # List of identity sources for the authorizer.<br/>    name                        = optional(string)       # Name of the authorizer.<br/>    provider_arns               = optional(list(string)) # List of provider ARNs for the authorizer.<br/>    scopes                      = optional(list(string)) # List of scopes for the authorizer.<br/>    token_validation_expression = optional(string)       # Validation expression for the token.<br/>  }))</pre> | `{}` | no |
-| <a name="input_body"></a> [body](#input\_body) | The OpenAPI specification for the API Gateway. This will conflict with 'cors\_configuration', 'integrations', 'routes', and 'version' as the OpenAPI specification would also set these configurations. | `string` | `null` | no |
-| <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | CORS configuration for the API Gateway | <pre>object({<br/>    allow_credentials = optional(bool, false)  # Whether or not credentials are part of the CORS request.<br/>    allow_headers     = optional(list(string)) # List of allowed HTTP headers.<br/>    allow_methods     = optional(list(string)) # List of allowed methods.<br/>    allow_origins     = optional(list(string)) # List of allowed origins.<br/>    expose_headers    = optional(list(string)) # List of exposed headers in the response.<br/>    max_age           = optional(number, 0)    # Number of seconds for which the browser should cache the preflight response.<br/>  })</pre> | `{}` | no |
-| <a name="input_credentials_arn"></a> [credentials\_arn](#input\_credentials\_arn) | ARN of the credentials for the API Gateway | `string` | `null` | no |
-| <a name="input_description"></a> [description](#input\_description) | Description of the API Gateway. Must be less than or equal to 1024 characters in length. | `string` | `null` | no |
-| <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Whether to disable the execute-api endpoint | `bool` | `false` | no |
-| <a name="input_domain_names"></a> [domain\_names](#input\_domain\_names) | Map of domain names to create for the API Gateway | <pre>map(object({<br/>    domain_name_configuration = object({<br/>      certificate_arn                        = string                       # ARN of the ACM certificate to use for the custom domain name.<br/>      endpoint_type                          = optional(string, "REGIONAL") # Endpoint type. Valid values are "REGIONAL".<br/>      ownership_verification_certificate_arn = optional(string)             # ARN of the certificate to use for ownership verification.<br/>      security_policy                        = optional(string, "TLS_1_2")  # TLS version to use for the custom domain name. Valid values are "TLS_1_2".<br/>    })<br/>  }))</pre> | `{}` | no |
-| <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Whether to fail on warnings during API Gateway creation | `bool` | `false` | no |
-| <a name="input_integration_responses"></a> [integration\_responses](#input\_integration\_responses) | Map of integration responses to create for the API Gateway | <pre>map(object({<br/>    integration_id                = string                # ID of the integration for the integration response.<br/>    integration_response_key      = string                # Key of the integration response.<br/>    content_handling_strategy     = optional(string)      # How to handle request payload content type conversions. Valid values are "CONVERT_TO_BINARY" and "CONVERT_TO_TEXT".<br/>    response_templates            = optional(map(string)) # Map of response templates for the integration response.<br/>    template_selection_expression = optional(string)      # Expression to select the template for the integration response.<br/>  }))</pre> | `{}` | no |
-| <a name="input_integrations"></a> [integrations](#input\_integrations) | Map of integrations to create for the API Gateway | <pre>map(object({<br/>    connection_id             = optional(string)      # ID of the VPC link for the integration.<br/>    connection_type           = optional(string)      # Type of the VPC link for the integration. Valid values are "VPC_LINK".<br/>    content_handling_strategy = optional(string)      # How to handle request payload content type conversions. Valid values are "CONVERT_TO_BINARY" and "CONVERT_TO_TEXT".<br/>    credentials_arn           = optional(string)      # ARN of the credentials to use for the integration.<br/>    description               = optional(string)      # Description of the integration.<br/>    integration_method        = optional(string)      # HTTP method for the integration.<br/>    integration_type          = optional(string)      # Type of the integration. Valid values are "AWS", "AWS_PROXY", "HTTP", "HTTP_PROXY", "MOCK".<br/>    integration_uri           = optional(string)      # URI of the integration.<br/>    passthrough_behavior      = optional(string)      # How to handle request payload content type conversions. Valid values are "WHEN_NO_MATCH" and "WHEN_NO_TEMPLATES".<br/>    request_parameters        = optional(map(string)) # Map of request parameters for the integration.<br/>    request_templates         = optional(map(string)) # Map of request templates for the integration.<br/>    timeout_milliseconds      = optional(number)      # Timeout in milliseconds for the integration.<br/>  }))</pre> | `{}` | no |
-| <a name="input_jwt_configuration"></a> [jwt\_configuration](#input\_jwt\_configuration) | JWT configuration for the API Gateway | <pre>object({<br/>    audience = optional(list(string)) # List of audience values for the JWT configuration.<br/>    issuer   = optional(string)       # Issuer for the JWT configuration.<br/>  })</pre> | `{}` | no |
-| <a name="input_models"></a> [models](#input\_models) | Map of models to create for the API Gateway | <pre>map(object({<br/>    content_type = string           # Content type of the model.<br/>    description  = optional(string) # Description of the model.<br/>    name         = string           # Name of the model.<br/>    schema       = string           # Schema of the model.<br/>  }))</pre> | `{}` | no |
-| <a name="input_mutual_tls_authentication"></a> [mutual\_tls\_authentication](#input\_mutual\_tls\_authentication) | Mutual TLS authentication configuration for the API Gateway | <pre>object({<br/>    truststore_uri     = string           # AWS S3 bucket where the mTLS keys and certificates will be stored.<br/>    truststore_version = optional(string) # Version of the S3 object that contains the truststore. If not specified, the latest version is used. Versioning must first be enabled on the S3 bucket.<br/>  })</pre> | `null` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name of the API Gateway | `string` | n/a | yes |
-| <a name="input_protocol_type"></a> [protocol\_type](#input\_protocol\_type) | Protocol type of the API Gateway. Must be either 'HTTP' or 'WEBSOCKET'. | `string` | n/a | yes |
-| <a name="input_route_key"></a> [route\_key](#input\_route\_key) | Route key for the API Gateway | `string` | `null` | no |
-| <a name="input_route_responses"></a> [route\_responses](#input\_route\_responses) | Map of route responses to create for the API Gateway | <pre>map(object({<br/>    route_id                   = string                # ID of the route for the route response.<br/>    route_response_key         = string                # Key of the route response.<br/>    response_models            = optional(map(string)) # Map of response models for the route response.<br/>    model_selection_expression = optional(string)      # Expression to select the template for the route response.<br/>  }))</pre> | `{}` | no |
-| <a name="input_route_selection_expression"></a> [route\_selection\_expression](#input\_route\_selection\_expression) | Route selection expression for the API Gateway | `string` | `"$request.method $request.path"` | no |
-| <a name="input_routes"></a> [routes](#input\_routes) | Map of routes to create for the API Gateway | <pre>map(object({<br/>    api_key_required                    = optional(bool)         # Whether an API key is required for the route.<br/>    authorization_scopes                = optional(list(string)) # List of authorization scopes for the route.<br/>    authorization_type                  = optional(string)       # Type of authorization for the route. Valid values are "NONE", "AWS_IAM", "CUSTOM", "JWT".<br/>    authorizer_id                       = optional(string)       # ID of the authorizer to use for the route.<br/>    model_selection_expression          = optional(string)       # Expression to select the model for the route.<br/>    operation_name                      = optional(string)       # Operation name for the route.<br/>    request_models                      = optional(map(string))  # Map of request models for the route.<br/>    request_parameters                  = optional(map(string))  # Map of request parameters for the route.<br/>    route_key                           = optional(string)       # Route key for the route.<br/>    route_response_selection_expression = optional(string)       # Expression to select the route response for the route.<br/>    target                              = optional(string)       # Target for the route.<br/>  }))</pre> | `{}` | no |
-| <a name="input_stages"></a> [stages](#input\_stages) | Map of stages to create for the API Gateway | <pre>map(object({<br/>    auto_deploy = optional(bool)   # Whether to automatically deploy the stage.<br/>    description = optional(string) # Description of the stage.<br/>    stage_name  = optional(string) # Name of the stage.<br/>  }))</pre> | `{}` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to the resources. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
-| <a name="input_target"></a> [target](#input\_target) | Target for the API Gateway | `string` | `null` | no |
-| <a name="input_vpc_links"></a> [vpc\_links](#input\_vpc\_links) | Map of VPC links to create for the API Gateway | <pre>map(object({<br/>    security_group_ids = list(string)          # List of security group IDs for the VPC link.<br/>    subnet_ids         = list(string)          # List of subnet IDs for the VPC link.<br/>    tags               = optional(map(string)) # Map of tags to apply to the VPC link.<br/>  }))</pre> | `{}` | no |
+| <a name="input_api_key_selection_expression"></a> [api\_key\_selection\_expression](#input\_api\_key\_selection\_expression) | WebSocket API key selection expression; preserves the legacy default. | `string` | `"$request.header.x-api-key"` | no |
+| <a name="input_api_version"></a> [api\_version](#input\_api\_version) | API version identifier, 1 through 64 characters. | `string` | `null` | no |
+| <a name="input_authorizers"></a> [authorizers](#input\_authorizers) | Keyed authorizers. Map keys are physical names; name/provider\_arns/scopes/token\_validation\_expression are deprecated no-op aliases. Canonical TTL falls back to authorizer\_result\_ttl, including zero. | <pre>map(object({<br/>    authorizer_credentials_arn        = optional(string)<br/>    authorizer_type                   = optional(string)<br/>    authorizer_uri                    = optional(string)<br/>    name                              = optional(string)<br/>    token_validation_expression       = optional(string)<br/>    authorizer_payload_format_version = optional(string)<br/>    authorizer_result_ttl             = optional(number)<br/>    authorizer_result_ttl_in_seconds  = optional(number)<br/>    enable_simple_responses           = optional(bool)<br/>    identity_sources                  = optional(list(string))<br/>    provider_arns                     = optional(list(string))<br/>    scopes                            = optional(list(string))<br/>    jwt_configuration = optional(object({<br/>      audience = optional(list(string))<br/>      issuer   = optional(string)<br/>    }))<br/>    timeouts = optional(object({<br/>      delete = optional(string)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_body"></a> [body](#input\_body) | OpenAPI definition; conflicts with explicit integrations, routes, meaningful CORS and api\_version. | `string` | `null` | no |
+| <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | HTTP CORS; null, empty, and false/zero-only objects omit the block. | <pre>object({<br/>    allow_credentials = optional(bool, false)<br/>    allow_headers     = optional(list(string))<br/>    allow_methods     = optional(list(string))<br/>    allow_origins     = optional(list(string))<br/>    expose_headers    = optional(list(string))<br/>    max_age           = optional(number, 0)<br/>  })</pre> | `{}` | no |
+| <a name="input_credentials_arn"></a> [credentials\_arn](#input\_credentials\_arn) | Quick-create integration credentials ARN. | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | API description, at most 1024 characters. | `string` | `null` | no |
+| <a name="input_disable_execute_api_endpoint"></a> [disable\_execute\_api\_endpoint](#input\_disable\_execute\_api\_endpoint) | Disable the default execute-api endpoint. | `bool` | `false` | no |
+| <a name="input_domain_names"></a> [domain\_names](#input\_domain\_names) | Keyed domain names configurations; null maps mean empty, null entries are rejected. | <pre>map(object({<br/>    domain_name_configuration = object({<br/>      certificate_arn                        = string<br/>      endpoint_type                          = optional(string, "REGIONAL")<br/>      security_policy                        = optional(string, "TLS_1_2")<br/>      ownership_verification_certificate_arn = optional(string)<br/>      ip_address_type                        = optional(string)<br/>    })<br/>    routing_mode = optional(string)<br/>    mutual_tls_authentication = optional(object({<br/>      truststore_uri     = string<br/>      truststore_version = optional(string)<br/>    }))<br/>    timeouts = optional(object({<br/>      create = optional(string)<br/>      update = optional(string)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_fail_on_warnings"></a> [fail\_on\_warnings](#input\_fail\_on\_warnings) | Fail OpenAPI imports on warnings. | `bool` | `false` | no |
+| <a name="input_integration_responses"></a> [integration\_responses](#input\_integration\_responses) | Keyed integration responses configurations; null maps mean empty, null entries are rejected. | <pre>map(object({<br/>    integration_id                = optional(string)<br/>    integration_key               = optional(string)<br/>    integration_response_key      = string<br/>    content_handling_strategy     = optional(string)<br/>    response_templates            = optional(map(string))<br/>    template_selection_expression = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_integrations"></a> [integrations](#input\_integrations) | Keyed integrations configurations; null maps mean empty, null entries are rejected. | <pre>map(object({<br/>    connection_id                 = optional(string)<br/>    connection_type               = optional(string)<br/>    content_handling_strategy     = optional(string)<br/>    credentials_arn               = optional(string)<br/>    description                   = optional(string)<br/>    integration_method            = optional(string)<br/>    integration_type              = optional(string)<br/>    integration_uri               = optional(string)<br/>    passthrough_behavior          = optional(string)<br/>    integration_subtype           = optional(string)<br/>    payload_format_version        = optional(string)<br/>    template_selection_expression = optional(string)<br/>    vpc_link_key                  = optional(string)<br/>    request_parameters            = optional(map(string))<br/>    request_templates             = optional(map(string))<br/>    timeout_milliseconds          = optional(number)<br/>    response_parameters = optional(map(object({<br/>      mappings    = map(string)<br/>      status_code = string<br/>    })), {})<br/>    tls_config = optional(object({<br/>      server_name_to_verify = optional(string)<br/>    }))<br/>  }))</pre> | `{}` | no |
+| <a name="input_ip_address_type"></a> [ip\_address\_type](#input\_ip\_address\_type) | API IP address family; null preserves the provider default. | `string` | `null` | no |
+| <a name="input_jwt_configuration"></a> [jwt\_configuration](#input\_jwt\_configuration) | Deprecated global JWT fallback; meaningful values apply only to JWT authorizers. | <pre>object({<br/>    audience = optional(list(string))<br/>    issuer   = optional(string)<br/>  })</pre> | `{}` | no |
+| <a name="input_models"></a> [models](#input\_models) | Keyed WebSocket models. Map keys are physical names; required legacy name remains a deprecated no-op alias. | <pre>map(object({<br/>    content_type = string<br/>    name         = string<br/>    schema       = string<br/>    description  = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_mutual_tls_authentication"></a> [mutual\_tls\_authentication](#input\_mutual\_tls\_authentication) | Global mutual TLS fallback for custom domains. | <pre>object({<br/>    truststore_uri     = string<br/>    truststore_version = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | Physical API name. | `string` | n/a | yes |
+| <a name="input_protocol_type"></a> [protocol\_type](#input\_protocol\_type) | HTTP or WEBSOCKET protocol. | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | Region override for every resource; null uses the provider region. | `string` | `null` | no |
+| <a name="input_route_key"></a> [route\_key](#input\_route\_key) | Quick-create HTTP route key. | `string` | `null` | no |
+| <a name="input_route_responses"></a> [route\_responses](#input\_route\_responses) | Keyed route responses configurations; null maps mean empty, null entries are rejected. | <pre>map(object({<br/>    route_id                   = optional(string)<br/>    route_key                  = optional(string)<br/>    route_response_key         = string<br/>    response_models            = optional(map(string))<br/>    model_selection_expression = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_route_selection_expression"></a> [route\_selection\_expression](#input\_route\_selection\_expression) | Route selection expression; WebSocket callers typically select $request.body.action. | `string` | `"$request.method $request.path"` | no |
+| <a name="input_routes"></a> [routes](#input\_routes) | Keyed routes; route\_key is required. Internal integration\_key and authorizer\_key are alternatives to literal references. request\_parameters is a deprecated boolean-string adapter. | <pre>map(object({<br/>    authorization_type                  = optional(string)<br/>    authorizer_id                       = optional(string)<br/>    model_selection_expression          = optional(string)<br/>    operation_name                      = optional(string)<br/>    route_key                           = optional(string)<br/>    route_response_selection_expression = optional(string)<br/>    target                              = optional(string)<br/>    integration_key                     = optional(string)<br/>    authorizer_key                      = optional(string)<br/>    api_key_required                    = optional(bool)<br/>    authorization_scopes                = optional(list(string))<br/>    request_models                      = optional(map(string))<br/>    request_parameters                  = optional(map(string))<br/>    request_parameter = optional(map(object({<br/>      request_parameter_key = string<br/>      required              = bool<br/>    })), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_stages"></a> [stages](#input\_stages) | Keyed stages. Map keys are physical names; stage\_name is a deprecated no-op alias. Null auto\_deploy retains provider false. | <pre>map(object({<br/>    auto_deploy = optional(bool)<br/>    description = optional(string)<br/>    stage_name  = optional(string)<br/>    access_log_settings = optional(object({<br/>      destination_arn = string<br/>      format          = string<br/>    }))<br/>    default_route_settings = optional(object({<br/>      data_trace_enabled       = optional(bool)<br/>      detailed_metrics_enabled = optional(bool)<br/>      logging_level            = optional(string)<br/>      throttling_burst_limit   = optional(number)<br/>      throttling_rate_limit    = optional(number)<br/>    }))<br/>    route_settings = optional(map(object({<br/>      data_trace_enabled       = optional(bool)<br/>      detailed_metrics_enabled = optional(bool)<br/>      logging_level            = optional(string)<br/>      throttling_burst_limit   = optional(number)<br/>      throttling_rate_limit    = optional(number)<br/>    })), {})<br/>    client_certificate_id = optional(string)<br/>    deployment_id         = optional(string)<br/>    stage_variables       = optional(map(string))<br/>    tags                  = optional(map(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Shared tags; override generated Name tags. Per-resource tags take final precedence. | `map(string)` | <pre>{<br/>  "terraform": "true"<br/>}</pre> | no |
+| <a name="input_target"></a> [target](#input\_target) | Quick-create integration target; cannot overlap explicit integration, route or stage ownership. | `string` | `null` | no |
+| <a name="input_vpc_links"></a> [vpc\_links](#input\_vpc\_links) | Keyed vpc links configurations; null maps mean empty, null entries are rejected. | <pre>map(object({<br/>    security_group_ids = list(string)<br/>    subnet_ids         = list(string)<br/>    tags               = optional(map(string))<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
@@ -151,56 +410,25 @@ No modules.
 | <a name="output_api_endpoint"></a> [api\_endpoint](#output\_api\_endpoint) | The URI of the API |
 | <a name="output_api_key_selection_expression"></a> [api\_key\_selection\_expression](#output\_api\_key\_selection\_expression) | The API key selection expression for the API |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the API |
+| <a name="output_authorizer_ids"></a> [authorizer\_ids](#output\_authorizer\_ids) | Map of authorizer ids keyed by the original logical resource keys. |
 | <a name="output_cors_configuration"></a> [cors\_configuration](#output\_cors\_configuration) | The CORS configuration for the API |
+| <a name="output_domain_tags_all"></a> [domain\_tags\_all](#output\_domain\_tags\_all) | Map of domain tags all keyed by the original logical resource keys. |
+| <a name="output_domains"></a> [domains](#output\_domains) | Domain identifiers and routing metadata keyed by domain name. |
 | <a name="output_execution_arn"></a> [execution\_arn](#output\_execution\_arn) | The ARN prefix to be used in permission policies |
 | <a name="output_id"></a> [id](#output\_id) | The API identifier |
+| <a name="output_integration_ids"></a> [integration\_ids](#output\_integration\_ids) | Map of integration ids keyed by the original logical resource keys. |
+| <a name="output_integration_response_ids"></a> [integration\_response\_ids](#output\_integration\_response\_ids) | Map of integration response ids keyed by the original logical resource keys. |
+| <a name="output_integration_response_selection_expressions"></a> [integration\_response\_selection\_expressions](#output\_integration\_response\_selection\_expressions) | Map of integration response selection expressions keyed by the original logical resource keys. |
+| <a name="output_model_ids"></a> [model\_ids](#output\_model\_ids) | Map of model ids keyed by the original logical resource keys. |
+| <a name="output_route_ids"></a> [route\_ids](#output\_route\_ids) | Map of route ids keyed by the original logical resource keys. |
+| <a name="output_route_response_ids"></a> [route\_response\_ids](#output\_route\_response\_ids) | Map of route response ids keyed by the original logical resource keys. |
+| <a name="output_stage_arns"></a> [stage\_arns](#output\_stage\_arns) | Map of stage arns keyed by the original logical resource keys. |
+| <a name="output_stage_execution_arns"></a> [stage\_execution\_arns](#output\_stage\_execution\_arns) | Map of stage execution arns keyed by the original logical resource keys. |
+| <a name="output_stage_ids"></a> [stage\_ids](#output\_stage\_ids) | Map of stage ids keyed by the original logical resource keys. |
+| <a name="output_stage_invoke_urls"></a> [stage\_invoke\_urls](#output\_stage\_invoke\_urls) | Map of stage invoke urls keyed by the original logical resource keys. |
+| <a name="output_stage_tags_all"></a> [stage\_tags\_all](#output\_stage\_tags\_all) | Map of stage tags all keyed by the original logical resource keys. |
 | <a name="output_tags_all"></a> [tags\_all](#output\_tags\_all) | Map of tags assigned to the resource |
+| <a name="output_vpc_link_arns"></a> [vpc\_link\_arns](#output\_vpc\_link\_arns) | Map of vpc link arns keyed by the original logical resource keys. |
+| <a name="output_vpc_link_ids"></a> [vpc\_link\_ids](#output\_vpc\_link\_ids) | Map of vpc link ids keyed by the original logical resource keys. |
+| <a name="output_vpc_link_tags_all"></a> [vpc\_link\_tags\_all](#output\_vpc\_link\_tags\_all) | Map of vpc link tags all keyed by the original logical resource keys. |
 <!-- END_TF_DOCS -->
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTACT -->
-## Contact
-
-Zachary Hill - [![LinkedIn][linkedin-shield]][linkedin-url] - zhill@zacharyhill.co
-
-Project Link: [https://github.com/zachreborn/terraform-modules](https://github.com/zachreborn/terraform-modules)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* [Zachary Hill](https://github.com/zachreborn)
-* [Jake Jones](https://github.com/jakeasaurus)
-* [Brad Engberg](https://github.com/bradms98)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/zachreborn/terraform-modules.svg?style=for-the-badge
-[contributors-url]: https://github.com/zachreborn/terraform-modules/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/zachreborn/terraform-modules.svg?style=for-the-badge
-[forks-url]: https://github.com/zachreborn/terraform-modules/network/members
-[stars-shield]: https://img.shields.io/github/stars/zachreborn/terraform-modules.svg?style=for-the-badge
-[stars-url]: https://github.com/zachreborn/terraform-modules/stargazers
-[issues-shield]: https://img.shields.io/github/issues/zachreborn/terraform-modules.svg?style=for-the-badge
-[issues-url]: https://github.com/zachreborn/terraform-modules/issues
-[license-shield]: https://img.shields.io/github/license/zachreborn/terraform-modules.svg?style=for-the-badge
-[license-url]: https://github.com/zachreborn/terraform-modules/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/zachary-hill-5524257a/
-[product-screenshot]: /images/screenshot.webp
-[Terraform.io]: https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform
-[Terraform-url]: https://terraform.io

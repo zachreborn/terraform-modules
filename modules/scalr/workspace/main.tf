@@ -5,8 +5,9 @@ terraform {
   required_version = ">= 1.9.0"
   required_providers {
     scalr = {
-      source  = "registry.scalr.io/scalr/scalr"
-      version = ">= 3.17.0"
+      source = "registry.scalr.io/scalr/scalr"
+      # scalr_workspace remote_state_sharing and runner_image_version_id were introduced in provider v3.20.0.
+      version = ">= 3.20.0"
     }
   }
 }
@@ -30,7 +31,9 @@ resource "scalr_workspace" "this" {
   operations                  = each.value.operations
   remote_backend              = each.value.remote_backend
   remote_state_consumers      = each.value.remote_state_consumers
+  remote_state_sharing        = each.value.remote_state_sharing
   run_operation_timeout       = each.value.run_operation_timeout
+  runner_image_version_id     = each.value.runner_image_version_id
   ssh_key_id                  = each.value.ssh_key_id
   tag_ids                     = each.value.tag_ids
   terraform_version           = each.value.terraform_version

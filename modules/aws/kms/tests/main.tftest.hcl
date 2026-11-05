@@ -40,6 +40,16 @@ run "plan_succeeds_with_valid_input" {
   }
 
   assert {
+    condition     = aws_kms_key.this.multi_region == false
+    error_message = "multi_region should default to false."
+  }
+
+  assert {
+    condition     = output.multi_region == false
+    error_message = "multi_region output should be false by default."
+  }
+
+  assert {
     condition     = aws_kms_key.this.tags["environment"] == "prod"
     error_message = "tags should default to include environment = prod."
   }
@@ -80,6 +90,7 @@ run "overrides_are_honored" {
     enable_key_rotation      = false
     key_usage                = "SIGN_VERIFY"
     is_enabled               = false
+    multi_region             = true
     description              = "Custom key description"
     policy                   = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
     tags = {
@@ -105,6 +116,16 @@ run "overrides_are_honored" {
   assert {
     condition     = aws_kms_key.this.is_enabled == false
     error_message = "is_enabled override should be honored."
+  }
+
+  assert {
+    condition     = aws_kms_key.this.multi_region == true
+    error_message = "multi_region override should be honored."
+  }
+
+  assert {
+    condition     = output.multi_region == true
+    error_message = "multi_region output should be true when multi_region = true."
   }
 
   assert {

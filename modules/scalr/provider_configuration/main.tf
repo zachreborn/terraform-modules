@@ -10,8 +10,10 @@ terraform {
   required_version = ">= 1.9.0"
   required_providers {
     scalr = {
-      source  = "registry.scalr.io/scalr/scalr"
-      version = ">= 3.17.0"
+      source = "registry.scalr.io/scalr/scalr"
+      # >= 3.20.0: scalr_provider_configuration's is_allowed_in_module_test argument and the read-only
+      # is_used_in_module_test attribute were first released in provider v3.20.0.
+      version = ">= 3.20.0"
     }
   }
 }
@@ -43,13 +45,14 @@ locals {
 resource "scalr_provider_configuration" "this" {
   for_each = var.provider_configurations
 
-  name                   = coalesce(each.value.name, each.key)
-  account_id             = each.value.account_id
-  apply_only             = each.value.apply_only
-  environments           = each.value.environments
-  export_shell_variables = each.value.export_shell_variables
-  owners                 = each.value.owners
-  tag_ids                = each.value.tag_ids
+  name                      = coalesce(each.value.name, each.key)
+  account_id                = each.value.account_id
+  apply_only                = each.value.apply_only
+  environments              = each.value.environments
+  export_shell_variables    = each.value.export_shell_variables
+  is_allowed_in_module_test = each.value.is_allowed_in_module_test
+  owners                    = each.value.owners
+  tag_ids                   = each.value.tag_ids
 
   dynamic "aws" {
     for_each = each.value.aws != null ? [each.value.aws] : []

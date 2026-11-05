@@ -2,7 +2,8 @@
 # Provider Configuration
 ###########################
 terraform {
-  required_version = ">= 1.0.0"
+  # optional() object attributes require Terraform/OpenTofu >= 1.3.0
+  required_version = ">= 1.3.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -10,12 +11,6 @@ terraform {
     }
   }
 }
-
-###########################
-# Data Sources
-###########################
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 ###########################
 # Locals
@@ -43,6 +38,37 @@ locals {
     stage_throttle        = var.stage_throttle_settings
   }
   deployment_hash = sha1(jsonencode(local.deployment_components))
+
+  # Nested parent_id self-references on a single for_each resource cycle the graph
+  # (both ternary branches are tracked). Split by depth so parents are separate addresses.
+  # depth 0 keeps the historical aws_api_gateway_resource.this address for root children.
+  root_resources = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key == null
+  }
+  nested_resources = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key != null && contains(keys(local.root_resources), resource.parent_resource_key)
+  }
+  nested_resources_2 = {
+    for key, resource in var.resources : key => resource
+    if resource.parent_resource_key != null && contains(keys(local.nested_resources), resource.parent_resource_key)
+  }
+
+  api_resources = merge(
+    aws_api_gateway_resource.this,
+    aws_api_gateway_resource.nested,
+    aws_api_gateway_resource.nested_2,
+  )
+
+  # mTLS truststore resolution. An explicit mtls_config.truststore_uri always wins, which keeps existing callers
+  # working unchanged. Otherwise the URI is built as s3://<bucket_name>/<truststore_key>, where the key defaults to
+  # truststore.pem. try() covers mtls_config being null, since its attributes cannot be read in that case.
+  mtls_truststore_key     = coalesce(try(var.mtls_config.truststore_key, null), "truststore.pem")
+  mtls_truststore_version = try(var.mtls_config.truststore_version, null)
+  mtls_truststore_uri = try(var.mtls_config.truststore_uri, null) != null ? var.mtls_config.truststore_uri : (
+    var.bucket_name != null ? "s3://${var.bucket_name}/${local.mtls_truststore_key}" : null
+  )
 }
 
 ###########################
@@ -75,10 +101,26 @@ resource "aws_api_gateway_rest_api" "this" {
 # API Gateway Resources
 ############################################
 resource "aws_api_gateway_resource" "this" {
-  for_each = var.resources
+  for_each = local.root_resources
 
   rest_api_id = aws_api_gateway_rest_api.this.id
   parent_id   = aws_api_gateway_rest_api.this.root_resource_id
+  path_part   = each.value.path_part
+}
+
+resource "aws_api_gateway_resource" "nested" {
+  for_each = local.nested_resources
+
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.this[each.value.parent_resource_key].id
+  path_part   = each.value.path_part
+}
+
+resource "aws_api_gateway_resource" "nested_2" {
+  for_each = local.nested_resources_2
+
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.nested[each.value.parent_resource_key].id
   path_part   = each.value.path_part
 }
 
@@ -131,7 +173,7 @@ resource "aws_api_gateway_method" "this" {
   for_each = var.methods
 
   rest_api_id          = aws_api_gateway_rest_api.this.id
-  resource_id          = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id          = local.api_resources[each.value.resource].id
   http_method          = each.value.http_method
   authorization        = each.value.authorization
   authorizer_id        = each.value.authorizer_id != null ? (can(aws_api_gateway_authorizer.this[each.value.authorizer_id]) ? aws_api_gateway_authorizer.this[each.value.authorizer_id].id : each.value.authorizer_id) : null
@@ -169,7 +211,7 @@ resource "aws_api_gateway_method_response" "this" {
   for_each = var.method_responses
 
   rest_api_id         = aws_api_gateway_rest_api.this.id
-  resource_id         = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id         = local.api_resources[each.value.resource].id
   http_method         = aws_api_gateway_method.this[each.value.method].http_method
   status_code         = each.value.status_code
   response_models     = each.value.response_models
@@ -183,7 +225,7 @@ resource "aws_api_gateway_integration" "this" {
   for_each = var.integrations
 
   rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id             = local.api_resources[each.value.resource].id
   http_method             = aws_api_gateway_method.this[each.value.method].http_method
   type                    = each.value.type
   uri                     = each.value.uri
@@ -231,7 +273,7 @@ resource "aws_api_gateway_integration_response" "this" {
   for_each = var.integration_responses
 
   rest_api_id         = aws_api_gateway_rest_api.this.id
-  resource_id         = aws_api_gateway_resource.this[each.value.resource].id
+  resource_id         = local.api_resources[each.value.resource].id
   http_method         = aws_api_gateway_method.this[each.value.method].http_method
   status_code         = each.value.status_code
   selection_pattern   = each.value.selection_pattern
@@ -279,6 +321,9 @@ resource "aws_api_gateway_deployment" "this" {
   }
 
   depends_on = [
+    aws_api_gateway_resource.this,
+    aws_api_gateway_resource.nested,
+    aws_api_gateway_resource.nested_2,
     aws_api_gateway_method.this,
     aws_api_gateway_method.root,
     aws_api_gateway_integration.this,
@@ -360,14 +405,23 @@ resource "aws_api_gateway_domain_name" "this" {
 
   # mTLS configuration - S3 bucket and truststore must be created separately
   dynamic "mutual_tls_authentication" {
-    for_each = var.enable_mtls && var.mtls_config != null ? [var.mtls_config] : []
+    for_each = var.enable_mtls && local.mtls_truststore_uri != null ? [local.mtls_truststore_uri] : []
     content {
-      truststore_uri     = mutual_tls_authentication.value.truststore_uri
-      truststore_version = mutual_tls_authentication.value.truststore_version
+      truststore_uri     = mutual_tls_authentication.value
+      truststore_version = local.mtls_truststore_version
     }
   }
 
   tags = var.tags
+
+  lifecycle {
+    # Fail closed: without a truststore the domain would otherwise be created without mTLS even though the caller
+    # asked for it.
+    precondition {
+      condition     = !var.enable_mtls || local.mtls_truststore_uri != null
+      error_message = "enable_mtls = true requires a truststore. Set bucket_name (optionally with mtls_config.truststore_key) or mtls_config.truststore_uri."
+    }
+  }
 }
 
 ############################################

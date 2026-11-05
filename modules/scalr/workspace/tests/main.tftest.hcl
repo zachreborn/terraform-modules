@@ -202,3 +202,162 @@ run "operations_selects_mode_when_execution_mode_unset" {
     error_message = "operations should be forwarded to the resource."
   }
 }
+
+###########################################################
+# Provider v3.20.0 arguments: remote_state_sharing and runner_image_version_id
+###########################################################
+
+run "remote_state_sharing_false_is_wired_through" {
+  command = plan
+
+  variables {
+    workspaces = {
+      private_state = {
+        environment_id       = "env-xxxxxxxxxx"
+        remote_state_sharing = false
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_workspace.this["private_state"].remote_state_sharing == false
+    error_message = "remote_state_sharing = false should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = output.remote_state_sharing["private_state"] == false
+    error_message = "The remote_state_sharing output should surface the effective value (false)."
+  }
+}
+
+run "remote_state_sharing_true_is_wired_through" {
+  command = plan
+
+  variables {
+    workspaces = {
+      shared_state = {
+        environment_id       = "env-xxxxxxxxxx"
+        remote_state_sharing = true
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_workspace.this["shared_state"].remote_state_sharing == true
+    error_message = "remote_state_sharing = true should be forwarded to the resource."
+  }
+
+  assert {
+    condition     = output.remote_state_sharing["shared_state"] == true
+    error_message = "The remote_state_sharing output should surface the effective value (true)."
+  }
+}
+
+run "runner_image_version_id_is_wired_through" {
+  command = plan
+
+  variables {
+    workspaces = {
+      pinned_runner = {
+        environment_id          = "env-xxxxxxxxxx"
+        runner_image_version_id = "cimgv-xxxxxxxxxx"
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_workspace.this["pinned_runner"].runner_image_version_id == "cimgv-xxxxxxxxxx"
+    error_message = "runner_image_version_id should be forwarded to the resource."
+  }
+}
+
+run "runner_image_version_id_is_unset_by_default" {
+  command = plan
+
+  variables {
+    workspaces = {
+      default_runner = {
+        environment_id = "env-xxxxxxxxxx"
+      }
+    }
+  }
+
+  # runner_image_version_id is optional and NOT computed, so leaving it out must leave it null and let
+  # the account default runner image apply.
+  assert {
+    condition     = scalr_workspace.this["default_runner"].runner_image_version_id == null
+    error_message = "runner_image_version_id should stay null when omitted."
+  }
+}
+
+###########################################################
+# Backward compatibility: deprecated remote_state_consumers
+###########################################################
+
+run "deprecated_remote_state_consumers_is_still_wired_through" {
+  command = plan
+
+  variables {
+    workspaces = {
+      legacy_all = {
+        environment_id         = "env-xxxxxxxxxx"
+        remote_state_consumers = ["*"]
+      }
+      legacy_specific = {
+        environment_id         = "env-xxxxxxxxxx"
+        remote_state_consumers = ["ws-aaaaaaaaaa", "ws-bbbbbbbbbb"]
+      }
+    }
+  }
+
+  assert {
+    condition     = scalr_workspace.this["legacy_all"].remote_state_consumers == toset(["*"])
+    error_message = "The deprecated remote_state_consumers = [\"*\"] should still be forwarded to the resource."
+  }
+
+  assert {
+    condition     = scalr_workspace.this["legacy_specific"].remote_state_consumers == toset(["ws-aaaaaaaaaa", "ws-bbbbbbbbbb"])
+    error_message = "The deprecated remote_state_consumers list should still be forwarded to the resource."
+  }
+}
+
+run "conflict_check_is_per_entry_so_different_entries_may_use_either_style" {
+  command = plan
+
+  variables {
+    workspaces = {
+      legacy = {
+        environment_id         = "env-xxxxxxxxxx"
+        remote_state_consumers = ["ws-aaaaaaaaaa"]
+      }
+      modern = {
+        environment_id       = "env-xxxxxxxxxx"
+        remote_state_sharing = false
+      }
+    }
+  }
+
+  assert {
+    condition     = length(scalr_workspace.this) == 2
+    error_message = "One entry using the deprecated remote_state_consumers and another using remote_state_sharing should both plan."
+  }
+
+  assert {
+    condition     = scalr_workspace.this["modern"].remote_state_sharing == false
+    error_message = "The entry using remote_state_sharing should keep its own value."
+  }
+
+  assert {
+    condition     = scalr_workspace.this["legacy"].remote_state_consumers == toset(["ws-aaaaaaaaaa"])
+    error_message = "The entry using remote_state_consumers should keep its own value."
+  }
+}
+
+run "empty_workspaces_map_plans_no_workspaces" {
+  command = plan
+
+  assert {
+    condition     = length(scalr_workspace.this) == 0 && length(output.ids) == 0 && length(output.remote_state_sharing) == 0
+    error_message = "An empty workspaces map should plan no workspaces and produce empty outputs."
+  }
+}

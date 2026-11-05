@@ -34,7 +34,7 @@ This module creates AWS API Gateway REST APIs with support for all major feature
 
 1. **ACM Certificate**: Use the `acm_certificate` module separately. API Gateway requires validated certificates, and validation creates circular dependencies if done within this module.
 
-2. **S3 Bucket for mTLS**: Use the `s3` module separately. The bucket stores the truststore.pem file and must exist before API Gateway domain configuration.
+2. **S3 Bucket for mTLS**: Use the `s3` module separately. The bucket stores the truststore.pem file and must exist before API Gateway domain configuration. Pass its name via `bucket_name`; the module builds `truststore_uri` as `s3://<bucket_name>/<mtls_config.truststore_key>` (key defaults to `truststore.pem`). An explicit `mtls_config.truststore_uri` always takes precedence.
 
 ### Deployment Strategy
 The module uses a **deployment hash** to automatically trigger redeployments when any configuration changes:
@@ -65,6 +65,7 @@ This ensures API changes are automatically propagated without manual interventio
 ### Resource Relationships
 Resources are linked via map keys for flexibility:
 
+- **Resources** may nest via optional `parent_resource_key` (another `resources` map key). Omitted/null parents attach under the REST API root. Nested paths like `/v1/leads` use stable logical keys (`v1`, `leads`). Nesting is implemented as separate resource addresses by depth (`this` / `nested` / `nested_2`) so parent references do not cycle the graph; max depth is two parents under a root segment (e.g. `/v1/leads/{id}`).
 - **Methods** reference `resources` by key
 - **Integrations** reference both `resources` and `methods` by key
 - **Integration Responses** reference `resources`, `methods`, and implicitly `integrations`
@@ -85,7 +86,8 @@ resources = {
     path_part = "users"
   }
   "user_id" = {
-    path_part = "{id}"
+    path_part           = "{id}"
+    parent_resource_key = "users"
   }
 }
 
@@ -122,7 +124,7 @@ Comprehensive validation ensures correct configuration:
 
 - Enum values (e.g., authorizer types, response types, logging levels)
 - Number ranges (e.g., cache sizes, compression sizes)
-- Format validation (e.g., S3 bucket names)
+- Format validation (e.g., S3 bucket names, S3 truststore URIs and object keys)
 - Null-safe checks (avoiding `length()` on nullable variables)
 
 ## Common Use Cases
@@ -311,11 +313,18 @@ module "api" {
   domain_name     = "api.example.com"
   certificate_arn = module.certificate.arn
   enable_mtls     = true
-  
+
+  # truststore_uri resolves to s3://my-api-truststore/truststore/truststore.pem
+  bucket_name = "my-api-truststore"
   mtls_config = {
-    truststore_uri     = "s3://my-api-truststore/truststore/truststore.pem"
-    truststore_version = "version_id_from_s3"
+    truststore_key     = "truststore/truststore.pem" # Optional. Defaults to "truststore.pem"
+    truststore_version = "version_id_from_s3"         # Optional
   }
+
+  # Alternative: pass the full URI instead of bucket_name + truststore_key.
+  # mtls_config = {
+  #   truststore_uri = "s3://my-api-truststore/truststore/truststore.pem"
+  # }
 }
 ```
 
@@ -357,7 +366,7 @@ module "api" {
 
 ## Provider Requirements
 
-- **Terraform**: >= 1.0.0
+- **Terraform / OpenTofu**: >= 1.3.0 (`optional()` object attributes)
 - **AWS Provider**: >= 6.0.0
 
 ## Testing
@@ -405,9 +414,10 @@ The module provides comprehensive outputs for all created resources:
 
 ## Known Limitations
 
-1. **OpenAPI/Swagger Import**: The `body` parameter supports OpenAPI, but this module is primarily designed for explicit resource configuration
+1. **OpenAPI/Swagger Import**: The `body` parameter supports OpenAPI nested paths, but that surface should not be mixed casually with the typed `resources` / `methods` / `integrations` maps. Prefer `parent_resource_key` for map-based nested paths.
 2. **Deployment Stages**: Currently supports a single stage per module instance
 3. **VPC Link**: V1 VPC Links only (for REST APIs); use the v2 module for HTTP APIs
+4. **Parent cycles**: Unknown and self `parent_resource_key` values fail variable validation. Longer cycles are rejected by the OpenTofu dependency graph.
 
 ## Contributing
 
