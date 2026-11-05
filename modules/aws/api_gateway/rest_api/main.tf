@@ -335,6 +335,12 @@ resource "aws_api_gateway_deployment" "this" {
     aws_api_gateway_authorizer.this,
     aws_api_gateway_gateway_response.this
   ]
+
+  # AWS rejects DeleteDeployment while a stage still points at the old id.
+  # Create the new deployment first, move the stage, then destroy the old one.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 ############################################
