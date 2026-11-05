@@ -49,6 +49,16 @@ output "central_kms_key_arns_dr" {
   value       = { for k, v in module.central_kms_dr : k => v.arn }
 }
 
+output "central_backup_role_arn" {
+  description = "ARN of the IAM role AWS Backup assumes in the central account for copy-back and restore jobs."
+  value       = module.central_backup_role.arn
+}
+
+output "central_backup_role_name" {
+  description = "Name of the IAM role AWS Backup assumes in the central account for copy-back and restore jobs."
+  value       = module.central_backup_role.name
+}
+
 output "vault_lock_mode" {
   description = "The AWS Backup Vault Lock mode applied to the central vaults (none, governance, or compliance)."
   value       = var.vault_lock_mode

@@ -40,6 +40,17 @@ locals {
 
   policy_regions = coalesce(var.policy_regions, [var.prod_region])
 
+  # Trust policy for the central account's AWS Backup role.
+  central_backup_assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "AllowAWSBackupAssumeRole"
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "backup.amazonaws.com" }
+    }]
+  })
+
   # Resource-based policy on each central vault: allow any principal in this organization to copy
   # recovery points into the vault. This is the destination half of cross-account copy.
   vault_access_policy = jsonencode({
@@ -162,6 +173,25 @@ locals {
       }
     }
   }
+}
+
+###########################
+# Central Backup IAM Role
+###########################
+# Role AWS Backup assumes for jobs started in the central account: copying a recovery point from a
+# central vault back into a member account's staging vault, and restores run in the central account.
+module "central_backup_role" {
+  source = "../../aws/iam/role"
+  providers = {
+    aws = aws.prod_region
+  }
+
+  name                 = var.central_backup_role_name
+  path                 = var.central_backup_role_path
+  permissions_boundary = var.central_backup_role_permissions_boundary
+  assume_role_policy   = local.central_backup_assume_role_policy
+  policy_arns          = var.central_backup_role_policy_arns
+  tags                 = var.tags
 }
 
 ###########################

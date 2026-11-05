@@ -124,6 +124,35 @@ variable "backup_role_name" {
   default     = "AWSBackupServiceRole"
 }
 
+variable "central_backup_role_name" {
+  type        = string
+  description = "(Optional) Name of the IAM role AWS Backup assumes in the central account for copy jobs from the central vaults back to member accounts and for restores run in the central account."
+  default     = "AWSBackupCentralRole"
+}
+
+variable "central_backup_role_path" {
+  type        = string
+  description = "(Optional) IAM path for the central backup role."
+  default     = "/"
+}
+
+variable "central_backup_role_permissions_boundary" {
+  type        = string
+  description = "(Optional) ARN of a permissions boundary to attach to the central backup role."
+  default     = null
+}
+
+variable "central_backup_role_policy_arns" {
+  type        = list(string)
+  description = "(Optional) AWS managed policy ARNs attached to the central backup role. Defaults to the AWS Backup service-role policies for backup (includes backup:CopyFromBackupVault and backup:CopyIntoBackupVault), restore, and S3 backup/restore."
+  default = [
+    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
+    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",
+    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Backup",
+    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Restore",
+  ]
+}
+
 variable "central_vault_prefix" {
   type        = string
   description = "(Optional) Name prefix for the central vaults. The tier key is appended (e.g. central-vault-1). The same vault name is used in both prod_region and dr_region; the region is carried in the ARN."
