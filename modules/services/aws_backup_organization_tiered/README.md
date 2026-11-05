@@ -69,7 +69,7 @@ It produces two things from a single `backup_tiers` map (the source of truth):
    one per tier in `prod_region` plus one in `dr_region` for `copy_to_dr` tiers. Each has a
    per-region customer-managed KMS key, a resource policy granting the organization
    `backup:CopyIntoBackupVault`, a KMS key policy granting org backup roles encrypt rights, and an
-   optional **COMPLIANCE-mode Vault Lock**. The result is immutable, logically air-gapped copies
+   optional **Vault Lock** (governance or compliance mode). The result is immutable, logically air-gapped copies
    living in one account, isolated from any source account's blast radius.
 
 The per-account static footprint (the `backup-staging` vault + the backup service role) is **not**
@@ -106,8 +106,8 @@ module "tiered_backup" {
   dr_region          = "us-east-2"
   target_ou_ids      = [module.dev_ou.id, module.test_ou.id]
 
-  # Validate against reversible vaults first, then flip to true to commit immutability.
-  enable_vault_lock   = false
+  # none -> governance (reversible lock) -> compliance (permanent after the grace window).
+  vault_lock_mode     = "none"
   changeable_for_days = 3
 
   backup_tiers = {
@@ -146,9 +146,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 - **Staging vs central.** The local `backup-staging` vault (member-side) is disposable: short
   retention, no lock. The central vaults hold the full retention and the immutability. AWS Backup
   always writes locally first, so the staging vault and role must pre-exist in every member account.
-- **Vault Lock is parameterized and irreversible.** `enable_vault_lock` defaults to `false` so the
-  cross-account copy + KMS wiring can be validated against reversible vaults. COMPLIANCE mode cannot
-  be undone after the `changeable_for_days` grace window expires — flip it on deliberately.
+- **Vault Lock mode is parameterized.** `vault_lock_mode` defaults to `"none"`. `"governance"`
+  enforces retention but can be removed by sufficiently privileged principals, so it can be used to
+  validate the cross-account copy + KMS wiring under a real lock. `"compliance"` cannot be undone
+  after the `changeable_for_days` grace window expires. Governance can be promoted to compliance in
+  place.
 - **Policy tokens.** `$account` is substituted by AWS Organizations per member account (used for the
   selection's `iam_role_arn`). The central account is a **literal** in the copy-destination ARNs.
 - **Window/lifecycle keys** follow the AWS Organizations backup-policy syntax
@@ -221,10 +223,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_backup_tiers"></a> [backup\_tiers](#input\_backup\_tiers) | (Required) The single source of truth for the tiered backup model. A map keyed by tier<br/>identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each<br/>tier declares its central copy/DR behavior, the Vault Lock retention floor for its central<br/>vaults, and an ordered list of backup rules. The module derives the org BACKUP\_POLICY and the<br/>central vault set entirely from this map: add a tier by adding a key, change a dimension by<br/>editing one place. Tier keys are arbitrary strings and become the `backup-tier` tag value.<br/><br/>Per-rule fields:<br/>  name                      - rule name (unique within the tier).<br/>  schedule                  - cron() expression. AWS Backup scheduled-snapshot floor is 1 hour.<br/>  continuous                - enable continuous backup / PITR (supported services only). PITR is<br/>                              local-staging only; copy\_actions are not emitted for continuous rules.<br/>  central\_copy              - copy the recovery point cross-account into the central vault(s).<br/>  start\_window\_minutes      - backup start window.<br/>  completion\_window\_minutes - backup completion window.<br/>  local\_delete\_after\_days   - staging (local) copy lifetime. Staging is disposable; keep short.<br/>  central\_delete\_after\_days - immutable central copy retention.<br/>  central\_cold\_after\_days   - Glacier-class transition for the central copy (null = none). AWS<br/>                              requires central\_delete\_after\_days >= central\_cold\_after\_days + 90. | <pre>map(object({<br/>    description              = string<br/>    copy_to_dr               = bool<br/>    vault_min_retention_days = optional(number, 30)<br/>    rules = list(object({<br/>      name                      = string<br/>      schedule                  = string<br/>      continuous                = optional(bool, false)<br/>      central_copy              = optional(bool, true)<br/>      start_window_minutes      = optional(number, 60)<br/>      completion_window_minutes = optional(number, 1440)<br/>      local_delete_after_days   = number<br/>      central_delete_after_days = number<br/>      central_cold_after_days   = optional(number, null)<br/>    }))<br/>  }))</pre> | n/a | yes |
 | <a name="input_central_account_id"></a> [central\_account\_id](#input\_central\_account\_id) | (Required) The AWS account ID of the central backup (delegated administrator) account that holds the compliance-locked central vaults. Used as the literal account in copy-destination ARNs and as the KMS key administrator principal. | `string` | n/a | yes |
 | <a name="input_central_vault_prefix"></a> [central\_vault\_prefix](#input\_central\_vault\_prefix) | (Optional) Name prefix for the central vaults. The tier key is appended (e.g. central-vault-1). The same vault name is used in both prod\_region and dr\_region; the region is carried in the ARN. | `string` | `"central-vault-"` | no |
-| <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) Grace window, in days, during which a COMPLIANCE-mode Vault Lock can still be deleted. After this window the lock is permanent. AWS minimum is 3. Only applies when enable\_vault\_lock = true. | `number` | `3` | no |
+| <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) Grace window, in days, during which a COMPLIANCE-mode Vault Lock can still be deleted. After this window the lock is permanent. AWS minimum is 3. Only applies when vault\_lock\_mode = "compliance". | `number` | `3` | no |
 | <a name="input_dr_region"></a> [dr\_region](#input\_dr\_region) | (Optional) The disaster-recovery region. Central vaults are created here for tiers with copy\_to\_dr = true, and rules in those tiers gain a second cross-region copy\_action targeting this region. | `string` | `"us-east-2"` | no |
 | <a name="input_enable_audit_manager"></a> [enable\_audit\_manager](#input\_enable\_audit\_manager) | (Optional) Create an AWS Backup Audit Manager framework and report plan in the central account to codify the tier rules and produce org-wide compliance reporting. | `bool` | `false` | no |
-| <a name="input_enable_vault_lock"></a> [enable\_vault\_lock](#input\_enable\_vault\_lock) | (Optional) Apply AWS Backup Vault Lock in COMPLIANCE mode to the central vaults. Compliance mode is IRREVERSIBLE once the changeable\_for\_days grace window expires. Leave false to validate the cross-account copy + KMS wiring against reversible vaults first, then flip to true to commit immutability. | `bool` | `false` | no |
 | <a name="input_kms_deletion_window_in_days"></a> [kms\_deletion\_window\_in\_days](#input\_kms\_deletion\_window\_in\_days) | (Optional) Duration in days before a destroyed central KMS key is deleted. Must be between 7 and 30. | `number` | `30` | no |
 | <a name="input_kms_enable_key_rotation"></a> [kms\_enable\_key\_rotation](#input\_kms\_enable\_key\_rotation) | (Optional) Enable automatic annual rotation of the central KMS keys. | `bool` | `true` | no |
 | <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name) | (Optional) Name of the AWS Organizations BACKUP\_POLICY. Also used as the per-tier plan-name prefix. | `string` | `"tiered-backup"` | no |
@@ -234,6 +235,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_tag_key"></a> [tag\_key](#input\_tag\_key) | (Optional) The resource tag key that steers a resource into a tier. Its value must equal one of the backup\_tiers keys. | `string` | `"backup-tier"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
 | <a name="input_target_ou_ids"></a> [target\_ou\_ids](#input\_target\_ou\_ids) | (Required) Organizational Unit IDs to attach the BACKUP\_POLICY to. Attach to workload OUs, never the org root, so the management account is excluded. New accounts placed in these OUs inherit the policy automatically. | `list(string)` | n/a | yes |
+| <a name="input_vault_lock_mode"></a> [vault\_lock\_mode](#input\_vault\_lock\_mode) | (Optional) AWS Backup Vault Lock mode for the central vaults. "none" applies no lock. "governance" enforces retention, but principals with backup:DeleteBackupVaultLockConfiguration or retention-change permissions can remove or alter it. "compliance" enforces retention and becomes IRREVERSIBLE (even for root) once the changeable\_for\_days grace window expires. Governance can be promoted to compliance in place. | `string` | `"none"` | no |
 
 ## Outputs
 
@@ -250,7 +252,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_central_vault_arns_dr"></a> [central\_vault\_arns\_dr](#output\_central\_vault\_arns\_dr) | Map of tier key to central vault ARN in the dr\_region (copy\_to\_dr tiers only). |
 | <a name="output_central_vault_arns_prod"></a> [central\_vault\_arns\_prod](#output\_central\_vault\_arns\_prod) | Map of tier key to central vault ARN in the prod\_region. |
 | <a name="output_central_vault_names"></a> [central\_vault\_names](#output\_central\_vault\_names) | Map of tier key to central vault name (identical across regions). |
-| <a name="output_vault_lock_enabled"></a> [vault\_lock\_enabled](#output\_vault\_lock\_enabled) | Whether COMPLIANCE-mode Vault Lock is applied to the central vaults. |
+| <a name="output_vault_lock_mode"></a> [vault\_lock\_mode](#output\_vault\_lock\_mode) | The AWS Backup Vault Lock mode applied to the central vaults (none, governance, or compliance). |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

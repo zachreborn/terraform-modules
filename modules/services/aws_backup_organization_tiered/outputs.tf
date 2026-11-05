@@ -49,9 +49,9 @@ output "central_kms_key_arns_dr" {
   value       = { for k, v in module.central_kms_dr : k => v.arn }
 }
 
-output "vault_lock_enabled" {
-  description = "Whether COMPLIANCE-mode Vault Lock is applied to the central vaults."
-  value       = var.enable_vault_lock
+output "vault_lock_mode" {
+  description = "The AWS Backup Vault Lock mode applied to the central vaults (none, governance, or compliance)."
+  value       = var.vault_lock_mode
 }
 
 ###########################

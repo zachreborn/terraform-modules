@@ -139,15 +139,19 @@ variable "target_ou_ids" {
 # Vault Lock Variables
 ###########################
 
-variable "enable_vault_lock" {
-  type        = bool
-  description = "(Optional) Apply AWS Backup Vault Lock in COMPLIANCE mode to the central vaults. Compliance mode is IRREVERSIBLE once the changeable_for_days grace window expires. Leave false to validate the cross-account copy + KMS wiring against reversible vaults first, then flip to true to commit immutability."
-  default     = false
+variable "vault_lock_mode" {
+  type        = string
+  description = "(Optional) AWS Backup Vault Lock mode for the central vaults. \"none\" applies no lock. \"governance\" enforces retention, but principals with backup:DeleteBackupVaultLockConfiguration or retention-change permissions can remove or alter it. \"compliance\" enforces retention and becomes IRREVERSIBLE (even for root) once the changeable_for_days grace window expires. Governance can be promoted to compliance in place."
+  default     = "none"
+  validation {
+    condition     = contains(["none", "governance", "compliance"], var.vault_lock_mode)
+    error_message = "vault_lock_mode must be one of: none, governance, compliance."
+  }
 }
 
 variable "changeable_for_days" {
   type        = number
-  description = "(Optional) Grace window, in days, during which a COMPLIANCE-mode Vault Lock can still be deleted. After this window the lock is permanent. AWS minimum is 3. Only applies when enable_vault_lock = true."
+  description = "(Optional) Grace window, in days, during which a COMPLIANCE-mode Vault Lock can still be deleted. After this window the lock is permanent. AWS minimum is 3. Only applies when vault_lock_mode = \"compliance\"."
   default     = 3
   validation {
     condition     = var.changeable_for_days >= 3

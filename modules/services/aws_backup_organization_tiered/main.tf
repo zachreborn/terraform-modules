@@ -221,11 +221,11 @@ resource "aws_backup_vault_policy" "central_prod" {
 }
 
 resource "aws_backup_vault_lock_configuration" "central_prod" {
-  for_each = var.enable_vault_lock ? var.backup_tiers : {}
+  for_each = var.vault_lock_mode != "none" ? var.backup_tiers : {}
   provider = aws.prod_region
 
   backup_vault_name   = aws_backup_vault.central_prod[each.key].name
-  changeable_for_days = var.changeable_for_days
+  changeable_for_days = var.vault_lock_mode == "compliance" ? var.changeable_for_days : null
   min_retention_days  = each.value.vault_min_retention_days
 }
 
@@ -250,11 +250,11 @@ resource "aws_backup_vault_policy" "central_dr" {
 }
 
 resource "aws_backup_vault_lock_configuration" "central_dr" {
-  for_each = var.enable_vault_lock ? local.dr_tiers : {}
+  for_each = var.vault_lock_mode != "none" ? local.dr_tiers : {}
   provider = aws.dr_region
 
   backup_vault_name   = aws_backup_vault.central_dr[each.key].name
-  changeable_for_days = var.changeable_for_days
+  changeable_for_days = var.vault_lock_mode == "compliance" ? var.changeable_for_days : null
   min_retention_days  = each.value.vault_min_retention_days
 }
 
