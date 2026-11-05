@@ -1,5 +1,59 @@
 # Changelog
 
+## [18.0.0](https://github.com/zachreborn/terraform-modules/compare/v17.6.0...v18.0.0) (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **aws/ram:** support list of resource ARNs for multi-resource shares ([#483](https://github.com/zachreborn/terraform-modules/issues/483))
+* **apigateway:** Gateway v2 now requires Terraform 1.3.0 and AWS provider 6.29.0. Previously ignored nested settings, authorizer controls, stage settings and tags now take effect; malformed or conflicting combinations are rejected. Existing singleton/keyed addresses and legacy no-op name aliases remain stable. Review the complete migration guidance and a consumer plan before adoption. The raised floors require a major release.
+* **lambda:** The module requires Terraform 1.3.0 and AWS provider 6.54.0. Previously ignored stream starting-position inputs now take effect and can require replacement. Existing singleton resource identity and effective batch/enabled defaults remain stable. Review the documented source/window restrictions and consumer plan before adoption.
+* **sqs:** The queue module requires Terraform 1.3.0 and AWS provider 6.8.0. Preserve encryption settings, queue names and delivery controls during adoption. The unchanged queue address and permanent key/alias moved declarations are documented. A major release is required for the toolchain floor increase.
+
+### Features
+
+* **apigateway:** complete gateway v2 adoption controls ([#546](https://github.com/zachreborn/terraform-modules/issues/546)) ([ae1ec27](https://github.com/zachreborn/terraform-modules/commit/ae1ec27ae5734eae6a9ca58c41b94941faf7f380))
+* **aws/ram:** support list of resource ARNs for multi-resource shares ([#483](https://github.com/zachreborn/terraform-modules/issues/483)) ([ee2b7bf](https://github.com/zachreborn/terraform-modules/commit/ee2b7bf42b099d10e6a22515d02a3745bc5e9011))
+* **lambda:** complete event source mapping controls ([#545](https://github.com/zachreborn/terraform-modules/issues/545)) ([9db3226](https://github.com/zachreborn/terraform-modules/commit/9db3226ab84862a09814b803ae12ed97be34e4e4))
+* **sqs:** complete queue adoption controls ([#544](https://github.com/zachreborn/terraform-modules/issues/544)) ([c2920cb](https://github.com/zachreborn/terraform-modules/commit/c2920cb63dbd91ddf501951d5e20dab37e7ea2fd))
+
+## [17.6.0](https://github.com/zachreborn/terraform-modules/compare/v17.5.0...v17.6.0) (2026-10-28)
+
+
+### Features
+
+* **dynamodb:** add keyed table module ([#543](https://github.com/zachreborn/terraform-modules/issues/543)) ([3b2e588](https://github.com/zachreborn/terraform-modules/commit/3b2e5880512a7ed0c010eb9ce5804de6d96cc2ec))
+
+## [17.5.0](https://github.com/zachreborn/terraform-modules/compare/v17.4.0...v17.5.0) (2026-10-28)
+
+
+### Features
+
+* **kms:** add multi_region variable and output ([#535](https://github.com/zachreborn/terraform-modules/issues/535)) ([cb19d1e](https://github.com/zachreborn/terraform-modules/commit/cb19d1e8bb65477ce9f30e9482ce478ca0b6b1dd))
+
+## [17.4.0](https://github.com/zachreborn/terraform-modules/compare/v17.3.0...v17.4.0) (2026-10-20)
+
+
+### Features
+
+* **scalr:** add Datadog, Docker, and Wiz integration modules ([#529](https://github.com/zachreborn/terraform-modules/issues/529)) ([7fe00c6](https://github.com/zachreborn/terraform-modules/commit/7fe00c60ef7c45f9da438a541514d4ecc700de6d))
+* **scalr:** add module test configuration modules and OCI module sources ([#530](https://github.com/zachreborn/terraform-modules/issues/530)) ([a92b85c](https://github.com/zachreborn/terraform-modules/commit/a92b85c6becaafb12ba29b589a35c2f90f790431))
+* **scalr:** add workspace remote state consumer module and v3.20.0 argument updates ([#528](https://github.com/zachreborn/terraform-modules/issues/528)) ([9d81f96](https://github.com/zachreborn/terraform-modules/commit/9d81f96fb2ccae3e2cdaf327333eac42a24ba1fc))
+
+## [17.3.0](https://github.com/zachreborn/terraform-modules/compare/v17.2.0...v17.3.0) (2026-10-18)
+
+
+### Features
+
+* **iam:** add standalone instance profile module ([#526](https://github.com/zachreborn/terraform-modules/issues/526)) ([3d326f9](https://github.com/zachreborn/terraform-modules/commit/3d326f952e4f889a5db46f880f2fb1828a1b6e82))
+
+## [17.2.0](https://github.com/zachreborn/terraform-modules/compare/v17.1.0...v17.2.0) (2026-10-18)
+
+
+### Features
+
+* **aws/api_gateway/rest_api:** nest resources via parent_resource_key ([#524](https://github.com/zachreborn/terraform-modules/issues/524)) ([2dc970a](https://github.com/zachreborn/terraform-modules/commit/2dc970a1a5048bf4c86a9fd0020ac509ec748c20))
+
 ## [17.1.0](https://github.com/zachreborn/terraform-modules/compare/v17.0.0...v17.1.0) (2026-10-08)
 
 

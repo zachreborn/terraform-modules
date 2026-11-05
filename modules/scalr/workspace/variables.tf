@@ -22,10 +22,24 @@ variable "workspaces" {
                                       execution. When false the workspace only stores state. Defaults to true upstream.
       - remote_backend:               (Optional) Whether Scalr manages the remote backend configuration and state storage.
                                       Default true.
-      - remote_state_consumers:       (Optional) Set of workspace IDs allowed to read this workspace's state. Use ["*"] to
-                                      share the state with all workspaces in the environment.
+      - remote_state_consumers:       (Optional, DEPRECATED by the upstream provider) Set of workspace IDs allowed to read this
+                                      workspace's state. Use ["*"] to share the state with all workspaces in the environment.
+                                      Kept for backward compatibility only. Prefer remote_state_sharing = false combined
+                                      with the ./remote_state_consumer submodule. Conflicts with remote_state_sharing (an
+                                      entry that sets both is rejected), and must not be combined with the
+                                      ./remote_state_consumer submodule for the same source workspace.
+      - remote_state_sharing:         (Optional) Whether this workspace's state is shared with all workspaces in the
+                                      environment. Set to false to manage the list of consumers with the
+                                      ./remote_state_consumer submodule (scalr_workspace_remote_state_consumer). When unset,
+                                      the account's workspace state sharing setting applies. Conflicts with
+                                      remote_state_consumers. Requires provider >= 3.20.0.
       - run_operation_timeout:        (Optional) Maximum number of minutes a run operation (plan or apply) may take before
                                       being automatically canceled.
+      - runner_image_version_id:      (Optional) ID of the container image version used as the runner image, in the format
+                                      "cimgv-<RANDOM STRING>" (look it up with the scalr_container_image_version data
+                                      source). Only works with Scalr-managed agent pools; it cannot be combined with an
+                                      agent_pool_id that points to a self-hosted agent pool. When unset, the account default
+                                      runner image is used. Requires provider >= 3.20.0.
       - ssh_key_id:                   (Optional) ID of the SSH key to use for the workspace.
       - tag_ids:                      (Optional) Set of tag IDs associated with the workspace.
       - terraform_version:            (Optional) The OpenTofu/Terraform version to use. Defaults to the latest available.
@@ -84,7 +98,9 @@ variable "workspaces" {
     operations                  = optional(bool)
     remote_backend              = optional(bool, true)
     remote_state_consumers      = optional(set(string))
+    remote_state_sharing        = optional(bool)
     run_operation_timeout       = optional(number)
+    runner_image_version_id     = optional(string)
     ssh_key_id                  = optional(string)
     tag_ids                     = optional(set(string))
     terraform_version           = optional(string)
@@ -151,5 +167,21 @@ variable "workspaces" {
       for k, v in var.workspaces : contains(["production", "staging", "testing", "development", "unmapped"], v.type)
     ])
     error_message = "Each workspaces entry's type must be one of \"production\", \"staging\", \"testing\", \"development\", or \"unmapped\"."
+  }
+
+  # The upstream provider declares remote_state_consumers and remote_state_sharing as conflicting
+  # (a null value is "not set"; an empty set still counts as set).
+  validation {
+    condition = alltrue([
+      for k, v in var.workspaces : v.remote_state_consumers == null || v.remote_state_sharing == null
+    ])
+    error_message = "Each workspaces entry may set only one of remote_state_consumers (deprecated) or remote_state_sharing; the upstream provider treats them as conflicting. Use remote_state_sharing = false with the ./remote_state_consumer submodule instead of remote_state_consumers."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.workspaces : v.runner_image_version_id == null || can(regex("^cimgv-[A-Za-z0-9]+$", v.runner_image_version_id))
+    ])
+    error_message = "Each workspaces entry's runner_image_version_id must be null or a container image version ID in the format \"cimgv-<RANDOM STRING>\"."
   }
 }

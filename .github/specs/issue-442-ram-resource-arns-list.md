@@ -3,6 +3,28 @@
 **Status:** Draft — pending CODEOWNERS review
 **Owners:** @zachreborn @Jakeasaurus
 **Type:** Feature
+## Implementation correction — PR #483
+The quality review reproduced a fresh-deployment failure in the original
+list-to-set design: resource ARNs are unknown until apply and cannot be
+`for_each` instance keys. The corrected implementation uses these decisions,
+which supersede conflicting type, key, migration, and test requirements in the
+original proposal retained below:
+- `resource_arns` is a required `map(string)` with caller-defined logical keys
+  known at plan time and ARN values that may be unknown until apply.
+- Associations use `for_each = var.resource_arns`; `resource_arn = each.value`
+  remains unchanged. `resource_association_ids` uses the same logical keys.
+- The address-management caller in `modules/aws/ipam/main.tf` passes a
+  single-entry map keyed by its pool's logical name. Its public inputs are
+  unchanged.
+- Caller-side `moved` blocks target `this["<logical-key>"]`, not an ARN-derived
+  key. The module README documents original singleton, unreleased ARN-keyed,
+  and nested address-management migrations and requires a no-recreation plan.
+- Existing tests retain their coverage with map inputs and meaningful output
+  assertions. An unmocked built-in `terraform_data` fixture verifies initial
+  planning with an unknown ARN; AWS remains mocked. Caller tests cover disabled,
+  organization, and explicit-principal sharing.
+- Empty maps remain supported. No provider features or production language
+  requirements are added; `terraform_data` is used only in the test fixture.
 
 ## 1. Background
 The `modules/aws/ram/` module wraps a single AWS RAM share. Today it accepts a

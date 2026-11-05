@@ -11,6 +11,11 @@ output "statuses" {
   value       = { for k, v in scalr_policy_group.this : k => v.status }
 }
 
+output "evaluate_on" {
+  description = "Map of the effective run stage (\"pre-plan\" or \"post-plan\") each Policy Group is evaluated at, keyed by the same keys as var.policy_groups. Reflects the provider default (\"post-plan\") when var.policy_groups[*].evaluate_on is unset on creation."
+  value       = { for k, v in scalr_policy_group.this : k => v.evaluate_on }
+}
+
 output "error_messages" {
   description = "Map of detailed Policy Group processing error messages (if any), keyed by the same keys as var.policy_groups."
   value       = { for k, v in scalr_policy_group.this : k => v.error_message }
