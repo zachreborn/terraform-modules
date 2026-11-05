@@ -57,11 +57,13 @@ small, static footprint that must pre-exist in **every** account whose resources
 the org `BACKUP_POLICY` (see the companion
 [`aws_backup_organization_tiered`](../aws_backup_organization_tiered) module).
 
-It creates exactly two things:
+It creates two things:
 
 1. **A local staging vault** (`backup-staging`). AWS Backup always writes recovery points locally
    first; the org policy's `copy_actions` then ship them cross-account into the compliance-locked
-   central vaults. Staging is disposable — no lock, short retention.
+   central vaults. Staging is disposable — no lock, short retention. Its access policy lets the
+   central account copy recovery points back in, which is how central copies are restored in this
+   account.
 2. **The backup IAM role** (`AWSBackupServiceRole` by default) that AWS Backup assumes. It carries
    the AWS managed Backup/Restore + S3 backup/restore policies plus an inline policy granting
    `backup:CopyIntoBackupVault` and KMS encrypt rights **scoped to the central account's** vault and
@@ -103,8 +105,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 ## Notes & Design Decisions
 
 - **Staging uses the AWS-managed key by default.** `staging_kms_key_arn` defaults to null
-  (`aws/backup`) because staging points are short-lived; the durable, immutable copy lives in the
-  CMK-encrypted central vault. Override it to use a customer-managed key if local policy requires.
+  (`aws/backup`). Cross-account copies of resource types not fully managed by AWS Backup (EBS, EC2,
+  RDS) require customer-managed keys, so set a CMK where those resources are restored by copying
+  back from the central account.
+- **Restore from central is copy-back, then restore.** AWS Backup cannot restore across accounts.
+  The central account copies the recovery point into this staging vault, and the restore runs here.
 - **Inline policy scope.** The cross-account copy policy targets `:<central_account_id>:` vault and
   key ARNs with wildcards rather than enumerating per-tier ARNs, so the module never needs the tier
   list and stays identical across accounts.
@@ -140,6 +145,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Type |
 | ---- | ---- |
 | [aws_backup_vault.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
+| [aws_backup_vault_policy.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault_policy) | resource |
 | [aws_iam_role_policy.cross_account_copy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 
 ## Inputs
@@ -151,7 +157,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_backup_role_permissions_boundary"></a> [backup\_role\_permissions\_boundary](#input\_backup\_role\_permissions\_boundary) | (Optional) ARN of a permissions boundary policy to attach to the backup role. | `string` | `null` | no |
 | <a name="input_central_account_id"></a> [central\_account\_id](#input\_central\_account\_id) | (Required) The AWS account ID of the central backup (delegated administrator) account that holds the compliance-locked central vaults and their CMKs. The backup role's inline policy is scoped to this account's vault and key ARNs so recovery points can be copied cross-account. This is the only value that varies between member accounts (and it is constant org-wide). | `string` | n/a | yes |
 | <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) AWS managed policy ARNs attached to the backup role. Defaults to the AWS Backup service-role policies for backup, restore, and S3 backup/restore, which together cover all AWS Backup-supported resource types. | `list(string)` | <pre>[<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Backup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Restore"<br/>]</pre> | no |
-| <a name="input_staging_kms_key_arn"></a> [staging\_kms\_key\_arn](#input\_staging\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup) — acceptable because staging is short-lived and the durable, immutable copy lives in the CMK-encrypted central vault. | `string` | `null` | no |
+| <a name="input_staging_kms_key_arn"></a> [staging\_kms\_key\_arn](#input\_staging\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup). Cross-account copies of resource types not fully managed by AWS Backup (such as EBS, EC2, and RDS) require customer-managed keys, so set this when those resources are restored by copying back from the central account. | `string` | `null` | no |
 | <a name="input_staging_vault_force_destroy"></a> [staging\_vault\_force\_destroy](#input\_staging\_vault\_force\_destroy) | (Optional) Allow Terraform to delete the staging vault even if it contains recovery points. Staging is disposable, but this defaults to false to avoid accidental destruction of in-flight recovery points. | `bool` | `false` | no |
 | <a name="input_staging_vault_name"></a> [staging\_vault\_name](#input\_staging\_vault\_name) | (Optional) Name of the local, tier-agnostic staging vault. AWS Backup always writes recovery points locally first; this vault must match the staging\_vault\_name configured in the org BACKUP\_POLICY. It is disposable (short retention, no lock). | `string` | `"backup-staging"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
@@ -164,6 +170,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_backup_role_name"></a> [backup\_role\_name](#output\_backup\_role\_name) | Name of the IAM role AWS Backup assumes in this account. |
 | <a name="output_staging_vault_arn"></a> [staging\_vault\_arn](#output\_staging\_vault\_arn) | ARN of the local staging backup vault. |
 | <a name="output_staging_vault_name"></a> [staging\_vault\_name](#output\_staging\_vault\_name) | Name of the local staging backup vault. |
+| <a name="output_staging_vault_policy"></a> [staging\_vault\_policy](#output\_staging\_vault\_policy) | Resource-based access policy on the staging vault. |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

@@ -11,6 +11,11 @@ output "staging_vault_name" {
   value       = aws_backup_vault.staging.name
 }
 
+output "staging_vault_policy" {
+  description = "Resource-based access policy on the staging vault."
+  value       = aws_backup_vault_policy.staging.policy
+}
+
 output "backup_role_arn" {
   description = "ARN of the IAM role AWS Backup assumes in this account."
   value       = module.backup_role.arn

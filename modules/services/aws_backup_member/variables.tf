@@ -23,7 +23,7 @@ variable "staging_vault_name" {
 
 variable "staging_kms_key_arn" {
   type        = string
-  description = "(Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup) — acceptable because staging is short-lived and the durable, immutable copy lives in the CMK-encrypted central vault."
+  description = "(Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup). Cross-account copies of resource types not fully managed by AWS Backup (such as EBS, EC2, and RDS) require customer-managed keys, so set this when those resources are restored by copying back from the central account."
   default     = null
 }
 

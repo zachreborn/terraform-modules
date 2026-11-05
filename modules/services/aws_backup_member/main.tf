@@ -57,6 +57,19 @@ locals {
       }
     ]
   })
+
+  # Resource-based policy on the staging vault: allow the central account to copy recovery points
+  # from its central vaults back into this vault, so they can be restored in this account.
+  staging_vault_access_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "AllowCentralAccountCopyIntoStagingVault"
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::${var.central_account_id}:root" }
+      Action    = "backup:CopyIntoBackupVault"
+      Resource  = "*"
+    }]
+  })
 }
 
 ###########################
@@ -64,12 +77,18 @@ locals {
 ###########################
 # Local, tier-agnostic vault. AWS Backup always writes recovery points here first; copy_actions in
 # the org BACKUP_POLICY then ship them cross-account to the central vaults. Disposable: no lock,
-# short retention (governed by the policy's local_delete_after_days).
+# short retention (governed by the policy's local_delete_after_days). Also the landing vault for
+# recovery points copied back from the central account for restore.
 resource "aws_backup_vault" "staging" {
   force_destroy = var.staging_vault_force_destroy
   kms_key_arn   = var.staging_kms_key_arn
   name          = var.staging_vault_name
   tags          = merge(tomap({ Name = var.staging_vault_name }), var.tags)
+}
+
+resource "aws_backup_vault_policy" "staging" {
+  backup_vault_name = aws_backup_vault.staging.name
+  policy            = local.staging_vault_access_policy
 }
 
 ###########################
