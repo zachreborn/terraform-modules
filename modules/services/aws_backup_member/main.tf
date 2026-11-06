@@ -76,14 +76,24 @@ locals {
 # Staging Vault
 ###########################
 # Local, tier-agnostic vault. AWS Backup always writes recovery points here first; copy_actions in
-# the org BACKUP_POLICY then ship them cross-account to the central vaults. Disposable: no lock,
-# short retention (governed by the policy's local_delete_after_days). Also the landing vault for
+# the org BACKUP_POLICY then ship them cross-account to the central vaults. Every tier keeps its
+# local points for the same staging_retention_days, which is also the lock's minimum retention, so
+# recent backups can't be deleted early from inside the account. Also the landing vault for
 # recovery points copied back from the central account for restore.
 resource "aws_backup_vault" "staging" {
   force_destroy = var.staging_vault_force_destroy
   kms_key_arn   = var.staging_kms_key_arn
   name          = var.staging_vault_name
   tags          = merge(tomap({ Name = var.staging_vault_name }), var.tags)
+}
+
+resource "aws_backup_vault_lock_configuration" "staging" {
+  count = var.vault_lock_mode != "none" ? 1 : 0
+
+  backup_vault_name   = aws_backup_vault.staging.name
+  changeable_for_days = var.vault_lock_mode == "compliance" ? var.changeable_for_days : null
+  min_retention_days  = var.staging_retention_days
+  max_retention_days  = var.staging_max_retention_days
 }
 
 resource "aws_backup_vault_policy" "staging" {

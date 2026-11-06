@@ -33,6 +33,42 @@ variable "staging_vault_force_destroy" {
   default     = false
 }
 
+variable "staging_retention_days" {
+  type        = number
+  description = "(Optional) Vault Lock minimum retention for the staging vault, in days. Must equal staging_retention_days in the aws_backup_organization_tiered module, which sets how long every rule keeps its local recovery points; a shorter rule lifecycle fails the lock check. Copy-backs into this vault must also be kept at least this long."
+  default     = 10
+  validation {
+    condition     = var.staging_retention_days >= 1
+    error_message = "staging_retention_days must be at least 1."
+  }
+}
+
+variable "staging_max_retention_days" {
+  type        = number
+  description = "(Optional) Vault Lock maximum retention for the staging vault, in days. Null sets no maximum."
+  default     = null
+}
+
+variable "vault_lock_mode" {
+  type        = string
+  description = "(Optional) AWS Backup Vault Lock mode for the staging vault. \"none\" applies no lock. \"governance\" enforces retention, but principals with the required IAM permissions can remove or alter it. \"compliance\" becomes IRREVERSIBLE (even for root) once the changeable_for_days grace window expires; after that the staging vault can't be deleted while it holds recovery points and its retention floor can't change."
+  default     = "none"
+  validation {
+    condition     = contains(["none", "governance", "compliance"], var.vault_lock_mode)
+    error_message = "vault_lock_mode must be one of: none, governance, compliance."
+  }
+}
+
+variable "changeable_for_days" {
+  type        = number
+  description = "(Optional) Grace window in days during which a compliance-mode lock can still be removed. AWS minimum is 3. Only applies when vault_lock_mode = \"compliance\"."
+  default     = 3
+  validation {
+    condition     = var.changeable_for_days >= 3
+    error_message = "changeable_for_days must be at least 3 (AWS Backup Vault Lock minimum)."
+  }
+}
+
 ###########################
 # Backup Role Variables
 ###########################

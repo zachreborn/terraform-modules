@@ -61,9 +61,10 @@ It creates two things:
 
 1. **A local staging vault** (`backup-staging`). AWS Backup always writes recovery points locally
    first; the org policy's `copy_actions` then ship them cross-account into the compliance-locked
-   central vaults. Staging is disposable — no lock, short retention. Its access policy lets the
-   central account copy recovery points back in, which is how central copies are restored in this
-   account.
+   central vaults. Every tier keeps its local points for the same `staging_retention_days` (10 by
+   default), and Vault Lock holds them for at least that long, so the most recent backups can't be
+   deleted from inside the account. Its access policy lets the central account copy recovery points
+   back in for restore.
 2. **The backup IAM role** (`AWSBackupServiceRole` by default) that AWS Backup assumes. It carries
    the AWS managed Backup/Restore + S3 backup/restore policies plus an inline policy granting
    `backup:CopyIntoBackupVault` and KMS encrypt rights **scoped to the central account's** vault and
@@ -108,8 +109,14 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
   (`aws/backup`). Cross-account copies of resource types not fully managed by AWS Backup (EBS, EC2,
   RDS) require customer-managed keys, so set a CMK where those resources are restored by copying
   back from the central account.
-- **Restore from central is copy-back, then restore.** AWS Backup cannot restore across accounts.
-  The central account copies the recovery point into this staging vault, and the restore runs here.
+- **Restore paths.** Recent points restore here from `backup-staging`. Older points in the
+  `prod_region` central vaults are copied back into this vault by the central account, then
+  restored here. Points in the `dr_region` air-gapped vaults restore directly from this account
+  through the RAM share.
+- **Staging lock.** `vault_lock_mode` follows the same none → governance → compliance rollout as
+  the central vaults. `staging_retention_days` must match the value in
+  `aws_backup_organization_tiered`. Under compliance mode the floor is permanent and the vault can't
+  be deleted while it holds recovery points.
 - **Inline policy scope.** The cross-account copy policy targets `:<central_account_id>:` vault and
   key ARNs with wildcards rather than enumerating per-tier ARNs, so the module never needs the tier
   list and stays identical across accounts.
@@ -145,6 +152,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Type |
 | ---- | ---- |
 | [aws_backup_vault.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
+| [aws_backup_vault_lock_configuration.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault_lock_configuration) | resource |
 | [aws_backup_vault_policy.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault_policy) | resource |
 | [aws_iam_role_policy.cross_account_copy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 
@@ -156,11 +164,15 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_backup_role_path"></a> [backup\_role\_path](#input\_backup\_role\_path) | (Optional) Path for the backup IAM role. | `string` | `"/"` | no |
 | <a name="input_backup_role_permissions_boundary"></a> [backup\_role\_permissions\_boundary](#input\_backup\_role\_permissions\_boundary) | (Optional) ARN of a permissions boundary policy to attach to the backup role. | `string` | `null` | no |
 | <a name="input_central_account_id"></a> [central\_account\_id](#input\_central\_account\_id) | (Required) The AWS account ID of the central backup (delegated administrator) account that holds the compliance-locked central vaults and their CMKs. The backup role's inline policy is scoped to this account's vault and key ARNs so recovery points can be copied cross-account. This is the only value that varies between member accounts (and it is constant org-wide). | `string` | n/a | yes |
+| <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) Grace window in days during which a compliance-mode lock can still be removed. AWS minimum is 3. Only applies when vault\_lock\_mode = "compliance". | `number` | `3` | no |
 | <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) AWS managed policy ARNs attached to the backup role. Defaults to the AWS Backup service-role policies for backup, restore, and S3 backup/restore, which together cover all AWS Backup-supported resource types. | `list(string)` | <pre>[<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Backup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Restore"<br/>]</pre> | no |
 | <a name="input_staging_kms_key_arn"></a> [staging\_kms\_key\_arn](#input\_staging\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup). Cross-account copies of resource types not fully managed by AWS Backup (such as EBS, EC2, and RDS) require customer-managed keys, so set this when those resources are restored by copying back from the central account. | `string` | `null` | no |
+| <a name="input_staging_max_retention_days"></a> [staging\_max\_retention\_days](#input\_staging\_max\_retention\_days) | (Optional) Vault Lock maximum retention for the staging vault, in days. Null sets no maximum. | `number` | `null` | no |
+| <a name="input_staging_retention_days"></a> [staging\_retention\_days](#input\_staging\_retention\_days) | (Optional) Vault Lock minimum retention for the staging vault, in days. Must equal staging\_retention\_days in the aws\_backup\_organization\_tiered module, which sets how long every rule keeps its local recovery points; a shorter rule lifecycle fails the lock check. Copy-backs into this vault must also be kept at least this long. | `number` | `10` | no |
 | <a name="input_staging_vault_force_destroy"></a> [staging\_vault\_force\_destroy](#input\_staging\_vault\_force\_destroy) | (Optional) Allow Terraform to delete the staging vault even if it contains recovery points. Staging is disposable, but this defaults to false to avoid accidental destruction of in-flight recovery points. | `bool` | `false` | no |
 | <a name="input_staging_vault_name"></a> [staging\_vault\_name](#input\_staging\_vault\_name) | (Optional) Name of the local, tier-agnostic staging vault. AWS Backup always writes recovery points locally first; this vault must match the staging\_vault\_name configured in the org BACKUP\_POLICY. It is disposable (short retention, no lock). | `string` | `"backup-staging"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to assign to all resources created by this module. | `map(string)` | `{}` | no |
+| <a name="input_vault_lock_mode"></a> [vault\_lock\_mode](#input\_vault\_lock\_mode) | (Optional) AWS Backup Vault Lock mode for the staging vault. "none" applies no lock. "governance" enforces retention, but principals with the required IAM permissions can remove or alter it. "compliance" becomes IRREVERSIBLE (even for root) once the changeable\_for\_days grace window expires; after that the staging vault can't be deleted while it holds recovery points and its retention floor can't change. | `string` | `"none"` | no |
 
 ## Outputs
 
@@ -171,6 +183,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_staging_vault_arn"></a> [staging\_vault\_arn](#output\_staging\_vault\_arn) | ARN of the local staging backup vault. |
 | <a name="output_staging_vault_name"></a> [staging\_vault\_name](#output\_staging\_vault\_name) | Name of the local staging backup vault. |
 | <a name="output_staging_vault_policy"></a> [staging\_vault\_policy](#output\_staging\_vault\_policy) | Resource-based access policy on the staging vault. |
+| <a name="output_vault_lock_mode"></a> [vault\_lock\_mode](#output\_vault\_lock\_mode) | The AWS Backup Vault Lock mode applied to the staging vault (none, governance, or compliance). |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->

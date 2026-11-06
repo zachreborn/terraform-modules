@@ -16,6 +16,11 @@ output "staging_vault_policy" {
   value       = aws_backup_vault_policy.staging.policy
 }
 
+output "vault_lock_mode" {
+  description = "The AWS Backup Vault Lock mode applied to the staging vault (none, governance, or compliance)."
+  value       = var.vault_lock_mode
+}
+
 output "backup_role_arn" {
   description = "ARN of the IAM role AWS Backup assumes in this account."
   value       = module.backup_role.arn
