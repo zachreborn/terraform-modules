@@ -229,6 +229,9 @@ jobs:
           cd "${MODULE}"
           tofu init -backend=false
           tofu test
+          if [ -f tests/test_lifecycle.py ]; then
+            python3 tests/test_lifecycle.py
+          fi
           echo "::endgroup::"
 
   test_opentofu:
