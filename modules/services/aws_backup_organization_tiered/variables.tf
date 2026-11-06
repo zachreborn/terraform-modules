@@ -21,8 +21,8 @@ variable "backup_tiers" {
   description = <<-EOT
     (Required) The single source of truth for the tiered backup model. A map keyed by tier
     identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each
-    tier declares its central copy/DR behavior, the Vault Lock retention floor for its central
-    vaults, and an ordered list of backup rules. Local staging retention is the same for every
+    tier declares its central copy/DR behavior, the Vault Lock retention floor for its prod_region
+    central vaults, and an ordered list of backup rules. Local staging retention is the same for every
     tier and is set by staging_retention_days. The module derives the org BACKUP_POLICY and the
     central vault set entirely from this map: add a tier by adding a key, change a dimension by
     editing one place. Tier keys are arbitrary strings and become the `backup-tier` tag value.
@@ -57,13 +57,6 @@ variable "backup_tiers" {
       ]
     ]))
     error_message = "vault_min_retention_days for each tier must be <= the shortest central_delete_after_days of its rules, so locked vaults never block scheduled expiry."
-  }
-
-  validation {
-    condition = alltrue([
-      for tkey, tier in var.backup_tiers : tier.copy_to_dr ? tier.vault_min_retention_days >= 7 : true
-    ])
-    error_message = "vault_min_retention_days must be at least 7 for copy_to_dr tiers (logically air-gapped vault minimum)."
   }
 }
 
@@ -208,10 +201,14 @@ variable "changeable_for_days" {
 # KMS Variables
 ###########################
 
-variable "dr_cold_storage" {
-  type        = bool
-  description = "(Optional) Apply central_cold_after_days to copies in the DR-region logically air-gapped vaults. Defaults to false, so DR copies stay in warm storage."
-  default     = false
+variable "dr_retention_days" {
+  type        = number
+  description = "(Optional) Retention, in days, for every copy in the DR-region logically air-gapped vaults, across all copy_to_dr tiers. Also sets each DR vault's min and max retention. DR copies stay in warm storage."
+  default     = 30
+  validation {
+    condition     = var.dr_retention_days >= 7
+    error_message = "dr_retention_days must be at least 7 (logically air-gapped vault minimum)."
+  }
 }
 
 variable "share_dr_vaults_with_target_ous" {

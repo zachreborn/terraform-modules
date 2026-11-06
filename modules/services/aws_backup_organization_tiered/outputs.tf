@@ -44,6 +44,11 @@ output "central_kms_key_arns_prod" {
   value       = { for k, v in module.central_kms_prod : k => v.arn }
 }
 
+output "central_kms_key_arns_dr" {
+  description = "Map of tier key to central KMS key ARN in the dr_region (copy_to_dr tiers only)."
+  value       = { for k, v in module.central_kms_dr : k => v.arn }
+}
+
 output "dr_vault_resource_share_arn" {
   description = "ARN of the AWS RAM resource share for the DR-region vaults, or null when sharing is off."
   value       = try(aws_ram_resource_share.central_dr[0].arn, null)

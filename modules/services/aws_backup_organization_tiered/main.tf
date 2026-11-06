@@ -6,7 +6,7 @@ terraform {
   required_providers {
     aws = {
       source                = "hashicorp/aws"
-      version               = ">= 6.0.0"
+      version               = ">= 6.22.0"
       configuration_aliases = [aws.prod_region, aws.dr_region]
     }
   }
@@ -150,12 +150,9 @@ locals {
                 tier.copy_to_dr ? {
                   "arn:aws:backup:${var.dr_region}:${var.central_account_id}:backup-vault:${local.central_vault_names[tkey]}" = {
                     target_backup_vault_arn = { "@@assign" = "arn:aws:backup:${var.dr_region}:${var.central_account_id}:backup-vault:${local.central_vault_names[tkey]}" }
-                    lifecycle = merge(
-                      { delete_after_days = { "@@assign" = tostring(rule.central_delete_after_days) } },
-                      (var.dr_cold_storage && rule.central_cold_after_days != null) ? {
-                        move_to_cold_storage_after_days = { "@@assign" = tostring(rule.central_cold_after_days) }
-                      } : {}
-                    )
+                    lifecycle = {
+                      delete_after_days = { "@@assign" = tostring(var.dr_retention_days) }
+                    }
                   }
                 } : {}
               )
@@ -243,17 +240,37 @@ resource "aws_backup_vault_lock_configuration" "central_prod" {
 }
 
 ###########################
+# Central KMS Keys (dr_region)
+###########################
+module "central_kms_dr" {
+  source   = "../../aws/kms"
+  for_each = local.dr_tiers
+  providers = {
+    aws = aws.dr_region
+  }
+
+  name_prefix             = "${var.central_vault_prefix}${each.key}-${var.dr_region}"
+  description             = "CMK for central backup vault ${each.key} (${var.dr_region})"
+  deletion_window_in_days = var.kms_deletion_window_in_days
+  enable_key_rotation     = var.kms_enable_key_rotation
+  policy                  = local.kms_key_policy
+  tags                    = var.tags
+}
+
+###########################
 # Central Vaults (dr_region)
 ###########################
-# Logically air-gapped vaults: always compliance-locked, encrypted with an AWS-owned key, and
-# shareable through AWS RAM so member accounts can restore from them directly.
+# Logically air-gapped vaults: always compliance-locked, encrypted with a central CMK, and
+# shareable through AWS RAM so member accounts can restore from them directly. Every DR copy is
+# kept for exactly dr_retention_days, which is also the vault's lock floor and ceiling.
 resource "aws_backup_logically_air_gapped_vault" "central_dr" {
   for_each = local.dr_tiers
   provider = aws.dr_region
 
   name               = local.central_vault_names[each.key]
-  min_retention_days = each.value.vault_min_retention_days
-  max_retention_days = max([for rule in each.value.rules : rule.central_delete_after_days]...)
+  encryption_key_arn = module.central_kms_dr[each.key].arn
+  min_retention_days = var.dr_retention_days
+  max_retention_days = var.dr_retention_days
   tags               = merge(tomap({ Name = local.central_vault_names[each.key] }), var.tags)
 }
 

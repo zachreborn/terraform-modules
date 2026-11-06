@@ -70,9 +70,9 @@ It produces two things from a single `backup_tiers` map (the source of truth):
    `backup:CopyIntoBackupVault`, a KMS key policy granting org backup roles encrypt rights, and
    **Vault Lock** set by `vault_lock_mode`.
 3. **Logically air-gapped central vaults** (`central-vault-<tier>`) in `dr_region` for `copy_to_dr`
-   tiers. These are always compliance-locked and encrypted with an AWS-owned key, so there is no
-   customer key to delete. They are shared with `target_ou_ids` through AWS RAM, so member accounts
-   restore from them directly.
+   tiers. These are always compliance-locked, encrypted with a customer-managed KMS key, and keep
+   every copy for `dr_retention_days`. They are shared with `target_ou_ids` through AWS RAM, so
+   member accounts restore from them directly.
 
 The per-account static footprint (the `backup-staging` vault + the backup service role) is **not**
 created here — it is created in every member account by the companion
@@ -112,6 +112,7 @@ module "tiered_backup" {
   vault_lock_mode        = "none"
   changeable_for_days    = 3
   staging_retention_days = 10
+  dr_retention_days      = 30
 
   backup_tiers = {
     "1" = {
@@ -156,7 +157,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
   staging vault with the `central_backup_role_name` role, then restored there, because AWS Backup
   cannot restore across accounts. Points in the `dr_region` air-gapped vaults restore directly from
   the member account through the RAM share.
-- **DR vaults and cold storage.** `dr_cold_storage` defaults to false, so DR copies stay warm.
+- **DR retention.** Every DR copy is kept for `dr_retention_days` (default 30) in warm storage,
+  whatever the rule's central retention. The DR vaults lock at exactly that value.
 - **RAM prerequisite.** `share_dr_vaults_with_target_ous` needs RAM sharing with AWS Organizations
   enabled in the management account.
 - **Vault Lock mode is parameterized.** `vault_lock_mode` defaults to `"none"`. `"governance"`
@@ -195,20 +197,21 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.22.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 6.0.0 |
-| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 6.0.0 |
+| <a name="provider_aws.dr_region"></a> [aws.dr\_region](#provider\_aws.dr\_region) | >= 6.22.0 |
+| <a name="provider_aws.prod_region"></a> [aws.prod\_region](#provider\_aws.prod\_region) | >= 6.22.0 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_central_backup_role"></a> [central\_backup\_role](#module\_central\_backup\_role) | ../../aws/iam/role | n/a |
+| <a name="module_central_kms_dr"></a> [central\_kms\_dr](#module\_central\_kms\_dr) | ../../aws/kms | n/a |
 | <a name="module_central_kms_prod"></a> [central\_kms\_prod](#module\_central\_kms\_prod) | ../../aws/kms | n/a |
 
 ## Resources
@@ -235,7 +238,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_audit_report_s3_bucket_name"></a> [audit\_report\_s3\_bucket\_name](#input\_audit\_report\_s3\_bucket\_name) | (Optional) Name of an existing S3 bucket to deliver Audit Manager report plan output to. Required when enable\_audit\_manager = true. | `string` | `null` | no |
 | <a name="input_backup_role_name"></a> [backup\_role\_name](#input\_backup\_role\_name) | (Optional) Name of the IAM role AWS Backup assumes in each member account. Must match the role created by the aws\_backup\_member module. Referenced in selections via the $account policy token. | `string` | `"AWSBackupServiceRole"` | no |
-| <a name="input_backup_tiers"></a> [backup\_tiers](#input\_backup\_tiers) | (Required) The single source of truth for the tiered backup model. A map keyed by tier<br/>identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each<br/>tier declares its central copy/DR behavior, the Vault Lock retention floor for its central<br/>vaults, and an ordered list of backup rules. Local staging retention is the same for every<br/>tier and is set by staging\_retention\_days. The module derives the org BACKUP\_POLICY and the<br/>central vault set entirely from this map: add a tier by adding a key, change a dimension by<br/>editing one place. Tier keys are arbitrary strings and become the `backup-tier` tag value.<br/><br/>Per-rule fields:<br/>  name                      - rule name (unique within the tier).<br/>  schedule                  - cron() expression. AWS Backup scheduled-snapshot floor is 1 hour.<br/>  continuous                - enable continuous backup / PITR (supported services only). PITR is<br/>                              local-staging only; copy\_actions are not emitted for continuous rules.<br/>  central\_copy              - copy the recovery point cross-account into the central vault(s).<br/>  start\_window\_minutes      - backup start window.<br/>  completion\_window\_minutes - backup completion window.<br/>  central\_delete\_after\_days - immutable central copy retention.<br/>  central\_cold\_after\_days   - Glacier-class transition for the central copy (null = none). AWS<br/>                              requires central\_delete\_after\_days >= central\_cold\_after\_days + 90. | <pre>map(object({<br/>    description              = string<br/>    copy_to_dr               = bool<br/>    vault_min_retention_days = optional(number, 30)<br/>    rules = list(object({<br/>      name                      = string<br/>      schedule                  = string<br/>      continuous                = optional(bool, false)<br/>      central_copy              = optional(bool, true)<br/>      start_window_minutes      = optional(number, 60)<br/>      completion_window_minutes = optional(number, 1440)<br/>      central_delete_after_days = number<br/>      central_cold_after_days   = optional(number, null)<br/>    }))<br/>  }))</pre> | n/a | yes |
+| <a name="input_backup_tiers"></a> [backup\_tiers](#input\_backup\_tiers) | (Required) The single source of truth for the tiered backup model. A map keyed by tier<br/>identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each<br/>tier declares its central copy/DR behavior, the Vault Lock retention floor for its prod\_region<br/>central vaults, and an ordered list of backup rules. Local staging retention is the same for every<br/>tier and is set by staging\_retention\_days. The module derives the org BACKUP\_POLICY and the<br/>central vault set entirely from this map: add a tier by adding a key, change a dimension by<br/>editing one place. Tier keys are arbitrary strings and become the `backup-tier` tag value.<br/><br/>Per-rule fields:<br/>  name                      - rule name (unique within the tier).<br/>  schedule                  - cron() expression. AWS Backup scheduled-snapshot floor is 1 hour.<br/>  continuous                - enable continuous backup / PITR (supported services only). PITR is<br/>                              local-staging only; copy\_actions are not emitted for continuous rules.<br/>  central\_copy              - copy the recovery point cross-account into the central vault(s).<br/>  start\_window\_minutes      - backup start window.<br/>  completion\_window\_minutes - backup completion window.<br/>  central\_delete\_after\_days - immutable central copy retention.<br/>  central\_cold\_after\_days   - Glacier-class transition for the central copy (null = none). AWS<br/>                              requires central\_delete\_after\_days >= central\_cold\_after\_days + 90. | <pre>map(object({<br/>    description              = string<br/>    copy_to_dr               = bool<br/>    vault_min_retention_days = optional(number, 30)<br/>    rules = list(object({<br/>      name                      = string<br/>      schedule                  = string<br/>      continuous                = optional(bool, false)<br/>      central_copy              = optional(bool, true)<br/>      start_window_minutes      = optional(number, 60)<br/>      completion_window_minutes = optional(number, 1440)<br/>      central_delete_after_days = number<br/>      central_cold_after_days   = optional(number, null)<br/>    }))<br/>  }))</pre> | n/a | yes |
 | <a name="input_central_account_id"></a> [central\_account\_id](#input\_central\_account\_id) | (Required) The AWS account ID of the central backup (delegated administrator) account that holds the compliance-locked central vaults. Used as the literal account in copy-destination ARNs and as the KMS key administrator principal. | `string` | n/a | yes |
 | <a name="input_central_backup_role_name"></a> [central\_backup\_role\_name](#input\_central\_backup\_role\_name) | (Optional) Name of the IAM role AWS Backup assumes in the central account for copy jobs from the central vaults back to member accounts and for restores run in the central account. | `string` | `"AWSBackupCentralRole"` | no |
 | <a name="input_central_backup_role_path"></a> [central\_backup\_role\_path](#input\_central\_backup\_role\_path) | (Optional) IAM path for the central backup role. | `string` | `"/"` | no |
@@ -243,8 +246,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_central_backup_role_policy_arns"></a> [central\_backup\_role\_policy\_arns](#input\_central\_backup\_role\_policy\_arns) | (Optional) AWS managed policy ARNs attached to the central backup role. Defaults to the AWS Backup service-role policies for backup (includes backup:CopyFromBackupVault and backup:CopyIntoBackupVault), restore, and S3 backup/restore. | `list(string)` | <pre>[<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Backup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForS3Restore"<br/>]</pre> | no |
 | <a name="input_central_vault_prefix"></a> [central\_vault\_prefix](#input\_central\_vault\_prefix) | (Optional) Name prefix for the central vaults. The tier key is appended (e.g. central-vault-1). The same vault name is used in both prod\_region and dr\_region; the region is carried in the ARN. | `string` | `"central-vault-"` | no |
 | <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) Grace window, in days, during which a COMPLIANCE-mode Vault Lock can still be deleted. After this window the lock is permanent. AWS minimum is 3. Only applies when vault\_lock\_mode = "compliance". | `number` | `3` | no |
-| <a name="input_dr_cold_storage"></a> [dr\_cold\_storage](#input\_dr\_cold\_storage) | (Optional) Apply central\_cold\_after\_days to copies in the DR-region logically air-gapped vaults. Defaults to false, so DR copies stay in warm storage. | `bool` | `false` | no |
 | <a name="input_dr_region"></a> [dr\_region](#input\_dr\_region) | (Optional) The disaster-recovery region. Central vaults are created here for tiers with copy\_to\_dr = true, and rules in those tiers gain a second cross-region copy\_action targeting this region. | `string` | `"us-east-2"` | no |
+| <a name="input_dr_retention_days"></a> [dr\_retention\_days](#input\_dr\_retention\_days) | (Optional) Retention, in days, for every copy in the DR-region logically air-gapped vaults, across all copy\_to\_dr tiers. Also sets each DR vault's min and max retention. DR copies stay in warm storage. | `number` | `30` | no |
 | <a name="input_enable_audit_manager"></a> [enable\_audit\_manager](#input\_enable\_audit\_manager) | (Optional) Create an AWS Backup Audit Manager framework and report plan in the central account to codify the tier rules and produce org-wide compliance reporting. | `bool` | `false` | no |
 | <a name="input_kms_deletion_window_in_days"></a> [kms\_deletion\_window\_in\_days](#input\_kms\_deletion\_window\_in\_days) | (Optional) Duration in days before a destroyed central KMS key is deleted. Must be between 7 and 30. | `number` | `30` | no |
 | <a name="input_kms_enable_key_rotation"></a> [kms\_enable\_key\_rotation](#input\_kms\_enable\_key\_rotation) | (Optional) Enable automatic annual rotation of the central KMS keys. | `bool` | `true` | no |
@@ -271,6 +274,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_backup_policy_json"></a> [backup\_policy\_json](#output\_backup\_policy\_json) | The rendered BACKUP\_POLICY JSON document. Useful for review and for validating the generated policy before attachment. |
 | <a name="output_central_backup_role_arn"></a> [central\_backup\_role\_arn](#output\_central\_backup\_role\_arn) | ARN of the IAM role AWS Backup assumes in the central account for copy-back and restore jobs. |
 | <a name="output_central_backup_role_name"></a> [central\_backup\_role\_name](#output\_central\_backup\_role\_name) | Name of the IAM role AWS Backup assumes in the central account for copy-back and restore jobs. |
+| <a name="output_central_kms_key_arns_dr"></a> [central\_kms\_key\_arns\_dr](#output\_central\_kms\_key\_arns\_dr) | Map of tier key to central KMS key ARN in the dr\_region (copy\_to\_dr tiers only). |
 | <a name="output_central_kms_key_arns_prod"></a> [central\_kms\_key\_arns\_prod](#output\_central\_kms\_key\_arns\_prod) | Map of tier key to central KMS key ARN in the prod\_region. |
 | <a name="output_central_vault_arns_dr"></a> [central\_vault\_arns\_dr](#output\_central\_vault\_arns\_dr) | Map of tier key to logically air-gapped central vault ARN in the dr\_region (copy\_to\_dr tiers only). |
 | <a name="output_central_vault_arns_prod"></a> [central\_vault\_arns\_prod](#output\_central\_vault\_arns\_prod) | Map of tier key to central vault ARN in the prod\_region. |
