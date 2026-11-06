@@ -14,7 +14,6 @@ variable "backup_tiers" {
       central_copy              = optional(bool, true)
       start_window_minutes      = optional(number, 60)
       completion_window_minutes = optional(number, 1440)
-      local_delete_after_days   = number
       central_delete_after_days = number
       central_cold_after_days   = optional(number, null)
     }))
@@ -23,7 +22,8 @@ variable "backup_tiers" {
     (Required) The single source of truth for the tiered backup model. A map keyed by tier
     identifier (the value written to the `backup-tier` tag, e.g. "1".."4" or "xs".."xl"). Each
     tier declares its central copy/DR behavior, the Vault Lock retention floor for its central
-    vaults, and an ordered list of backup rules. The module derives the org BACKUP_POLICY and the
+    vaults, and an ordered list of backup rules. Local staging retention is the same for every
+    tier and is set by staging_retention_days. The module derives the org BACKUP_POLICY and the
     central vault set entirely from this map: add a tier by adding a key, change a dimension by
     editing one place. Tier keys are arbitrary strings and become the `backup-tier` tag value.
 
@@ -35,7 +35,6 @@ variable "backup_tiers" {
       central_copy              - copy the recovery point cross-account into the central vault(s).
       start_window_minutes      - backup start window.
       completion_window_minutes - backup completion window.
-      local_delete_after_days   - staging (local) copy lifetime. Staging is disposable; keep short.
       central_delete_after_days - immutable central copy retention.
       central_cold_after_days   - Glacier-class transition for the central copy (null = none). AWS
                                   requires central_delete_after_days >= central_cold_after_days + 90.
@@ -58,6 +57,23 @@ variable "backup_tiers" {
       ]
     ]))
     error_message = "vault_min_retention_days for each tier must be <= the shortest central_delete_after_days of its rules, so locked vaults never block scheduled expiry."
+  }
+
+  validation {
+    condition = alltrue([
+      for tkey, tier in var.backup_tiers : tier.copy_to_dr ? tier.vault_min_retention_days >= 7 : true
+    ])
+    error_message = "vault_min_retention_days must be at least 7 for copy_to_dr tiers (logically air-gapped vault minimum)."
+  }
+}
+
+variable "staging_retention_days" {
+  type        = number
+  description = "(Optional) Days every recovery point is kept in the member account's local staging vault, for all tiers and rules. Must equal the staging vault's Vault Lock minimum retention set in the aws_backup_member module, or backup jobs fail the lock check."
+  default     = 10
+  validation {
+    condition     = var.staging_retention_days >= 1 && var.staging_retention_days <= 35
+    error_message = "staging_retention_days must be between 1 and 35 (the continuous backup maximum)."
   }
 }
 
@@ -170,7 +186,7 @@ variable "target_ou_ids" {
 
 variable "vault_lock_mode" {
   type        = string
-  description = "(Optional) AWS Backup Vault Lock mode for the central vaults. \"none\" applies no lock. \"governance\" enforces retention, but principals with backup:DeleteBackupVaultLockConfiguration or retention-change permissions can remove or alter it. \"compliance\" enforces retention and becomes IRREVERSIBLE (even for root) once the changeable_for_days grace window expires. Governance can be promoted to compliance in place."
+  description = "(Optional) AWS Backup Vault Lock mode for the central vaults in prod_region. The DR-region vaults are logically air-gapped and always locked in compliance mode. \"none\" applies no lock. \"governance\" enforces retention, but principals with backup:DeleteBackupVaultLockConfiguration or retention-change permissions can remove or alter it. \"compliance\" enforces retention and becomes IRREVERSIBLE (even for root) once the changeable_for_days grace window expires. Governance can be promoted to compliance in place."
   default     = "none"
   validation {
     condition     = contains(["none", "governance", "compliance"], var.vault_lock_mode)
@@ -191,6 +207,18 @@ variable "changeable_for_days" {
 ###########################
 # KMS Variables
 ###########################
+
+variable "dr_cold_storage" {
+  type        = bool
+  description = "(Optional) Apply central_cold_after_days to copies in the DR-region logically air-gapped vaults. Defaults to false, so DR copies stay in warm storage."
+  default     = false
+}
+
+variable "share_dr_vaults_with_target_ous" {
+  type        = bool
+  description = "(Optional) Share the DR-region logically air-gapped vaults with target_ou_ids through AWS RAM, so member accounts can restore from them directly. Requires RAM sharing with AWS Organizations to be enabled in the management account."
+  default     = true
+}
 
 variable "kms_deletion_window_in_days" {
   type        = number

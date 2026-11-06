@@ -107,7 +107,8 @@ locals {
   # ----------------------------------------------------------------------------------------------
   # BACKUP_POLICY document, derived entirely from var.backup_tiers.
   #
-  # One plan per tier; one rule per tier rule. Every rule writes to the local staging vault and
+  # One plan per tier; one rule per tier rule. Every rule writes to the local staging vault (kept
+  # staging_retention_days, matching the staging vault's lock floor) and
   # (for non-continuous rules with central_copy) copies cross-account to the central vault in
   # prod_region, plus a second copy to dr_region for copy_to_dr tiers. Per the AWS Organizations
   # backup policy syntax every leaf value is a string wrapped in {"@@assign": ...}; the $account
@@ -125,7 +126,7 @@ locals {
               complete_backup_window_minutes = { "@@assign" = tostring(rule.completion_window_minutes) }
               target_backup_vault_name       = { "@@assign" = var.staging_vault_name }
               lifecycle = {
-                delete_after_days = { "@@assign" = tostring(rule.local_delete_after_days) }
+                delete_after_days = { "@@assign" = tostring(var.staging_retention_days) }
               }
             },
             rule.continuous ? {
@@ -151,7 +152,7 @@ locals {
                     target_backup_vault_arn = { "@@assign" = "arn:aws:backup:${var.dr_region}:${var.central_account_id}:backup-vault:${local.central_vault_names[tkey]}" }
                     lifecycle = merge(
                       { delete_after_days = { "@@assign" = tostring(rule.central_delete_after_days) } },
-                      rule.central_cold_after_days != null ? {
+                      (var.dr_cold_storage && rule.central_cold_after_days != null) ? {
                         move_to_cold_storage_after_days = { "@@assign" = tostring(rule.central_cold_after_days) }
                       } : {}
                     )
@@ -213,24 +214,6 @@ module "central_kms_prod" {
 }
 
 ###########################
-# Central KMS Keys (dr_region)
-###########################
-module "central_kms_dr" {
-  source   = "../../aws/kms"
-  for_each = local.dr_tiers
-  providers = {
-    aws = aws.dr_region
-  }
-
-  name_prefix             = "${var.central_vault_prefix}${each.key}-${var.dr_region}"
-  description             = "CMK for central backup vault ${each.key} (${var.dr_region})"
-  deletion_window_in_days = var.kms_deletion_window_in_days
-  enable_key_rotation     = var.kms_enable_key_rotation
-  policy                  = local.kms_key_policy
-  tags                    = var.tags
-}
-
-###########################
 # Central Vaults (prod_region)
 ###########################
 resource "aws_backup_vault" "central_prod" {
@@ -262,30 +245,52 @@ resource "aws_backup_vault_lock_configuration" "central_prod" {
 ###########################
 # Central Vaults (dr_region)
 ###########################
-resource "aws_backup_vault" "central_dr" {
+# Logically air-gapped vaults: always compliance-locked, encrypted with an AWS-owned key, and
+# shareable through AWS RAM so member accounts can restore from them directly.
+resource "aws_backup_logically_air_gapped_vault" "central_dr" {
   for_each = local.dr_tiers
   provider = aws.dr_region
 
-  kms_key_arn = module.central_kms_dr[each.key].arn
-  name        = local.central_vault_names[each.key]
-  tags        = merge(tomap({ Name = local.central_vault_names[each.key] }), var.tags)
+  name               = local.central_vault_names[each.key]
+  min_retention_days = each.value.vault_min_retention_days
+  max_retention_days = max([for rule in each.value.rules : rule.central_delete_after_days]...)
+  tags               = merge(tomap({ Name = local.central_vault_names[each.key] }), var.tags)
 }
 
 resource "aws_backup_vault_policy" "central_dr" {
   for_each = local.dr_tiers
   provider = aws.dr_region
 
-  backup_vault_name = aws_backup_vault.central_dr[each.key].name
+  backup_vault_name = aws_backup_logically_air_gapped_vault.central_dr[each.key].name
   policy            = local.vault_access_policy
 }
 
-resource "aws_backup_vault_lock_configuration" "central_dr" {
-  for_each = var.vault_lock_mode != "none" ? local.dr_tiers : {}
+###########################
+# DR Vault Sharing (AWS RAM)
+###########################
+resource "aws_ram_resource_share" "central_dr" {
+  count    = var.share_dr_vaults_with_target_ous && length(local.dr_tiers) > 0 ? 1 : 0
   provider = aws.dr_region
 
-  backup_vault_name   = aws_backup_vault.central_dr[each.key].name
-  changeable_for_days = var.vault_lock_mode == "compliance" ? var.changeable_for_days : null
-  min_retention_days  = each.value.vault_min_retention_days
+  name                      = "${var.central_vault_prefix}dr"
+  allow_external_principals = false
+  tags                      = var.tags
+}
+
+resource "aws_ram_resource_association" "central_dr" {
+  for_each = var.share_dr_vaults_with_target_ous ? local.dr_tiers : {}
+  provider = aws.dr_region
+
+  resource_arn       = aws_backup_logically_air_gapped_vault.central_dr[each.key].arn
+  resource_share_arn = aws_ram_resource_share.central_dr[0].arn
+}
+
+resource "aws_ram_principal_association" "central_dr" {
+  for_each = var.share_dr_vaults_with_target_ous && length(local.dr_tiers) > 0 ? toset(var.target_ou_ids) : toset([])
+  provider = aws.dr_region
+
+  principal          = "arn:aws:organizations::${data.aws_organizations_organization.this.master_account_id}:ou/${local.org_id}/${each.value}"
+  resource_share_arn = aws_ram_resource_share.central_dr[0].arn
 }
 
 ###########################
