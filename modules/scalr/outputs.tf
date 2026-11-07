@@ -41,6 +41,11 @@ output "provider_configuration_custom_ids" {
   value       = { for name in keys(local.custom_provider_config) : name => local.provider_configuration_ids[name] }
 }
 
+output "provider_configuration_is_used_in_module_test" {
+  description = "Map of every Provider Configuration name (across all AWS, AzureRM, Google, and custom types) to whether it is currently linked to a module test (the read-only is_used_in_module_test attribute). Requires scalr provider >= 3.20.0."
+  value       = module.provider_configuration.is_used_in_module_test
+}
+
 ###########################
 # Composition Wiring (verification)
 ###########################
@@ -57,4 +62,24 @@ output "provider_configuration_custom" {
 output "workspace_provider_configurations" {
   description = "Map of each workspace's resolved provider_configuration list (id + alias) as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's name-to-ID resolution and ordering."
   value       = { for key, workspace in local.workspace_inputs : key => workspace.provider_configuration }
+}
+
+output "workspace_resolved_settings" {
+  description = "Map of each workspace's resolved remote_state_consumers, remote_state_sharing, and runner_image_version_id as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's YAML-to-submodule wiring, including that a value set per workspace suppresses the module-wide default of its conflicting counterpart (remote_state_consumers vs remote_state_sharing)."
+  value = {
+    for key, workspace in local.workspace_inputs : key => {
+      remote_state_consumers  = workspace.remote_state_consumers
+      remote_state_sharing    = workspace.remote_state_sharing
+      runner_image_version_id = workspace.runner_image_version_id
+    }
+  }
+}
+
+output "provider_configuration_is_allowed_in_module_test" {
+  description = "Map of every Provider Configuration name to the resolved is_allowed_in_module_test value (per-entry YAML value, else the module-wide per-type default; null when neither is set) passed to the ./provider_configuration submodule. Exposed to verify the root's YAML-to-submodule wiring."
+  # tobool() normalizes the value to bool|null: when a provider-type YAML file has several entries with
+  # differing keys, `var.x == null ? {} : yamldecode(var.x)` unifies them to map(string), so YAML booleans
+  # reach local.provider_configurations as the strings "true"/"false". The ./provider_configuration
+  # submodule's typed variable converts them back to bool, so the wiring itself is unaffected.
+  value = { for name, cfg in local.provider_configurations : name => cfg.is_allowed_in_module_test == null ? null : tobool(cfg.is_allowed_in_module_test) }
 }

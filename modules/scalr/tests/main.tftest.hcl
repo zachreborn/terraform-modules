@@ -458,6 +458,263 @@ run "aws_access_key_module_wide_fallback_plans_successfully" {
   }
 }
 
+###########################
+# v3.20.0: workspace remote_state_sharing / runner_image_version_id passthrough
+###########################
+run "workspace_v3_20_attributes_pass_through_from_yaml" {
+  command = plan
+
+  variables {
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          sharing_workspace:
+            remote_state_sharing: false
+            runner_image_version_id: "cimgv-abc123"
+          consumers_workspace:
+            remote_state_consumers:
+              - "ws-consumer1"
+          plain_workspace: {}
+    YAML
+  }
+
+  # A workspace that sets the new attributes in YAML forwards them to ./workspace unchanged.
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.sharing_workspace"].remote_state_sharing == false
+    error_message = "remote_state_sharing set in YAML should be forwarded to the ./workspace submodule."
+  }
+
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.sharing_workspace"].runner_image_version_id == "cimgv-abc123"
+    error_message = "runner_image_version_id set in YAML should be forwarded to the ./workspace submodule."
+  }
+
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.sharing_workspace"].remote_state_consumers == null
+    error_message = "A workspace that sets only remote_state_sharing should not also receive remote_state_consumers."
+  }
+
+  # The deprecated remote_state_consumers attribute keeps working and does not pick up remote_state_sharing.
+  assert {
+    condition     = length(output.workspace_resolved_settings["environment-1.consumers_workspace"].remote_state_consumers) == 1 && output.workspace_resolved_settings["environment-1.consumers_workspace"].remote_state_consumers[0] == "ws-consumer1"
+    error_message = "remote_state_consumers set in YAML should still be forwarded to the ./workspace submodule."
+  }
+
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.consumers_workspace"].remote_state_sharing == null
+    error_message = "A workspace that sets only remote_state_consumers should not also receive remote_state_sharing."
+  }
+
+  # A workspace that sets none of the new attributes leaves them all null (provider defaults apply).
+  assert {
+    condition = alltrue([
+      output.workspace_resolved_settings["environment-1.plain_workspace"].remote_state_consumers == null,
+      output.workspace_resolved_settings["environment-1.plain_workspace"].remote_state_sharing == null,
+      output.workspace_resolved_settings["environment-1.plain_workspace"].runner_image_version_id == null,
+    ])
+    error_message = "A workspace that sets none of the v3.20.0 attributes should leave them null."
+  }
+}
+
+run "workspace_module_wide_sharing_and_runner_image_defaults" {
+  command = plan
+
+  variables {
+    workspace_remote_state_sharing    = false
+    workspace_runner_image_version_id = "cimgv-default123"
+
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          default_workspace: {}
+          consumers_workspace:
+            remote_state_consumers:
+              - "ws-consumer1"
+          override_workspace:
+            runner_image_version_id: "cimgv-override456"
+    YAML
+  }
+
+  assert {
+    condition = alltrue([
+      output.workspace_resolved_settings["environment-1.default_workspace"].remote_state_sharing == false,
+      output.workspace_resolved_settings["environment-1.default_workspace"].runner_image_version_id == "cimgv-default123",
+      output.workspace_resolved_settings["environment-1.default_workspace"].remote_state_consumers == null,
+    ])
+    error_message = "The module-wide workspace_remote_state_sharing and workspace_runner_image_version_id defaults should apply to a workspace that sets neither."
+  }
+
+  # The module-wide remote_state_sharing default must be suppressed for a workspace that sets the
+  # conflicting remote_state_consumers itself; otherwise ./workspace would reject the entry.
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.consumers_workspace"].remote_state_sharing == null
+    error_message = "A per-workspace remote_state_consumers must suppress the module-wide remote_state_sharing default."
+  }
+
+  assert {
+    condition     = length(output.workspace_resolved_settings["environment-1.consumers_workspace"].remote_state_consumers) == 1
+    error_message = "The per-workspace remote_state_consumers value should be kept."
+  }
+
+  # A per-workspace runner_image_version_id overrides the module-wide default.
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.override_workspace"].runner_image_version_id == "cimgv-override456"
+    error_message = "A per-workspace runner_image_version_id should override the module-wide default."
+  }
+}
+
+run "workspace_module_wide_consumers_default_is_suppressed_by_sharing" {
+  command = plan
+
+  variables {
+    workspace_remote_state_consumers = ["ws-module-wide-consumer"]
+
+    scalr_config = <<-YAML
+      ---
+      environment-1:
+        workspaces:
+          default_workspace: {}
+          sharing_workspace:
+            remote_state_sharing: false
+    YAML
+  }
+
+  # The deprecated module-wide consumers default still applies to a workspace that does not opt in
+  # to remote_state_sharing (backward compatibility)...
+  assert {
+    condition     = length(output.workspace_resolved_settings["environment-1.default_workspace"].remote_state_consumers) == 1 && output.workspace_resolved_settings["environment-1.default_workspace"].remote_state_consumers[0] == "ws-module-wide-consumer"
+    error_message = "The deprecated module-wide workspace_remote_state_consumers default should still apply to workspaces that do not set remote_state_sharing."
+  }
+
+  assert {
+    condition     = output.workspace_resolved_settings["environment-1.default_workspace"].remote_state_sharing == null
+    error_message = "remote_state_sharing should stay null when only the deprecated consumers default is set."
+  }
+
+  # ...but is suppressed for a workspace that sets remote_state_sharing, which conflicts with it.
+  assert {
+    condition = alltrue([
+      output.workspace_resolved_settings["environment-1.sharing_workspace"].remote_state_sharing == false,
+      output.workspace_resolved_settings["environment-1.sharing_workspace"].remote_state_consumers == null,
+    ])
+    error_message = "A per-workspace remote_state_sharing must suppress the module-wide remote_state_consumers default."
+  }
+}
+
+###########################
+# v3.20.0: provider_configuration is_allowed_in_module_test passthrough
+###########################
+run "provider_configuration_is_allowed_in_module_test_wiring" {
+  command = plan
+
+  variables {
+    aws_is_allowed_in_module_test     = false
+    azurerm_is_allowed_in_module_test = true
+
+    aws_provider_config = <<-YAML
+      ---
+      aws_provider_1:
+        credentials_type: "access_keys"
+        access_key: "my-plan-access-key"
+        is_allowed_in_module_test: true
+      aws_provider_2:
+        credentials_type: "access_keys"
+        access_key: "my-apply-access-key"
+    YAML
+
+    azurerm_provider_config = <<-YAML
+      ---
+      azurerm_provider_1:
+        auth_type: "oidc"
+        audience: "api://AzureADTokenExchange"
+        client_id: "00000000-0000-0000-0000-000000000000"
+        tenant_id: "11111111-1111-1111-1111-111111111111"
+        subscription_id: "22222222-2222-2222-2222-222222222222"
+    YAML
+
+    google_provider_config = <<-YAML
+      ---
+      google_provider_1:
+        auth_type: "oidc"
+        project: "my-gcp-project"
+        service_account_email: "scalr@my-gcp-project.iam.gserviceaccount.com"
+        workload_provider_name: "projects/123456789/locations/global/workloadIdentityPools/scalr-pool/providers/scalr-provider"
+    YAML
+
+    custom_provider_config = <<-YAML
+      ---
+      kubernetes:
+        provider_name: "kubernetes"
+        is_allowed_in_module_test: true
+        argument:
+          - name: "host"
+            value: "https://kubernetes.example.com"
+    YAML
+  }
+
+  # Per-entry YAML value wins over the module-wide default for that provider type.
+  assert {
+    condition     = output.provider_configuration_is_allowed_in_module_test["aws_provider_1"] == true
+    error_message = "A per-entry is_allowed_in_module_test: true in YAML should be forwarded to the ./provider_configuration submodule."
+  }
+
+  # An AWS entry that omits it falls back to the module-wide aws_is_allowed_in_module_test default.
+  assert {
+    condition     = output.provider_configuration_is_allowed_in_module_test["aws_provider_2"] == false
+    error_message = "An AWS entry without is_allowed_in_module_test should fall back to var.aws_is_allowed_in_module_test."
+  }
+
+  assert {
+    condition     = output.provider_configuration_is_allowed_in_module_test["azurerm_provider_1"] == true
+    error_message = "An AzureRM entry without is_allowed_in_module_test should fall back to var.azurerm_is_allowed_in_module_test."
+  }
+
+  # Neither a per-entry value nor a module-wide default is set for Google: stays null so the
+  # submodule/provider default applies.
+  assert {
+    condition     = output.provider_configuration_is_allowed_in_module_test["google_provider_1"] == null
+    error_message = "A Google entry with neither a YAML value nor a module-wide default should leave is_allowed_in_module_test null."
+  }
+
+  assert {
+    condition     = output.provider_configuration_is_allowed_in_module_test["kubernetes"] == true
+    error_message = "A custom entry's per-entry is_allowed_in_module_test: true should be forwarded to the ./provider_configuration submodule."
+  }
+
+  # The read-only is_used_in_module_test output is surfaced for every provider type (keys are known at plan time).
+  assert {
+    condition     = length(output.provider_configuration_is_used_in_module_test) == 5
+    error_message = "provider_configuration_is_used_in_module_test should list every provider configuration across all four types."
+  }
+}
+
+###########################
+# v3.20.0: Azure DevOps Services VCS provider
+###########################
+run "vcs_provider_config_accepts_azure_dev_ops_services" {
+  command = plan
+
+  variables {
+    vcs_provider_config = <<-YAML
+      ---
+      azure-devops-vcs:
+        vcs_type: "azure_dev_ops_services"
+        username: "my-azure-devops-organization"
+        # checkov:skip=CKV_SECRET_6:Mock literal for an offline unit test, not a real secret.
+        token: "mock-azure-devops-token-value"
+        environments:
+          - "*"
+    YAML
+  }
+
+  assert {
+    condition     = length(output.vcs_provider_ids) == 1 && output.vcs_provider_ids["azure-devops-vcs"] != null
+    error_message = "A VCS provider with vcs_type azure_dev_ops_services should plan successfully via the YAML config."
+  }
+}
+
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails, treat it
 # as a signal that the module code has a bug and fix the root cause in main.tf / variables.tf /
 # outputs.tf, then re-run `tofu test` until it passes for the right reason.

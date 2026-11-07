@@ -126,6 +126,9 @@ environment-2-all-options:
         - name: "aws_provider_1"
           alias: "primary"
       remote_backend: true
+      # remote_state_consumers is deprecated by the Scalr provider and conflicts with remote_state_sharing.
+      # Prefer remote_state_sharing: false with the ./workspace/remote_state_consumer submodule (see
+      # workspace-4-state-sharing below).
       remote_state_consumers:
         - "consumer-1"
         - "consumer-2"
@@ -146,6 +149,14 @@ environment-2-all-options:
         identifier: "org/repo"
         ingress_submodules: false
         trigger_patterns: "*.tf" # conflicts with trigger_prefixes; a single glob-style string, not a list
+    workspace-4-state-sharing:
+      description: "This is workspace 4 in environment 2, using the scalr provider 3.20.0 attributes"
+      # Do not share state with every workspace in the environment; manage the consumers with the
+      # ./workspace/remote_state_consumer submodule instead. Conflicts with remote_state_consumers.
+      remote_state_sharing: false # requires scalr provider >= 3.20.0
+      # Container image version used as the runner image. Only works with Scalr-managed agent pools
+      # (do not combine with an agent_pool_id that points to a self-hosted agent pool).
+      runner_image_version_id: "cimgv-xxxxxxxxxx" # requires scalr provider >= 3.20.0
 ```
 
 ### AWS Provider Configuration Example
@@ -211,9 +222,37 @@ kubernetes:
 
 See `example_azurerm_provider_config.yaml`, `example_google_provider_config.yaml`, and `example_custom_provider_config.yaml` in this directory for the full, ready-to-use files.
 
+### Module-Test Credentials
+
+A provider configuration can be offered as credentials for module tests by setting `is_allowed_in_module_test: true` on its entry in any of the four provider-type YAML files (`aws_provider_config`, `azurerm_provider_config`, `google_provider_config`, `custom_provider_config`). Each type also has a module-wide default (`aws_is_allowed_in_module_test`, `azurerm_is_allowed_in_module_test`, `google_is_allowed_in_module_test`, `custom_is_allowed_in_module_test`) that an individual entry overrides. When neither is set, the provider default (`false`) applies. Attaching a configuration to a module test is done with the standalone `module/test_provider_configuration` module. This requires scalr provider >= 3.20.0.
+
+```yaml
+# aws_provider_config
+---
+aws_module_test:
+  credentials_type: "oidc"
+  audience: "your_audience_client_id"
+  role_arn: "arn:aws:iam::123456789012:role/ScalrModuleTestRole"
+  is_allowed_in_module_test: true
+```
+
+### VCS Provider Configuration
+
+`vcs_provider_config` is a YAML formatted file defining one or more VCS providers. The `vcs_type` (or the module-wide `vcs_provider_vcs_type` default) accepts `github`, `github_enterprise`, `gitlab`, `gitlab_enterprise`, `bitbucket_enterprise`, and `azure_dev_ops_services`. For `azure_dev_ops_services`, `username` is the Azure DevOps organization name and is only needed for organization-scoped tokens. Supply tokens through the `token` key or the sensitive `vcs_provider_token` variable rather than committing them. The `azure_dev_ops_services` type requires scalr provider >= 3.20.0.
+
+```yaml
+# vcs_provider_config
+---
+azure-devops:
+  vcs_type: "azure_dev_ops_services"
+  username: "my-azure-devops-organization"
+  environments:
+    - "*"
+```
+
 ### Outputs
 
-The module exposes `environment_ids`, `workspace_ids`, `vcs_provider_ids`, and `provider_configuration_ids` (a single unified map of **every** provider configuration name across all AWS, AzureRM, Google, and custom types), plus the per-type subset maps `provider_configuration_aws_ids`, `provider_configuration_azurerm_ids`, `provider_configuration_google_ids`, and `provider_configuration_custom_ids` -- maps of the YAML-defined name (or, for `workspace_ids`, the `<environment>.<workspace>` composite key) to the corresponding Scalr resource ID.
+The module exposes `environment_ids`, `workspace_ids`, `vcs_provider_ids`, and `provider_configuration_ids` (a single unified map of **every** provider configuration name across all AWS, AzureRM, Google, and custom types), plus the per-type subset maps `provider_configuration_aws_ids`, `provider_configuration_azurerm_ids`, `provider_configuration_google_ids`, and `provider_configuration_custom_ids` -- maps of the YAML-defined name (or, for `workspace_ids`, the `<environment>.<workspace>` composite key) to the corresponding Scalr resource ID. `provider_configuration_is_used_in_module_test` maps every provider configuration name to whether it is currently linked to a module test.
 
 ### Upgrading from the inline-resource version (state migration)
 
@@ -273,6 +312,16 @@ tofu state mv 'module.scalr.scalr_provider_configuration.aws["aws_provider_1"]' 
 
 After migrating, `plan` should report **no changes** for the relocated resources. Two other behavior changes in this release to be aware of: `provider_configuration_ids` is now a single map spanning **all** provider types (use `provider_configuration_aws_ids` for the previous AWS-only behavior), and the module now requires OpenTofu >= 1.9 / Terraform >= 1.9 (`required_version = ">= 1.9.0"`; the `>= 1.9.0` floor is driven by the composed `provider_configuration` submodule's cross-variable validation, which OpenTofu supports from 1.9.0 onward).
 
+### Upgrading to scalr provider 3.20.0
+
+This module now requires the scalr provider **>= 3.20.0** (previously >= 3.17.0), because the composed `./workspace` and `./provider_configuration` submodules use arguments that first shipped in 3.20.0. Callers pinned below 3.20.0 must upgrade the provider before taking this release; no state migration is needed. The release adds these optional inputs, all unset by default so existing configurations plan with no changes:
+
+- Workspaces: `remote_state_sharing` and `runner_image_version_id` (YAML keys, with `workspace_remote_state_sharing` and `workspace_runner_image_version_id` as module-wide defaults).
+- Provider configurations: `is_allowed_in_module_test` (YAML key, with the per-type `*_is_allowed_in_module_test` defaults).
+- VCS providers: the `azure_dev_ops_services` `vcs_type`.
+
+`remote_state_consumers` is deprecated by the scalr provider and conflicts with `remote_state_sharing`. A value set on a workspace in the YAML file suppresses the module-wide default of the conflicting attribute, so setting one attribute per workspace never collides with a module-wide default for the other. Setting both on the same workspace is rejected. To manage consumers explicitly, set `remote_state_sharing: false` and use the standalone `workspace/remote_state_consumer` module.
+
 _For more examples, please refer to the [Documentation](https://github.com/zachreborn/terraform-modules)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -285,13 +334,13 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.17.0 |
+| <a name="requirement_scalr"></a> [scalr](#requirement\_scalr) | >= 3.20.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.17.0 |
+| <a name="provider_scalr"></a> [scalr](#provider\_scalr) | >= 3.20.0 |
 
 ## Modules
 
@@ -319,6 +368,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_aws_environments"></a> [aws\_environments](#input\_aws\_environments) | List of Scalr Environments which the provider will be shared to. | `list(string)` | `null` | no |
 | <a name="input_aws_export_shell_variables"></a> [aws\_export\_shell\_variables](#input\_aws\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the aws provider configuration. | `bool` | `false` | no |
 | <a name="input_aws_external_id"></a> [aws\_external\_id](#input\_aws\_external\_id) | The external ID to use when assuming the role. Required if aws\_credentials\_type is set to 'role\_delegation' and the role requires an external ID. | `string` | `null` | no |
+| <a name="input_aws_is_allowed_in_module_test"></a> [aws\_is\_allowed\_in\_module\_test](#input\_aws\_is\_allowed\_in\_module\_test) | Whether the AWS provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0. | `bool` | `null` | no |
 | <a name="input_aws_owners"></a> [aws\_owners](#input\_aws\_owners) | List of Scalr User IDs who will own the Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_aws_provider_config"></a> [aws\_provider\_config](#input\_aws\_provider\_config) | YAML formatted file defining one or more AWS provider configurations. | `string` | `null` | no |
 | <a name="input_aws_role_arn"></a> [aws\_role\_arn](#input\_aws\_role\_arn) | The ARN of the role to assume. Required if aws\_credentials\_type is set to 'oidc' or 'role\_delegation'. | `string` | `null` | no |
@@ -330,6 +380,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_azurerm_client_secret"></a> [azurerm\_client\_secret](#input\_azurerm\_client\_secret) | The Client Secret that should be used for the AzureRM provider configuration. Required when azurerm\_auth\_type is 'client-secrets'. | `string` | `null` | no |
 | <a name="input_azurerm_environments"></a> [azurerm\_environments](#input\_azurerm\_environments) | List of Scalr Environments which the AzureRM provider configuration will be shared to. | `list(string)` | `null` | no |
 | <a name="input_azurerm_export_shell_variables"></a> [azurerm\_export\_shell\_variables](#input\_azurerm\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the AzureRM provider configuration. | `bool` | `false` | no |
+| <a name="input_azurerm_is_allowed_in_module_test"></a> [azurerm\_is\_allowed\_in\_module\_test](#input\_azurerm\_is\_allowed\_in\_module\_test) | Whether the AzureRM provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0. | `bool` | `null` | no |
 | <a name="input_azurerm_owners"></a> [azurerm\_owners](#input\_azurerm\_owners) | List of Scalr Team IDs who will own the AzureRM Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_azurerm_provider_config"></a> [azurerm\_provider\_config](#input\_azurerm\_provider\_config) | YAML formatted file defining one or more AzureRM provider configurations. | `string` | `null` | no |
 | <a name="input_azurerm_subscription_id"></a> [azurerm\_subscription\_id](#input\_azurerm\_subscription\_id) | The Subscription ID that should be used for the AzureRM provider configuration. If omitted, it must be set as a shell variable in the workspace or as part of the source configuration. | `string` | `null` | no |
@@ -339,6 +390,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_custom_argument_secrets"></a> [custom\_argument\_secrets](#input\_custom\_argument\_secrets) | Map of sensitive custom provider argument values, keyed by the provider configuration's name<br/>(a top-level key in custom\_provider\_config, or the resource's own name for module-wide<br/>defaults) and then by argument name. Populate an entry here instead of setting 'value' directly<br/>in custom\_argument or the YAML file whenever an argument sets 'sensitive = true': the<br/>provider's sensitive flag only controls masking in Scalr and does not prevent the value from<br/>appearing in Terraform/OpenTofu plan output when sourced from a non-sensitive variable.<br/><br/>Example:<br/>  custom\_argument\_secrets = {<br/>    kubernetes = {<br/>      password = "<value-from-a-secret-manager>"<br/>    }<br/>  } | `map(map(string))` | `{}` | no |
 | <a name="input_custom_environments"></a> [custom\_environments](#input\_custom\_environments) | List of Scalr Environments which the custom provider configuration will be shared to. | `list(string)` | `null` | no |
 | <a name="input_custom_export_shell_variables"></a> [custom\_export\_shell\_variables](#input\_custom\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the custom provider configuration. | `bool` | `false` | no |
+| <a name="input_custom_is_allowed_in_module_test"></a> [custom\_is\_allowed\_in\_module\_test](#input\_custom\_is\_allowed\_in\_module\_test) | Whether the custom provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0. | `bool` | `null` | no |
 | <a name="input_custom_owners"></a> [custom\_owners](#input\_custom\_owners) | List of Scalr Team IDs who will own the custom Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_custom_provider_config"></a> [custom\_provider\_config](#input\_custom\_provider\_config) | YAML formatted file defining one or more custom provider configurations. | `string` | `null` | no |
 | <a name="input_custom_provider_name"></a> [custom\_provider\_name](#input\_custom\_provider\_name) | The name of the Terraform provider being configured (e.g. 'kubernetes'). Can be overridden per provider configuration in the YAML file. | `string` | `null` | no |
@@ -357,6 +409,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_google_default_labels_strategy"></a> [google\_default\_labels\_strategy](#input\_google\_default\_labels\_strategy) | On duplicate key behaviour for default labels. Valid values are 'skip' and 'update'. | `string` | `null` | no |
 | <a name="input_google_environments"></a> [google\_environments](#input\_google\_environments) | List of Scalr Environments which the Google provider configuration will be shared to. | `list(string)` | `null` | no |
 | <a name="input_google_export_shell_variables"></a> [google\_export\_shell\_variables](#input\_google\_export\_shell\_variables) | Whether to export provider credentials as shell variables when using the Scalr CLI with the Google provider configuration. | `bool` | `false` | no |
+| <a name="input_google_is_allowed_in_module_test"></a> [google\_is\_allowed\_in\_module\_test](#input\_google\_is\_allowed\_in\_module\_test) | Whether the Google provider configuration can be used as credentials for module tests. Can be overridden per provider configuration in the YAML file. Left unset (null) so the provider default (false) applies. Requires scalr provider >= 3.20.0. | `bool` | `null` | no |
 | <a name="input_google_owners"></a> [google\_owners](#input\_google\_owners) | List of Scalr Team IDs who will own the Google Provider Configuration. | `list(string)` | `null` | no |
 | <a name="input_google_project"></a> [google\_project](#input\_google\_project) | The default Google Cloud project ID to manage resources in. If another project ID is specified on a resource, it will take precedence. | `string` | `null` | no |
 | <a name="input_google_provider_config"></a> [google\_provider\_config](#input\_google\_provider\_config) | YAML formatted file defining one or more Google provider configurations. | `string` | `null` | no |
@@ -372,8 +425,8 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_vcs_provider_id"></a> [vcs\_provider\_id](#input\_vcs\_provider\_id) | The VCS Provider ID to use for the workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_vcs_provider_token"></a> [vcs\_provider\_token](#input\_vcs\_provider\_token) | The api key or personal access token for the VCS Provider. | `string` | `null` | no |
 | <a name="input_vcs_provider_url"></a> [vcs\_provider\_url](#input\_vcs\_provider\_url) | The URL of the VCS Provider. Required when using a self-hosted vcs provider. | `string` | `null` | no |
-| <a name="input_vcs_provider_username"></a> [vcs\_provider\_username](#input\_vcs\_provider\_username) | The username for the VCS Provider. Required for 'bitbucket\_enterprise'. | `string` | `null` | no |
-| <a name="input_vcs_provider_vcs_type"></a> [vcs\_provider\_vcs\_type](#input\_vcs\_provider\_vcs\_type) | The type of VCS Provider. Valid values are 'github', 'github\_enterprise', 'gitlab', 'gitlab\_enterprise', and 'bitbucket\_enterprise'. | `string` | `"github"` | no |
+| <a name="input_vcs_provider_username"></a> [vcs\_provider\_username](#input\_vcs\_provider\_username) | The username for the VCS Provider. Required for 'bitbucket\_enterprise'. For 'azure\_dev\_ops\_services' it is the Azure DevOps organization name, required only for organization-scoped tokens. | `string` | `null` | no |
+| <a name="input_vcs_provider_vcs_type"></a> [vcs\_provider\_vcs\_type](#input\_vcs\_provider\_vcs\_type) | The type of VCS Provider. Valid values are 'github', 'github\_enterprise', 'gitlab', 'gitlab\_enterprise', 'bitbucket\_enterprise', and 'azure\_dev\_ops\_services' (Azure DevOps Services, which requires scalr provider >= 3.20.0). | `string` | `"github"` | no |
 | <a name="input_workspace_agent_pool_id"></a> [workspace\_agent\_pool\_id](#input\_workspace\_agent\_pool\_id) | The Agent Pool ID to assign to the Workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_workspace_auto_apply"></a> [workspace\_auto\_apply](#input\_workspace\_auto\_apply) | Whether to automatically apply runs when they are queued. Can be overridden per workspace in the YAML file. | `bool` | `false` | no |
 | <a name="input_workspace_auto_queue_runs"></a> [workspace\_auto\_queue\_runs](#input\_workspace\_auto\_queue\_runs) | Whether to automatically queue runs when a workspace's configuration changes. Can be overridden per workspace in the YAML file. Valid values are 'skip\_first', 'always', 'never', and 'on\_create\_only'. | `string` | `"always"` | no |
@@ -383,8 +436,10 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_workspace_iac_platform"></a> [workspace\_iac\_platform](#input\_workspace\_iac\_platform) | The Infrastructure as Code platform for the workspace. Valid values are 'terraform' or 'opentofu'. | `string` | `"opentofu"` | no |
 | <a name="input_workspace_module_version_id"></a> [workspace\_module\_version\_id](#input\_workspace\_module\_version\_id) | The Module Version ID to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'modver-<RANDOM STRING>'. This cannot be set when using a vcs repository as the source for the workspace. | `string` | `null` | no |
 | <a name="input_workspace_remote_backend"></a> [workspace\_remote\_backend](#input\_workspace\_remote\_backend) | Whether Scalr manages the remote backend configuration. Can be overridden per workspace in the YAML file. | `bool` | `true` | no |
-| <a name="input_workspace_remote_state_consumers"></a> [workspace\_remote\_state\_consumers](#input\_workspace\_remote\_state\_consumers) | List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `null` | no |
+| <a name="input_workspace_remote_state_consumers"></a> [workspace\_remote\_state\_consumers](#input\_workspace\_remote\_state\_consumers) | DEPRECATED by the upstream provider. List of Workspace IDs that can read the remote state of this workspace. Can be overridden per workspace in the YAML file. Conflicts with remote\_state\_sharing: a workspace that sets remote\_state\_sharing in the YAML file ignores this module-wide default. Prefer remote\_state\_sharing = false together with the ./workspace/remote\_state\_consumer submodule. | `list(string)` | `null` | no |
+| <a name="input_workspace_remote_state_sharing"></a> [workspace\_remote\_state\_sharing](#input\_workspace\_remote\_state\_sharing) | Whether the state of the workspace is shared with all workspaces within the environment. Set to false to manage the list of consumers with the ./workspace/remote\_state\_consumer submodule. Can be overridden per workspace in the YAML file. Conflicts with remote\_state\_consumers: a workspace that sets remote\_state\_consumers in the YAML file ignores this module-wide default. Left unset (null) so the account's workspace state sharing setting applies. Requires scalr provider >= 3.20.0. | `bool` | `null` | no |
 | <a name="input_workspace_run_operation_timeout"></a> [workspace\_run\_operation\_timeout](#input\_workspace\_run\_operation\_timeout) | The maximum time, in minutes, that a run operation (plan or apply) can take before it is automatically canceled. Can be overridden per workspace in the YAML file. | `number` | `60` | no |
+| <a name="input_workspace_runner_image_version_id"></a> [workspace\_runner\_image\_version\_id](#input\_workspace\_runner\_image\_version\_id) | The ID of the container image version used as the runner image, in the format 'cimgv-<RANDOM STRING>' (look it up with the scalr\_container\_image\_version data source). Can be overridden per workspace in the YAML file. Only works with Scalr-managed agent pools: it cannot be combined with an agent pool ID that points to a self-hosted agent pool. Left unset (null) so the account default runner image is used. Requires scalr provider >= 3.20.0. | `string` | `null` | no |
 | <a name="input_workspace_ssh_key_id"></a> [workspace\_ssh\_key\_id](#input\_workspace\_ssh\_key\_id) | The SSH Key ID to use for the workspace. Can be overridden per workspace in the YAML file. | `string` | `null` | no |
 | <a name="input_workspace_tag_ids"></a> [workspace\_tag\_ids](#input\_workspace\_tag\_ids) | List of Tag IDs to assign to the workspace. Can be overridden per workspace in the YAML file. | `list(string)` | `null` | no |
 | <a name="input_workspace_terraform_version"></a> [workspace\_terraform\_version](#input\_workspace\_terraform\_version) | The opentofu or terraform version to use for the workspace. Can be overridden per workspace in the YAML file. Must be in the format 'X.Y.Z'. | `string` | `null` | no |
@@ -403,9 +458,12 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="output_provider_configuration_custom_ids"></a> [provider\_configuration\_custom\_ids](#output\_provider\_configuration\_custom\_ids) | Map of custom Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_google_ids"></a> [provider\_configuration\_google\_ids](#output\_provider\_configuration\_google\_ids) | Map of Google Provider Configuration names to their Scalr Provider Configuration IDs. |
 | <a name="output_provider_configuration_ids"></a> [provider\_configuration\_ids](#output\_provider\_configuration\_ids) | Map of every Provider Configuration name (across all AWS, AzureRM, Google, and custom types) to its Scalr Provider Configuration ID. |
+| <a name="output_provider_configuration_is_allowed_in_module_test"></a> [provider\_configuration\_is\_allowed\_in\_module\_test](#output\_provider\_configuration\_is\_allowed\_in\_module\_test) | Map of every Provider Configuration name to the resolved is\_allowed\_in\_module\_test value (per-entry YAML value, else the module-wide per-type default; null when neither is set) passed to the ./provider\_configuration submodule. Exposed to verify the root's YAML-to-submodule wiring. |
+| <a name="output_provider_configuration_is_used_in_module_test"></a> [provider\_configuration\_is\_used\_in\_module\_test](#output\_provider\_configuration\_is\_used\_in\_module\_test) | Map of every Provider Configuration name (across all AWS, AzureRM, Google, and custom types) to whether it is currently linked to a module test (the read-only is\_used\_in\_module\_test attribute). Requires scalr provider >= 3.20.0. |
 | <a name="output_vcs_provider_ids"></a> [vcs\_provider\_ids](#output\_vcs\_provider\_ids) | Map of VCS Provider names to their Scalr VCS Provider IDs. |
 | <a name="output_workspace_ids"></a> [workspace\_ids](#output\_workspace\_ids) | Map of Workspace composite keys ('<environment>.<workspace>') to their Scalr Workspace IDs. |
 | <a name="output_workspace_provider_configurations"></a> [workspace\_provider\_configurations](#output\_workspace\_provider\_configurations) | Map of each workspace's resolved provider\_configuration list (id + alias) as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's name-to-ID resolution and ordering. |
+| <a name="output_workspace_resolved_settings"></a> [workspace\_resolved\_settings](#output\_workspace\_resolved\_settings) | Map of each workspace's resolved remote\_state\_consumers, remote\_state\_sharing, and runner\_image\_version\_id as passed to the ./workspace submodule, keyed by '<environment>.<workspace>'. Exposed to verify the root's YAML-to-submodule wiring, including that a value set per workspace suppresses the module-wide default of its conflicting counterpart (remote\_state\_consumers vs remote\_state\_sharing). |
 <!-- END_TF_DOCS -->
 
 <!-- LICENSE -->
