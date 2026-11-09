@@ -17,7 +17,7 @@ variable "central_account_id" {
 
 variable "staging_vault_name" {
   type        = string
-  description = "(Optional) Name of the local, tier-agnostic staging vault. AWS Backup always writes recovery points locally first; this vault must match the staging_vault_name configured in the org BACKUP_POLICY. It is disposable (short retention, no lock)."
+  description = "(Optional) Name of the local, tier-agnostic staging vault. AWS Backup always writes recovery points locally first; this vault must match the staging_vault_name configured in the org BACKUP_POLICY. Retention and locking are set by staging_retention_days and vault_lock_mode."
   default     = "backup-staging"
 }
 
@@ -29,7 +29,7 @@ variable "staging_kms_key_arn" {
 
 variable "staging_vault_force_destroy" {
   type        = bool
-  description = "(Optional) Allow Terraform to delete the staging vault even if it contains recovery points. Staging is disposable, but this defaults to false to avoid accidental destruction of in-flight recovery points."
+  description = "(Optional) Allow Terraform to delete the staging vault even if it contains recovery points. Defaults to false to avoid accidental destruction of in-flight recovery points. Has no effect on a compliance-locked vault, which cannot be deleted while it holds recovery points."
   default     = false
 }
 
