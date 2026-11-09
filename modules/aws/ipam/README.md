@@ -186,6 +186,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
   sharing org-wide), keeping cross-cutting RAM concerns consistent with the rest
   of the library. Pool ARNs are also exposed via `pool_arns` for callers who
   prefer to manage sharing externally.
+  The child module receives a resource map keyed by the pool's logical name,
+  so newly created pools can be shared in the same plan. Existing deployments
+  must migrate each singleton association to its pool-keyed address; see the
+  [RAM migration instructions](../ram/README.md#existing-address-management-module-callers)
+  before upgrading.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
