@@ -15,7 +15,6 @@ terraform {
 # Locals
 ###########################
 locals {
-  # Trust policy: allow the AWS Backup service to assume this role.
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -26,10 +25,6 @@ locals {
     }]
   })
 
-  # Identity-side permissions for cross-account copy into the central account. The central vault's
-  # resource policy grants the org backup:CopyIntoBackupVault; this is the matching identity grant,
-  # plus the KMS rights needed to write copies encrypted under the central account's CMKs. Scoped to
-  # the central account's vault and key ARNs.
   cross_account_copy_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -58,8 +53,6 @@ locals {
     ]
   })
 
-  # Resource-based policy on the staging vault: allow the central account to copy recovery points
-  # from its central vaults back into this vault, so they can be restored in this account.
   staging_vault_access_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -75,11 +68,6 @@ locals {
 ###########################
 # Staging Vault
 ###########################
-# Local, tier-agnostic vault. AWS Backup always writes recovery points here first; copy_actions in
-# the org BACKUP_POLICY then ship them cross-account to the central vaults. Every tier keeps its
-# local points for the same staging_retention_days, which is also the lock's minimum retention, so
-# recent backups can't be deleted early from inside the account. Also the landing vault for
-# recovery points copied back from the central account for restore.
 resource "aws_backup_vault" "staging" {
   force_destroy = var.staging_vault_force_destroy
   kms_key_arn   = var.staging_kms_key_arn
@@ -115,8 +103,6 @@ module "backup_role" {
   tags                 = var.tags
 }
 
-# Inline policy: cross-account copy + KMS rights on the central account. Kept inline (same IAM
-# domain as the role) because it depends on the per-account central_account_id.
 resource "aws_iam_role_policy" "cross_account_copy" {
   name   = "central-backup-copy"
   role   = module.backup_role.name
