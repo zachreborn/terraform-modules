@@ -58,7 +58,7 @@ Organization. It is meant to run in the AWS Backup **delegated administrator** a
 Tag any resource in any member account with `backup-tier = <tier>` and the correct schedule,
 retention, and immutability apply automatically, org-wide, with zero per-resource configuration.
 
-It produces two things from a single `backup_tiers` map (the source of truth):
+It produces three things from a single `backup_tiers` map (the source of truth):
 
 1. **One AWS Organizations `BACKUP_POLICY`** carrying every tier dimension (cadence, retention,
    cold transition, cross-account/cross-region copy). AWS Organizations propagates it to every
@@ -178,6 +178,16 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
   lifecycle), and `central_delete_after_days >= central_cold_after_days + 90` is enforced.
 - **Continuous / PITR is local-only.** Rules with `continuous = true` emit no `copy_actions`
   (cross-account PITR copy is not supported); they protect the local staging vault only.
+- **Org-scoped grants.** The central vault access policies and the CMK key policies grant access
+  only to principals whose `aws:PrincipalOrgID` matches this organization. Each CMK also grants
+  full administration to the central account root so the key can never be orphaned.
+- **Central backup role.** `central_backup_role_name` is the role AWS Backup assumes for jobs started
+  in the central account: copy-backs from the central vaults into member staging vaults, and
+  restores run in the central account.
+- **Audit Manager.** `enable_audit_manager` creates a framework with three controls (resources
+  protected by a backup plan, recovery points encrypted, and minimum retention set to the smallest
+  `vault_min_retention_days` across tiers) plus a daily `BACKUP_JOB_REPORT` report plan covering
+  `prod_region` and `dr_region`, delivered to `audit_report_s3_bucket_name`.
 - **Attach to workload OUs, not the org root**, so the management account is excluded.
 - **Tag coverage is out of scope for this module.** Untagged eligible resources are silently
   unprotected. A recommended companion control is an AWS Config `required-tags` (or equivalent)

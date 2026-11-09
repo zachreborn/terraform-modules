@@ -15,9 +15,6 @@ terraform {
 ###########################
 # Data Sources
 ###########################
-# The central account is the registered AWS Backup delegated administrator and can read the
-# organization. The org ID scopes the cross-account vault access policy and the KMS key policy so
-# only principals inside this organization can copy into / encrypt with the central vaults.
 data "aws_organizations_organization" "this" {
   provider = aws.prod_region
 }
@@ -28,19 +25,16 @@ data "aws_organizations_organization" "this" {
 locals {
   org_id = data.aws_organizations_organization.this.id
 
-  # central-vault-<tier>. The same name is used in both regions; the region lives in the ARN.
   central_vault_names = {
     for tkey, _ in var.backup_tiers : tkey => "${var.central_vault_prefix}${tkey}"
   }
 
-  # Tiers that also keep a cross-region copy in the DR region.
   dr_tiers = {
     for tkey, tier in var.backup_tiers : tkey => tier if tier.copy_to_dr
   }
 
   policy_regions = coalesce(var.policy_regions, [var.prod_region])
 
-  # Trust policy for the central account's AWS Backup role.
   central_backup_assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -51,8 +45,6 @@ locals {
     }]
   })
 
-  # Resource-based policy on each central vault: allow any principal in this organization to copy
-  # recovery points into the vault. This is the destination half of cross-account copy.
   vault_access_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -69,9 +61,6 @@ locals {
     }]
   })
 
-  # Key policy for every central CMK: full admin to the central account root (so the key is never
-  # orphaned), plus encrypt/decrypt/grant rights to any backup role in the organization so member
-  # accounts can write encrypted copies into the central vaults.
   kms_key_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -104,16 +93,6 @@ locals {
     ]
   })
 
-  # ----------------------------------------------------------------------------------------------
-  # BACKUP_POLICY document, derived entirely from var.backup_tiers.
-  #
-  # One plan per tier; one rule per tier rule. Every rule writes to the local staging vault (kept
-  # staging_retention_days, matching the staging vault's lock floor) and
-  # (for non-continuous rules with central_copy) copies cross-account to the central vault in
-  # prod_region, plus a second copy to dr_region for copy_to_dr tiers. Per the AWS Organizations
-  # backup policy syntax every leaf value is a string wrapped in {"@@assign": ...}; the $account
-  # token is substituted per member account at apply time, while the central account is a literal.
-  # ----------------------------------------------------------------------------------------------
   backup_policy = {
     plans = {
       for tkey, tier in var.backup_tiers : "${var.policy_name}-tier-${tkey}" => {
@@ -132,8 +111,6 @@ locals {
             rule.continuous ? {
               enable_continuous_backup = { "@@assign" = true }
             } : {},
-            # copy_actions ship the recovery point to the central vault(s). Continuous/PITR points
-            # are local-only (cross-account PITR copy is not supported), so they get no copy_actions.
             (rule.central_copy && !rule.continuous) ? {
               copy_actions = merge(
                 {
@@ -176,8 +153,6 @@ locals {
 ###########################
 # Central Backup IAM Role
 ###########################
-# Role AWS Backup assumes for jobs started in the central account: copying a recovery point from a
-# central vault back into a member account's staging vault, and restores run in the central account.
 module "central_backup_role" {
   source = "../../aws/iam/role"
   providers = {
@@ -260,9 +235,6 @@ module "central_kms_dr" {
 ###########################
 # Central Vaults (dr_region)
 ###########################
-# Logically air-gapped vaults: always compliance-locked, encrypted with a central CMK, and
-# shareable through AWS RAM so member accounts can restore from them directly. Every DR copy is
-# kept for exactly dr_retention_days, which is also the vault's lock floor and ceiling.
 resource "aws_backup_logically_air_gapped_vault" "central_dr" {
   for_each = local.dr_tiers
   provider = aws.dr_region
@@ -313,9 +285,6 @@ resource "aws_ram_principal_association" "central_dr" {
 ###########################
 # Organization BACKUP_POLICY
 ###########################
-# Authored in the central (delegated administrator) account and attached to the workload OUs. AWS
-# Organizations propagates it to every member account in those OUs, including accounts added later,
-# with no per-account deploy.
 resource "aws_organizations_policy" "tiered_backup" {
   provider = aws.prod_region
 
@@ -344,12 +313,10 @@ resource "aws_backup_framework" "this" {
   name        = replace("${var.policy_name}_framework", "-", "_")
   description = "Codifies the tiered backup rules for org-wide AWS Backup compliance reporting."
 
-  # Every protected resource must be a member of a backup plan.
   control {
     name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"
   }
 
-  # Recovery points must be retained for at least the tier minimum.
   control {
     name = "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK"
     input_parameter {
@@ -358,7 +325,6 @@ resource "aws_backup_framework" "this" {
     }
   }
 
-  # Recovery points must be encrypted.
   control {
     name = "BACKUP_RECOVERY_POINT_ENCRYPTED"
   }

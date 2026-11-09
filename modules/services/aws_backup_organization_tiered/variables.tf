@@ -198,7 +198,7 @@ variable "changeable_for_days" {
 }
 
 ###########################
-# KMS Variables
+# DR Vault Variables
 ###########################
 
 variable "dr_retention_days" {
@@ -216,6 +216,10 @@ variable "share_dr_vaults_with_target_ous" {
   description = "(Optional) Share the DR-region logically air-gapped vaults with target_ou_ids through AWS RAM, so member accounts can restore from them directly. Requires RAM sharing with AWS Organizations to be enabled in the management account."
   default     = true
 }
+
+###########################
+# KMS Variables
+###########################
 
 variable "kms_deletion_window_in_days" {
   type        = number
