@@ -16,9 +16,6 @@ variables {
   central_account_id = "222222222222"
 }
 
-###########################
-# Baseline
-###########################
 run "baseline_defaults" {
   command = apply
 
@@ -73,9 +70,6 @@ run "baseline_defaults" {
   }
 }
 
-###########################
-# Central Account Wiring
-###########################
 run "central_account_id_scopes_policies" {
   command = plan
 
@@ -100,9 +94,6 @@ run "central_account_id_scopes_policies" {
   }
 }
 
-###########################
-# Vault Lock Modes
-###########################
 run "lock_governance" {
   command = plan
 
@@ -172,3 +163,7 @@ run "lock_compliance" {
     error_message = "vault_lock_mode output should be compliance."
   }
 }
+
+# Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
+# treat it as a signal that the module code has a bug and fix the root cause in main.tf /
+# variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.
