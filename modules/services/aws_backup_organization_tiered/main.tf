@@ -5,7 +5,8 @@ terraform {
   required_version = ">= 1.0.0"
   required_providers {
     aws = {
-      source                = "hashicorp/aws"
+      source = "hashicorp/aws"
+      # encryption_key_arn on aws_backup_logically_air_gapped_vault was introduced in AWS provider 6.22.0.
       version               = ">= 6.22.0"
       configuration_aliases = [aws.prod_region, aws.dr_region]
     }
