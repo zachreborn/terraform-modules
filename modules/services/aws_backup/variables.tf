@@ -213,6 +213,12 @@ variable "organization_backup_plan_content" {
   type        = string
 }
 
+variable "excluded_tag_key" {
+  type        = string
+  description = "(Optional) Resources carrying this tag key, with any value, are excluded from both backup selections. Defaults to backup-tier so resources managed by the tag-based tiered backup policy are not backed up twice. Set to null to select every resource."
+  default     = "backup-tier"
+}
+
 variable "tags" {
   type        = map(any)
   description = "(Optional) A mapping of tags to assign to the object."
