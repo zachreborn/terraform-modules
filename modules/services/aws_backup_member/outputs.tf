@@ -30,3 +30,8 @@ output "backup_role_name" {
   description = "Name of the IAM role AWS Backup assumes in this account."
   value       = module.backup_role.name
 }
+
+output "ebs_kms_key_arn" {
+  description = "ARN of the default EBS encryption key, or null when manage_ebs_default_encryption is false."
+  value       = var.manage_ebs_default_encryption ? module.ebs_kms[0].arn : null
+}

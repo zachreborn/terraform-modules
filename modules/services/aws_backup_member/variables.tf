@@ -103,6 +103,32 @@ variable "managed_policy_arns" {
 }
 
 ###########################
+# EBS Encryption Variables
+###########################
+
+variable "manage_ebs_default_encryption" {
+  type        = bool
+  description = "(Optional) Create a customer-managed KMS key, make it this account's default EBS encryption key, and turn on EBS encryption by default in the current region. The key policy lets the central backup account use the key, which AWS Backup requires to copy EBS and EC2 backups cross-account. Volumes encrypted with the AWS-managed aws/ebs key cannot be copied cross-account. Existing volumes keep their current key."
+  default     = true
+}
+
+variable "ebs_kms_alias_prefix" {
+  type        = string
+  description = "(Optional) Alias name prefix for the default EBS encryption key."
+  default     = "ebs-default"
+}
+
+variable "ebs_kms_deletion_window_in_days" {
+  type        = number
+  description = "(Optional) Waiting period, in days, before the default EBS encryption key is deleted after it is scheduled for deletion. Must be between 7 and 30."
+  default     = 30
+  validation {
+    condition     = var.ebs_kms_deletion_window_in_days >= 7 && var.ebs_kms_deletion_window_in_days <= 30
+    error_message = "ebs_kms_deletion_window_in_days must be between 7 and 30."
+  }
+}
+
+###########################
 # General Variables
 ###########################
 

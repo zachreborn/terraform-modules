@@ -1,4 +1,22 @@
-mock_provider "aws" {}
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "111111111111"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-west-2"
+    }
+  }
+
+  mock_resource "aws_kms_key" {
+    defaults = {
+      arn = "arn:aws:kms:us-west-2:111111111111:key/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   central_account_id = "222222222222"

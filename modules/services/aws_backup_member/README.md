@@ -145,6 +145,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_backup_role"></a> [backup\_role](#module\_backup\_role) | ../../aws/iam/role | n/a |
+| <a name="module_ebs_kms"></a> [ebs\_kms](#module\_ebs\_kms) | ../../aws/kms | n/a |
 
 ## Resources
 
@@ -153,7 +154,11 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | [aws_backup_vault.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
 | [aws_backup_vault_lock_configuration.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault_lock_configuration) | resource |
 | [aws_backup_vault_policy.staging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault_policy) | resource |
+| [aws_ebs_default_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_default_kms_key) | resource |
+| [aws_ebs_encryption_by_default.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_encryption_by_default) | resource |
 | [aws_iam_role_policy.cross_account_copy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -164,6 +169,9 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | <a name="input_backup_role_permissions_boundary"></a> [backup\_role\_permissions\_boundary](#input\_backup\_role\_permissions\_boundary) | (Optional) ARN of a permissions boundary policy to attach to the backup role. | `string` | `null` | no |
 | <a name="input_central_account_id"></a> [central\_account\_id](#input\_central\_account\_id) | (Required) The AWS account ID of the central backup (delegated administrator) account that holds the compliance-locked central vaults and their CMKs. The backup role's inline policy is scoped to this account's vault and key ARNs so recovery points can be copied cross-account. This is the only value that varies between member accounts (and it is constant org-wide). | `string` | n/a | yes |
 | <a name="input_changeable_for_days"></a> [changeable\_for\_days](#input\_changeable\_for\_days) | (Optional) Grace window in days during which a compliance-mode lock can still be removed. AWS minimum is 3. Only applies when vault\_lock\_mode = "compliance". | `number` | `3` | no |
+| <a name="input_ebs_kms_alias_prefix"></a> [ebs\_kms\_alias\_prefix](#input\_ebs\_kms\_alias\_prefix) | (Optional) Alias name prefix for the default EBS encryption key. | `string` | `"ebs-default"` | no |
+| <a name="input_ebs_kms_deletion_window_in_days"></a> [ebs\_kms\_deletion\_window\_in\_days](#input\_ebs\_kms\_deletion\_window\_in\_days) | (Optional) Waiting period, in days, before the default EBS encryption key is deleted after it is scheduled for deletion. Must be between 7 and 30. | `number` | `30` | no |
+| <a name="input_manage_ebs_default_encryption"></a> [manage\_ebs\_default\_encryption](#input\_manage\_ebs\_default\_encryption) | (Optional) Create a customer-managed KMS key, make it this account's default EBS encryption key, and turn on EBS encryption by default in the current region. The key policy lets the central backup account use the key, which AWS Backup requires to copy EBS and EC2 backups cross-account. Volumes encrypted with the AWS-managed aws/ebs key cannot be copied cross-account. Existing volumes keep their current key. | `bool` | `true` | no |
 | <a name="input_managed_policy_arns"></a> [managed\_policy\_arns](#input\_managed\_policy\_arns) | (Optional) AWS managed policy ARNs attached to the backup role. Defaults to the AWS Backup service-role policies for backup, restore, and S3 backup/restore, which together cover all AWS Backup-supported resource types. | `list(string)` | <pre>[<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",<br/>  "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",<br/>  "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",<br/>  "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore"<br/>]</pre> | no |
 | <a name="input_staging_kms_key_arn"></a> [staging\_kms\_key\_arn](#input\_staging\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key to encrypt the staging vault. Defaults to null, which uses the AWS-managed AWS Backup key (aws/backup). Cross-account copies of resource types not fully managed by AWS Backup (such as EBS, EC2, and RDS) require customer-managed keys, so set this when those resources are restored by copying back from the central account. | `string` | `null` | no |
 | <a name="input_staging_max_retention_days"></a> [staging\_max\_retention\_days](#input\_staging\_max\_retention\_days) | (Optional) Vault Lock maximum retention for the staging vault, in days. Null sets no maximum. | `number` | `null` | no |
@@ -179,6 +187,7 @@ _For more examples, please refer to the [Documentation](https://github.com/zachr
 | ---- | ----------- |
 | <a name="output_backup_role_arn"></a> [backup\_role\_arn](#output\_backup\_role\_arn) | ARN of the IAM role AWS Backup assumes in this account. |
 | <a name="output_backup_role_name"></a> [backup\_role\_name](#output\_backup\_role\_name) | Name of the IAM role AWS Backup assumes in this account. |
+| <a name="output_ebs_kms_key_arn"></a> [ebs\_kms\_key\_arn](#output\_ebs\_kms\_key\_arn) | ARN of the default EBS encryption key, or null when manage\_ebs\_default\_encryption is false. |
 | <a name="output_staging_vault_arn"></a> [staging\_vault\_arn](#output\_staging\_vault\_arn) | ARN of the local staging backup vault. |
 | <a name="output_staging_vault_name"></a> [staging\_vault\_name](#output\_staging\_vault\_name) | Name of the local staging backup vault. |
 | <a name="output_staging_vault_policy"></a> [staging\_vault\_policy](#output\_staging\_vault\_policy) | Resource-based access policy on the staging vault. |

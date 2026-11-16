@@ -1,4 +1,22 @@
 mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "111111111111"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-west-2"
+    }
+  }
+
+  mock_resource "aws_kms_key" {
+    defaults = {
+      arn = "arn:aws:kms:us-west-2:111111111111:key/00000000-0000-0000-0000-000000000000"
+    }
+  }
+
   mock_resource "aws_backup_vault" {
     defaults = {
       arn = "arn:aws:backup:us-west-2:111111111111:backup-vault:backup-staging"
@@ -167,3 +185,35 @@ run "lock_compliance" {
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.
+
+run "ebs_default_encryption" {
+  command = apply
+
+  assert {
+    condition     = length(module.ebs_kms) == 1 && aws_ebs_encryption_by_default.this[0].enabled
+    error_message = "EBS default encryption and its key should be managed by default."
+  }
+
+  assert {
+    condition     = aws_ebs_default_kms_key.this[0].key_arn == module.ebs_kms[0].arn
+    error_message = "The account default EBS key should be the module's key."
+  }
+
+  assert {
+    condition     = contains([for s in jsondecode(local.ebs_kms_key_policy).Statement : s.Principal.AWS], "arn:aws:iam::222222222222:root")
+    error_message = "The EBS key policy should grant the central backup account."
+  }
+}
+
+run "ebs_default_encryption_disabled" {
+  command = apply
+
+  variables {
+    manage_ebs_default_encryption = false
+  }
+
+  assert {
+    condition     = length(module.ebs_kms) == 0 && length(aws_ebs_default_kms_key.this) == 0 && output.ebs_kms_key_arn == null
+    error_message = "No EBS key or default setting should be managed when disabled."
+  }
+}
