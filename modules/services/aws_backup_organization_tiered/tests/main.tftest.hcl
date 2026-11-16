@@ -226,6 +226,12 @@ run "policy_document" {
   }
 
   assert {
+    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-1"].advanced_backup_settings.ec2.windows_vss["@@assign"] == "enabled"
+    error_message = "Tier plans should enable Windows VSS by default."
+  }
+
+
+  assert {
     condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-1"].rules.hourly.target_backup_vault_name["@@assign"] == "backup-staging"
     error_message = "Every rule should target the staging vault."
   }

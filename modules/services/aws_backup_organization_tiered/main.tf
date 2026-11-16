@@ -99,6 +99,11 @@ locals {
     plans = {
       for tkey, tier in var.backup_tiers : "${var.policy_name}-tier-${tkey}" => {
         regions = { "@@assign" = local.policy_regions }
+        advanced_backup_settings = {
+          ec2 = {
+            windows_vss = { "@@assign" = var.windows_vss }
+          }
+        }
         rules = {
           for rule in tier.rules : rule.name => merge(
             {

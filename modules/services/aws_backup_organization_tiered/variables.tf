@@ -121,6 +121,16 @@ variable "policy_name" {
   default     = "tiered-backup"
 }
 
+variable "windows_vss" {
+  type        = string
+  description = "(Optional) Windows VSS setting for EC2 backups in every tier plan. \"enabled\" requests application-consistent snapshots of Windows instances, which requires the AwsVssComponents package and the AWSEC2VssSnapshotPolicy managed policy on each instance's role. Non-Windows instances are backed up normally. \"disabled\" takes crash-consistent snapshots."
+  default     = "enabled"
+  validation {
+    condition     = contains(["enabled", "disabled"], var.windows_vss)
+    error_message = "windows_vss must be enabled or disabled."
+  }
+}
+
 variable "staging_vault_name" {
   type        = string
   description = "(Optional) Name of the tier-agnostic local staging vault that must pre-exist in every member account (created by the aws_backup_member module). Recovery points land here first, then copy_actions ship them to the central vault(s)."
