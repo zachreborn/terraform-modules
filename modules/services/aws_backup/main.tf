@@ -465,6 +465,16 @@ resource "aws_backup_selection" "all_resources" {
     "arn:aws:ec2:*:*:instance/*",
     "arn:aws:s3:*"
   ]
+
+  dynamic "condition" {
+    for_each = var.excluded_tag_key == null ? [] : [var.excluded_tag_key]
+    content {
+      string_not_like {
+        key   = "aws:ResourceTag/${condition.value}"
+        value = "*"
+      }
+    }
+  }
 }
 
 #######################################
@@ -518,6 +528,16 @@ resource "aws_backup_selection" "all_ec2" {
   resources = [
     "arn:aws:ec2:*:*:instance/*"
   ]
+
+  dynamic "condition" {
+    for_each = var.excluded_tag_key == null ? [] : [var.excluded_tag_key]
+    content {
+      string_not_like {
+        key   = "aws:ResourceTag/${condition.value}"
+        value = "*"
+      }
+    }
+  }
 }
 
 ###############################################################
