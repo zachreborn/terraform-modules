@@ -447,3 +447,53 @@ run "number_greater_than_one_suffixes_names_with_index" {
 # Do NOT weaken these assertions (or any you add) to force a pass. If a `run` block fails,
 # treat it as a signal that the module code has a bug and fix the root cause in main.tf /
 # variables.tf / outputs.tf, then re-run `tofu test` until it passes for the right reason.
+
+run "root_volume_drops_backup_tier_tag" {
+  command = plan
+
+  variables {
+    ami                    = "ami-0123456789abcdef0"
+    instance_type          = "t3.micro"
+    name                   = "example"
+    vpc_security_group_ids = ["sg-0123456789abcdef0"]
+    tags = {
+      environment = "test"
+      backup-tier = "4"
+    }
+  }
+
+  assert {
+    condition     = aws_instance.ec2[0].tags["backup-tier"] == "4"
+    error_message = "The instance should keep the backup-tier tag."
+  }
+
+  assert {
+    condition     = !contains(keys(aws_instance.ec2[0].root_block_device[0].tags), "backup-tier")
+    error_message = "The root volume should not get the backup-tier tag."
+  }
+
+  assert {
+    condition     = aws_instance.ec2[0].root_block_device[0].tags["environment"] == "test" && aws_instance.ec2[0].root_block_device[0].tags["Name"] == "example"
+    error_message = "The root volume should keep every other instance tag and its Name."
+  }
+}
+
+run "root_volume_exclusion_can_be_disabled" {
+  command = plan
+
+  variables {
+    ami                           = "ami-0123456789abcdef0"
+    instance_type                 = "t3.micro"
+    name                          = "example"
+    vpc_security_group_ids        = ["sg-0123456789abcdef0"]
+    root_volume_excluded_tag_keys = []
+    tags = {
+      backup-tier = "4"
+    }
+  }
+
+  assert {
+    condition     = aws_instance.ec2[0].root_block_device[0].tags["backup-tier"] == "4"
+    error_message = "An empty exclusion list should copy every tag to the root volume."
+  }
+}
