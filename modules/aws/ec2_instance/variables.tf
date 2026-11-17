@@ -197,6 +197,12 @@ variable "subnet_id" {
   default     = ""
 }
 
+variable "root_volume_excluded_tag_keys" {
+  type        = list(string)
+  description = "(Optional) Keys in tags that are not copied to the root volume. Defaults to backup-tier, so a tiered backup policy backs up the instance (which includes its root volume) without also backing up the root volume on its own."
+  default     = ["backup-tier"]
+}
+
 variable "tags" {
   type        = map(string)
   description = "A mapping of tags to assign to the resource"

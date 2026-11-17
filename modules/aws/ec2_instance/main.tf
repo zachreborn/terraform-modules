@@ -45,7 +45,7 @@ resource "aws_instance" "ec2" {
   root_block_device {
     delete_on_termination = var.root_delete_on_termination
     encrypted             = var.encrypted
-    tags                  = merge(var.tags, ({ "Name" = format("%s%s", var.name, var.number > 1 ? count.index + 1 : "") }))
+    tags                  = merge({ for k, v in var.tags : k => v if !contains(var.root_volume_excluded_tag_keys, k) }, ({ "Name" = format("%s%s", var.name, var.number > 1 ? count.index + 1 : "") }))
     volume_type           = var.root_volume_type
     volume_size           = var.root_volume_size
   }
