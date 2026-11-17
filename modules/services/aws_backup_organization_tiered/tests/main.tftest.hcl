@@ -230,6 +230,16 @@ run "policy_document" {
     error_message = "Tier plans should enable Windows VSS by default."
   }
 
+  assert {
+    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-1"].selections.resources["by-backup-tier"].not_resource_types["@@assign"] == ["arn:aws:ec2:*:*:volume/*"]
+    error_message = "Tier selections should exclude EBS volumes by default."
+  }
+
+  assert {
+    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-1"].selections.resources["by-backup-tier"].conditions.string_equals["backup-tier-1"].condition_key["@@assign"] == "aws:ResourceTag/backup-tier"
+    error_message = "Tier selections should match on the backup-tier tag."
+  }
+
 
   assert {
     condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-1"].rules.hourly.target_backup_vault_name["@@assign"] == "backup-staging"
@@ -300,12 +310,12 @@ run "policy_document" {
   }
 
   assert {
-    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-2"].selections.tags["by-backup-tier"].tag_value["@@assign"] == ["2"]
+    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-2"].selections.resources["by-backup-tier"].conditions.string_equals["backup-tier-2"].condition_value["@@assign"] == "2"
     error_message = "Each plan should select resources tagged with its tier key."
   }
 
   assert {
-    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-2"].selections.tags["by-backup-tier"].iam_role_arn["@@assign"] == "arn:aws:iam::$account:role/AWSBackupServiceRole"
+    condition     = jsondecode(output.backup_policy_json).plans["tiered-backup-tier-2"].selections.resources["by-backup-tier"].iam_role_arn["@@assign"] == "arn:aws:iam::$account:role/AWSBackupServiceRole"
     error_message = "Selections should use the member backup role via the $account token."
   }
 }

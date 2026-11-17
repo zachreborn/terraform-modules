@@ -144,12 +144,24 @@ locals {
           )
         }
         selections = {
-          tags = {
-            "by-${var.tag_key}" = {
-              iam_role_arn = { "@@assign" = "arn:aws:iam::$account:role/${var.backup_role_name}" }
-              tag_key      = { "@@assign" = var.tag_key }
-              tag_value    = { "@@assign" = [tkey] }
-            }
+          resources = {
+            "by-${var.tag_key}" = merge(
+              {
+                iam_role_arn   = { "@@assign" = "arn:aws:iam::$account:role/${var.backup_role_name}" }
+                resource_types = { "@@assign" = ["*"] }
+                conditions = {
+                  string_equals = {
+                    "${var.tag_key}-${tkey}" = {
+                      condition_key   = { "@@assign" = "aws:ResourceTag/${var.tag_key}" }
+                      condition_value = { "@@assign" = tkey }
+                    }
+                  }
+                }
+              },
+              length(var.not_resource_types) > 0 ? {
+                not_resource_types = { "@@assign" = var.not_resource_types }
+              } : {}
+            )
           }
         }
       }

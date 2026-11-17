@@ -131,6 +131,12 @@ variable "windows_vss" {
   }
 }
 
+variable "not_resource_types" {
+  type        = list(string)
+  description = "(Optional) Resource type ARN patterns excluded from every tier selection. Defaults to EBS volumes: EC2 instance backups already include every attached volume, and root volumes inherit the instance's tags, so selecting volumes separately would back them up twice. Set to [] to back up tagged volumes on their own."
+  default     = ["arn:aws:ec2:*:*:volume/*"]
+}
+
 variable "staging_vault_name" {
   type        = string
   description = "(Optional) Name of the tier-agnostic local staging vault that must pre-exist in every member account (created by the aws_backup_member module). Recovery points land here first, then copy_actions ship them to the central vault(s)."
